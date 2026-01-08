@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Get-Content ''Assets\\\\Project\\\\Scripts\\\\Units\\\\IlyaUnit.cs'' | Select-String -Pattern ''class IlyaUnit'' -Context 0,5\")",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"Get-ChildItem ''Assets\\\\Project\\\\Scripts\\\\Units\\\\*.cs'' | Select-Object -ExpandProperty Name\")",
+      "Bash(powershell -Command \"Get-Content ''Assets\\\\Project\\\\Scripts\\\\Units\\\\Unit.cs'' | Select-String -Pattern ''class Unit'' -Context 0,2\")",
+      "Bash(powershell -Command:*)"
+    ]
+  }
+}

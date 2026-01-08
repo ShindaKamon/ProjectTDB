@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 934d79229d5e0844d92926a39a6904b0, type: 3}
+  m_Name: FamilyEmotion_Precurseurs
+  m_EditorClassIdentifier: Assembly-CSharp::FamilyEmotionData
+  familyType: 8
+  positiveEmotionName: "Int\xE9r\xEAt"
+  neutralEmotionName: Anticipation
+  negativeEmotionName: Vigilance
+  positiveDescription: "\xC9tat d\xE9fensif et protecteur."
+  neutralDescription: "\xC9tat d'\xE9quilibre \xE9motionnel."
+  negativeDescription: "\xC9tat offensif et agressif."
+  positiveColor: {r: 1, g: 0.78431374, b: 0.54901963, a: 1}
+  neutralColor: {r: 1, g: 0.627451, b: 0.3137255, a: 1}
+  negativeColor: {r: 1, g: 0.47058824, b: 0.15686275, a: 1}

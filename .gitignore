@@ -1,0 +1,15 @@
+# Dossiers Unity à ignorer
+/Library/
+/Temp/
+/Obj/
+/Build/
+/Builds/
+/Logs/
+/UserSettings/
+
+# Fichiers Unity à ignorer
+*.pidb
+*.unityproj
+*.sln
+*.userprefs
+*.DS_Store

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 934d79229d5e0844d92926a39a6904b0, type: 3}
+  m_Name: FamilyEmotion_Dissidents
+  m_EditorClassIdentifier: Assembly-CSharp::FamilyEmotionData
+  familyType: 2
+  positiveEmotionName: Ennui
+  neutralEmotionName: "D\xE9go\xFBt"
+  negativeEmotionName: Aversion
+  positiveDescription: "\xC9tat d\xE9fensif et protecteur."
+  neutralDescription: "\xC9tat d'\xE9quilibre \xE9motionnel."
+  negativeDescription: "\xC9tat offensif et agressif."
+  positiveColor: {r: 0.47058824, g: 0.627451, b: 0.54901963, a: 1}
+  neutralColor: {r: 0.39215687, g: 0.50980395, b: 0.39215687, a: 1}
+  negativeColor: {r: 0.3137255, g: 0.39215687, b: 0.23529412, a: 1}

@@ -13,3 +13,14 @@
 *.sln
 *.userprefs
 *.DS_Store
+
+# VSCode
+.vscode/
+
+# Fichiers système
+.bash_history
+.DS_Store
+
+# Autres fichiers Unity
+*.csproj
+*.sln

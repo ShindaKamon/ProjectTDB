@@ -7,9 +7,11 @@ using TMPro;
 /// GridManager adapté pour Émotions Tactics
 /// Gère la grille carrée, les unités, le système de tours, et l'UI
 /// Compatible avec Unit de base ET IlyaUnit
+/// Phase 3.5: Implémente IGridService pour injection de dépendances
 /// </summary>
-public class GridManager : MonoBehaviour
+public class GridManager : MonoBehaviour, IGridService
 {
+    // NOTE: Instance gardé pour compatibilité (sera progressivement éliminé)
     public static GridManager Instance { get; private set; }
 
     [Header("=== Configuration Grille ===")]
@@ -31,9 +33,21 @@ public class GridManager : MonoBehaviour
     private Dictionary<Vector2, Tile> _tiles;
     private List<Unit> _units;
     private Unit _activeUnit;
-    
+
+    // ===== REPOSITORY PATTERN =====
+    // GridRepository centralise toutes les requêtes de grille pour améliorer la testabilité
+    private GridRepository _gridRepository;
+
+    // ===== STATE MACHINE (Phase 3.4) =====
+    // TurnStateMachine gère les états explicites du système de tours
+    private TurnStateMachine _turnStateMachine;
+
+    // ===== UI CACHE =====
+    // Cache pour éviter FindFirstObjectByType à chaque tour
+    private UnitStatsUI _cachedStatsUI;
+
     // ===== AWAKE & INIT =====
-    
+
     private void Awake()
     {
         // Singleton
@@ -47,13 +61,94 @@ public class GridManager : MonoBehaviour
         }
 
         _tiles = new Dictionary<Vector2, Tile>();
+        _units = new List<Unit>();
         GenerateGrid();
+
+        // Initialise le GridRepository après la génération de la grille
+        _gridRepository = new GridRepository(_tiles, _units, _width, _height);
+
+        // Initialise la TurnStateMachine (Phase 3.4)
+        _turnStateMachine = new TurnStateMachine();
+
+        // Enregistre ce GridManager comme IGridService dans le ServiceLocator (Phase 3.5)
+        ServiceLocator.Instance.Register<IGridService>(this);
+        Debug.Log("GridManager: Enregistré dans ServiceLocator comme IGridService");
+
+        // S'abonne aux événements de l'EventBus
+        EventBus.Subscribe<TurnEndRequestedEvent>(OnTurnEndRequested);
+        EventBus.Subscribe<ShowMovementRangeEvent>(OnShowMovementRange);
+        EventBus.Subscribe<ShowCardTargetsEvent>(OnShowCardTargets);
+        EventBus.Subscribe<ShowAOEZoneEvent>(OnShowAOEZone);
+        EventBus.Subscribe<ResetTileColorsEvent>(OnResetTileColors);
     }
 
     private void Start()
     {
         // Initialise les unités dans Start() pour que le BattleUIManager ait le temps de s'initialiser dans Awake()
         InitUnits();
+    }
+
+    private void OnDestroy()
+    {
+        // Se désabonne des événements pour éviter les fuites mémoire
+        EventBus.Unsubscribe<TurnEndRequestedEvent>(OnTurnEndRequested);
+        EventBus.Unsubscribe<ShowMovementRangeEvent>(OnShowMovementRange);
+        EventBus.Unsubscribe<ShowCardTargetsEvent>(OnShowCardTargets);
+        EventBus.Unsubscribe<ShowAOEZoneEvent>(OnShowAOEZone);
+        EventBus.Unsubscribe<ResetTileColorsEvent>(OnResetTileColors);
+
+        // Désenregistre du ServiceLocator (Phase 3.5)
+        ServiceLocator.Instance.Unregister<IGridService>();
+    }
+
+    /// <summary>
+    /// Appelé quand une unité demande la fin du tour via l'EventBus
+    /// </summary>
+    private void OnTurnEndRequested(TurnEndRequestedEvent e)
+    {
+        Debug.Log($"[EventBus] Fin de tour demandée par {e.RequestingUnit?.name ?? "Inconnu"}");
+        OnEndTurnButtonClick();
+    }
+
+    /// <summary>
+    /// Appelé quand un composant demande l'affichage de la portée de mouvement
+    /// </summary>
+    private void OnShowMovementRange(ShowMovementRangeEvent e)
+    {
+        if (e.Unit != null)
+        {
+            ShowMovementRange(e.Unit);
+        }
+    }
+
+    /// <summary>
+    /// Appelé quand un composant demande l'affichage des cibles de carte
+    /// </summary>
+    private void OnShowCardTargets(ShowCardTargetsEvent e)
+    {
+        if (e.Card != null && e.Source != null)
+        {
+            ShowCardTargets(e.Card, e.Source);
+        }
+    }
+
+    /// <summary>
+    /// Appelé quand un composant demande l'affichage d'une zone AOE
+    /// </summary>
+    private void OnShowAOEZone(ShowAOEZoneEvent e)
+    {
+        if (e.Card != null && e.Source != null)
+        {
+            ShowAOEZone(e.Epicenter, e.Radius, e.Card, e.Source);
+        }
+    }
+
+    /// <summary>
+    /// Appelé quand un composant demande la réinitialisation des couleurs de tuiles
+    /// </summary>
+    private void OnResetTileColors(ResetTileColorsEvent e)
+    {
+        ResetAllTileColors();
     }
 
     void GenerateGrid()
@@ -67,7 +162,8 @@ public class GridManager : MonoBehaviour
                 spawnedTile.name = $"Tile {x} {y}";
                 spawnedTile.transform.SetParent(transform);
 
-                var tile = spawnedTile.GetComponent<Tile>();
+                // OPTIMISATION Phase 3.3: ComponentLocator
+                var tile = spawnedTile.GetRequiredComponent<Tile>("Tile instantiée par GridManager");
                 bool isOffset = (x % 2 == 0 && y % 2 != 0) || (x % 2 != 0 && y % 2 == 0);
                 tile.Init(isOffset);
 
@@ -83,21 +179,22 @@ public class GridManager : MonoBehaviour
     
     private void InitUnits()
     {
-        _units = new List<Unit>();
+        // _units est déjà initialisé dans Awake() et partagé avec GridRepository
         Unit instantiatedPlayerUnit = null;
 
         // 1. Instancie le champion sélectionné (si disponible)
         if (ChampionSelectManager.SelectedChampion != null)
         {
             GameObject playerUnitGO = Instantiate(ChampionSelectManager.SelectedChampion.prefab);
-            instantiatedPlayerUnit = playerUnitGO.GetComponent<Unit>();
+            // OPTIMISATION Phase 3.3: ComponentLocator
+            instantiatedPlayerUnit = playerUnitGO.GetRequiredComponent<Unit>("Champion sélectionné");
             if (instantiatedPlayerUnit != null)
             {
                 // Initialise le champion du joueur avec ses données et la position de départ
                 instantiatedPlayerUnit.Initialize(ChampionSelectManager.SelectedChampion, _playerSpawnGridPos, Unit.UnitFaction.Player);
 
-                // Initialise le DeckManager de l'unité joueur
-                DeckManager playerDeckManager = instantiatedPlayerUnit.GetComponent<DeckManager>();
+                // Initialise le DeckManager de l'unité joueur (OPTIMISATION Phase 3.3: ComponentLocator)
+                DeckManager playerDeckManager = instantiatedPlayerUnit.GetRequiredComponent<DeckManager>("DeckManager du champion");
                 if (playerDeckManager != null)
                 {
                     if (ChampionSelectManager.SelectedChampion.startingDeck != null && ChampionSelectManager.SelectedChampion.startingDeck.Count > 0)
@@ -192,6 +289,9 @@ public class GridManager : MonoBehaviour
             UpdateUnitUI();
             DisplayMovementRange(_activeUnit);
 
+            // Démarre la battle avec la TurnStateMachine (Phase 3.4)
+            _turnStateMachine.StartBattle(_activeUnit);
+
             // Gère le premier tour
             HandleTurnStart(_activeUnit);
         }
@@ -210,7 +310,7 @@ public class GridManager : MonoBehaviour
 
         // Rafraîchit les PM pour toutes les unités
         _activeUnit.RefreshMovement();
-        Debug.Log($"{_activeUnit.name} : PM rafraîchis ({_activeUnit.GetRemainingMovement()}/{_activeUnit.GetMovementRange()})");
+        Debug.Log($"{_activeUnit.name} : PM rafraîchis ({_activeUnit.GetCurrentMovementPoints()}/{_activeUnit.GetMaxMovementPoints()})");
 
         // Si c'est IlyaUnit, rafraîchit aussi les PA
         IlyaUnit ilyaUnit = _activeUnit as IlyaUnit;
@@ -221,8 +321,8 @@ public class GridManager : MonoBehaviour
         }
 
         // Pioche une carte si l'unité a un DeckManager (unités joueur uniquement)
-        DeckManager deckManager = _activeUnit.GetComponent<DeckManager>();
-        if (deckManager != null)
+        // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car les ennemis n'ont pas de DeckManager)
+        if (_activeUnit.TryGetComponentSafe(out DeckManager deckManager))
         {
             deckManager.DrawCard();
             Debug.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
@@ -233,27 +333,48 @@ public class GridManager : MonoBehaviour
     
     public void NextTurn()
     {
+        // Phase 3.4: Commence la transition entre tours
+        _turnStateMachine.BeginTurnTransition();
+
         int currentIndex = _units.IndexOf(_activeUnit);
         int nextIndex = (currentIndex + 1) % _units.Count;
-        
+
+        Unit previousUnit = _activeUnit;
+
         // Désabonne l'ancienne unité
         if (_activeUnit != null)
         {
             _activeUnit.OnMovementStepCompleted -= HandleUnitMovementStep;
         }
-        
+
         _activeUnit = _units[nextIndex];
         Debug.Log($"=== Tour de : {_activeUnit.name} ===");
-        
+
+        // Invalide tous les caches (OPTIMISATION: nouvel état de jeu)
+        _gridRepository.InvalidateAllCaches();
+
+        // Publie l'événement de changement de tour
+        EventBus.Publish(new TurnChangedEvent(_activeUnit, previousUnit));
+
         // Rafraîchit la nouvelle unité
         RefreshActiveUnitTurn();
-        
+
         // Réabonne aux événements
         _activeUnit.OnMovementStepCompleted += HandleUnitMovementStep;
-        
+
         // Met à jour l'affichage
         UpdateUnitUI();
         DisplayMovementRange(_activeUnit);
+
+        // Phase 3.4: Transition vers le nouvel état (PlayerTurn ou EnemyTurn)
+        if (_activeUnit.GetFaction() == Unit.UnitFaction.Player)
+        {
+            _turnStateMachine.BeginPlayerTurn(_activeUnit);
+        }
+        else
+        {
+            _turnStateMachine.BeginEnemyTurn(_activeUnit);
+        }
 
         // Gère le début de tour (joueur ou IA)
         HandleTurnStart(_activeUnit);
@@ -271,8 +392,8 @@ public class GridManager : MonoBehaviour
     private void HandleTurnStart(Unit unit)
     {
         // Appliquer les effets de début de tour (transformation)
-        EmotionSystem emotionSystem = unit.GetComponent<EmotionSystem>();
-        if (emotionSystem != null)
+        // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car toutes les unités n'ont pas EmotionSystem)
+        if (unit.TryGetComponentSafe(out EmotionSystem emotionSystem))
         {
             emotionSystem.ApplyTurnEffects();
         }
@@ -285,8 +406,8 @@ public class GridManager : MonoBehaviour
         else // Ennemi
         {
             _inputManager.enabled = false;
-            EnemyAI enemyAI = unit.GetComponent<EnemyAI>();
-            if (enemyAI != null)
+            // OPTIMISATION Phase 3.3: ComponentLocator
+            if (unit.TryGetComponentSafe(out EnemyAI enemyAI))
             {
                 StartCoroutine(ExecuteEnemyTurn(enemyAI, 1.0f));
             }
@@ -340,17 +461,19 @@ public class GridManager : MonoBehaviour
     {
         Unit activeUnit = GetActiveUnit();
         if (activeUnit == null) return;
-        
-        // Utilise le nouveau système UI
-        UnitStatsUI statsUI = FindFirstObjectByType<UnitStatsUI>();
-        if (statsUI != null)
+
+        // Utilise le cache pour éviter FindFirstObjectByType à chaque tour (OPTIMISATION)
+        if (_cachedStatsUI == null)
         {
-            statsUI.SetUnit(activeUnit);
+            _cachedStatsUI = FindFirstObjectByType<UnitStatsUI>();
+            if (_cachedStatsUI == null)
+            {
+                Debug.LogWarning("UnitStatsUI introuvable ! Ajoute le script sur le Canvas.");
+                return;
+            }
         }
-        else
-        {
-            Debug.LogWarning("UnitStatsUI introuvable ! Ajoute le script sur le Canvas.");
-        }
+
+        _cachedStatsUI.SetUnit(activeUnit);
     }
     
     // ===== AFFICHAGE PORTÉES =====
@@ -361,7 +484,7 @@ public class GridManager : MonoBehaviour
         if (unit.GetFaction() != Unit.UnitFaction.Player) return;
 
         // Récupère la portée de mouvement (PM pour toutes les unités)
-        int range = unit.GetRemainingMovement();
+        int range = unit.GetCurrentMovementPoints();
 
         Dictionary<Tile, int> movementTilesWithCost = GetMovementTiles(
             unit.GetCurrentGridPos(),
@@ -401,173 +524,20 @@ public class GridManager : MonoBehaviour
         ResetAllTileColors();
         DisplayMovementRange(unit);
 
-        Debug.Log($"Portée de mouvement affichée pour {unit.name} : {unit.GetRemainingMovement()}/{unit.GetMovementRange()} PM");
+        Debug.Log($"Portée de mouvement affichée pour {unit.name} : {unit.GetCurrentMovementPoints()}/{unit.GetMaxMovementPoints()} PM");
     }
     
     // ===== PATHFINDING & PORTÉES =====
-    
+    // Toutes les méthodes de pathfinding délèguent maintenant au GridRepository
+
     public Dictionary<Tile, int> GetMovementTiles(Vector2 startPos, int range, Unit ignoreUnit = null)
-    {
-        Dictionary<Tile, int> reachableTilesWithCost = new Dictionary<Tile, int>();
-        Queue<Vector2> queue = new Queue<Vector2>();
-        Dictionary<Vector2, int> visited = new Dictionary<Vector2, int>();
+        => _gridRepository.GetMovementTiles(startPos, range, ignoreUnit);
 
-        queue.Enqueue(startPos);
-        visited[startPos] = 0;
-
-        while (queue.Count > 0)
-        {
-            Vector2 currentPos = queue.Dequeue();
-            int currentCost = visited[currentPos];
-            Tile currentTile = GetTileAtPosition(currentPos);
-
-            if (currentTile != null && !reachableTilesWithCost.ContainsKey(currentTile))
-            {
-                reachableTilesWithCost.Add(currentTile, currentCost);
-            }
-
-            Vector2[] neighbors = new Vector2[]
-            {
-                currentPos + new Vector2(0, 1),
-                currentPos + new Vector2(0, -1),
-                currentPos + new Vector2(1, 0),
-                currentPos + new Vector2(-1, 0)
-            };
-
-            foreach (Vector2 neighborPos in neighbors)
-            {
-                Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
-                bool isOccupied = (unitAtNeighbor != null && unitAtNeighbor != ignoreUnit);
-
-                if (_tiles.ContainsKey(neighborPos) && 
-                    !visited.ContainsKey(neighborPos) && 
-                    currentCost + 1 <= range && 
-                    !isOccupied)
-                {
-                    visited[neighborPos] = currentCost + 1;
-                    queue.Enqueue(neighborPos);
-                }
-            }
-        }
-
-        return reachableTilesWithCost;
-    }
-    
     public List<Tile> GetAttackTiles(Vector2 startPos, int range, Unit ignoreUnit = null)
-    {
-        List<Tile> reachableTiles = new List<Tile>();
-        Queue<Vector2> queue = new Queue<Vector2>();
-        Dictionary<Vector2, int> visited = new Dictionary<Vector2, int>();
+        => _gridRepository.GetAttackTiles(startPos, range, ignoreUnit);
 
-        queue.Enqueue(startPos);
-        visited[startPos] = 0;
-
-        while (queue.Count > 0)
-        {
-            Vector2 currentPos = queue.Dequeue();
-            int currentCost = visited[currentPos];
-            Tile currentTile = GetTileAtPosition(currentPos);
-            
-            if (currentTile != null)
-            {
-                reachableTiles.Add(currentTile);
-            }
-
-            Vector2[] neighbors = new Vector2[]
-            {
-                currentPos + new Vector2(0, 1),
-                currentPos + new Vector2(0, -1),
-                currentPos + new Vector2(1, 0),
-                currentPos + new Vector2(-1, 0)
-            };
-
-            foreach (Vector2 neighborPos in neighbors)
-            {
-                if (_tiles.ContainsKey(neighborPos) && 
-                    !visited.ContainsKey(neighborPos) && 
-                    currentCost + 1 <= range)
-                {
-                    visited[neighborPos] = currentCost + 1;
-                    queue.Enqueue(neighborPos);
-                }
-            }
-        }
-        
-        if (range > 0 && reachableTiles.Contains(GetTileAtPosition(startPos)))
-        {
-            reachableTiles.Remove(GetTileAtPosition(startPos));
-        }
-        
-        return reachableTiles;
-    }
-    
     public List<Tile> GetPathToTile(Vector2 startPos, Vector2 targetPos, int maxRange, Unit ignoreUnit = null)
-    {
-        if (startPos == targetPos)
-        {
-            return new List<Tile>();
-        }
-
-        Queue<Vector2> queue = new Queue<Vector2>();
-        Dictionary<Vector2, Vector2> parentMap = new Dictionary<Vector2, Vector2>();
-        Dictionary<Vector2, int> costMap = new Dictionary<Vector2, int>();
-
-        queue.Enqueue(startPos);
-        costMap[startPos] = 0;
-
-        Vector2 currentPos;
-        while (queue.Count > 0)
-        {
-            currentPos = queue.Dequeue();
-            int currentCost = costMap[currentPos];
-
-            if (currentPos == targetPos)
-            {
-                break;
-            }
-
-            Vector2[] neighbors = new Vector2[]
-            {
-                currentPos + new Vector2(0, 1),
-                currentPos + new Vector2(0, -1),
-                currentPos + new Vector2(1, 0),
-                currentPos + new Vector2(-1, 0)
-            };
-
-            foreach (Vector2 neighborPos in neighbors)
-            {
-                Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
-                bool isOccupied = (unitAtNeighbor != null && unitAtNeighbor != ignoreUnit);
-
-                if (_tiles.ContainsKey(neighborPos) && !isOccupied)
-                {
-                    int newCost = currentCost + 1;
-                    
-                    if (newCost <= maxRange && 
-                        (!costMap.ContainsKey(neighborPos) || newCost < costMap[neighborPos]))
-                    {
-                        costMap[neighborPos] = newCost;
-                        parentMap[neighborPos] = currentPos;
-                        queue.Enqueue(neighborPos);
-                    }
-                }
-            }
-        }
-
-        List<Tile> path = new List<Tile>();
-        if (parentMap.ContainsKey(targetPos))
-        {
-            currentPos = targetPos;
-            while (currentPos != startPos)
-            {
-                path.Add(GetTileAtPosition(currentPos));
-                currentPos = parentMap[currentPos];
-            }
-            path.Reverse();
-        }
-
-        return path;
-    }
+        => _gridRepository.GetPathToTile(startPos, targetPos, maxRange, ignoreUnit);
     
     public void ResetAllTileColors()
     {
@@ -581,49 +551,35 @@ public class GridManager : MonoBehaviour
     }
     
     // ===== GETTERS PUBLICS =====
-    
+    // Toutes les méthodes de requête délèguent maintenant au GridRepository
+    // pour améliorer la testabilité et réduire le couplage
+
     public Unit GetActiveUnit() => _activeUnit;
-    
-    public Tile GetTileAtPosition(Vector2 pos)
-    {
-        if (_tiles.TryGetValue(pos, out var tile))
-        {
-            return tile;
-        }
-        return null;
-    }
-    
-    public Vector2 GetGridPosFromWorldPos(Vector3 worldPos)
-    {
-        int x = Mathf.RoundToInt(worldPos.x + _width / 2.0f);
-        int y = Mathf.RoundToInt(worldPos.z + _height / 2.0f);
-        return new Vector2(x, y);
-    }
-    
-    public List<Unit> GetAllPlayerUnits()
-    {
-        List<Unit> playerUnits = new List<Unit>();
-        foreach (Unit unit in _units)
-        {
-            if (unit.GetFaction() == Unit.UnitFaction.Player)
-            {
-                playerUnits.Add(unit);
-            }
-        }
-        return playerUnits;
-    }
-    
-    public Unit GetUnitAtGridPos(Vector2 gridPos)
-    {
-        foreach (Unit unit in _units)
-        {
-            if (unit.GetCurrentGridPos() == gridPos)
-            {
-                return unit;
-            }
-        }
-        return null;
-    }
+
+    /// <summary>
+    /// Retourne le GridRepository pour injection de dépendances (Phase 2)
+    /// </summary>
+    public GridRepository GetGridRepository() => _gridRepository;
+
+    /// <summary>
+    /// Invalide le cache d'attaque (appelé quand une carte est sélectionnée/désélectionnée)
+    /// </summary>
+    public void InvalidateAttackTilesCache() => _gridRepository.InvalidateAttackTilesCache();
+
+    public Tile GetTileAtPosition(Vector2 pos) => _gridRepository.GetTileAtPosition(pos);
+
+    public Vector2 GetGridPosFromWorldPos(Vector3 worldPos) => _gridRepository.GetGridPosFromWorldPos(worldPos);
+
+    public List<Unit> GetAllPlayerUnits() => _gridRepository.GetAllPlayerUnits();
+
+    public List<Unit> GetAllEnemyUnits() => _gridRepository.GetAllEnemyUnits();
+
+    public Unit GetUnitAtGridPos(Vector2 gridPos) => _gridRepository.GetUnitAtGridPos(gridPos);
+
+    /// <summary>
+    /// Retourne la TurnStateMachine (Phase 3.4)
+    /// </summary>
+    public TurnStateMachine GetTurnStateMachine() => _turnStateMachine;
 
     // ===== SYSTÈME DE CIBLAGE DE CARTES =====
 
@@ -711,8 +667,5 @@ public class GridManager : MonoBehaviour
     /// <summary>
     /// Obtient la liste de toutes les unités
     /// </summary>
-    public List<Unit> GetAllUnits()
-    {
-        return _units;
-    }
+    public List<Unit> GetAllUnits() => _gridRepository.GetAllUnits();
 }

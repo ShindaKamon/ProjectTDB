@@ -14,11 +14,11 @@ public class ChampionData : ScriptableObject
     public CardElementType elementType = CardElementType.None;
 
     [Header("Stats de base")]
-    public int maxHealth = 100;
-    public int movementRange = 3;
-    public int maxPA = 5;
-    public int defenseP = 10;
-    public int defenseM = 10;
+    public int maxHealth = 100;                // HP (Points de Vie) maximum
+    public int movementRange = 3;              // PM (Points de Mouvement) maximum
+    public int maxActionPoints = 5;            // PA (Points d'Action) maximum
+    public int physicalDefense = 10;           // Défense physique
+    public int magicalDefense = 10;            // Défense magique
 
     [Header("Deck de Départ")]
     public List<CardData> startingDeck = new List<CardData>();

@@ -9,16 +9,16 @@ public class EnemyAI : MonoBehaviour
 
     void Awake()
     {
-        _enemyUnit = GetComponent<Unit>();
+        // OPTIMISATION Phase 3.3: ComponentLocator
+        _enemyUnit = this.GetRequiredComponent<Unit>("EnemyAI nécessite Unit");
         if (_enemyUnit == null)
         {
-            Debug.LogError("EnemyAI nécessite un composant Unit sur le même GameObject.");
             enabled = false;
             return;
         }
 
-        // Vérifie si c'est un Enemy avec système de cartes
-        _enemy = GetComponent<Enemy>();
+        // Vérifie si c'est un Enemy avec système de cartes (OPTIMISATION Phase 3.3: ComponentLocator)
+        this.TryGetComponentSafe(out _enemy);
     }
 
     public void TakeTurn()
@@ -38,12 +38,12 @@ public class EnemyAI : MonoBehaviour
         }
 
         // 1. Trouver le joueur le plus proche
-        List<Unit> playerUnits = GridManager.Instance.GetAllPlayerUnits();
+        List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
 
         if (playerUnits == null || playerUnits.Count == 0)
         {
             Debug.LogWarning($"{_enemyUnit.name}: Aucune unité joueur trouvée. Passe son tour.");
-            GridManager.Instance.OnEndTurnButtonClick();
+            EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
             yield break;
         }
 
@@ -52,7 +52,7 @@ public class EnemyAI : MonoBehaviour
         if (closestPlayerUnit == null)
         {
             Debug.LogWarning($"{_enemyUnit.name}: Aucun joueur valide trouvé.");
-            GridManager.Instance.OnEndTurnButtonClick();
+            EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
             yield break;
         }
 
@@ -153,7 +153,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         // 4. Fin du tour (plus d'attaque de base, tout passe par les cartes)
-        GridManager.Instance.OnEndTurnButtonClick();
+        EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
     }
 
     // Calcule un chemin complet vers la cible en utilisant tous les points de mouvement disponibles
@@ -161,7 +161,7 @@ public class EnemyAI : MonoBehaviour
     {
         List<Tile> path = new List<Tile>();
         Vector2 currentPos = _enemyUnit.GetCurrentGridPos();
-        int remainingMovement = _enemyUnit.GetRemainingMovement();
+        int remainingMovement = _enemyUnit.GetCurrentMovementPoints();
 
         // Obtient la portée max des cartes de l'ennemi (si c'est un Enemy avec cartes)
         int maxCardRange = GetMaxCardRange();
@@ -191,7 +191,7 @@ public class EnemyAI : MonoBehaviour
             }
 
             // Ajouter cette case au chemin
-            Tile nextTile = GridManager.Instance.GetTileAtPosition(nextMove);
+            Tile nextTile = Services.Grid.GetTileAtPosition(nextMove);
             path.Add(nextTile);
             currentPos = nextMove; // Mettre à jour la position simulée
         }
@@ -248,10 +248,10 @@ public class EnemyAI : MonoBehaviour
             Vector2 nextPos = fromPos + dir;
 
             // Vérifier que la case est valide
-            Tile nextTile = GridManager.Instance.GetTileAtPosition(nextPos);
+            Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
             if (nextTile == null) continue; // Case hors grille
 
-            Unit unitOnTile = GridManager.Instance.GetUnitAtGridPos(nextPos);
+            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(nextPos);
             if (unitOnTile != null) continue; // Case occupée
 
             // Calculer la distance au joueur depuis cette case
@@ -298,7 +298,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         // Trouve le joueur le plus proche pour vérifier la portée
-        List<Unit> playerUnits = GridManager.Instance.GetAllPlayerUnits();
+        List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
         if (playerUnits == null || playerUnits.Count == 0)
         {
             Debug.LogWarning($"{_enemy.name}: Aucun joueur pour cibler {card.cardName}");
@@ -338,7 +338,7 @@ public class EnemyAI : MonoBehaviour
         Vector2 targetTile = Vector2.zero;
 
         // Trouve le joueur le plus proche pour les cartes offensives
-        List<Unit> playerUnits = GridManager.Instance.GetAllPlayerUnits();
+        List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
         if (playerUnits != null && playerUnits.Count > 0)
         {
             Unit closestPlayer = FindClosestPlayer(playerUnits);

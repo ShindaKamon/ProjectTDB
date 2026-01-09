@@ -20,16 +20,11 @@ public class EnemyData : ScriptableObject
     public bool isBoss = false;
 
     [Header("Stats de Base")]
-    // Point de vie
-    public int maxHealth = 50;
-    // Point de mouvement
-    public int movementRange = 2;
-    // PA par tour pour jouer des cartes
-    public int maxPA = 2;
-    // Defense physique
-    public int defenseP = 10;
-    // defense magique
-    public int defenseM = 10;
+    public int maxHealth = 50;                 // HP (Points de Vie) maximum
+    public int movementRange = 2;              // PM (Points de Mouvement) maximum
+    public int maxActionPoints = 2;            // PA (Points d'Action) maximum
+    public int physicalDefense = 10;           // Défense physique
+    public int magicalDefense = 10;            // Défense magique
 
     [Header("Deck Pattern")]
     [Tooltip("Le deck définit le pattern de combat de l'ennemi. Les cartes sont jouées dans l'ordre (pas de mélange).")]

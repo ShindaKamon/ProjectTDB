@@ -27,14 +27,18 @@ public class HandUIController : MonoBehaviour
             _selectedCard = null;
             ResetSelectedCardUIPosition();
             ResetCardHighlights();
+
+            // Invalide le cache d'attaque (OPTIMISATION: plus de carte sélectionnée)
+            Services.Grid?.InvalidateAttackTilesCache();
         }
 
         // Toujours réafficher la portée de mouvement après désélection
         // (même si aucune carte n'était sélectionnée, pour être sûr)
-        Unit activeUnit = GridManager.Instance?.GetActiveUnit();
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
         if (activeUnit != null)
         {
-            GridManager.Instance.ShowMovementRange(activeUnit);
+            // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
+            EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
         }
     }
 
@@ -59,9 +63,10 @@ public class HandUIController : MonoBehaviour
     private void TryInitialize()
     {
         // Trouver le DeckManager du joueur actif
-        if (GridManager.Instance != null && GridManager.Instance.GetActiveUnit() != null)
+        if (Services.Grid != null && Services.Grid.GetActiveUnit() != null)
         {
-            _playerDeckManager = GridManager.Instance.GetActiveUnit().GetComponent<DeckManager>();
+            // OPTIMISATION Phase 3.3: ComponentLocator
+            Services.Grid.GetActiveUnit().TryGetComponentSafe(out _playerDeckManager);
             if (_playerDeckManager != null)
             {
                 _playerDeckManager.OnHandChanged += UpdateHandUI; // S'abonner à l'événement de changement de main
@@ -75,10 +80,10 @@ public class HandUIController : MonoBehaviour
             }
 
             // S'abonner aux changements de PA si c'est IlyaUnit
-            IlyaUnit ilyaUnit = GridManager.Instance.GetActiveUnit() as IlyaUnit;
+            IlyaUnit ilyaUnit = Services.Grid.GetActiveUnit() as IlyaUnit;
             if (ilyaUnit != null)
             {
-                ilyaUnit.OnPAChanged += HandlePAChanged;
+                ilyaUnit.OnActionPointsChanged += HandlePAChanged;
             }
 
             _isInitialized = true;
@@ -93,12 +98,12 @@ public class HandUIController : MonoBehaviour
         }
 
         // Se désabonner des changements de PA
-        if (GridManager.Instance != null && GridManager.Instance.GetActiveUnit() != null)
+        if (Services.Grid != null && Services.Grid.GetActiveUnit() != null)
         {
-            IlyaUnit ilyaUnit = GridManager.Instance.GetActiveUnit() as IlyaUnit;
+            IlyaUnit ilyaUnit = Services.Grid.GetActiveUnit() as IlyaUnit;
             if (ilyaUnit != null)
             {
-                ilyaUnit.OnPAChanged -= HandlePAChanged;
+                ilyaUnit.OnActionPointsChanged -= HandlePAChanged;
             }
         }
     }
@@ -125,7 +130,8 @@ public class HandUIController : MonoBehaviour
             Vector2 localPoint;
             Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRectTransform, mousePos, null, out localPoint);
-            _selectedCardUIObject.GetComponent<RectTransform>().localPosition = localPoint;
+            // OPTIMISATION Phase 3.3: ComponentLocator
+            _selectedCardUIObject.GetRequiredComponent<RectTransform>("Selected card UI").localPosition = localPoint;
         }
     }
 
@@ -147,7 +153,8 @@ public class HandUIController : MonoBehaviour
                 GameObject cardUI = Instantiate(_cardUIPrefab, _handContainer);
                 _instantiatedCardUIs.Add(cardUI);
 
-                CardUIElement cardUIElement = cardUI.GetComponent<CardUIElement>();
+                // OPTIMISATION Phase 3.3: ComponentLocator
+                CardUIElement cardUIElement = cardUI.GetRequiredComponent<CardUIElement>("Card UI instantiated");
                 if (cardUIElement != null)
                 {
                     cardUIElement.SetCardData(cardData);
@@ -192,11 +199,16 @@ public class HandUIController : MonoBehaviour
             // Si la même carte est cliquée à nouveau, la désélectionner
             _selectedCard = null;
             _selectedCardUIObject = null;
+
+            // Invalide le cache d'attaque (OPTIMISATION: nouvelle carte = nouveau calcul)
+            Services.Grid.InvalidateAttackTilesCache();
+
             // Masquer les cibles de carte et réafficher la portée de mouvement
-            Unit activeUnit = GridManager.Instance.GetActiveUnit();
+            Unit activeUnit = Services.Grid.GetActiveUnit();
             if (activeUnit != null)
             {
-                GridManager.Instance.ShowMovementRange(activeUnit);
+                // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
+                EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
             }
             Debug.Log("Carte désélectionnée.");
         }
@@ -206,13 +218,17 @@ public class HandUIController : MonoBehaviour
             _selectedCard = clickedCard;
             HighlightSelectedCard(_selectedCard);
 
+            // Invalide le cache d'attaque (OPTIMISATION: nouvelle carte = nouveau calcul)
+            Services.Grid.InvalidateAttackTilesCache();
+
             // Récupérer l'unité active une fois pour toute la méthode
-            Unit activeUnit = GridManager.Instance.GetActiveUnit();
+            Unit activeUnit = Services.Grid.GetActiveUnit();
 
             // Afficher les cibles valides pour cette carte
             if (activeUnit != null)
             {
-                GridManager.Instance.ShowCardTargets(_selectedCard, activeUnit);
+                // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
+                EventBus.Publish(new ShowCardTargetsEvent(_selectedCard, activeUnit));
             }
 
             Debug.Log($"Carte sélectionnée : {_selectedCard.cardName}");
@@ -220,15 +236,15 @@ public class HandUIController : MonoBehaviour
             // Trouver le GameObject UI correspondant à la carte sélectionnée pour le faire suivre la souris
             foreach (GameObject cardUIObject in _instantiatedCardUIs)
             {
-                CardUIElement cardUIElement = cardUIObject.GetComponent<CardUIElement>();
-                if (cardUIElement != null && cardUIElement.CardData == _selectedCard)
+                // OPTIMISATION Phase 3.3: ComponentLocator
+                if (cardUIObject.TryGetComponentSafe(out CardUIElement cardUIElement) && cardUIElement.CardData == _selectedCard)
                 {
                     _selectedCardUIObject = cardUIObject;
                     _selectedCardUIObject.transform.SetParent(transform.root); // Détacher du HandContainer
 
                     // Désactive le raycast sur cette carte pour qu'elle ne bloque pas les clics sur le monde
-                    CanvasGroup canvasGroup = _selectedCardUIObject.GetComponent<CanvasGroup>();
-                    if (canvasGroup == null)
+                    // OPTIMISATION Phase 3.3: ComponentLocator
+                    if (!_selectedCardUIObject.TryGetComponentSafe(out CanvasGroup canvasGroup))
                     {
                         canvasGroup = _selectedCardUIObject.AddComponent<CanvasGroup>();
                     }
@@ -243,7 +259,8 @@ public class HandUIController : MonoBehaviour
             {
                 // Carte AOE Self : afficher la zone AOE autour du joueur
                 Vector2 playerPos = activeUnit.GetCurrentGridPos();
-                GridManager.Instance.ShowAOEZone(playerPos, clickedCard.aoeRadius, clickedCard, activeUnit);
+                // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
+                EventBus.Publish(new ShowAOEZoneEvent(playerPos, clickedCard.aoeRadius, clickedCard, activeUnit));
             }
             // Note: Toutes les autres cartes affichent déjà leur portée via ShowCardTargets (ligne 160)
             // Aucune carte n'est jouée automatiquement, l'utilisateur doit cliquer pour confirmer
@@ -253,63 +270,75 @@ public class HandUIController : MonoBehaviour
     // Méthode pour jouer la carte actuellement sélectionnée
     public void PlaySelectedCard(Unit targetUnit, Vector2 targetTile)
     {
-        if (_selectedCard != null && _playerDeckManager != null)
+        // Validation des préconditions
+        if (_selectedCard == null)
         {
-            Unit activeUnit = GridManager.Instance.GetActiveUnit();
-            if (activeUnit == null)
+            Debug.LogWarning("Aucune carte sélectionnée.");
+            return;
+        }
+
+        if (_playerDeckManager == null)
+        {
+            Debug.LogError("DeckManager introuvable - impossible de jouer la carte.");
+            return;
+        }
+
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        if (activeUnit == null)
+        {
+            Debug.LogError("Aucune unité active - impossible de jouer la carte.");
+            return;
+        }
+
+        // Validation centralisée : peut-on jouer cette carte ?
+        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
+        if (!canPlayResult.IsValid)
+        {
+            Debug.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
+            return;
+        }
+
+        // Validation centralisée : le ciblage est-il valide ?
+        if (_selectedCard.targetsUnit)
+        {
+            ValidationResult targetResult = GameActionValidator.CanTargetUnit(_selectedCard, activeUnit, targetUnit);
+            if (!targetResult.IsValid)
             {
-                Debug.LogWarning("Impossible de jouer la carte : aucune unité active.");
+                Debug.LogWarning($"❌ Ciblage invalide : {targetResult.ErrorMessage}");
                 return;
             }
-
-            // Vérifier le coût de la carte en PA
-            bool canAfford = false;
-            IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
-
-            if (_selectedCard.costPA > 0)
-            {
-                if (ilyaUnit != null)
-                {
-                    canAfford = ilyaUnit.GetCurrentPA() >= _selectedCard.costPA;
-                }
-                else
-                {
-                    Debug.LogWarning("L'unité active n'est pas IlyaUnit et ne peut pas dépenser de PA.");
-                }
-            }
-            else
-            {
-                // Carte gratuite (0 PA)
-                canAfford = true;
-            }
-
-            if (canAfford)
-            {
-                _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
-                _playerDeckManager.PlayCard(_selectedCard);
-
-                // Déduire le coût en PA
-                if (_selectedCard.costPA > 0 && ilyaUnit != null)
-                {
-                    ilyaUnit.SpendPA(_selectedCard.costPA);
-                }
-
-                GridManager.Instance.UpdateUnitUI(); // Mettre à jour l'UI après avoir joué la carte
-                _selectedCard = null; // Désélectionner la carte après l'avoir jouée
-                ResetSelectedCardUIPosition(); // Réinitialiser la position de la carte
-                ResetCardHighlights(); // Désactiver le surlignage
-                GridManager.Instance.ResetAllTileColors(); // Masquer les cibles de carte
-                GridManager.Instance.ShowMovementRange(activeUnit); // Réafficher la portée de mouvement
-            }
-            else
-            {
-                Debug.LogWarning($"{activeUnit.name} n'a pas assez de ressources pour jouer {_selectedCard.cardName}.");
-            }
         }
-        else
+
+        if (_selectedCard.targetsTile)
         {
-            Debug.LogWarning("Aucune carte sélectionnée ou DeckManager introuvable.");
+            ValidationResult tileResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, targetTile);
+            if (!tileResult.IsValid)
+            {
+                Debug.LogWarning($"❌ Ciblage de tuile invalide : {tileResult.ErrorMessage}");
+                return;
+            }
         }
+
+        // Toutes les validations passées, exécuter la carte
+        _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
+        _playerDeckManager.PlayCard(_selectedCard);
+
+        // Déduire le coût en PA (validation déjà faite par CanPlayCard)
+        if (_selectedCard.costPA > 0 && activeUnit is IActionPointsUser paUser)
+        {
+            paUser.SpendPA(_selectedCard.costPA);
+        }
+
+        // Nettoyage UI
+        Services.Grid.UpdateUnitUI();
+        _selectedCard = null;
+        ResetSelectedCardUIPosition();
+        ResetCardHighlights();
+        // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
+        EventBus.Publish(new ResetTileColorsEvent());
+        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+
+        Debug.Log($"✅ Carte jouée avec succès");
     }
 
     // Méthode pour surligner visuellement la carte sélectionnée
@@ -332,7 +361,7 @@ public class HandUIController : MonoBehaviour
     {
         if (cardUIElement == null || cardUIElement.CardData == null) return;
 
-        Unit activeUnit = GridManager.Instance?.GetActiveUnit();
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
         IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
 
         bool canAfford = false;

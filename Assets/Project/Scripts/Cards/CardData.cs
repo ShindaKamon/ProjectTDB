@@ -196,15 +196,10 @@ public class CardData : ScriptableObject
     // Méthode helper pour vérifier si une unité occupe une tuile
     private bool IsUnitOnTile(Tile tile)
     {
-        Unit[] allUnits = Object.FindObjectsByType<Unit>(FindObjectsSortMode.None);
-        foreach (Unit unit in allUnits)
-        {
-            if (unit.GetCurrentGridPos() == GridManager.Instance.GetGridPosFromWorldPos(tile.transform.position))
-            {
-                return true;
-            }
-        }
-        return false;
+        // OPTIMISATION: Utilise GridRepository au lieu de FindObjectsByType
+        Vector2 tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
+        Unit unitOnTile = Services.Grid.GetUnitAtGridPos(tilePos);
+        return unitOnTile != null;
     }
 
     // Méthode pour obtenir toutes les unités affectées par l'AOE
@@ -217,7 +212,8 @@ public class CardData : ScriptableObject
             return affectedUnits;
         }
 
-        Unit[] allUnits = Object.FindObjectsByType<Unit>(FindObjectsSortMode.None);
+        // OPTIMISATION: Utilise GridRepository au lieu de FindObjectsByType
+        List<Unit> allUnits = Services.Grid.GetAllUnits();
 
         foreach (Unit unit in allUnits)
         {

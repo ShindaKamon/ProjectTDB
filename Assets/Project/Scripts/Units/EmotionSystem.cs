@@ -54,8 +54,9 @@ public class EmotionSystem : MonoBehaviour
 
     void Awake()
     {
-        unit = GetComponent<Unit>();
-        ilyaUnit = GetComponent<IlyaUnit>();
+        // OPTIMISATION Phase 3.3: ComponentLocator
+        unit = this.GetRequiredComponent<Unit>("EmotionSystem nécessite Unit");
+        this.TryGetComponentSafe(out ilyaUnit);
     }
 
     /// <summary>
@@ -126,7 +127,7 @@ public class EmotionSystem : MonoBehaviour
         if (transformation.maxHealthModifier != 0)
         {
             appliedMaxHealthMod = transformation.maxHealthModifier;
-            // TODO: Appliquer à Unit.maxHealth
+            unit.SetMaxHealth(unit.GetMaxHealth() + appliedMaxHealthMod);
             Debug.Log($"  → Max Health: {transformation.maxHealthModifier:+0;-0;0}");
         }
 
@@ -142,7 +143,7 @@ public class EmotionSystem : MonoBehaviour
         if (transformation.defensePModifier != 0 && ilyaUnit != null)
         {
             appliedDefensePMod = transformation.defensePModifier;
-            ilyaUnit.SetDefenseP(ilyaUnit.GetDefenseP() + appliedDefensePMod);
+            ilyaUnit.SetPhysicalDefense(ilyaUnit.GetPhysicalDefense() + appliedDefensePMod);
             Debug.Log($"  → Défense P: {transformation.defensePModifier:+0;-0;0}");
         }
 
@@ -150,7 +151,7 @@ public class EmotionSystem : MonoBehaviour
         if (transformation.defenseMModifier != 0 && ilyaUnit != null)
         {
             appliedDefenseMMod = transformation.defenseMModifier;
-            ilyaUnit.SetDefenseM(ilyaUnit.GetDefenseM() + appliedDefenseMMod);
+            ilyaUnit.SetMagicalDefense(ilyaUnit.GetMagicalDefense() + appliedDefenseMMod);
             Debug.Log($"  → Défense M: {transformation.defenseMModifier:+0;-0;0}");
         }
 
@@ -158,7 +159,7 @@ public class EmotionSystem : MonoBehaviour
         if (transformation.movementModifier != 0)
         {
             appliedMovementMod = transformation.movementModifier;
-            unit.SetMovementRange(unit.GetMovementRange() + appliedMovementMod);
+            unit.SetMaxMovementPoints(unit.GetMaxMovementPoints() + appliedMovementMod);
             Debug.Log($"  → Mouvement: {transformation.movementModifier:+0;-0;0}");
         }
 
@@ -221,6 +222,13 @@ public class EmotionSystem : MonoBehaviour
     /// </summary>
     private void RemoveStatModifiers()
     {
+        // Retirer les modificateurs de santé
+        if (appliedMaxHealthMod != 0)
+        {
+            unit.SetMaxHealth(unit.GetMaxHealth() - appliedMaxHealthMod);
+            appliedMaxHealthMod = 0;
+        }
+
         // Retirer les modificateurs de PA
         if (appliedMaxPAMod != 0 && ilyaUnit != null)
         {
@@ -231,26 +239,23 @@ public class EmotionSystem : MonoBehaviour
         // Retirer les modificateurs de défense physique
         if (appliedDefensePMod != 0 && ilyaUnit != null)
         {
-            ilyaUnit.SetDefenseP(ilyaUnit.GetDefenseP() - appliedDefensePMod);
+            ilyaUnit.SetPhysicalDefense(ilyaUnit.GetPhysicalDefense() - appliedDefensePMod);
             appliedDefensePMod = 0;
         }
 
         // Retirer les modificateurs de défense magique
         if (appliedDefenseMMod != 0 && ilyaUnit != null)
         {
-            ilyaUnit.SetDefenseM(ilyaUnit.GetDefenseM() - appliedDefenseMMod);
+            ilyaUnit.SetMagicalDefense(ilyaUnit.GetMagicalDefense() - appliedDefenseMMod);
             appliedDefenseMMod = 0;
         }
 
         // Retirer les modificateurs de mouvement
         if (appliedMovementMod != 0)
         {
-            unit.SetMovementRange(unit.GetMovementRange() - appliedMovementMod);
+            unit.SetMaxMovementPoints(unit.GetMaxMovementPoints() - appliedMovementMod);
             appliedMovementMod = 0;
         }
-
-        // Réinitialiser les autres modificateurs
-        appliedMaxHealthMod = 0;
     }
 
 

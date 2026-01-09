@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -29,9 +30,10 @@ public class BattleUIManager : MonoBehaviour
         }
 
         // Trouve automatiquement les UI si non assignées
+        // OPTIMISATION Phase 3.3: ComponentLocator (découragé mais nécessaire pour setup initial)
         if (_bossHealthBar == null)
         {
-            _bossHealthBar = FindAnyObjectByType<BossHealthBarUI>();
+            _bossHealthBar = ComponentLocator.FindSingleObjectOfType<BossHealthBarUI>("BattleUIManager setup");
             if (_bossHealthBar != null)
             {
                 Debug.Log("BattleUIManager: BossHealthBarUI trouvée automatiquement");
@@ -43,7 +45,8 @@ public class BattleUIManager : MonoBehaviour
         }
         if (_enemyCardPreview == null)
         {
-            _enemyCardPreview = FindAnyObjectByType<EnemyCardPreviewUI>();
+            // OPTIMISATION Phase 3.3: ComponentLocator (découragé mais nécessaire pour setup initial)
+            _enemyCardPreview = ComponentLocator.FindSingleObjectOfType<EnemyCardPreviewUI>("BattleUIManager setup");
             if (_enemyCardPreview != null)
             {
                 Debug.Log("BattleUIManager: EnemyCardPreviewUI trouvée automatiquement");
@@ -165,11 +168,12 @@ public class BattleUIManager : MonoBehaviour
         {
             _currentTrackedEnemy = null;
 
-            // Cherche un autre ennemi vivant
-            Enemy[] remainingEnemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
-            foreach (Enemy remainingEnemy in remainingEnemies)
+            // Cherche un autre ennemi vivant via GridRepository (OPTIMISATION: pas de FindObjectsByType)
+            List<Unit> allEnemies = Services.Grid.GetAllEnemyUnits();
+            foreach (Unit enemyUnit in allEnemies)
             {
-                if (remainingEnemy != enemy && remainingEnemy.GetHealth() > 0)
+                Enemy remainingEnemy = enemyUnit as Enemy;
+                if (remainingEnemy != null && remainingEnemy != enemy && remainingEnemy.GetHealth() > 0)
                 {
                     TrackEnemyCards(remainingEnemy);
                     break;

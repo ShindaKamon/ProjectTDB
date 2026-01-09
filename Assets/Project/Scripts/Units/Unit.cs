@@ -35,18 +35,34 @@ public class Unit : MonoBehaviour
     protected int _maxHealth;
     protected int _health;
     protected int _attackDamage; // NOTE: Utilisé uniquement par IlyaUnit pour le système de transformation
-    protected int _movementRange;
+    protected int _maxMovementPoints; // PM (Points de Mouvement) maximum
 
     public ChampionData championData; // Référence aux données du champion.
 
     // Nouvelle propriété pour la faction de l'unité.
     [SerializeField] private UnitFaction _faction = UnitFaction.Player; // Par défaut, c'est une unité du joueur.
 
-    // Points de mouvement restants pour le tour actuel.
-    private int _remainingMovement; // N'est pas SerializableField car géré en code.
+    // PM (Points de Mouvement) restants pour le tour actuel.
+    private int _currentMovementPoints; // N'est pas SerializableField car géré en code.
+
+    // Protection contre la double initialisation
+    protected bool _isInitialized = false;
+
+    // ===== STATE MACHINE (Phase 3.4) =====
+    private UnitState _unitState;
+
+    // NOTE: Le système PA a été déplacé vers les classes Champion et Enemy
+    // Unit ne contient plus que la base commune (HP, Movement, Position)
 
     public void Initialize(ChampionData data, Vector2 initialGridPos, UnitFaction faction)
     {
+        // Protection contre la double initialisation
+        if (_isInitialized)
+        {
+            Debug.LogWarning($"{gameObject.name} est déjà initialisé. Initialisation ignorée.");
+            return;
+        }
+
         championData = data;
         _currentGridPos = initialGridPos;
         _faction = faction;
@@ -66,10 +82,13 @@ public class Unit : MonoBehaviour
         // Définit le nom du GameObject de l'unité avec le nom du champion
         gameObject.name = championData.championName;
 
+        // Initialise la UnitState (Phase 3.4)
+        _unitState = new UnitState(this);
+
         // Positionne l'unité instantanément à sa position de grille initiale.
-        if (GridManager.Instance != null)
+        if (Services.Grid != null)
         {
-            Tile tile = GridManager.Instance.GetTileAtPosition(_currentGridPos);
+            Tile tile = Services.Grid.GetTileAtPosition(_currentGridPos);
             if (tile != null)
             {
                 transform.position = tile.gameObject.transform.position + new Vector3(0, 0.5f, 0);
@@ -82,22 +101,29 @@ public class Unit : MonoBehaviour
         }
         else
         {
-            Debug.LogError("GridManager.Instance n'est pas disponible lors de l'initialisation de l'unité.");
+            Debug.LogError("Services.Grid n'est pas disponible lors de l'initialisation de l'unité.");
         }
+
+        // Marque l'unité comme initialisée
+        _isInitialized = true;
     }
 
     protected virtual void Start()
     {
-        // Si l'unité n'a pas été initialisée via la méthode Initialize() (par exemple, ennemis placés manuellement)
-        if (championData != null && _health == 0) // Vérifie si les stats n'ont pas été définies
+        // Si l'unité n'a pas été initialisée (unités placées manuellement dans la scène)
+        if (!_isInitialized)
         {
-            Vector2 currentWorldGridPos = GridManager.Instance.GetGridPosFromWorldPos(transform.position); // Récupère la position actuelle de la scène
-            Initialize(championData, currentWorldGridPos, _faction);
-        }
-        else if (championData == null)
-        {
-            Debug.LogError($"L'unité {gameObject.name} n'a pas de ChampionData assigné et n'a pas été initialisée. Elle ne fonctionnera pas correctement.");
-            enabled = false;
+            if (championData != null)
+            {
+                Vector2 currentWorldGridPos = Services.Grid.GetGridPosFromWorldPos(transform.position);
+                Initialize(championData, currentWorldGridPos, _faction);
+            }
+            else
+            {
+                Debug.LogError($"L'unité {gameObject.name} n'a pas de ChampionData assigné et ne peut pas être initialisée.");
+                enabled = false;
+                return;
+            }
         }
 
         // Ne crée la barre de vie QUE si c'est une Unit de base (pas une classe dérivée comme IlyaUnit)
@@ -145,10 +171,20 @@ public class Unit : MonoBehaviour
     // Méthode pour initialiser les stats de base de l'unité (peut être surchargée)
     protected virtual void InitUnitStats(ChampionData data)
     {
+        // Validation centralisée des données
+        ValidationResult validation = GameActionValidator.ValidateChampionData(data);
+        if (!validation.IsValid)
+        {
+            Debug.LogError($"❌ Échec initialisation Unit : {validation.ErrorMessage}");
+            enabled = false;
+            return;
+        }
+
         _maxHealth = data.maxHealth;
         _health = _maxHealth;
-        _movementRange = data.movementRange;
+        _maxMovementPoints = data.movementRange;
 
+        // NOTE: Les PA sont maintenant gérés par les classes dérivées (Champion, Enemy)
         // Plus d'attaque de base, tout passe par les cartes
         _attackDamage = 0;
     }
@@ -158,8 +194,8 @@ public class Unit : MonoBehaviour
     /// </summary>
     protected virtual void InitEmotionSystem(ChampionData data)
     {
-        EmotionSystem emotionSystem = GetComponent<EmotionSystem>();
-        if (emotionSystem != null)
+        // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car toutes les unités n'ont pas EmotionSystem)
+        if (this.TryGetComponentSafe(out EmotionSystem emotionSystem))
         {
             // Configure les données émotionnelles de la famille
             emotionSystem.SetFamilyEmotionData(data.familyEmotionData);
@@ -187,6 +223,16 @@ public class Unit : MonoBehaviour
             return;
         }
 
+        // Phase 3.4: Vérifie l'état avant de bouger
+        if (_unitState != null && !_unitState.CanMove())
+        {
+            Debug.LogWarning($"{name}: Cannot move - state is {_unitState.GetCurrentState()}");
+            return;
+        }
+
+        // Phase 3.4: Marque comme "en mouvement"
+        _unitState?.BeginMoving();
+
         _path = path; // Stocke le chemin.
         _isMoving = true; // Active le mouvement.
         _targetWorldPosition = _path[0].gameObject.transform.position + new Vector3(0, 0.5f, 0); // La première tuile du chemin est la première cible.
@@ -207,7 +253,7 @@ public class Unit : MonoBehaviour
                 // Si l'unité a atteint une tuile du chemin.
                 if (_path.Count > 0)
                 {
-                    _currentGridPos = GridManager.Instance.GetGridPosFromWorldPos(_path[0].gameObject.transform.position); // Met à jour la position de grille actuelle
+                    _currentGridPos = Services.Grid.GetGridPosFromWorldPos(_path[0].gameObject.transform.position); // Met à jour la position de grille actuelle
                     _path.RemoveAt(0); // Retire la tuile atteinte du chemin.
 
                     OnMovementStepCompleted?.Invoke(); // Déclenche l'événement après chaque étape de mouvement.
@@ -221,6 +267,10 @@ public class Unit : MonoBehaviour
                     {
                         // Le chemin est vide, l'unité a atteint sa destination finale.
                         _isMoving = false; // Arrête le mouvement.
+
+                        // Phase 3.4: Termine le mouvement
+                        _unitState?.EndMoving();
+
                         Debug.Log($"{name} a atteint sa destination finale.");
                     }
                 }
@@ -236,6 +286,13 @@ public class Unit : MonoBehaviour
     // Méthode pour infliger des dégâts à cette unité.
     public virtual void TakeDamage(int damage)
     {
+        // Phase 3.4: Vérifie si l'unité peut recevoir des dégâts
+        if (_unitState != null && !_unitState.CanTakeDamage())
+        {
+            Debug.LogWarning($"{name}: Cannot take damage - already dead");
+            return;
+        }
+
         _health = Mathf.Clamp(_health - damage, 0, _maxHealth);
         Debug.Log($"{name} a pris {damage} dégâts. PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
@@ -249,6 +306,10 @@ public class Unit : MonoBehaviour
         if (_health <= 0)
         {
             Debug.Log($"{name} a été vaincu !");
+
+            // Phase 3.4: Marque comme mort
+            _unitState?.SetDead();
+
             OnUnitDied?.Invoke(this);
 
             // Détruit la barre de vie
@@ -276,9 +337,43 @@ public class Unit : MonoBehaviour
     }
 
     // Setters publics pour les stats (utilisés par EmotionSystem et classes dérivées).
-    public void SetMovementRange(int value)
+    public void SetMaxMovementPoints(int value)
     {
-        _movementRange = value;
+        _maxMovementPoints = value;
+    }
+
+    /// <summary>
+    /// Modifie la santé maximum de l'unité (utilisé par EmotionSystem pour les transformations)
+    /// Ajuste aussi la santé actuelle proportionnellement pour éviter les incohérences
+    /// </summary>
+    public void SetMaxHealth(int value)
+    {
+        if (value <= 0)
+        {
+            Debug.LogError($"{name}: Tentative de définir maxHealth à {value}, valeur invalide!");
+            return;
+        }
+
+        // Calculer le pourcentage de santé actuel
+        float healthPercentage = (_maxHealth > 0) ? ((float)_health / _maxHealth) : 1f;
+
+        // Appliquer la nouvelle santé maximum
+        _maxHealth = value;
+
+        // Ajuster la santé actuelle pour maintenir le même pourcentage
+        _health = Mathf.RoundToInt(_maxHealth * healthPercentage);
+        _health = Mathf.Clamp(_health, 1, _maxHealth); // Au minimum 1 HP
+
+        Debug.Log($"{name}: Max Health changé à {_maxHealth}, HP actuels ajustés à {_health}");
+
+        // Notifier le changement
+        OnHealthChanged?.Invoke(_health, _maxHealth);
+
+        // Mettre à jour la barre de vie
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealth(_health, _maxHealth);
+        }
     }
 
     // NOTE: Utilisé uniquement par IlyaUnit pour modifier l'ATK lors des transformations
@@ -293,6 +388,14 @@ public class Unit : MonoBehaviour
         _faction = newFaction;
     }
 
+    /// <summary>
+    /// Retourne la UnitState (Phase 3.4)
+    /// </summary>
+    public UnitState GetUnitState()
+    {
+        return _unitState;
+    }
+
     // LEGACY: Méthode d'attaque de base (obsolète, utilisée uniquement par IlyaUnit pour lifesteal)
     // Les attaques se font maintenant via les cartes, cette méthode n'inflige plus de dégâts directs
     public virtual void Attack(Unit target)
@@ -301,19 +404,19 @@ public class Unit : MonoBehaviour
         target.TakeDamage(_attackDamage);
     }
 
-    // Méthode pour dépenser des points de mouvement.
+    // Méthode pour dépenser des PM (Points de Mouvement)
     public void SpendMovement(int amount)
     {
-        _remainingMovement -= amount;
-        if (_remainingMovement < 0) _remainingMovement = 0;
-        Debug.Log($"{name} a dépensé {amount} points de mouvement. Restant : {_remainingMovement}");
+        _currentMovementPoints -= amount;
+        if (_currentMovementPoints < 0) _currentMovementPoints = 0;
+        Debug.Log($"{name} a dépensé {amount} PM. Restant : {_currentMovementPoints}");
     }
 
-    // Méthode pour réinitialiser les points de mouvement au début du tour.
+    // Méthode pour réinitialiser les PM au début du tour
     public void RefreshMovement()
     {
-        _remainingMovement = _movementRange;
-        Debug.Log($"{name}: Points de mouvement réinitialisés à {_remainingMovement}.");
+        _currentMovementPoints = _maxMovementPoints;
+        Debug.Log($"{name}: PM réinitialisés à {_currentMovementPoints}.");
     }
 
     // Getters pour les propriétés de l'unité (nécessaires pour l'affichage UI).
@@ -328,9 +431,20 @@ public class Unit : MonoBehaviour
         return _attackDamage;
     }
 
-    public int GetMovementRange()
+    /// <summary>
+    /// Retourne les PM (Points de Mouvement) maximum
+    /// </summary>
+    public int GetMaxMovementPoints()
     {
-        return _movementRange;
+        return _maxMovementPoints;
+    }
+
+    /// <summary>
+    /// Retourne les PM (Points de Mouvement) restants ce tour
+    /// </summary>
+    public int GetCurrentMovementPoints()
+    {
+        return _currentMovementPoints;
     }
 
     // Getter pour la faction de l'unité.
@@ -345,12 +459,6 @@ public class Unit : MonoBehaviour
         return _currentGridPos;
     }
 
-    // Getter pour les points de mouvement restants.
-    public int GetRemainingMovement()
-    {
-        return _remainingMovement;
-    }
-
     // Getter pour vérifier si l'unité est en mouvement.
     public bool IsMoving()
     {
@@ -361,4 +469,7 @@ public class Unit : MonoBehaviour
     {
         return _maxHealth;
     }
+
+    // NOTE: Les méthodes PA (GetCurrentPA, GetMaxPA, SetMaxPA, SpendPA, RefreshPA)
+    // ont été déplacées vers les classes Champion et Enemy
 } 

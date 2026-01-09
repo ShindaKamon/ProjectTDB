@@ -37,7 +37,7 @@ public class UnitStatsUI : MonoBehaviour
         // Désabonnement de l'ancienne unité (si présente)
         if (_ilyaUnit != null)
         {
-            _ilyaUnit.OnPAChanged -= UpdatePA;
+            _ilyaUnit.OnActionPointsChanged -= UpdatePA;
         }
         if (_emotionSystem != null)
         {
@@ -47,12 +47,13 @@ public class UnitStatsUI : MonoBehaviour
 
         _genericUnit = unit;
         _ilyaUnit = unit as IlyaUnit; // Cast si c'est Ilya
-        _emotionSystem = unit.GetComponent<EmotionSystem>(); // Récupère EmotionSystem si présent
+        // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car toutes les unités n'ont pas EmotionSystem)
+        unit.TryGetComponentSafe(out _emotionSystem);
 
         if (_ilyaUnit != null)
         {
             // Abonnement à la nouvelle unité
-            _ilyaUnit.OnPAChanged += UpdatePA;
+            _ilyaUnit.OnActionPointsChanged += UpdatePA;
 
             // Abonnement à EmotionSystem (si présent)
             if (_emotionSystem != null)
@@ -94,7 +95,7 @@ public class UnitStatsUI : MonoBehaviour
             UpdateName();
             UpdateHP();
             UpdatePA(_ilyaUnit.GetCurrentPA(), _ilyaUnit.GetMaxPA());
-            UpdatePM(_ilyaUnit.GetRemainingMovement(), _ilyaUnit.GetMovementRange());
+            UpdatePM(_ilyaUnit.GetCurrentMovementPoints(), _ilyaUnit.GetMaxMovementPoints());
             UpdateDefenseP();
             UpdateDefenseM();
 
@@ -120,7 +121,7 @@ public class UnitStatsUI : MonoBehaviour
 
         UpdateName();
         UpdateHP();
-        UpdatePM(_genericUnit.GetRemainingMovement(), _genericUnit.GetMovementRange());
+        UpdatePM(_genericUnit.GetCurrentMovementPoints(), _genericUnit.GetMaxMovementPoints());
     }
     
     private void UpdateName()
@@ -170,7 +171,7 @@ public class UnitStatsUI : MonoBehaviour
     {
         if (_defensePText != null && _ilyaUnit != null)
         {
-            _defensePText.text = $"DEF: {_ilyaUnit.GetDefenseP()}";
+            _defensePText.text = $"DEF: {_ilyaUnit.GetPhysicalDefense()}";
         }
     }
 
@@ -178,7 +179,7 @@ public class UnitStatsUI : MonoBehaviour
     {
         if (_defenseMText != null && _ilyaUnit != null)
         {
-            _defenseMText.text = $"DEF: {_ilyaUnit.GetDefenseM()}";
+            _defenseMText.text = $"DEF: {_ilyaUnit.GetMagicalDefense()}";
         }
     }
 

@@ -12,13 +12,13 @@ public class InputManager : MonoBehaviour
 
     void Update()
     {
-        // Vérifie que le GridManager existe
-        if (GridManager.Instance == null)
+        // Phase 3.5: Utilise Services.Grid au lieu de Services.Grid
+        if (!Services.IsGridServiceAvailable())
         {
             return;
         }
 
-        Unit activeUnit = GridManager.Instance.GetActiveUnit();
+        Unit activeUnit = Services.Grid.GetActiveUnit();
 
         if (activeUnit == null)
         {
@@ -31,14 +31,15 @@ public class InputManager : MonoBehaviour
         {
             if (currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile))
             {
-                // Affiche les cibles valides pour la nouvelle carte sélectionnée
-                GridManager.Instance.ShowCardTargets(currentSelectedCard, activeUnit);
+                // Affiche les cibles valides pour la nouvelle carte sélectionnée (OPTIMISATION Phase 3.2: EventBus)
+                EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
             }
             else if (_previousSelectedCard != null)
             {
                 // Si on vient de désélectionner une carte, réafficher la portée de mouvement
                 Debug.Log("InputManager: Carte désélectionnée, réaffichage de la portée de mouvement");
-                GridManager.Instance.ShowMovementRange(activeUnit);
+                // OPTIMISATION Phase 3.2: EventBus
+                EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
             }
             _previousSelectedCard = currentSelectedCard;
             _lastHoveredTilePos = new Vector2(-1, -1); // Reset hover
@@ -56,15 +57,14 @@ public class InputManager : MonoBehaviour
                 Vector2 hoveredPos = Vector2.zero;
                 bool isValidHoverTarget = false;
 
-                // Vérifie si on survole une unité
-                Unit hoveredUnit = hoveredObject.GetComponent<Unit>();
-                if (hoveredUnit != null && currentSelectedCard.targetsUnit)
+                // Vérifie si on survole une unité (OPTIMISATION Phase 3.3: ComponentLocator)
+                if (hoveredObject.TryGetComponentSafe(out Unit hoveredUnit) && currentSelectedCard.targetsUnit)
                 {
                     // Vérifie d'abord que l'unité est dans la portée
                     Vector2 sourcePos = activeUnit.GetCurrentGridPos();
                     Vector2 targetPos = hoveredUnit.GetCurrentGridPos();
-                    List<Tile> tilesInRange = GridManager.Instance.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
-                    Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPos);
+                    List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
+                    Tile targetTile = Services.Grid.GetTileAtPosition(targetPos);
 
                     // On survole une unité, elle est dans la portée ET c'est une cible valide
                     if (tilesInRange.Contains(targetTile) && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
@@ -82,11 +82,11 @@ public class InputManager : MonoBehaviour
                         if (int.TryParse(nameParts[1], out int gridX) && int.TryParse(nameParts[2], out int gridY))
                         {
                             hoveredPos = new Vector2(gridX, gridY);
-                            Tile hoveredTile = GridManager.Instance.GetTileAtPosition(hoveredPos);
+                            Tile hoveredTile = Services.Grid.GetTileAtPosition(hoveredPos);
 
                             // Calcule la distance depuis l'unité active en utilisant le pathfinding (nombre de cases)
                             Vector2 sourcePos = activeUnit.GetCurrentGridPos();
-                            List<Tile> tilesInRange = GridManager.Instance.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
+                            List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
 
                             // Vérifie si la tuile est dans la portée ET que c'est une cible valide
                             if (currentSelectedCard.targetsTile &&
@@ -104,32 +104,33 @@ public class InputManager : MonoBehaviour
                 {
                     _lastHoveredTilePos = hoveredPos;
 
-                    // Réaffiche les cibles de base
-                    GridManager.Instance.ShowCardTargets(currentSelectedCard, activeUnit);
+                    // Réaffiche les cibles de base (OPTIMISATION Phase 3.2: EventBus)
+                    EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
 
                     // Si la carte est AOE, affiche la zone AOE
                     if (currentSelectedCard.isAOE && currentSelectedCard.aoeRadius > 0)
                     {
-                        GridManager.Instance.ShowAOEZone(hoveredPos, currentSelectedCard.aoeRadius, currentSelectedCard, activeUnit);
+                        // OPTIMISATION Phase 3.2: EventBus
+                        EventBus.Publish(new ShowAOEZoneEvent(hoveredPos, currentSelectedCard.aoeRadius, currentSelectedCard, activeUnit));
                     }
                     else
                     {
                         // Sinon, surligne juste la tuile en rouge
-                        GridManager.Instance.HighlightTile(hoveredPos, Color.red);
+                        Services.Grid.HighlightTile(hoveredPos, Color.red);
                     }
                 }
                 else if (!isValidHoverTarget && _lastHoveredTilePos != new Vector2(-1, -1))
                 {
-                    // Si on ne survole plus de cible valide, réaffiche juste les cibles de base
+                    // Si on ne survole plus de cible valide, réaffiche juste les cibles de base (OPTIMISATION Phase 3.2: EventBus)
                     _lastHoveredTilePos = new Vector2(-1, -1);
-                    GridManager.Instance.ShowCardTargets(currentSelectedCard, activeUnit);
+                    EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
                 }
             }
             else if (_lastHoveredTilePos != new Vector2(-1, -1))
             {
-                // Si le raycast ne touche rien, réinitialise
+                // Si le raycast ne touche rien, réinitialise (OPTIMISATION Phase 3.2: EventBus)
                 _lastHoveredTilePos = new Vector2(-1, -1);
-                GridManager.Instance.ShowCardTargets(currentSelectedCard, activeUnit);
+                EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
             }
         }
 
@@ -200,7 +201,8 @@ public class InputManager : MonoBehaviour
         CardData selectedCard = _handUIController.SelectedCard;
         if (selectedCard == null) return; // Par sécurité
 
-        Unit targetUnit = clickedObject.GetComponent<Unit>();
+        // OPTIMISATION Phase 3.3: ComponentLocator
+        clickedObject.TryGetComponentSafe(out Unit targetUnit);
 
         Vector2 targetTilePos = Vector2.zero;
         Tile targetTile = null;
@@ -221,7 +223,7 @@ public class InputManager : MonoBehaviour
                     int.TryParse(nameParts[2], out int gridY))
                 {
                     targetTilePos = new Vector2(gridX, gridY);
-                    targetTile = GridManager.Instance.GetTileAtPosition(targetTilePos);
+                    targetTile = Services.Grid.GetTileAtPosition(targetTilePos);
                 }
             }
         }
@@ -313,10 +315,10 @@ public class InputManager : MonoBehaviour
         IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
         
         // Récupère les points de mouvement disponibles (PM pour toutes les unités)
-        int availablePoints = activeUnit.GetRemainingMovement();
-        
-        // Vérifie si on clique sur une unité
-        Unit clickedUnit = clickedObject.GetComponent<Unit>();
+        int availablePoints = activeUnit.GetCurrentMovementPoints();
+
+        // Vérifie si on clique sur une unité (OPTIMISATION Phase 3.3: ComponentLocator)
+        clickedObject.TryGetComponentSafe(out Unit clickedUnit);
 
         // Les attaques se font uniquement via les cartes, plus d'attaque de base
         if (clickedUnit == activeUnit)
@@ -342,18 +344,18 @@ public class InputManager : MonoBehaviour
                     }
 
                     // Récupère les tuiles atteignables
-                    Dictionary<Tile, int> reachableTilesWithCost = GridManager.Instance.GetMovementTiles(
+                    Dictionary<Tile, int> reachableTilesWithCost = Services.Grid.GetMovementTiles(
                         activeUnit.GetCurrentGridPos(), 
                         availablePoints, 
                         activeUnit
                     );
 
-                    Tile targetTile = GridManager.Instance.GetTileAtPosition(targetGridPos);
+                    Tile targetTile = Services.Grid.GetTileAtPosition(targetGridPos);
 
                     if (targetTile != null && reachableTilesWithCost.ContainsKey(targetTile))
                     {
                         // Calcule le chemin
-                        List<Tile> pathToTarget = GridManager.Instance.GetPathToTile(
+                        List<Tile> pathToTarget = Services.Grid.GetPathToTile(
                             activeUnit.GetCurrentGridPos(), 
                             targetGridPos, 
                             availablePoints, 
@@ -367,19 +369,19 @@ public class InputManager : MonoBehaviour
                             if (availablePoints >= movementCost)
                             {
                                 Debug.Log($"{activeUnit.name} se déplace vers {targetGridPos} (coût: {movementCost})");
-                                
-                                // Efface l'ancien affichage
-                                GridManager.Instance.ResetAllTileColors();
+
+                                // Efface l'ancien affichage (OPTIMISATION Phase 3.2: EventBus)
+                                EventBus.Publish(new ResetTileColorsEvent());
                                 
                                 // Déplace l'unité
                                 activeUnit.MoveToTile(pathToTarget);
                                 
                                 // IMPORTANT : Tous les déplacements dépensent des PM (Points de Mouvement)
                                 activeUnit.SpendMovement(movementCost);
-                                Debug.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetRemainingMovement()}/{activeUnit.GetMovementRange()}");
+                                Debug.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
                                 
                                 // Met à jour l'UI
-                                GridManager.Instance.UpdateUnitUI();
+                                Services.Grid.UpdateUnitUI();
                                 
                                 // Rafraîchit la portée après mouvement
                                 StartCoroutine(RefreshRangeAfterMovement(activeUnit));
@@ -409,17 +411,18 @@ public class InputManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         // Tous les déplacements utilisent les PM (Points de Mouvement)
-        int remainingPM = unit.GetRemainingMovement();
+        int remainingPM = unit.GetCurrentMovementPoints();
 
         if (unit != null && remainingPM > 0)
         {
-            GridManager.Instance.ShowMovementRange(unit);
+            // OPTIMISATION Phase 3.2: EventBus
+            EventBus.Publish(new ShowMovementRangeEvent(unit));
             Debug.Log($"Portée rafraîchie : {remainingPM} PM restants");
         }
         else if (unit != null)
         {
-            // Plus de points de mouvement, on réinitialise juste l'affichage
-            GridManager.Instance.ResetAllTileColors();
+            // Plus de points de mouvement, on réinitialise juste l'affichage (OPTIMISATION Phase 3.2: EventBus)
+            EventBus.Publish(new ResetTileColorsEvent());
             Debug.Log($"{unit.name} n'a plus de PM.");
         }
     }

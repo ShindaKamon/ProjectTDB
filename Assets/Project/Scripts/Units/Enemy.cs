@@ -2,31 +2,52 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Classe Enemy hérite de Unit et ajoute le système de cartes pour les ennemis.
-/// Les ennemis piochent séquentiellement leur deck (pas de mélange) comme pattern de combat.
+/// Classe Enemy hérite de Unit et représente les ennemis.
+/// Les ennemis ont :
+/// - Un système PA pour jouer leurs cartes de pattern (via ActionPointsComponent)
+/// - Un deck séquentiel (pas de mélange) qui boucle
+/// - Un comportement prévisible pour le joueur
 /// </summary>
-public class Enemy : Unit
+public class Enemy : Unit, IActionPointsUser
 {
     // ========== ENEMY DATA ==========
 
     [Header("=== Enemy Specific ==")]
     [SerializeField] private EnemyData _enemyData;
 
-    [SerializeField] private int _maxPA = 2;           // PA max par tour
-    [SerializeField] private int _currentPA = 2;       // PA restants ce tour
+    // ========== SYSTÈME PA (Points d'Action) ==========
+    // Les ennemis ont leur propre système PA pour jouer leurs cartes de pattern
+    // Utilise la composition avec ActionPointsComponent pour éviter la duplication de code
+    [Header("Enemy Action Points")]
+    [SerializeField] private int _maxActionPoints = 2;         // PA (Points d'Action) maximum par tour (valeur initiale)
 
+    // Component qui gère la logique PA
+    private ActionPointsComponent _actionPointsComponent;
+
+    // ========== ÉVÉNEMENTS ==========
+
+    /// <summary>
+    /// Événement pour notifier les changements de PA
+    /// Redirige l'événement du component vers l'extérieur
+    /// </summary>
+    public event System.Action<int, int> OnActionPointsChanged
+    {
+        add { if (_actionPointsComponent != null) _actionPointsComponent.OnActionPointsChanged += value; }
+        remove { if (_actionPointsComponent != null) _actionPointsComponent.OnActionPointsChanged -= value; }
+    }
+
+    // ========== DECK PATTERN ==========
     // Deck system pour pattern de combat
     private List<CardData> _combatDeck = new List<CardData>();
     private int _currentCardIndex = 0; // Index de la prochaine carte à jouer
 
     // ========== EVENTS ==========
-    public event System.Action<int, int> OnPAChanged;        // (current, max)
     public event System.Action<CardData> OnNextCardChanged;   // Prochaine carte visible
 
     // ========== GETTERS PUBLICS ==========
 
-    public int GetCurrentPA() => _currentPA;
-    public int GetMaxPA() => _maxPA;
+    public int GetCurrentPA() => _actionPointsComponent?.GetCurrentPA() ?? 0;
+    public int GetMaxPA() => _actionPointsComponent?.GetMaxPA() ?? 0;
     public EnemyData GetEnemyData() => _enemyData;
     public bool IsBoss() => _enemyData != null && _enemyData.isBoss;
 
@@ -54,21 +75,32 @@ public class Enemy : Unit
     /// </summary>
     public void InitializeEnemy(EnemyData data, Vector2 initialGridPos)
     {
-        _enemyData = data;
-
-        if (_enemyData == null)
+        // Protection contre la double initialisation
+        if (_isInitialized)
         {
-            Debug.LogError($"EnemyData n'est pas assigné à l'ennemi {gameObject.name} !");
+            Debug.LogWarning($"{gameObject.name} (Enemy) est déjà initialisé. Initialisation ignorée.");
+            return;
+        }
+
+        // Validation centralisée des données
+        ValidationResult validation = GameActionValidator.ValidateEnemyData(data);
+        if (!validation.IsValid)
+        {
+            Debug.LogError($"❌ Échec initialisation Enemy : {validation.ErrorMessage}");
             enabled = false;
             return;
         }
 
+        _enemyData = data;
+
         // Initialise les stats de base depuis EnemyData
         _maxHealth = data.maxHealth;
         _health = _maxHealth;
-        _movementRange = data.movementRange;
-        _maxPA = data.maxPA;
-        _currentPA = _maxPA;
+        _maxMovementPoints = data.movementRange;
+
+        // Initialise le component PA
+        _maxActionPoints = data.maxActionPoints;
+        _actionPointsComponent = new ActionPointsComponent(_maxActionPoints, $"{gameObject.name} (Enemy)");
 
         // Les ennemis n'ont pas d'attaque de base, tout passe par les cartes
         _attackDamage = 0;
@@ -89,9 +121,9 @@ public class Enemy : Unit
         gameObject.name = data.enemyName;
 
         // Positionne l'ennemi dans le monde
-        if (GridManager.Instance != null)
+        if (Services.Grid != null)
         {
-            Tile tile = GridManager.Instance.GetTileAtPosition(_currentGridPos);
+            Tile tile = Services.Grid.GetTileAtPosition(_currentGridPos);
             if (tile != null)
             {
                 transform.position = tile.gameObject.transform.position + new Vector3(0, 0.5f, 0);
@@ -102,22 +134,28 @@ public class Enemy : Unit
         // Notifie la prochaine carte
         OnNextCardChanged?.Invoke(GetNextCard());
 
-        Debug.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, PA: {_currentPA}/{_maxPA}, Deck: {_combatDeck.Count} cartes");
+        Debug.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, PA: {GetCurrentPA()}/{GetMaxPA()}, Deck: {_combatDeck.Count} cartes");
+
+        // Marque l'ennemi comme initialisé
+        _isInitialized = true;
     }
 
     protected override void Start()
     {
-        // Si l'ennemi n'a pas été initialisé via InitializeEnemy (placé manuellement)
-        if (_enemyData != null && _health == 0)
+        // Si l'ennemi n'a pas été initialisé (placé manuellement dans la scène)
+        if (!_isInitialized)
         {
-            Vector2 currentWorldGridPos = GridManager.Instance.GetGridPosFromWorldPos(transform.position);
-            InitializeEnemy(_enemyData, currentWorldGridPos);
-        }
-        else if (_enemyData == null)
-        {
-            Debug.LogError($"L'ennemi {gameObject.name} n'a pas de EnemyData assigné !");
-            enabled = false;
-            return;
+            if (_enemyData != null)
+            {
+                Vector2 currentWorldGridPos = Services.Grid.GetGridPosFromWorldPos(transform.position);
+                InitializeEnemy(_enemyData, currentWorldGridPos);
+            }
+            else
+            {
+                Debug.LogError($"L'ennemi {gameObject.name} n'a pas de EnemyData assigné et ne peut pas être initialisé.");
+                enabled = false;
+                return;
+            }
         }
 
         // Crée la barre de vie (sauf si c'est un boss - sera géré différemment)
@@ -127,35 +165,36 @@ public class Enemy : Unit
         }
     }
 
-    // ========== SYSTÈME PA ==========
+    // ========== IMPLÉMENTATION INTERFACE IActionPointsUser ==========
 
-    /// <summary>
-    /// Dépense des PA pour jouer une carte
-    /// </summary>
     public bool SpendPA(int amount)
     {
-        if (_currentPA >= amount)
+        if (_actionPointsComponent == null)
         {
-            _currentPA -= amount;
-            OnPAChanged?.Invoke(_currentPA, _maxPA);
-            Debug.Log($"{name} (Enemy): PA dépensés ({amount}). Restant: {_currentPA}/{_maxPA}");
-            return true;
-        }
-        else
-        {
-            Debug.LogWarning($"{name} (Enemy): PA insuffisants ! Requis: {amount}, Disponible: {_currentPA}");
+            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
             return false;
         }
+        return _actionPointsComponent.SpendPA(amount);
     }
 
-    /// <summary>
-    /// Rafraîchit les PA en début de tour
-    /// </summary>
     public void RefreshPA()
     {
-        _currentPA = _maxPA;
-        OnPAChanged?.Invoke(_currentPA, _maxPA);
-        Debug.Log($"{name} (Enemy): PA rafraîchis à {_currentPA}/{_maxPA}");
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.RefreshPA();
+    }
+
+    public void SetMaxPA(int value)
+    {
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.SetMaxPA(value);
     }
 
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========
@@ -183,9 +222,9 @@ public class Enemy : Unit
         CardData nextCard = _combatDeck[_currentCardIndex];
 
         // Vérifie si on a assez de PA
-        if (nextCard.costPA > _currentPA)
+        if (nextCard.costPA > GetCurrentPA())
         {
-            Debug.LogWarning($"{name} (Enemy): Pas assez de PA pour jouer {nextCard.cardName} (coût: {nextCard.costPA}, dispo: {_currentPA})");
+            Debug.LogWarning($"{name} (Enemy): Pas assez de PA pour jouer {nextCard.cardName} (coût: {nextCard.costPA}, dispo: {GetCurrentPA()})");
             return null;
         }
 

@@ -91,11 +91,11 @@ public class ChampionSelectManager : MonoBehaviour
         stats += $"Mouvement: {_currentSelectedChampion.movementRange}\n";
 
         // Ajouter les stats spécifiques si disponibles
-        if (_currentSelectedChampion.maxPA > 0)
+        if (_currentSelectedChampion.maxActionPoints > 0)
         {
-            stats += $"PA Max: {_currentSelectedChampion.maxPA}\n";
-            stats += $"Défense P: {_currentSelectedChampion.defenseP}\n";
-            stats += $"Défense M: {_currentSelectedChampion.defenseM}\n";
+            stats += $"PA Max: {_currentSelectedChampion.maxActionPoints}\n";
+            stats += $"Défense P: {_currentSelectedChampion.physicalDefense}\n";
+            stats += $"Défense M: {_currentSelectedChampion.magicalDefense}\n";
 
             // Affiche les émotions si disponibles
             if (_currentSelectedChampion.familyEmotionData != null)

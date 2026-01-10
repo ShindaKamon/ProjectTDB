@@ -292,6 +292,17 @@ public class GridManager : MonoBehaviour, IGridService
             // Démarre la battle avec la TurnStateMachine (Phase 3.4)
             _turnStateMachine.StartBattle(_activeUnit);
 
+            // Phase 3.4: Met la première unité en état Active
+            UnitState initialState = _activeUnit.GetUnitState();
+            if (initialState != null)
+            {
+                initialState.SetActive();
+            }
+            else
+            {
+                Debug.LogWarning($"GridManager.InitUnits: {_activeUnit.name} n'a pas de UnitState!");
+            }
+
             // Gère le premier tour
             HandleTurnStart(_activeUnit);
         }
@@ -349,6 +360,27 @@ public class GridManager : MonoBehaviour, IGridService
 
         _activeUnit = _units[nextIndex];
         Debug.Log($"=== Tour de : {_activeUnit.name} ===");
+
+        // Phase 3.4: Met l'ancienne unité en état Idle
+        if (previousUnit != null)
+        {
+            UnitState prevState = previousUnit.GetUnitState();
+            if (prevState != null)
+            {
+                prevState.SetIdle();
+            }
+        }
+
+        // Phase 3.4: Met la nouvelle unité active en état Active
+        UnitState activeState = _activeUnit.GetUnitState();
+        if (activeState != null)
+        {
+            activeState.SetActive();
+        }
+        else
+        {
+            Debug.LogWarning($"GridManager.NextTurn: {_activeUnit.name} n'a pas de UnitState!");
+        }
 
         // Invalide tous les caches (OPTIMISATION: nouvel état de jeu)
         _gridRepository.InvalidateAllCaches();

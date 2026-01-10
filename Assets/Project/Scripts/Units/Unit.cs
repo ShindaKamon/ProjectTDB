@@ -297,6 +297,10 @@ public class Unit : MonoBehaviour
         Debug.Log($"{name} a pris {damage} dégâts. PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
+        // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
+        // Note: On ne connaît pas forcément la source des dégâts ici, donc on passe null
+        EventBus.Publish(new UnitDamagedEvent(this, null, damage));
+
         // Met à jour la barre de vie
         if (healthBar != null)
         {
@@ -325,9 +329,18 @@ public class Unit : MonoBehaviour
     // Méthode pour soigner l'unité.
     public void Heal(int amount)
     {
+        // Ne soigne pas si déjà à max HP
+        int actualHealAmount = Mathf.Min(amount, _maxHealth - _health);
+
         _health = Mathf.Clamp(_health + amount, 0, _maxHealth);
         Debug.Log($"{name} récupère {amount} PV. PV actuels : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth); // Déclenche l'événement de changement de PV
+
+        // Phase 4.1: Publie l'événement de soins pour le système de combat visuals
+        if (actualHealAmount > 0)
+        {
+            EventBus.Publish(new UnitHealedEvent(this, actualHealAmount));
+        }
 
         // Met à jour la barre de vie
         if (healthBar != null)

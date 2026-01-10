@@ -813,17 +813,9 @@ public void UpdateUnitUI()
 - ✅ TODO ligne 70 résolu avec feedbacks visuels complets
 - ✅ **Résultat**: Cartes réactives avec animations professionnelles, amélioration game feel
 
-### v4.2 - Phase 4.2 (Health Orbs System)
-- ✅ HealthOrbUI créé (2 modes : Radial et Multiple)
-- ✅ Mode Radial : 1 orbe qui se remplit/vide (fill radial 360°)
-- ✅ Mode Multiple : plusieurs petites orbes (1 orbe = X HP)
-- ✅ Couleurs dynamiques selon vie (rouge vif → orange → rouge foncé)
-- ✅ Follow smooth avec world-to-screen conversion
-- ✅ HealthOrbManager pour gestion centralisée
-- ✅ Toggle orbes ↔ barres de vie classiques
-- ✅ Auto-création pour toutes les unités
-- ✅ Nettoyage automatique des orbes (unités mortes)
-- ✅ **Résultat**: Alternative visuelle aux barres, "boule rouge" comme demandé
+### v4.2 - Phase 4.2 (Health Orbs System) - ANNULÉE
+- ❌ Phase annulée par l'utilisateur (approche différente prévue)
+- ❌ Fichiers HealthOrbUI.cs et HealthOrbManager.cs supprimés
 
 ### v4.1 - Phase 4.1 (Damage Numbers & Combat Feedback)
 - ✅ DamageNumberPopup créé (~250 lignes)

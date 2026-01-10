@@ -169,14 +169,18 @@ public class BattleUIManager : MonoBehaviour
             _currentTrackedEnemy = null;
 
             // Cherche un autre ennemi vivant via GridRepository (OPTIMISATION: pas de FindObjectsByType)
-            List<Unit> allEnemies = Services.Grid.GetAllEnemyUnits();
-            foreach (Unit enemyUnit in allEnemies)
+            // Vérifie que le service est disponible (évite erreurs lors de la destruction de scène)
+            if (Services.IsGridServiceAvailable())
             {
-                Enemy remainingEnemy = enemyUnit as Enemy;
-                if (remainingEnemy != null && remainingEnemy != enemy && remainingEnemy.GetHealth() > 0)
+                List<Unit> allEnemies = Services.Grid.GetAllEnemyUnits();
+                foreach (Unit enemyUnit in allEnemies)
                 {
-                    TrackEnemyCards(remainingEnemy);
-                    break;
+                    Enemy remainingEnemy = enemyUnit as Enemy;
+                    if (remainingEnemy != null && remainingEnemy != enemy && remainingEnemy.GetHealth() > 0)
+                    {
+                        TrackEnemyCards(remainingEnemy);
+                        break;
+                    }
                 }
             }
 

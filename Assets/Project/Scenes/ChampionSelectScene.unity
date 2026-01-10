@@ -470,6 +470,8 @@ MonoBehaviour:
   _combatSceneName: CombatScene
   _allChampions:
   - {fileID: 11400000, guid: 69814cc10eca8dd44a973e4c449f15fd, type: 2}
+  - {fileID: 11400000, guid: 13fbf2a764eade04c90c31687fdd56d3, type: 2}
+  - {fileID: 11400000, guid: 6526e05b2fc060847b3c27e9958fa396, type: 2}
 --- !u!4 &472746932
 Transform:
   m_ObjectHideFlags: 0
@@ -1214,11 +1216,11 @@ MonoBehaviour:
   _hpText: {fileID: 0}
   _paText: {fileID: 0}
   _pmText: {fileID: 0}
-  _attackText: {fileID: 0}
-  _defenseText: {fileID: 0}
-  _rageText: {fileID: 0}
+  _defensePText: {fileID: 0}
+  _defenseMText: {fileID: 0}
+  _emotionText: {fileID: 0}
   _hpBar: {fileID: 0}
-  _rageBar: {fileID: 0}
+  _emotionBar: {fileID: 0}
   _transformIcon: {fileID: 0}
 --- !u!114 &2078018439
 MonoBehaviour:

@@ -98,12 +98,17 @@ public class HandUIController : MonoBehaviour
         }
 
         // Se désabonner des changements de PA
-        if (Services.Grid != null && Services.Grid.GetActiveUnit() != null)
+        // Vérifie que le service est disponible avant d'y accéder (évite erreurs lors de la destruction de scène)
+        if (Services.IsGridServiceAvailable())
         {
-            IlyaUnit ilyaUnit = Services.Grid.GetActiveUnit() as IlyaUnit;
-            if (ilyaUnit != null)
+            Unit activeUnit = Services.Grid.GetActiveUnit();
+            if (activeUnit != null)
             {
-                ilyaUnit.OnActionPointsChanged -= HandlePAChanged;
+                IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
+                if (ilyaUnit != null)
+                {
+                    ilyaUnit.OnActionPointsChanged -= HandlePAChanged;
+                }
             }
         }
     }

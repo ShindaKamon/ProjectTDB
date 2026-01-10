@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Attaque CAC
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: Attaque CAC
-  description: "- 20 d\xE9g\xE2ts physiques"
+  description: "20 d\xE9g\xE2ts physiques"
   famillyType: 0
   classeType: 0
+  elementType: 0
   artwork: {fileID: 0}
   costPA: 2
   targetType: 2
@@ -27,3 +28,4 @@ MonoBehaviour:
   damageAmount: 20
   movementAmount: 0
   healAmount: 0
+  emotionModifier: 0

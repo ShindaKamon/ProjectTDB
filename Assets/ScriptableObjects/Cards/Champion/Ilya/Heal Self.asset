@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Heal Self
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: Heal Self
-  description: '- 20 points de vie'
+  description: 20 points de vie
   famillyType: 0
   classeType: 0
+  elementType: 0
   artwork: {fileID: 0}
   costPA: 2
   targetType: 1
@@ -27,3 +28,4 @@ MonoBehaviour:
   damageAmount: 0
   movementAmount: 0
   healAmount: 20
+  emotionModifier: 0

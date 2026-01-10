@@ -50,6 +50,10 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     // Événement statique pour notifier quand une carte est cliquée
     public static event System.Action<CardData> OnCardClicked;
 
+    // Événements pour le hover
+    public static event System.Action<GameObject> OnCardHoverEnter;
+    public static event System.Action<GameObject> OnCardHoverExit;
+
     void Awake()
     {
         // S'assurer que le surlignage est désactivé au démarrage
@@ -105,7 +109,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
             // Afficher le coût en PA
             if (_cardCostText != null)
             {
-                _cardCostText.text = _cardData.costPA > 0 ? $"{_cardData.costPA} PA" : "0";
+                _cardCostText.text = _cardData.costPA.ToString();
             }
 
             // Mettre à jour l'illustration si vous en avez une
@@ -220,6 +224,9 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         // Ne pas animer si la carte n'est pas jouable
         if (!_isAffordable) return;
 
+        // Notifier le HandUIController
+        OnCardHoverEnter?.Invoke(gameObject);
+
         // Hover : augmentation de taille + rotation + tint
         _targetScale = _originalScale * _hoverScale;
         _targetRotation = _originalRotation * Quaternion.Euler(0, 0, _hoverRotation);
@@ -231,6 +238,9 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         if (!_enableHoverAnimation || _isFollowingMouse) return;
 
         _isHovered = false;
+
+        // Notifier le HandUIController
+        OnCardHoverExit?.Invoke(gameObject);
 
         // Retour à la normale (ou à l'état sélectionné si sélectionnée)
         if (_isSelected)

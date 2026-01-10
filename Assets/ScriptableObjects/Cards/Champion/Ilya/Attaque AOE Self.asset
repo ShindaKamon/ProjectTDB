@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Attaque AOE Self
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: Attaque AOE Self
-  description: "- AOE 2 hex autour d'Ilya : 30 d\xE9g\xE2ts \xE0 tous les ennemis\n"
+  description: "30 d\xE9g\xE2ts \xE0 tous les ennemis autour d'Ilya"
   famillyType: 0
   classeType: 0
+  elementType: 0
   artwork: {fileID: 0}
   costPA: 3
   targetType: 1
@@ -27,3 +28,4 @@ MonoBehaviour:
   damageAmount: 30
   movementAmount: 0
   healAmount: 0
+  emotionModifier: 0

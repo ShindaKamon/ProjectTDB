@@ -18,7 +18,9 @@
       "Bash(if [ -d \"./Library/SourceAssetDB\" ])",
       "Bash(then echo \"SourceAssetDB exists\")",
       "Bash(else echo \"SourceAssetDB not found\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(findstr:*)",
+      "Bash(git restore:*)"
     ]
   }
 }

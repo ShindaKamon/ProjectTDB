@@ -11,10 +11,31 @@ public class HandUIController : MonoBehaviour
     [SerializeField] private Transform _handContainer; // Le parent où les cartes seront instanciées
     [SerializeField] private RectTransform _canvasRectTransform; // Référence au RectTransform du Canvas
 
+    [Header("Disposition en Arc")]
+    [SerializeField] private float _arcRadius = 50f; // Profondeur de la courbe (en pixels, plus élevé = plus courbé)
+    [SerializeField] private float _arcAngle = 20f; // Angle de rotation max des cartes sur les bords (en degrés)
+    [SerializeField] private float _cardSpacing = 120f; // Espacement horizontal entre cartes (en pixels)
+    [SerializeField] private float _maxOverlap = 0.7f; // Chevauchement max quand trop de cartes (0-1, 1 = pas de chevauchement)
+    [SerializeField] private float _hoverLiftDistance = 50f; // Distance que la carte monte au hover (en pixels)
+    [SerializeField] private float _verticalOffset = 0f; // Offset vertical de base de la main (en pixels)
+
+    [Header("Preview de Ciblage")]
+    [SerializeField] private Vector2 _cardPreviewPosition = new Vector2(200f, 0f); // Position de la carte en mode ciblage (relative au centre du canvas)
+    [SerializeField] private float _cardPreviewScale = 1.0f; // Échelle de la carte en mode preview (1.0 = taille normale)
+    [SerializeField] private Vector2 _curveStartOffset = new Vector2(300f, 0f); // Point de départ de la courbe (position fixe dans le canvas)
+    [SerializeField] private TargetingCurve _targetingCurve; // Référence à la courbe de ciblage
+    [SerializeField] private TargetingReticle _targetingReticle; // Référence au réticule de ciblage
+    [SerializeField] private Color _curveColor = new Color(0f, 1f, 1f, 0.8f); // Couleur cyan avec transparence
+    [SerializeField] private Color _reticleColor = new Color(1f, 1f, 0f, 0.9f); // Couleur jaune avec transparence
+
     private DeckManager _playerDeckManager;
     private List<GameObject> _instantiatedCardUIs = new List<GameObject>();
     private CardData _selectedCard = null; // La carte actuellement sélectionnée par le joueur
     private GameObject _selectedCardUIObject = null; // Le GameObject UI de la carte sélectionnée
+    private GameObject _hoveredCard = null; // La carte actuellement survolée
+    private Vector2 _hoveredCardOriginalPos;
+    private Quaternion _hoveredCardOriginalRot;
+    private int _hoveredCardOriginalSiblingIndex;
 
     // Propriété publique pour que l'InputManager puisse accéder à la carte sélectionnée
     public CardData SelectedCard => _selectedCard;
@@ -45,11 +66,15 @@ public class HandUIController : MonoBehaviour
     void OnEnable()
     {
         CardUIElement.OnCardClicked += HandleCardClicked; // S'abonner à l'événement de clic sur les cartes
+        CardUIElement.OnCardHoverEnter += HandleCardHoverEnter;
+        CardUIElement.OnCardHoverExit += HandleCardHoverExit;
     }
 
     void OnDisable()
     {
         CardUIElement.OnCardClicked -= HandleCardClicked; // Se désabonner pour éviter les fuites de mémoire
+        CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
+        CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
     }
 
     private bool _isInitialized = false;
@@ -129,14 +154,55 @@ public class HandUIController : MonoBehaviour
             TryInitialize();
         }
 
-        // Si une carte est sélectionnée et nécessite une cible, la faire suivre la souris
+        // Si une carte est sélectionnée et nécessite une cible, la positionner à gauche en mode preview
         if (_selectedCard != null && (_selectedCard.targetsUnit || _selectedCard.targetsTile) && _selectedCardUIObject != null)
         {
-            Vector2 localPoint;
-            Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRectTransform, mousePos, null, out localPoint);
-            // OPTIMISATION Phase 3.3: ComponentLocator
-            _selectedCardUIObject.GetRequiredComponent<RectTransform>("Selected card UI").localPosition = localPoint;
+            RectTransform cardRect = _selectedCardUIObject.GetRequiredComponent<RectTransform>("Selected card UI");
+
+            // Positionner la carte à gauche de l'écran (mode preview)
+            cardRect.anchoredPosition = _cardPreviewPosition;
+            cardRect.localScale = Vector3.one * _cardPreviewScale;
+            cardRect.localRotation = Quaternion.identity; // Pas de rotation
+
+            // Dessiner la courbe de ciblage vers la souris
+            if (_targetingCurve != null)
+            {
+                // Position de la souris en coordonnées canvas
+                Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+                Vector2 localMousePos;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRectTransform, mousePos, null, out localMousePos);
+
+                // Point de départ : position fixe configurée dans l'Inspector
+                Vector2 curveStartPoint = _curveStartOffset;
+
+                // Activer et mettre à jour la courbe (en utilisant directement les coordonnées canvas)
+                _targetingCurve.gameObject.SetActive(true);
+                _targetingCurve.color = _curveColor;
+                _targetingCurve.UpdateCurve(curveStartPoint, localMousePos);
+
+                // Afficher le réticule de ciblage à la position de la souris
+                if (_targetingReticle != null)
+                {
+                    _targetingReticle.gameObject.SetActive(true);
+                    _targetingReticle.color = _reticleColor;
+                    _targetingReticle.UpdatePosition(localMousePos);
+                }
+            }
+        }
+        else
+        {
+            // Cacher la courbe et le réticule si aucune carte n'est sélectionnée
+            if (_targetingCurve != null && _targetingCurve.gameObject.activeSelf)
+            {
+                _targetingCurve.Hide();
+                _targetingCurve.gameObject.SetActive(false);
+            }
+
+            if (_targetingReticle != null && _targetingReticle.gameObject.activeSelf)
+            {
+                _targetingReticle.Hide();
+                _targetingReticle.gameObject.SetActive(false);
+            }
         }
     }
 
@@ -188,6 +254,110 @@ public class HandUIController : MonoBehaviour
             // nous devons la retrouver et la surligner.
             HighlightSelectedCard(_selectedCard);
         }
+
+        // Arranger les cartes en arc
+        ArrangeCardsInArc();
+    }
+
+    /// <summary>
+    /// Dispose les cartes en arc de cercle avec chevauchement
+    /// </summary>
+    private void ArrangeCardsInArc()
+    {
+        int cardCount = _instantiatedCardUIs.Count;
+        if (cardCount == 0) return;
+
+        // Calculer l'espacement effectif avec chevauchement
+        float effectiveSpacing = _cardSpacing;
+        if (cardCount > 1)
+        {
+            // Si trop de cartes, réduire l'espacement (chevauchement)
+            float totalWidth = (cardCount - 1) * _cardSpacing;
+            float maxWidth = _canvasRectTransform.rect.width * _maxOverlap;
+            if (totalWidth > maxWidth)
+            {
+                effectiveSpacing = maxWidth / (cardCount - 1);
+            }
+        }
+
+        // RectTransform du HandContainer pour calculer le centre
+        RectTransform handRect = _handContainer.GetComponent<RectTransform>();
+        float handWidth = handRect.rect.width;
+        float centerX = handWidth / 2f; // Centre du HandContainer
+
+        // Largeur totale occupée par toutes les cartes
+        float totalSpread = (cardCount - 1) * effectiveSpacing;
+        float startX = centerX - (totalSpread / 2f); // Commence à gauche, centré
+
+        for (int i = 0; i < cardCount; i++)
+        {
+            GameObject cardUI = _instantiatedCardUIs[i];
+            RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+
+            // Position horizontale : répartition uniforme de gauche à droite, centrée
+            float x = startX + (i * effectiveSpacing);
+
+            // Position verticale : arc (descend du centre vers les bords)
+            // Normaliser la position de 0 (centre) à 1 (extrémités)
+            float t = cardCount > 1 ? Mathf.Abs((i / (float)(cardCount - 1)) - 0.5f) * 2f : 0f;
+            float y = _verticalOffset - (t * t * _arcRadius); // Courbe parabolique
+
+            // Angle de rotation basé sur la position
+            float angle = 0f;
+            if (cardCount > 1)
+            {
+                float angleT = (i / (float)(cardCount - 1)) - 0.5f; // -0.5 à +0.5
+                angle = angleT * _arcAngle;
+            }
+
+            // Appliquer la position et rotation
+            cardRect.anchoredPosition = new Vector2(x, y);
+            cardRect.localRotation = Quaternion.Euler(0, 0, -angle);
+            cardRect.SetSiblingIndex(i);
+        }
+    }
+
+    /// <summary>
+    /// Gère le hover sur une carte - la fait sortir de la main
+    /// </summary>
+    private void HandleCardHoverEnter(GameObject cardUI)
+    {
+        if (_hoveredCard != null || cardUI == _selectedCardUIObject) return;
+
+        _hoveredCard = cardUI;
+        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+
+        // Sauvegarder la position et rotation d'origine
+        _hoveredCardOriginalPos = cardRect.anchoredPosition;
+        _hoveredCardOriginalRot = cardRect.localRotation;
+        _hoveredCardOriginalSiblingIndex = cardRect.GetSiblingIndex();
+
+        // Mettre la carte au-dessus des autres (dernier sibling = devant)
+        cardRect.SetAsLastSibling();
+
+        // Lever la carte vers le haut
+        Vector2 targetPos = _hoveredCardOriginalPos + new Vector2(0, _hoverLiftDistance);
+        cardRect.anchoredPosition = targetPos;
+
+        // Rotation à 0 (carte droite)
+        cardRect.localRotation = Quaternion.identity;
+    }
+
+    /// <summary>
+    /// Gère la sortie du hover - remet la carte à sa place
+    /// </summary>
+    private void HandleCardHoverExit(GameObject cardUI)
+    {
+        if (_hoveredCard != cardUI) return;
+
+        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+
+        // Restaurer la position et rotation d'origine
+        cardRect.anchoredPosition = _hoveredCardOriginalPos;
+        cardRect.localRotation = _hoveredCardOriginalRot;
+        cardRect.SetSiblingIndex(_hoveredCardOriginalSiblingIndex);
+
+        _hoveredCard = null;
     }
 
     private void HandleCardClicked(CardData clickedCard)
@@ -245,7 +415,27 @@ public class HandUIController : MonoBehaviour
                 if (cardUIObject.TryGetComponentSafe(out CardUIElement cardUIElement) && cardUIElement.CardData == _selectedCard)
                 {
                     _selectedCardUIObject = cardUIObject;
-                    _selectedCardUIObject.transform.SetParent(transform.root); // Détacher du HandContainer
+
+                    // Détacher du HandContainer et attacher directement au Canvas
+                    _selectedCardUIObject.transform.SetParent(_canvasRectTransform);
+
+                    // Mettre la carte au-dessus de tout (dernier dans la hiérarchie = rendu en dernier = au-dessus)
+                    _selectedCardUIObject.transform.SetAsLastSibling();
+
+                    // Ajouter un Canvas sur la carte pour contrôler le sorting order
+                    Canvas cardCanvas = _selectedCardUIObject.GetComponent<Canvas>();
+                    if (cardCanvas == null)
+                    {
+                        cardCanvas = _selectedCardUIObject.AddComponent<Canvas>();
+                    }
+                    cardCanvas.overrideSorting = true;
+                    cardCanvas.sortingOrder = 1000; // Très haut pour être au-dessus de tout
+
+                    // Ajouter GraphicRaycaster si nécessaire pour que la carte reste cliquable
+                    if (_selectedCardUIObject.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+                    {
+                        _selectedCardUIObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                    }
 
                     // Désactive le raycast sur cette carte pour qu'elle ne bloque pas les clics sur le monde
                     // OPTIMISATION Phase 3.3: ComponentLocator
@@ -424,6 +614,20 @@ public class HandUIController : MonoBehaviour
     {
         if (_selectedCardUIObject != null)
         {
+            // Supprimer d'abord le GraphicRaycaster (dépend du Canvas)
+            UnityEngine.UI.GraphicRaycaster raycaster = _selectedCardUIObject.GetComponent<UnityEngine.UI.GraphicRaycaster>();
+            if (raycaster != null)
+            {
+                Destroy(raycaster);
+            }
+
+            // Ensuite supprimer le Canvas
+            Canvas cardCanvas = _selectedCardUIObject.GetComponent<Canvas>();
+            if (cardCanvas != null)
+            {
+                Destroy(cardCanvas);
+            }
+
             // Réactive les raycasts sur la carte
             CanvasGroup canvasGroup = _selectedCardUIObject.GetComponent<CanvasGroup>();
             if (canvasGroup != null)
@@ -433,8 +637,10 @@ public class HandUIController : MonoBehaviour
 
             // Réattacher la carte au HandContainer si elle avait été détachée
             _selectedCardUIObject.transform.SetParent(_handContainer);
-            // S'assurer que la mise en page se recalcule
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_handContainer.GetComponent<RectTransform>());
+
+            // Réarranger toutes les cartes en arc pour repositionner correctement
+            ArrangeCardsInArc();
+
             _selectedCardUIObject = null;
         }
     }

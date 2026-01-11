@@ -16,6 +16,10 @@ public class TargetingCurve : Graphic
     private Vector2 _startPoint; // Point de départ (carte)
     private Vector2 _endPoint; // Point d'arrivée (souris)
 
+    // OPTIMISATION: Pré-allocation pour éviter GC
+    private Vector2[] _curvePoints; // Array pré-allouée pour les points de courbe
+    private bool _isInitialized = false;
+
     /// <summary>
     /// Met à jour les points de la courbe
     /// </summary>
@@ -36,6 +40,13 @@ public class TargetingCurve : Graphic
         if (Vector2.Distance(_startPoint, _endPoint) < 0.1f)
             return; // Ne rien dessiner si les points sont trop proches
 
+        // OPTIMISATION: Initialiser l'array seulement une fois
+        if (!_isInitialized || _curvePoints == null || _curvePoints.Length != _curveSegments + 1)
+        {
+            _curvePoints = new Vector2[_curveSegments + 1];
+            _isInitialized = true;
+        }
+
         // Les points passés sont en coordonnées "anchoredPosition" du canvas (centre = 0,0)
         // Notre RectTransform a aussi son centre à 0,0, donc on peut utiliser directement
         // PAS DE CONVERSION NÉCESSAIRE car les deux utilisent le même système (centre du canvas = 0,0)
@@ -43,20 +54,18 @@ public class TargetingCurve : Graphic
         // Calculer le point de contrôle pour la courbe de Bézier quadratique
         Vector2 controlPoint = CalculateControlPoint(_startPoint, _endPoint);
 
-        // Générer les points de la courbe
-        List<Vector2> curvePoints = new List<Vector2>();
+        // Générer les points de la courbe (réutilise l'array pré-allouée)
         for (int i = 0; i <= _curveSegments; i++)
         {
             float t = i / (float)_curveSegments;
-            Vector2 point = CalculateBezierPoint(t, _startPoint, controlPoint, _endPoint);
-            curvePoints.Add(point);
+            _curvePoints[i] = CalculateBezierPoint(t, _startPoint, controlPoint, _endPoint);
         }
 
         // Créer les triangles pour rendre la ligne épaisse
-        for (int i = 0; i < curvePoints.Count - 1; i++)
+        for (int i = 0; i < _curvePoints.Length - 1; i++)
         {
-            Vector2 p1 = curvePoints[i];
-            Vector2 p2 = curvePoints[i + 1];
+            Vector2 p1 = _curvePoints[i];
+            Vector2 p2 = _curvePoints[i + 1];
 
             // Direction perpendiculaire pour l'épaisseur
             Vector2 direction = (p2 - p1).normalized;

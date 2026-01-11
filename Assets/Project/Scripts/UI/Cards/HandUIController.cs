@@ -32,10 +32,12 @@ public class HandUIController : MonoBehaviour
     private List<GameObject> _instantiatedCardUIs = new List<GameObject>();
     private CardData _selectedCard = null; // La carte actuellement sélectionnée par le joueur
     private GameObject _selectedCardUIObject = null; // Le GameObject UI de la carte sélectionnée
+    private RectTransform _selectedCardRect = null; // Cache du RectTransform pour performance
     private GameObject _hoveredCard = null; // La carte actuellement survolée
     private Vector2 _hoveredCardOriginalPos;
     private Quaternion _hoveredCardOriginalRot;
     private int _hoveredCardOriginalSiblingIndex;
+    private Vector2 _lastMousePos = Vector2.zero; // Cache de la dernière position souris
 
     // Propriété publique pour que l'InputManager puisse accéder à la carte sélectionnée
     public CardData SelectedCard => _selectedCard;
@@ -117,6 +119,11 @@ public class HandUIController : MonoBehaviour
 
     void OnDestroy()
     {
+        // Nettoyage des events statiques (CRITIQUE pour éviter fuites mémoire)
+        CardUIElement.OnCardClicked -= HandleCardClicked;
+        CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
+        CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
+
         if (_playerDeckManager != null)
         {
             _playerDeckManager.OnHandChanged -= UpdateHandUI; // Se désabonner pour éviter les fuites de mémoire
@@ -157,40 +164,58 @@ public class HandUIController : MonoBehaviour
         // Si une carte est sélectionnée et nécessite une cible, la positionner à gauche en mode preview
         if (_selectedCard != null && (_selectedCard.targetsUnit || _selectedCard.targetsTile) && _selectedCardUIObject != null)
         {
-            RectTransform cardRect = _selectedCardUIObject.GetRequiredComponent<RectTransform>("Selected card UI");
-
-            // Positionner la carte à gauche de l'écran (mode preview)
-            cardRect.anchoredPosition = _cardPreviewPosition;
-            cardRect.localScale = Vector3.one * _cardPreviewScale;
-            cardRect.localRotation = Quaternion.identity; // Pas de rotation
-
-            // Dessiner la courbe de ciblage vers la souris
-            if (_targetingCurve != null)
+            // Cache le RectTransform si pas déjà fait
+            if (_selectedCardRect == null)
             {
-                // Position de la souris en coordonnées canvas
-                Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
-                Vector2 localMousePos;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRectTransform, mousePos, null, out localMousePos);
+                _selectedCardRect = _selectedCardUIObject.GetRequiredComponent<RectTransform>("Selected card UI");
+            }
 
-                // Point de départ : position fixe configurée dans l'Inspector
-                Vector2 curveStartPoint = _curveStartOffset;
+            if (_selectedCardRect != null)
+            {
+                // Positionner la carte à gauche de l'écran (mode preview)
+                _selectedCardRect.anchoredPosition = _cardPreviewPosition;
+                _selectedCardRect.localScale = Vector3.one * _cardPreviewScale;
+                _selectedCardRect.localRotation = Quaternion.identity; // Pas de rotation
 
-                // Activer et mettre à jour la courbe (en utilisant directement les coordonnées canvas)
-                _targetingCurve.gameObject.SetActive(true);
-                _targetingCurve.color = _curveColor;
-                _targetingCurve.UpdateCurve(curveStartPoint, localMousePos);
-
-                // Afficher le réticule de ciblage à la position de la souris
-                if (_targetingReticle != null)
+                // Dessiner la courbe de ciblage vers la souris (seulement si la souris a bougé)
+                if (_targetingCurve != null)
                 {
-                    _targetingReticle.gameObject.SetActive(true);
-                    _targetingReticle.color = _reticleColor;
-                    _targetingReticle.UpdatePosition(localMousePos);
+                    // Position de la souris en coordonnées canvas
+                    Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+
+                    // Ne recalculer que si la souris a bougé
+                    if (Vector2.Distance(mousePos, _lastMousePos) > 1f)
+                    {
+                        _lastMousePos = mousePos;
+
+                        Vector2 localMousePos;
+                        RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRectTransform, mousePos, null, out localMousePos);
+
+                        // Point de départ : position fixe configurée dans l'Inspector
+                        Vector2 curveStartPoint = _curveStartOffset;
+
+                        // Activer et mettre à jour la courbe (en utilisant directement les coordonnées canvas)
+                        _targetingCurve.gameObject.SetActive(true);
+                        _targetingCurve.color = _curveColor;
+                        _targetingCurve.UpdateCurve(curveStartPoint, localMousePos);
+
+                        // Afficher le réticule de ciblage à la position de la souris
+                        if (_targetingReticle != null)
+                        {
+                            _targetingReticle.gameObject.SetActive(true);
+                            _targetingReticle.color = _reticleColor;
+                            _targetingReticle.UpdatePosition(localMousePos);
+                        }
+                    }
                 }
             }
         }
         else
         {
+            // Réinitialiser le cache du RectTransform
+            _selectedCardRect = null;
+            _lastMousePos = Vector2.zero;
+
             // Cacher la courbe et le réticule si aucune carte n'est sélectionnée
             if (_targetingCurve != null && _targetingCurve.gameObject.activeSelf)
             {
@@ -282,6 +307,12 @@ public class HandUIController : MonoBehaviour
 
         // RectTransform du HandContainer pour calculer le centre
         RectTransform handRect = _handContainer.GetComponent<RectTransform>();
+        if (handRect == null)
+        {
+            Debug.LogError("HandContainer n'a pas de RectTransform!");
+            return;
+        }
+
         float handWidth = handRect.rect.width;
         float centerX = handWidth / 2f; // Centre du HandContainer
 
@@ -293,6 +324,7 @@ public class HandUIController : MonoBehaviour
         {
             GameObject cardUI = _instantiatedCardUIs[i];
             RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+            if (cardRect == null) continue;
 
             // Position horizontale : répartition uniforme de gauche à droite, centrée
             float x = startX + (i * effectiveSpacing);
@@ -326,6 +358,7 @@ public class HandUIController : MonoBehaviour
 
         _hoveredCard = cardUI;
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+        if (cardRect == null) return;
 
         // Sauvegarder la position et rotation d'origine
         _hoveredCardOriginalPos = cardRect.anchoredPosition;
@@ -351,6 +384,7 @@ public class HandUIController : MonoBehaviour
         if (_hoveredCard != cardUI) return;
 
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+        if (cardRect == null) return;
 
         // Restaurer la position et rotation d'origine
         cardRect.anchoredPosition = _hoveredCardOriginalPos;
@@ -450,7 +484,7 @@ public class HandUIController : MonoBehaviour
             }
 
             // Affiche la zone d'effet pour les cartes AOE Self
-            if (clickedCard.targetType == CardTargetType.Self && clickedCard.isAOE)
+            if (activeUnit != null && clickedCard.targetType == CardTargetType.Self && clickedCard.isAOE)
             {
                 // Carte AOE Self : afficher la zone AOE autour du joueur
                 Vector2 playerPos = activeUnit.GetCurrentGridPos();

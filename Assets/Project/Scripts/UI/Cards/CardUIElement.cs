@@ -280,11 +280,23 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
 
     // ========== CLEANUP ==========
 
-    void OnDestroy()
+    void OnDisable()
     {
+        // CRITIQUE: Arrêter la coroutine infinie quand la carte est désactivée
         if (_glowPulseCoroutine != null)
         {
             StopCoroutine(_glowPulseCoroutine);
+            _glowPulseCoroutine = null;
+        }
+    }
+
+    void OnDestroy()
+    {
+        // CRITIQUE: Arrêter la coroutine infinie avant destruction
+        if (_glowPulseCoroutine != null)
+        {
+            StopCoroutine(_glowPulseCoroutine);
+            _glowPulseCoroutine = null;
         }
     }
 }

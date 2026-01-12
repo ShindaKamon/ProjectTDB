@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
+  m_Name: DevotionAbsolue
+  m_EditorClassIdentifier: Assembly-CSharp::CardData
+  cardName: DEVOTION ABSOLUE
+  description: "Taunt ennemis (2 tours)\n+20 DEF pendant 2 tours\n\nENRAGE (1):\nDur\xE9e
+    : 3 tours (au lieu de 2)\n+30 DEF (au lieu de 20)"
+  famillyType: 0
+  classeType: 0
+  elementType: 0
+  artwork: {fileID: 0}
+  costPA: 2
+  targetType: 1
+  targetRange: 0
+  areaEffect: 0
+  aoeRadius: 0
+  affectedTarget: 0
+  damageType: 0
+  damageAmount: 0
+  movementAmount: 0
+  healAmount: 0
+  emotionModifier: 0

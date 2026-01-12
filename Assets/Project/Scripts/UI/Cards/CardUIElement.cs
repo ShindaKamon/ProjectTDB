@@ -112,6 +112,8 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
                 _cardCostText.text = _cardData.costPA.ToString();
             }
 
+            // Afficher le background (A MODIFIER ENSUITE)
+            if (_cardBackground != null) _cardBackground.sprite = _cardData.artwork;
             // Mettre à jour l'illustration si vous en avez une
             // if (_cardIllustrationImage != null) _cardIllustrationImage.sprite = _cardData.illustration;
         }

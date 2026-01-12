@@ -350,7 +350,7 @@ public class HandUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Gère le hover sur une carte - la fait sortir de la main
+    /// Gère le hover sur une carte - la fait de sortir de la main
     /// </summary>
     private void HandleCardHoverEnter(GameObject cardUI)
     {

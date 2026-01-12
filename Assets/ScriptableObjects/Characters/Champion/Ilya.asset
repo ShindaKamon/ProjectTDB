@@ -18,23 +18,13 @@ MonoBehaviour:
   elementType: 1
   maxHealth: 100
   movementRange: 3
-  maxPA: 5
-  defense: 10
-  rageThreshold: 5
-  damagePerRage: 2
-  transformDuration: 3
-  dechaineMaxPA: 4
-  dechaineMovement: 4
-  dechaineAttack: 25
-  dechaineDefense: 5
-  dechaineHpLossPerTurn: 10
-  dechaineLifesteal: 0.25
+  maxActionPoints: 5
+  physicalDefense: 10
+  magicalDefense: 10
   startingDeck:
-  - {fileID: 11400000, guid: 8e7cfdc1b0e0ebb4e9bf4a2569ba2405, type: 2}
-  - {fileID: 11400000, guid: 0ce5c9d523d6f224da5d70e6d2f99510, type: 2}
-  - {fileID: 11400000, guid: 63787b6b372ab4d4aaeff782375c1c2a, type: 2}
-  - {fileID: 11400000, guid: 053de3dd1b609ba48a70b1fe05e2bf81, type: 2}
-  - {fileID: 11400000, guid: 47bc395f3066f0549b3eda6e2dd8b0a6, type: 2}
+  - {fileID: 11400000, guid: 3ea8d71d287d45c4c9a119009a314627, type: 2}
+  - {fileID: 11400000, guid: 24f6a61c2b5a48c4d90e21741618a37f, type: 2}
+  - {fileID: 11400000, guid: 48fc4de4e2df1144d96c2a75b555caa3, type: 2}
   familyEmotionData: {fileID: 11400000, guid: 730ce7dcd45c9a74b99936064ce32841, type: 2}
   positiveTransformation: {fileID: 0}
   negativeTransformation: {fileID: 0}

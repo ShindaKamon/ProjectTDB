@@ -12,6 +12,7 @@ public class BattleUIManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private BossHealthBarUI _bossHealthBar;
     [SerializeField] private EnemyCardPreviewUI _enemyCardPreview;
+    [SerializeField] private HealthOrbController _playerHealthOrb; //TEST ORB
 
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
@@ -27,6 +28,11 @@ public class BattleUIManager : MonoBehaviour
         {
             Destroy(gameObject);
             return;
+        }
+
+        if (_playerHealthOrb == null)
+        {
+            _playerHealthOrb = ComponentLocator.FindSingleObjectOfType<HealthOrbController>("BatleUIManager setup");            
         }
 
         // Trouve automatiquement les UI si non assignées
@@ -189,6 +195,14 @@ public class BattleUIManager : MonoBehaviour
             {
                 _enemyCardPreview.HidePreview();
             }
+        }
+    }
+
+    public void UpdatePlayerOrb (float currentHP, float maxHP, Color emotionColor)
+    {
+        if (_playerHealthOrb != null)
+        {
+            _playerHealthOrb.UpdateHealth(currentHP, maxHP, emotionColor);
         }
     }
 }

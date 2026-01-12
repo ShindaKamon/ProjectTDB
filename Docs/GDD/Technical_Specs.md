@@ -264,115 +264,71 @@
 
 ## ⚡ Optimisations de Performance
 
+### Principes d'Optimisation Appliqués
+
+| Principe | Description | Impact |
+|----------|-------------|--------|
+| **Pré-allocation d'Arrays** | Allocation une fois à l'initialisation | Évite GC chaque frame |
+| **Cache des Composants** | GetComponent une fois dans Awake | Évite appels répétés coûteux |
+| **Seuils de Mise à Jour** | Update seulement si changement significatif | Réduit calculs inutiles |
+| **Event Cleanup** | Désabonnement dans OnDestroy | Évite fuites mémoire |
+| **Coroutine Cleanup** | Stop dans OnDisable/OnDestroy | Évite coroutines orphelines |
+
+---
+
 ### Prévention des Allocations GC
 
-**Problème:** Allocations répétées dans Update() ou OnPopulateMesh() causent du Garbage Collection fréquent.
+**Problème:** Allocations répétées dans Update ou OnPopulateMesh causent du Garbage Collection fréquent.
 
-**Solutions:**
+**Solutions Appliquées:**
 
-1. **Pré-allocation d'Arrays:**
-```csharp
-// ❌ MAUVAIS - Allocation chaque frame
-void OnPopulateMesh(VertexHelper vh) {
-    List<Vector2> points = new List<Vector2>(); // GC!
-}
+| Technique | Problème Résolu | Implémentation |
+|-----------|-----------------|----------------|
+| **Pré-allocation d'Arrays** | Créer List/Array chaque frame | Allouer dans Awake, réutiliser |
+| **Cache des Composants** | GetComponent répété | Cacher dans variable privée |
+| **Seuils de Mouvement** | Update à chaque pixel | Seuil minimum de déplacement |
+| **Réutilisation de Variables** | Créer new Vector2 chaque fois | Variables réutilisables |
 
-// ✅ BON - Pré-allocation
-private Vector2[] _curvePoints;
-void Awake() {
-    _curvePoints = new Vector2[_segmentCount + 1];
-}
-```
+**Exemple de Seuil:**
+- Seuil de mouvement souris : 1 pixel
+- Update de la courbe seulement si déplacement > seuil
+- Réduit calculs de 90%+
 
-2. **Cache des Composants:**
-```csharp
-// ❌ MAUVAIS - GetComponent chaque frame
-void Update() {
-    RectTransform rt = GetComponent<RectTransform>(); // GC!
-}
+---
 
-// ✅ BON - Cache à l'initialisation
-private RectTransform _rectTransform;
-void Awake() {
-    _rectTransform = GetComponent<RectTransform>();
-}
-```
+### Gestion de Mémoire Critique
 
-3. **Seuils de Mise à Jour:**
-```csharp
-// ✅ BON - Update seulement si nécessaire
-if (Vector2.Distance(mousePos, _lastMousePos) > MOUSE_MOVE_THRESHOLD)
-{
-    UpdateTargeting(mousePos);
-    _lastMousePos = mousePos;
-}
-```
+**Nettoyage Obligatoire:**
 
-### Gestion de Mémoire
+| Type | Nettoyage | Conséquence si Oublié |
+|------|-----------|----------------------|
+| **Événements Statiques** | Désabonnement dans OnDestroy | Fuites mémoire, références mortes |
+| **Coroutines** | StopCoroutine dans OnDisable | Coroutines continuent après destruction |
+| **Timers** | Annulation dans OnDestroy | Callbacks sur objets détruits |
+| **References** | Null dans OnDestroy | Empêche GC de nettoyer |
 
-**Event Cleanup (CRITIQUE):**
-```csharp
-void OnDestroy()
-{
-    // Nettoyer TOUS les événements statiques
-    CardUIElement.OnCardClicked -= HandleCardClicked;
-    CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
-    CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
-}
-```
+**Points de Nettoyage:**
+- OnDisable : Pour désactivation temporaire
+- OnDestroy : Pour destruction définitive
 
-**Coroutine Cleanup (CRITIQUE):**
-```csharp
-void OnDisable()
-{
-    if (_glowPulseCoroutine != null)
-    {
-        StopCoroutine(_glowPulseCoroutine);
-        _glowPulseCoroutine = null;
-    }
-}
-
-void OnDestroy()
-{
-    // Même cleanup pour sécurité
-    if (_glowPulseCoroutine != null)
-    {
-        StopCoroutine(_glowPulseCoroutine);
-        _glowPulseCoroutine = null;
-    }
-}
-```
+---
 
 ### Object Pooling
 
-**À implémenter pour:**
-- Instances de cartes (CardUIElement)
-- Effets visuels (particules, sprites)
-- Projectiles
-- Texte de dégâts flottant
+**Systèmes à Pooler:**
 
-**Pattern de base:**
-```csharp
-public class ObjectPool<T> where T : Component
-{
-    private Queue<T> _pool = new Queue<T>();
-    private T _prefab;
+| Objet | Fréquence de Spawn | Priorité |
+|-------|-------------------|----------|
+| **CardUIElement** | Chaque pioche | Haute |
+| **Effets Visuels** | Chaque action | Haute |
+| **Texte de Dégâts** | Chaque attaque | Moyenne |
+| **Projectiles** | Chaque attaque | Moyenne |
 
-    public T Get() {
-        if (_pool.Count > 0) {
-            T obj = _pool.Dequeue();
-            obj.gameObject.SetActive(true);
-            return obj;
-        }
-        return Object.Instantiate(_prefab);
-    }
-
-    public void Return(T obj) {
-        obj.gameObject.SetActive(false);
-        _pool.Enqueue(obj);
-    }
-}
-```
+**Principe du Pool:**
+- File d'objets désactivés prêts à l'emploi
+- Get : Active et retourne un objet
+- Return : Désactive et remet dans la file
+- Évite Instantiate/Destroy coûteux
 
 ---
 
@@ -380,117 +336,129 @@ public class ObjectPool<T> where T : Component
 
 ### Null Checks Obligatoires
 
-**Après GetComponent:**
-```csharp
-RectTransform rt = GetComponent<RectTransform>();
-if (rt == null)
-{
-    Debug.LogError("Component RectTransform manquant!");
-    return;
-}
-```
+| Situation | Check Requis | Raison |
+|-----------|--------------|--------|
+| **Après GetComponent** | Vérifier si null | Composant peut être absent |
+| **Après Find/FindObjectOfType** | Vérifier si null | Objet peut ne pas exister |
+| **Avant Utilisation de Références** | Vérifier si null | Référence peut être détruite |
+| **Paramètres de Méthodes** | Valider non-null | Prévenir NullReferenceException |
 
-**Après Find/FindObjectOfType:**
-```csharp
-GameObject obj = GameObject.Find("HandContainer");
-if (obj == null)
-{
-    Debug.LogError("GameObject 'HandContainer' introuvable!");
-    return;
-}
-```
-
-**Avant Utilisation de Références:**
-```csharp
-if (_targetingCurve != null)
-{
-    _targetingCurve.UpdateCurve(startPos, endPos);
-}
-```
+**Stratégies de Gestion:**
+- Debug.LogError avec contexte (gameObject)
+- Return early si composant critique manquant
+- Valeurs par défaut sécurisées
+- Validation dans l'Inspector avec RequireComponent
 
 ---
 
 ## 📊 Data Management
 
-### ScriptableObjects
+### ScriptableObjects Utilisés
+
+| ScriptableObject | Données Contenues | Menu de Création |
+|------------------|-------------------|------------------|
+| **CardData** | Cartes (nom, coût, effets) | Cards/Card Data |
+| **ChampionData** | Champions (stats, deck) | Champion/Champion Data |
+| **EnemyData** | Ennemis (stats, pattern) | Enemy/Enemy Data |
+| **FamilyEmotionData** | Émotions par famille | Champion/Family Emotion Data |
+| **TransformationData** | Modificateurs de transformation | Champion/Transformation Data |
 
 **Avantages:**
 - Données séparées du code
 - Partageables entre instances
-- Éditables dans l'Inspector
+- Éditables dans l'Inspector Unity
 - Pas de duplication en mémoire
+- Faciles à balance (modifications instantanées)
 
-**Exemples:**
-```csharp
-[CreateAssetMenu(fileName = "NewCard", menuName = "Project TDB/Card Data")]
-public class CardData : ScriptableObject
-{
-    public string cardName;
-    public string description;
-    public int costPA;
-    public CardType cardType;
-    public TargetType targetType;
-    public List<CardEffect> effects;
-}
-```
+---
 
 ### Serialization
 
-**Utilisé pour:**
-- Sauvegardes de progression
-- Configuration de niveaux
-- Statistiques de personnages
+**Utilisations:**
 
-**Format:** JSON via `JsonUtility` (simple) ou Newtonsoft.Json (complexe)
+| Type | Format | Usage |
+|------|--------|-------|
+| **Sauvegardes** | JSON | Progression joueur |
+| **Configuration** | ScriptableObject | Données de design |
+| **Statistiques** | JSON | Métriques de jeu |
+
+**Format Privilégié:** JSON via JsonUtility pour simplicité et compatibilité Unity
 
 ---
 
 ## 🧪 Testing et Debug
 
-### Debug Tools
+### Outils de Debug
 
-**Logs avec Contexte:**
-```csharp
-Debug.Log($"Carte cliquée : {_cardData.cardName}", gameObject);
-Debug.LogWarning($"Pas assez de PA pour {_cardData.cardName}", gameObject);
-Debug.LogError($"RectTransform manquant sur {gameObject.name}!", gameObject);
-```
+| Outil | Utilisation | Exemple |
+|-------|-------------|---------|
+| **Debug.Log** | Messages informatifs | Carte cliquée, action validée |
+| **Debug.LogWarning** | Avertissements non-critiques | Pas assez de PA |
+| **Debug.LogError** | Erreurs critiques | Composant manquant |
+| **Gizmos** | Visualisation en éditeur | Grille, portée, zones |
 
-**Gizmos pour Visualisation:**
-```csharp
-void OnDrawGizmos()
-{
-    // Dessiner la grille en mode éditeur
-    Gizmos.color = Color.green;
-    foreach (var tile in tiles)
-    {
-        Gizmos.DrawWireCube(tile.worldPosition, Vector3.one * 0.9f);
-    }
-}
-```
+**Bonnes Pratiques:**
+- Toujours inclure contexte (gameObject) dans les logs
+- Utiliser string interpolation pour clarté
+- Gizmos pour visualiser données spatiales
+- Debug conditionnels pour éviter spam
+
+---
 
 ### Profiling
 
-**Unity Profiler - Zones à Surveiller:**
-- **Update()** dans HandUIController : <0.5ms par frame
-- **OnPopulateMesh()** dans TargetingCurve : <0.2ms
-- **GC Allocations** : 0 dans hot paths (Update, OnPopulateMesh)
+**Objectifs de Performance (Unity Profiler):**
+
+| Système | Méthode Critique | Budget | Actuel |
+|---------|------------------|--------|--------|
+| **Card UI** | HandUIController.Update | <0.5ms | Optimisé ✓ |
+| **Targeting** | TargetingCurve.OnPopulateMesh | <0.2ms | Optimisé ✓ |
+| **GC Allocations** | Hot paths (Update, OnPopulate) | 0 bytes | Optimisé ✓ |
+
+**Zones à Surveiller:**
+- Update loops dans l'UI
+- OnPopulateMesh pour Custom Graphics
+- Allocations GC dans les méthodes fréquentes
 
 ---
 
 ## 🚀 Build et Déploiement
 
 ### Plateformes Cibles
-- **Windows** (Primaire)
-- **macOS** (Secondaire)
-- **Linux** (Optionnel)
+
+| Plateforme | Priorité | Statut |
+|------------|----------|--------|
+| **Windows** | Primaire | Testé |
+| **macOS** | Secondaire | À tester |
+| **Linux** | Optionnel | À tester |
+
+---
 
 ### Build Settings
-- **Compression** : LZ4 (fast) pour développement, LZMA (small) pour release
-- **Stripping Level** : Medium (balance taille/compatibilité)
-- **Script Backend** : IL2CPP pour performance
+
+| Setting | Développement | Release |
+|---------|---------------|---------|
+| **Compression** | LZ4 (rapide) | LZMA (petite taille) |
+| **Stripping Level** | Low | Medium |
+| **Script Backend** | Mono (debug rapide) | IL2CPP (performance) |
+| **Code Optimization** | Debug | Master |
+
+---
+
+## 📝 Notes Techniques Importantes
+
+### Points d'Attention
+
+| Sujet | Détail |
+|-------|--------|
+| **Événements Statiques** | TOUJOURS désabonner dans OnDestroy |
+| **Coroutines** | Stopper dans OnDisable ET OnDestroy |
+| **GetComponent** | Cacher dans Awake, jamais dans Update |
+| **Allocations** | Pré-allouer arrays, réutiliser objets |
+| **Null Checks** | Toujours valider avant utilisation |
 
 ---
 
 **Dernière mise à jour:** 11 Janvier 2026
+**Version:** 2.0
 **Responsable:** Équipe Technique Project TDB

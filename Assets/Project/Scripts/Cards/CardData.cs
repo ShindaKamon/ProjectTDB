@@ -96,7 +96,7 @@ public class CardData : ScriptableObject
     // Type d'élément
     public CardElementType elementType = CardElementType.None;
     // Illustration de la carte
-    public Sprite artwork; 
+    public Sprite artwork;
 
     [Header("Coût et ressources")]
     // Coût en PA (Points d'Action)

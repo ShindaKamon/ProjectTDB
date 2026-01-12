@@ -1,404 +1,418 @@
 # ⚔️ Système de Combat - Project TDB
 
-**Version:** 1.0
+**Version:** 2.0
 **Date:** 11 Janvier 2026
+**Statut:** Reflète l'implémentation actuelle
 
 ---
 
 ## 🎯 Vue d'Ensemble
 
-Le système de combat de **Project TDB** combine combat tactique sur grille hexagonale et gestion de cartes pour créer une expérience stratégique profonde où chaque décision compte. Les joueurs doivent équilibrer positionnement, gestion de ressources et construction de combos pour vaincre leurs adversaires.
+Le système de combat de **Project TDB** combine combat tactique sur grille 2D et gestion de cartes avec un système d'émotions unique. Les joueurs contrôlent des champions qui utilisent des cartes de leurs decks personnels pour affronter des ennemis avec des patterns d'attaque fixes. Le système d'émotions ajoute une dimension stratégique en transformant les champions selon leurs actions.
 
 ---
 
 ## 🔄 Déroulement d'un Combat
 
-### Phase 1: Initialisation du Combat
+### Machine à États (TurnStateMachine)
 
-**Actions:**
-1. Chargement de la scène de combat
-2. Placement des unités (joueurs et ennemis) sur la grille
-3. Calcul de l'initiative pour déterminer l'ordre des tours
-4. Mélange des decks de chaque personnage
-5. Pioche des mains initiales (5 cartes par personnage)
-6. Attribution des ressources de départ (PA, PM, ressources spéciales)
+| État | Description | Transitions |
+|------|-------------|-------------|
+| **Initializing** | Initialisation du combat | → PlayerTurn |
+| **PlayerTurn** | Tour des champions | → EnemyTurn, BattleEnd |
+| **EnemyTurn** | Tour des ennemis | → TransitioningTurn |
+| **TransitioningTurn** | Transition entre tours | → PlayerTurn, BattleEnd |
+| **BattleEnd** | Fin du combat | Aucune |
 
-**Règles d'Initiative:**
-- Basé sur la statistique de Vitesse de chaque unité
-- Modificateurs possibles (cartes, effets de terrain)
-- L'ordre est recalculé chaque tour
+---
 
-### Phase 2: Tour d'un Personnage Joueur
+### Phase 1: Initialisation (Initializing)
 
-**1. Début de Tour**
-- Pioche de cartes jusqu'à avoir 5 cartes en main
-- Restauration des PA (3-5 selon le personnage)
-- Restauration des PM (2-4 selon le personnage)
-- Résolution des effets de début de tour (poison, régénération, etc.)
+| Action | Description |
+|--------|-------------|
+| **Setup de la grille** | Génération de la grille de combat |
+| **Placement unités** | Champions et ennemis placés sur la grille |
+| **Init des decks** | Mélange des decks des champions |
+| **Pioche initiale** | Champions piochent jusqu'à 5 cartes |
+| **Resources initiales** | Attribution des PA, PM de départ |
 
-**2. Phase d'Action (Libre)**
+**Différence Champions vs Ennemis:**
+- Champions : Deck mélangé, pioche aléatoire
+- Ennemis : Deck pattern, pioche séquentielle
 
-Le joueur peut effectuer les actions suivantes dans l'ordre de son choix:
+---
 
-- **Jouer des Cartes**
-  - Sélectionner une carte dans la main
-  - Payer le coût en PA
-  - Choisir une cible valide (si nécessaire)
-  - Résoudre les effets de la carte
+### Phase 2: Tour des Champions (PlayerTurn)
 
-- **Se Déplacer**
-  - Dépenser des PM pour se déplacer sur la grille
-  - 1 PM = 1 case hexagonale
-  - Mouvement bloqué par les obstacles et ennemis
+**Début de Tour:**
 
-- **Utiliser des Capacités Passives**
-  - Certaines capacités ne coûtent pas de PA
-  - Effets déclenchés automatiquement
+| Action | Description |
+|--------|-------------|
+| **Pioche** | Pioche jusqu'à 5 cartes en main |
+| **Restauration PA** | PA restaurés au maximum (3-5) |
+| **Restauration PM** | PM restaurés au maximum (2-4) |
+| **Effets de début** | Résolution des effets (régénération, poison, etc.) |
 
-**3. Fin de Tour**
-- Résolution des effets de fin de tour
-- Défausse des cartes en excès (limite de main: 10 cartes)
-- Passage au personnage suivant dans l'ordre d'initiative
+**Actions Disponibles (Ordre Libre):**
 
-### Phase 3: Tour des Ennemis
+| Action | Coût | Description |
+|--------|------|-------------|
+| **Jouer une Carte** | PA variable | Sélection, ciblage, exécution des effets |
+| **Se Déplacer** | 1 PM par case | Déplacement sur la grille (bloqué par obstacles) |
+| **Terminer le Tour** | Gratuit | Passe au tour suivant |
 
-**IA Ennemie:**
-1. Évaluation de la situation (distance aux joueurs, santé, etc.)
-2. Choix de l'action optimale:
-   - Attaquer un joueur à portée
-   - Se déplacer vers un joueur
-   - Utiliser une capacité spéciale
-   - Se protéger si santé basse
-3. Exécution de l'action
+**Fin de Tour:**
+- Défausse des cartes en excès si >10 en main
+- Transition vers EnemyTurn
 
-**Patterns d'IA:**
-- **Agressif** : Attaque toujours la cible la plus proche
-- **Défensif** : Privilégie la protection et reste à distance
-- **Tactique** : Utilise le terrain et les capacités de manière optimale
-- **Support** : Aide les autres ennemis (buffs, soins)
+---
 
-### Phase 4: Fin du Combat
+### Phase 3: Tour des Ennemis (EnemyTurn)
+
+**Fonctionnement des Ennemis:**
+
+| Caractéristique | Description |
+|-----------------|-------------|
+| **Deck Pattern** | Ordre fixe de cartes, pas de mélange |
+| **Pioche** | Séquentielle, reprend au début si fin du deck |
+| **IA** | Joue la prochaine carte dans le pattern |
+| **PA** | 2-4 selon l'ennemi |
+
+**Déroulement:**
+1. Pioche de la prochaine carte du pattern
+2. Validation de l'action
+3. Choix de la cible (si nécessaire)
+4. Exécution de la carte
+5. Passage à l'ennemi suivant
+
+---
+
+### Phase 4: Fin du Combat (BattleEnd)
 
 **Conditions de Victoire:**
-- Tous les ennemis sont vaincus → Victoire
-- Tous les personnages joueurs sont vaincus → Défaite
 
-**Récompenses (Victoire):**
-- Expérience pour les personnages
-- Or et gemmes
-- Nouvelles cartes (choix parmi 3 options)
-- Possibilité d'améliorer une carte existante
-- Items/équipement (rare)
+| Condition | Résultat |
+|-----------|----------|
+| **Tous les ennemis vaincus** | Victoire ✓ |
+| **Tous les champions vaincus** | Défaite ✗ |
+
+**Récompenses (À Implémenter):**
+- Expérience pour les champions
+- Nouvelles cartes
+- Ressources
+- Progression de la campagne
 
 ---
 
 ## 📊 Ressources de Combat
 
+### Ressources Principales
+
+| Ressource | Champions | Ennemis | Régénération | Description |
+|-----------|-----------|---------|--------------|-------------|
+| **PA** (Points d'Action) | 3-5 | 2-4 | Complète par tour | Pour jouer des cartes |
+| **PM** (Points de Mouvement) | 2-4 | 2-4 | Complète par tour | Pour se déplacer (1 PM = 1 case) |
+| **HP** (Points de Vie) | Variable | Variable | Via cartes/effets | Tombe à 0 = vaincu |
+| **Défense Physique** | 10+ | 10+ | Fixe | Réduit dégâts physiques |
+| **Défense Magique** | 10+ | 10+ | Fixe | Réduit dégâts magiques |
+
+---
+
 ### Points d'Action (PA)
 
-**Caractéristiques:**
-- Ressource principale pour jouer des cartes
-- Régénération complète au début de chaque tour
-- Quantité variable selon le personnage (3-5 PA)
-- Ne se cumule PAS entre les tours
+**Coût des Cartes par PA:**
 
-**Coût des Cartes:**
-- **0 PA** : Cartes gratuites (rares, souvent conditionnelles)
-- **1 PA** : Cartes basiques (attaques faibles, déplacements)
-- **2 PA** : Cartes standards (attaques moyennes, buffs)
-- **3 PA** : Cartes puissantes (gros dégâts, AoE)
-- **4+ PA** : Cartes ultimes (effets dévastateurs)
+| Coût | Type de Carte | Puissance Typique |
+|------|---------------|-------------------|
+| **0 PA** | Gratuites | Faibles effets ou conditionnelles |
+| **1 PA** | Basiques | 6 dégâts, petits effets |
+| **2 PA** | Standards | 12 dégâts, buffs moyens |
+| **3 PA** | Puissantes | 18 dégâts, AoE, gros effets |
+| **4+ PA** | Ultimes | 24+ dégâts, effets dévastateurs |
 
 **Gestion:**
-- Impossible de jouer une carte si PA insuffisants
-- Cartes non jouables sont grisées dans l'UI
-- Texte de coût devient rouge si insuffisant
+- Restauration complète chaque tour
+- Ne se cumule PAS entre tours
+- Cartes impossibles à jouer si PA insuffisants
+- Feedback UI : cartes grisées si non jouables
+
+---
 
 ### Points de Mouvement (PM)
 
-**Caractéristiques:**
-- Ressource pour le déplacement sur la grille
-- Régénération complète au début de chaque tour
-- Quantité variable selon le personnage (2-4 PM)
-- 1 PM = 1 case hexagonale
+**Règles de Déplacement:**
 
-**Règles de Mouvement:**
-- Déplacement bloqué par les obstacles
-- Impossible de traverser une case occupée par un ennemi
-- Certaines cartes permettent de se téléporter (ignorent les obstacles)
-- Le terrain peut modifier le coût (terrain difficile = 2 PM)
+| Règle | Description |
+|-------|-------------|
+| **Coût** | 1 PM = 1 case |
+| **Blocage** | Obstacles et ennemis bloquent le passage |
+| **Restauration** | Complète au début du tour |
+| **Non-cumulatif** | Ne se garde pas entre tours |
+
+**Mouvement via Cartes:**
+- Certaines cartes donnent des PM bonus
+- Téléportation possible (ignore obstacles)
+- Déplacement forcé (push/pull)
+
+---
 
 ### Santé (HP)
 
-**Caractéristiques:**
-- Points de vie du personnage
-- Tombe à 0 → Personnage vaincu
-- Peut être restaurée via cartes ou compétences
-- Maximum fixe selon le personnage
+**Système de Dégâts:**
 
-**Dégâts:**
-- **Physiques** : Dégâts directs, réduits par l'armure
-- **Magiques** : Ignorent partiellement l'armure
-- **Vrais** : Ignorent toutes les défenses (rares)
+| Type | Formule | Minimum |
+|------|---------|---------|
+| **Physical** | Dégâts - Défense Physique | 1 |
+| **Magical** | Dégâts - Défense Magique | 1 |
 
-**Protection:**
-- **Armure** : Réduit les dégâts physiques
-- **Bouclier** : Points de vie temporaires (absorbent les dégâts)
-- **Esquive** : Chance d'éviter complètement les dégâts
+**Important:** Les dégâts infligent toujours au minimum 1 HP pour éviter les immunités totales.
 
-### Ressources Spéciales
+**Barre de Vie:**
+- Champions : Au-dessus de la tête
+- Ennemis normaux : Au-dessus de la tête
+- Boss : En haut de l'écran (BossHealthBar)
 
-**Rage (Ilya):**
-- Génération: +1 Rage par attaque effectuée
-- Maximum: 10 Rage
-- Utilisation: Certaines cartes puissantes consomment la Rage
-- Stratégie: Enchaîner les attaques pour monter la Rage, puis utiliser une carte ultime
+---
 
-**Mana (Ayla):**
-- Génération: +2 Mana par tour
-- Maximum: 10 Mana
-- Utilisation: Sorts de mage consomment du Mana
-- Régénération passive chaque tour
+### Système d'Émotions (Champions Uniquement)
 
-**Émotion (Système avancé):**
-- États émotionnels affectant les statistiques
-- **Joyeux** : +10% dégâts, +1 PA
-- **Triste** : -10% dégâts, +1 défense
-- **Colérique** : +20% dégâts, -1 défense
-- **Calme** : +1 PM, +10% précision
+**Jauge Émotionnelle:**
+
+| Caractéristique | Valeur |
+|-----------------|--------|
+| **Minimum** | -100 (DPS) |
+| **Neutre** | 0 |
+| **Maximum** | +100 (Tank) |
+
+**Modificateurs par Carte:**
+- Chaque carte modifie la jauge (-50 à +50)
+- Les cartes offensives poussent vers négatif (DPS)
+- Les cartes défensives poussent vers positif (Tank)
+
+**Transformations:**
+
+| Seuil | Type | Effet | Permanent |
+|-------|------|-------|-----------|
+| **+100** | Positif/Tank | Bonus défensifs, HP accrus | Oui (1× par combat) |
+| **-100** | Négatif/DPS | Bonus offensifs, dégâts accrus | Oui (1× par combat) |
+
+Voir [Card_System.md](Card_System.md) pour les émotions spécifiques de chaque famille.
 
 ---
 
 ## 🎯 Système de Ciblage
 
-### Types de Cibles
+### Types de Cible (CardTargetType)
 
-**1. Cible Unique (Single Target)**
-- Sélection d'une seule cible (allié ou ennemi)
-- Doit être à portée
-- Ligne de vue requise (optionnel selon la carte)
+| Type | Description | Exemple d'Usage |
+|------|-------------|-----------------|
+| **None** | Aucune cible | Buff automatique |
+| **Self** | Soi-même uniquement | Se soigner |
+| **Enemy** | Un ou plusieurs ennemis | Attaques |
+| **Ally** | Alliés (sauf soi) | Buff allié |
+| **AllyOrSelf** | Alliés ET soi | Soins de groupe |
+| **AllyorEnemy** | Alliés ET ennemis | Explosion qui affecte tous |
+| **AnyUnit** | N'importe quelle unité | Télékinésie |
+| **EmptyTile** | Tuiles vides | Invocation, pièges |
+| **AnyTile** | N'importe quelle tuile | Zone d'effet centrée |
 
-**2. Zone d'Effet (AoE)**
-- **Cercle** : Rayon autour d'un point (ex: 2 cases de rayon)
-- **Ligne** : Toutes les cases en ligne droite
-- **Cône** : Zone conique dans une direction
-- **Croix** : 4 cases adjacentes
+Voir [Card_System.md](Card_System.md) pour les détails complets.
 
-**3. Auto-ciblage (Self)**
-- Cible automatiquement le lanceur
-- Pas de sélection nécessaire
-
-**4. Toutes les Cibles (All Enemies / All Allies)**
-- Affecte automatiquement toutes les cibles valides
-- Pas de sélection nécessaire
+---
 
 ### Portée des Cartes
 
-**Distances:**
-- **Mêlée** : 1 case (cases adjacentes uniquement)
-- **Courte** : 2-3 cases
-- **Moyenne** : 4-5 cases
-- **Longue** : 6+ cases
-- **Infinie** : Toute la grille
+| Portée | Distance | Type d'Usage |
+|--------|----------|--------------|
+| **0** | Soi-même | Buffs personnels |
+| **1** | Mêlée (adjacents) | Attaques au corps-à-corps |
+| **2-3** | Courte | Sorts courts, armes de jet |
+| **4-6** | Moyenne | Sorts standards, arcs |
+| **7+** | Longue | Sorts puissants, artillerie |
+| **99** | Infinie | Sorts globaux |
 
-**Ligne de Vue:**
-- Certaines cartes nécessitent une ligne de vue dégagée
-- Obstacles bloquent la ligne de vue
-- Alliés ne bloquent PAS la ligne de vue
+---
 
-### Interface de Ciblage
+### Zones d'Effet (AOE)
 
-**Visuel:**
-1. **Sélection de Carte** :
-   - Carte sélectionnée s'agrandit légèrement
-   - Glow vert autour de la carte
-   - Cases valides s'illuminent sur la grille
+| Forme | Description | Visualisation | Usage |
+|-------|-------------|---------------|-------|
+| **None** | Cible unique | • | Attaques précises |
+| **OneTile** | Une seule case | • | Piège minimal |
+| **Circle** | Cercle (rayon variable) | ○ | Explosions |
+| **Line** | Ligne droite | \| | Rayon, souffle |
+| **Cross** | Croix (4 directions) | + | Onde de choc |
+| **Cone** | Cône directionnel | ▷ | Arc de feu |
 
-2. **Hover sur Cible**:
-   - Courbe de Bézier de la carte jusqu'à la souris
-   - Réticule circulaire avec croix à la position de la souris
-   - Preview des dégâts/effets sur la cible
+Voir les schémas ASCII détaillés dans [Card_System.md](Card_System.md).
 
-3. **Validation**:
-   - Clic gauche pour confirmer
-   - Clic droit pour annuler
-   - Carte retourne dans la main si annulée
+---
 
-**Implémentation (voir [Technical_Specs.md](Technical_Specs.md)):**
-- `TargetingCurve.cs` : Courbe de Bézier quadratique
-- `TargetingReticle.cs` : Réticule circulaire avec crosshair
-- `HandUIController.cs` : Gestion de la sélection et ciblage
+### Interface de Ciblage Visuel
+
+**Étapes de Ciblage:**
+
+| Étape | Feedback Visuel | Action Joueur |
+|-------|----------------|---------------|
+| **1. Sélection Carte** | Carte s'agrandit, glow vert | Clic sur carte |
+| **2. Hover Cible** | Courbe de Bézier + réticule | Déplace souris |
+| **3. Validation** | Animation de lancement | Clic gauche |
+| **4. Annulation** | Carte retourne en main | Clic droit |
+
+**Composants Visuels:**
+- TargetingCurve : Courbe de Bézier quadratique de la carte vers la souris
+- TargetingReticle : Réticule circulaire avec croix
+- HandUIController : Gestion de la sélection et validation
+
+Voir [Technical_Specs.md](Technical_Specs.md) pour l'implémentation technique.
 
 ---
 
 ## 💥 Résolution des Effets
 
-### Ordre de Résolution
+### Ordre de Résolution d'une Carte
 
-1. **Validation de la Cible**
-   - Vérifier que la cible est toujours valide
-   - Vérifier la portée et ligne de vue
+| Étape | Action | Vérifications |
+|-------|--------|---------------|
+| **1. Validation** | Vérifier cible valide | Portée, PA suffisants |
+| **2. Coût** | Dépenser les PA | Déduction immédiate |
+| **3. Calcul** | Calculer dégâts/effets | Appliquer modificateurs |
+| **4. Application** | Appliquer effets | Dégâts, soins, mouvements |
+| **5. Émotion** | Modifier jauge émotionnelle | Selon modificateur de la carte |
+| **6. Vérification** | Vérifier morts | Retirer unités vaincues |
 
-2. **Calcul des Dégâts/Effets**
-   - Appliquer les bonus/malus du lanceur
-   - Appliquer les modificateurs de la cible
-   - Calcul final des dégâts
-
-3. **Application des Effets**
-   - Dégâts/soins
-   - Effets de statut (poison, brûlure, étourdissement)
-   - Déplacements forcés
-   - Buffs/Debuffs
-
-4. **Résolution des Déclencheurs**
-   - Capacités "On Hit" (ex: riposte)
-   - Capacités "On Damage" (ex: absorption)
-   - Effets en chaîne
-
-5. **Vérification des Morts**
-   - Personnages/ennemis vaincus sont retirés
-   - Déclenchement des effets "On Death"
-   - Vérification des conditions de victoire/défaite
+---
 
 ### Formules de Calcul
 
 **Dégâts Physiques:**
-```
-Dégâts Finaux = (Dégâts Base × Multiplicateur) - Armure Cible
-Minimum = 1 (toujours au moins 1 dégât)
-```
+- Formule : Dégâts Base - Défense Physique de la Cible
+- Minimum : 1 (toujours au moins 1 dégât)
 
 **Dégâts Magiques:**
-```
-Dégâts Finaux = (Dégâts Base × Multiplicateur) - (Armure Cible × 0.5)
-```
+- Formule : Dégâts Base - Défense Magique de la Cible
+- Minimum : 1 (toujours au moins 1 dégât)
 
 **Soins:**
-```
-Soins Finaux = Soins Base × (1 + Bonus de Soin %)
-Maximum = HP Max - HP Actuel
-```
+- Formule : Soins Base
+- Maximum : HP Max - HP Actuel (ne peut pas dépasser HP max)
+
+**Mouvement Bonus:**
+- Formule : PM Actuels + Bonus de Mouvement
+- Utilisable immédiatement sur le même tour
 
 ---
 
-## 🎲 Effets de Statut
+## 🎲 Effets de Statut (À Implémenter)
 
-### Debuffs
+### Debuffs Prévus
 
-**Poison:**
-- Perte de HP au début de chaque tour
-- Dégâts = Stacks × 2
-- Durée: 3 tours
-- Stackable jusqu'à 5 fois
+| Effet | Durée | Effet Mécanique | Stackable |
+|-------|-------|-----------------|-----------|
+| **Poison** | 3 tours | Perte HP au début du tour | Oui (×5 max) |
+| **Brûlure** | 2 tours | Perte HP + réduit soins de 50% | Oui (×3 max) |
+| **Stun** | 1 tour | Saute son tour | Non |
+| **Gel** | 2 tours | PM réduits à 0 | Non |
+| **Faiblesse** | 2 tours | Dégâts -30% | Non |
 
-**Brûlure:**
-- Perte de HP au début de chaque tour
-- Dégâts = Stacks × 3
-- Durée: 2 tours
-- Stackable jusqu'à 3 fois
-- Réduit les soins reçus de 50%
+---
 
-**Étourdissement (Stun):**
-- Le personnage saute son tour
-- Durée: 1 tour
-- Non-stackable
+### Buffs Prévus
 
-**Gel (Freeze):**
-- PM réduits à 0
-- Durée: 2 tours
-- Brisé si le personnage reçoit des dégâts de feu
+| Effet | Durée | Effet Mécanique | Stackable |
+|-------|-------|-----------------|-----------|
+| **Bouclier** | Jusqu'à destruction | Absorbe dégâts avant HP | Non |
+| **Force** | 2 tours | Dégâts physiques +30% | Non |
+| **Hâte** | 3 tours | +1 PM par tour | Non |
+| **Régénération** | 3 tours | Soins au début du tour | Oui (×5 max) |
 
-**Faiblesse:**
-- Dégâts infligés réduits de 30%
-- Durée: 2 tours
-
-### Buffs
-
-**Bouclier:**
-- Points de vie temporaires
-- Absorbe les dégâts avant la santé
-- Disparaît à la fin du combat
-
-**Force:**
-- Dégâts physiques augmentés de 30%
-- Durée: 2 tours
-
-**Hâte:**
-- +1 PM par tour
-- Durée: 3 tours
-
-**Régénération:**
-- Récupère HP au début de chaque tour
-- Soins = Stacks × 3
-- Durée: 3 tours
-- Stackable jusqu'à 5 fois
+**Note:** Le système de statuts est prévu mais pas encore implémenté dans le code actuel.
 
 ---
 
 ## 🧠 Stratégies et Synergies
 
-### Combos de Base
+### Synergie Famille-Classe-Élément
 
-**Combo Mêlée (Ilya):**
-1. Se rapprocher de l'ennemi (PM)
-2. Attaque basique (1 PA) → +1 Rage
-3. Attaque basique (1 PA) → +1 Rage
-4. Frappe puissante (2 PA, consomme 2 Rage) → Gros dégâts
+**Exemple de Synergie:**
+- Famille Déchaînés + Classe Ombrelame + Élément Aucun = DPS physique pur
+- Famille Précurseurs + Classe Tisseur + Élément Feu = Mage AoE explosif
+- Famille Gardiens + Classe Veilleur + Élément Lumière = Support soins
 
-**Combo AoE (Ayla):**
-1. Boule de feu (2 PA, 3 Mana) → Dégâts + Brûlure
-2. Explosion de mana (3 PA, 5 Mana) → Double dégâts sur cibles brûlées
+**Construction de Deck:**
 
-**Combo Défensif:**
-1. Bouclier (1 PA) → +5 Bouclier
-2. Retraite tactique (1 PA) → Recul de 2 cases
-3. Contre-attaque (0 PA, réaction) → Riposte si attaqué
-
-### Positionnement Tactique
-
-**Formations:**
-- **Ligne** : Maximise la couverture de terrain
-- **Triangle** : Protection mutuelle, bon contre focus
-- **Écartée** : Évite les AoE ennemies
-
-**Utilisation du Terrain:**
-- **Hauteur** : Bonus de dégâts depuis les cases élevées
-- **Couverture** : Réduction des dégâts derrière les obstacles
-- **Zones Dangereuses** : Lave, poison, pièges
+| Objectif | Familles Recommandées | Classes | Stratégie |
+|----------|----------------------|---------|-----------|
+| **Tank** | Gardiens, Déchaînés (Contrariété) | Ancre, Veilleur | Transformations positives (+100) |
+| **DPS** | Déchaînés (Rage), Réprouvés | Ombrelame, Tisseur | Transformations négatives (-100) |
+| **Support** | Éveillés, Gardiens | Veilleur, Harmoniste | Buffs et soins |
+| **Control** | Dissidents, Exilés | Tisseur, Ancre | Manipulation terrain |
 
 ---
 
-## 📈 Difficulté et Équilibrage
+### Positionnement Tactique
 
-### Scaling des Ennemis
+**Importance de la Position:**
 
-**Facteurs:**
-- Niveau du joueur
-- Nombre de personnages dans l'équipe
-- Progression dans la campagne
+| Facteur | Impact |
+|---------|--------|
+| **Portée** | Cartes mêlée (1) nécessitent proximité |
+| **AOE** | Regroupement amplifie dégâts ennemis |
+| **Mobilité** | PM limités = planifier mouvement |
+| **Ligne de Vue** | Obstacles peuvent bloquer (si implémenté) |
 
-**Ajustements:**
-- HP des ennemis: × (1 + 0.1 × Niveau)
-- Dégâts des ennemis: × (1 + 0.08 × Niveau)
-- Nombre d'ennemis: Variable selon le combat
+**Formations Recommandées:**
+- Ligne : Couverture maximale du terrain
+- Dispersée : Évite les AOE ennemies
+- Tactique : Protéger les champions fragiles derrière les tanks
 
-### Système de Difficulté
+---
 
-**Facile:**
-- Ennemis -30% HP
-- Ennemis -20% dégâts
-- +1 PA pour tous les personnages
+## 📈 Difficulté et Équilibrage (À Implémenter)
 
-**Normal:**
-- Valeurs de base
+### Système de Difficulté Prévu
 
-**Difficile:**
-- Ennemis +50% HP
-- Ennemis +30% dégâts
-- -1 PA pour tous les personnages
-- Meilleur loot
+| Difficulté | HP Ennemis | Dégâts Ennemis | Modificateurs Joueur |
+|------------|------------|----------------|---------------------|
+| **Facile** | -30% | -20% | +1 PA |
+| **Normal** | 100% | 100% | Aucun |
+| **Difficile** | +50% | +30% | -1 PA, meilleur loot |
+
+---
+
+### Équilibrage des Cartes
+
+**Principes de Design:**
+- Coût PA proportionnel aux effets
+- AOE coûte plus cher que cible unique
+- Émotions extrêmes = cartes plus puissantes
+- Cartes neutres (0 émotion) = polyvalentes
+
+**Formules de Référence:** Voir [Card_System.md](Card_System.md) section Équilibrage.
+
+---
+
+## 📝 Systèmes À Développer
+
+### Priorité Haute
+- Effets de statut (poison, stun, buffs)
+- IA ennemie avancée (patterns complexes)
+- Animations de combat
+- Feedbacks visuels améliorés
+
+### Priorité Moyenne
+- Système de difficulté
+- Terrain avec effets (lave, glace)
+- Ligne de vue
+- Hauteur et couverture
+
+### Priorité Basse
+- Réactions (contre-attaque, riposte)
+- Combos automatiques
+- Achievements de combat
 
 ---
 
 **Dernière mise à jour:** 11 Janvier 2026
+**Version:** 2.0
 **Responsable:** Design Combat Project TDB

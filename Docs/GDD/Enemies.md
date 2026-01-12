@@ -1,487 +1,350 @@
-# 👹 Ennemis et Boss - Project TDB
+# 👹 Ennemis - Project TDB
 
-**Version:** 1.0
+**Version:** 2.0
 **Date:** 11 Janvier 2026
+**Statut:** Reflète la structure actuelle (EnemyData)
 
 ---
 
 ## 🎯 Vue d'Ensemble
 
-Les ennemis de **Project TDB** sont conçus pour challenger les joueurs avec des patterns tactiques variés, forçant l'adaptation et la réflexion stratégique. Chaque type d'ennemi a des forces, faiblesses et comportements distincts.
+Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leurs cartes sont jouées dans un ordre fixe et séquentiel (pas de mélange). Ils sont classifiés en ennemis normaux et boss, avec des barres de vie différentes selon leur type.
 
 ---
 
-## 🗡️ Ennemis Communs
+## 📊 Structure d'un Ennemi (EnemyData)
 
-### Soldat Gobelin (Tier 1)
+### Données de Base
 
-**Apparence:**
-- Petit gobelin avec armure de cuir
-- Épée courte ou lance
-- Bouclier en bois
+| Attribut | Type | Description |
+|----------|------|-------------|
+| **Nom** | Text | Nom de l'ennemi |
+| **Prefab** | GameObject | Modèle 3D/2D de l'ennemi |
+| **Élément** | CardElementType | Feu, Ombre, Lumière, Eau ou None |
+| **Is Boss** | Boolean | Si true, barre de vie en haut de l'écran |
 
-**Statistiques:**
-```
-HP:     25   ██████░░░░
-Armure: 2    ████░░░░░░
-PA:     3    ██████░░░░
-PM:     3    ██████░░░░
-Vitesse: 6   ██████░░░░
-```
+---
 
-**Comportement IA:**
-- **Type:** Agressif
-- **Priorité:** Attaque le personnage le plus proche
-- **Mouvement:** Se rapproche s'il n'est pas à portée
-- **Capacités:**
-  - Coup d'Épée (1 PA) : 5 dégâts physiques, portée mêlée
-  - Charge (2 PA) : Se déplace de 2 cases et attaque pour 6 dégâts
+### Statistiques de Combat
 
-**Stratégie du Joueur:**
-- Facile à vaincre individuellement
+| Stat | Plage Typique | Description |
+|------|---------------|-------------|
+| **Max Health** | Normaux: 30-80, Boss: 200+ | Points de vie maximum |
+| **Movement Range** | 2-4 | Points de mouvement par tour |
+| **Max Action Points** | 2-4 | Points d'action par tour |
+| **Physical Defense** | 5-20 | Défense contre dégâts physiques |
+| **Magical Defense** | 5-20 | Défense contre dégâts magiques |
+
+---
+
+### Deck Pattern (Combat Deck)
+
+| Caractéristique | Ennemis | Champions (Comparaison) |
+|-----------------|---------|-------------------------|
+| **Type de Pioche** | Séquentielle | Aléatoire (mélangé) |
+| **Ordre** | Fixe, se répète | Aléatoire à chaque pioche |
+| **Taille Typique** | 5-10 cartes | 15-25 cartes |
+| **Stratégie** | Pattern prévisible | Imprévisible |
+
+---
+
+### Visual Settings
+
+| Paramètre | Description |
+|-----------|-------------|
+| **Health Bar Offset** | Position de la barre de vie au-dessus de la tête |
+| **Health Bar Color** | Couleur de la barre de vie (typiquement rouge) |
+
+---
+
+## 🎭 Différence Normaux vs Boss
+
+### Ennemis Normaux
+
+| Caractéristique | Valeur |
+|-----------------|--------|
+| **Is Boss** | false |
+| **Barre de Vie** | Au-dessus de la tête |
+| **HP Typiques** | 30-80 |
+| **PA Typiques** | 2-3 |
+| **Deck Pattern** | 5-8 cartes |
+
+**Utilisation:**
+- Ennemis de base dans les rencontres
+- Multiples par combat
+- Patterns simples
+
+---
+
+### Boss
+
+| Caractéristique | Valeur |
+|-----------------|--------|
+| **Is Boss** | true |
+| **Barre de Vie** | En haut de l'écran (BossHealthBar) |
+| **HP Typiques** | 200-500 |
+| **PA Typiques** | 3-4 |
+| **Deck Pattern** | 8-12 cartes |
+
+**Utilisation:**
+- Un seul par combat (typiquement)
+- Fin de niveau, événements spéciaux
+- Patterns complexes avec phases
+
+---
+
+## 🃏 Design de Deck Pattern
+
+### Principes de Design
+
+| Principe | Description | Exemple |
+|----------|-------------|---------|
+| **Prévisibilité** | Pattern se répète, joueur peut anticiper | Attaque → Buff → Attaque |
+| **Variété** | Assez de cartes différentes pour ne pas être répétitif | 6-8 cartes minimum |
+| **Montée en Puissance** | Cartes plus fortes en fin de pattern | Carte ultime en dernière position |
+| **Thématique** | Pattern correspond à l'identité de l'ennemi | Gobelin archer : majorité d'attaques distance |
+
+---
+
+### Exemples de Patterns
+
+**Pattern Agressif (Guerrier):**
+1. Frappe Rapide (1 PA, 8 dégâts)
+2. Frappe Rapide (1 PA, 8 dégâts)
+3. Frappe Puissante (2 PA, 15 dégâts)
+4. Bouclier (1 PA, +5 bouclier)
+5. Frappe Dévastatrice (3 PA, 25 dégâts)
+
+**Durée du Cycle:** 5 tours, puis recommence
+
+---
+
+**Pattern Support (Chaman):**
+1. Éclair (2 PA, 10 dégâts)
+2. Soins (2 PA, heal 15 HP)
+3. Buff Allié (2 PA, +3 dégâts à tous)
+4. Éclair (2 PA, 10 dégâts)
+5. Invocation (3 PA, invoque unité)
+
+**Durée du Cycle:** 5 tours, puis recommence
+
+---
+
+**Pattern Boss (Multi-Phase):**
+1. Attaque Basique (2 PA, 12 dégâts)
+2. Attaque Basique (2 PA, 12 dégâts)
+3. Buff Personnel (2 PA, +5 dégâts)
+4. Attaque AoE (3 PA, 15 dégâts rayon 2)
+5. Attaque Basique (2 PA, 12 dégâts)
+6. Attaque Ultime (4 PA, 30 dégâts rayon 3)
+
+**Durée du Cycle:** 6 tours, puis recommence
+
+**Note:** Les patterns complexes peuvent changer selon les HP du boss (phases).
+
+---
+
+## 🎯 Catégories d'Ennemis
+
+### Par Rôle
+
+| Rôle | HP | PA | Style | Cartes Typiques |
+|------|----|----|-------|-----------------|
+| **Tank** | 60-80 | 2-3 | Défensif, provocation | Bouclier, Taunt, Régénération |
+| **DPS** | 40-50 | 3-4 | Offensif, burst | Attaques multiples, Finishers |
+| **Support** | 30-40 | 3-4 | Buff/Heal alliés | Soins, Buffs, Invocations |
+| **Contrôleur** | 40-50 | 3-4 | Debuff, zone | Stun, Slow, AOE |
+
+---
+
+### Par Élément
+
+| Élément | Caractéristiques | Faiblesses |
+|---------|-----------------|------------|
+| **Feu** | Dégâts AOE, brûlure | Eau |
+| **Ombre** | Drain de vie, debuffs | Lumière |
+| **Lumière** | Soins, purification | Ombre |
+| **Eau** | Gel, ralentissement | Feu |
+| **None** | Équilibré, physique | Aucune |
+
+---
+
+## 🏗️ Création d'Ennemis
+
+### Processus dans Unity
+
+| Étape | Action |
+|-------|--------|
+| **1. Créer SO** | Clic droit → Enemy/Enemy Data |
+| **2. Identité** | Nom, Prefab, Élément |
+| **3. Classification** | Cocher Is Boss si boss |
+| **4. Stats** | HP, PA, PM, Défenses |
+| **5. Deck Pattern** | Glisser-déposer cartes dans Combat Deck (ordre important!) |
+| **6. Visuels** | Health Bar Offset, Color |
+
+---
+
+### Checklist de Validation
+
+| Élément | Vérifié |
+|---------|---------|
+| Prefab assigné | ☐ |
+| Élément choisi | ☐ |
+| Is Boss configuré correctement | ☐ |
+| Stats équilibrées | ☐ |
+| Combat Deck de 5-12 cartes | ☐ |
+| Pattern teste et équilibré | ☐ |
+
+---
+
+## 🎲 Exemples d'Ennemis
+
+### Ennemi Normal: Gobelin Guerrier
+
+| Attribut | Valeur |
+|----------|--------|
+| **Nom** | Gobelin Guerrier |
+| **Élément** | None |
+| **Is Boss** | false |
+| **Max Health** | 40 |
+| **Movement Range** | 3 |
+| **Max Action Points** | 3 |
+| **Physical Defense** | 10 |
+| **Magical Defense** | 5 |
+
+**Combat Deck (Pattern):**
+1. Frappe Rapide (1 PA, 6 dégâts)
+2. Frappe Rapide (1 PA, 6 dégâts)
+3. Frappe Puissante (2 PA, 12 dégâts)
+4. Bouclier (1 PA, +5 bouclier)
+5. Charge (2 PA, 15 dégâts + déplacement)
+
+**Stratégie pour Joueur:**
+- Pattern prévisible, anticiper Charge au 5e tour
+- Éliminer rapidement (HP faibles)
 - Dangereux en groupe
-- Faible défense, cible prioritaire pour AoE
-
-**Récompenses:**
-- 15 XP
-- 10-15 Or
 
 ---
 
-### Archer Gobelin (Tier 1)
+### Boss: Dragon des Cendres
 
-**Apparence:**
-- Gobelin avec arc court
-- Cape verte
-- Carquois
+| Attribut | Valeur |
+|----------|--------|
+| **Nom** | Dragon des Cendres |
+| **Élément** | Feu |
+| **Is Boss** | true |
+| **Max Health** | 300 |
+| **Movement Range** | 2 |
+| **Max Action Points** | 4 |
+| **Physical Defense** | 20 |
+| **Magical Defense** | 15 |
 
-**Statistiques:**
-```
-HP:     20   ████░░░░░░
-Armure: 1    ██░░░░░░░░
-PA:     3    ██████░░░░
-PM:     2    ████░░░░░░
-Vitesse: 5   █████░░░░░
-```
+**Combat Deck (Pattern):**
+1. Griffe (2 PA, 15 dégâts physiques)
+2. Souffle de Feu (3 PA, 20 dégâts feu rayon 3)
+3. Griffe (2 PA, 15 dégâts physiques)
+4. Vol (2 PA, déplacement 4 cases)
+5. Souffle de Feu (3 PA, 20 dégâts feu rayon 3)
+6. Météore Enflammé (4 PA, 35 dégâts feu rayon 4)
 
-**Comportement IA:**
-- **Type:** Défensif
-- **Priorité:** Reste à distance, cible les personnages à faible HP
-- **Mouvement:** Recule si un ennemi s'approche
-- **Capacités:**
-  - Tir à l'Arc (1 PA) : 4 dégâts physiques, portée 5
-  - Flèche Empoisonnée (2 PA) : 3 dégâts + Poison (1 stack, 2 tours)
-  - Retraite (1 PA) : Recule de 2 cases
-
-**Stratégie du Joueur:**
-- Très fragile
-- Utiliser la mobilité pour se rapprocher
-- Bloquer la ligne de vue avec obstacles
-
-**Récompenses:**
-- 15 XP
-- 10-15 Or
+**Stratégie pour Joueur:**
+- Anticiper Météore au 6e tour
+- Se disperser avant Souffle de Feu (tours 2 et 5)
+- Utiliser cartes Eau pour bonus de dégâts
 
 ---
 
-### Chaman Gobelin (Tier 2)
+## ⚖️ Équilibrage
 
-**Apparence:**
-- Gobelin avec bâton totémique
-- Masque tribal
-- Robe ornée
+### Formules de Base
 
-**Statistiques:**
-```
-HP:     35   ███████░░░
-Armure: 3    ███░░░░░░░
-PA:     4    ████░░░░░░
-PM:     2    ████░░░░░░
-Vitesse: 4   ████░░░░░░
-```
+**HP Ennemi Normal:**
+- Formule : 30 + (10 × Tier)
+- Tier 1 : 40 HP
+- Tier 2 : 50 HP
+- Tier 3 : 60 HP
 
-**Comportement IA:**
-- **Type:** Support
-- **Priorité:** Buff les alliés, soigne les blessés
-- **Mouvement:** Reste au milieu du groupe
-- **Capacités:**
-  - Éclair Mineur (2 PA) : 6 dégâts magiques, portée 4
-  - Soins Tribaux (2 PA) : Restaure 10 HP à un allié, portée 3
-  - Cri de Guerre (1 PA) : Tous les alliés gagnent +2 dégâts pour 2 tours
-
-**Stratégie du Joueur:**
-- **CIBLE PRIORITAIRE** : Doit être éliminé rapidement
-- Transforme les combats faciles en combats difficiles
-- Faible mobilité, utiliser le focus burst
-
-**Récompenses:**
-- 30 XP
-- 20-30 Or
+**HP Boss:**
+- Formule : 200 + (50 × Chapter)
+- Chapitre 1 : 250 HP
+- Chapitre 2 : 300 HP
+- Chapitre 3 : 350 HP
 
 ---
 
-### Brute Orque (Tier 2)
+### Budget PA par Pattern
 
-**Apparence:**
-- Grand orque musclé
-- Hache à deux mains
-- Armure lourde
+| Type | PA Total Pattern | Tours de Cycle |
+|------|------------------|----------------|
+| **Normal Faible** | 6-8 PA | 3-4 tours |
+| **Normal Moyen** | 8-12 PA | 4-5 tours |
+| **Normal Fort** | 12-15 PA | 5-6 tours |
+| **Boss** | 18-24 PA | 6-8 tours |
 
-**Statistiques:**
-```
-HP:     60   ██████████
-Armure: 6    ██████░░░░
-PA:     3    ██████░░░░
-PM:     2    ████░░░░░░
-Vitesse: 3   ███░░░░░░░
-```
-
-**Comportement IA:**
-- **Type:** Agressif
-- **Priorité:** Attaque le personnage avec le plus de HP
-- **Mouvement:** Avance lentement mais sûrement
-- **Capacités:**
-  - Frappe de Hache (2 PA) : 12 dégâts physiques, portée mêlée
-  - Coup Écrasant (3 PA) : 18 dégâts + Push 1 case
-  - Hurlement (1 PA) : Provocation (force les ennemis adjacents à l'attaquer)
-
-**Stratégie du Joueur:**
-- Tank ennemi, difficile à tuer rapidement
-- Kite avec mobilité et attaques à distance
-- Utiliser dégâts magiques (ignore partiellement l'armure)
-
-**Récompenses:**
-- 40 XP
-- 30-40 Or
+**Principe:** Le total de PA dans le pattern doit être équilibré avec les HP.
 
 ---
 
-### Nécromancien Squelette (Tier 3)
+### Scaling de Difficulté
 
-**Apparence:**
-- Squelette en robe noire
-- Bâton avec crâne
-- Aura sombre
-
-**Statistiques:**
-```
-HP:     45   █████████░
-Armure: 2    ██░░░░░░░░
-PA:     5    ██████████
-PM:     2    ████░░░░░░
-Vitesse: 5   █████░░░░░
-```
-
-**Comportement IA:**
-- **Type:** Tactique
-- **Priorité:** Invoque des sbires, attaque à distance
-- **Mouvement:** Reste en arrière, se téléporte si menacé
-- **Capacités:**
-  - Rayon Nécrotique (2 PA) : 8 dégâts magiques, portée 5
-  - Invocation de Squelettes (3 PA) : Invoque 2 Squelettes Guerriers
-  - Drain de Vie (3 PA) : 10 dégâts, restaure 5 HP
-  - Téléportation d'Ombre (2 PA) : Se téléporte jusqu'à 4 cases
-
-**Stratégie du Joueur:**
-- **TRÈS PRIORITAIRE** : Invocations rendent le combat ingérable
-- Utiliser le contrôle de foule (Stun, Gel)
-- Focus burst avant qu'il n'invoque trop
-- Éliminer les invocations avec AoE
-
-**Récompenses:**
-- 60 XP
-- 50-70 Or
+| Paramètre | Facile | Normal | Difficile |
+|-----------|--------|--------|-----------|
+| **HP** | -30% | 100% | +50% |
+| **Dégâts** | -20% | 100% | +30% |
+| **Défenses** | -20% | 100% | +20% |
 
 ---
 
-### Élémentaire de Feu (Tier 3)
+## 📝 Ennemis À Créer
 
-**Apparence:**
-- Forme humanoïde de flammes
-- Yeux de braise
-- Aura de chaleur
+### Priorité Haute
+- 5-10 ennemis normaux variés
+- 1-2 boss par acte
+- Un ennemi de chaque élément
+- Représentation de chaque rôle (Tank/DPS/Support)
 
-**Statistiques:**
-```
-HP:     50   ██████████
-Armure: 0    ░░░░░░░░░░
-PA:     4    ████░░░░░░
-PM:     3    ██████░░░░
-Vitesse: 6   ██████░░░░
-```
+### Priorité Moyenne
+- Variantes d'ennemis existants
+- Ennemis élites (mini-boss)
+- Ennemis avec mécaniques spéciales
 
-**Résistances:**
-- **Feu:** Immune
-- **Glace:** Faiblesse (×2 dégâts)
-- **Physique:** Résistance (-50% dégâts)
-
-**Comportement IA:**
-- **Type:** Agressif / AoE
-- **Priorité:** Groupes de personnages proches
-- **Mouvement:** Se rapproche pour maximiser l'AoE
-- **Capacités:**
-  - Boule de Feu (2 PA) : 10 dégâts feu, rayon 2
-  - Nova de Flammes (3 PA) : 12 dégâts feu AoE autour de lui, rayon 2
-  - Immolation (Passif) : 3 dégâts feu aux ennemis adjacents à la fin de son tour
-
-**Stratégie du Joueur:**
-- Utiliser dégâts de glace (double dégâts)
-- Éviter de se regrouper (AoE)
-- Attaques à distance recommandées
-
-**Récompenses:**
-- 70 XP
-- 60-80 Or
+### Priorité Basse
+- Boss secrets
+- Ennemis saisonniers/événements
+- Ennemis légendaires
 
 ---
 
-## 👑 Boss
+## 🎨 Design d'Ennemis
 
-### Warlord Grakk - Chef des Gobelins (Boss Acte 1)
+### Principes de Design
 
-**Apparence:**
-- Gobelin massif (2× taille normale)
-- Armure d'os et de métal
-- Grande hache enchantée
-- Cape de fourrure
-
-**Statistiques:**
-```
-HP:     200  ██████████ (Barre de vie en 2 phases)
-Armure: 8    ████████░░
-PA:     5    ██████████
-PM:     3    ██████░░░░
-Vitesse: 7   ███████░░░
-```
-
-**Phases du Combat:**
-
-**Phase 1 (100% → 50% HP):**
-- **Comportement:** Agressif, attaque frontale
-- **Capacités:**
-  - Frappe du Warlord (2 PA) : 15 dégâts physiques, portée mêlée
-  - Lancer de Hache (3 PA) : 12 dégâts en ligne, portée 5, traverse les ennemis
-  - Cri de Ralliement (2 PA) : Invoque 2 Soldats Gobelins
-  - Charge Brutale (3 PA) : Se déplace de 3 cases, 18 dégâts + Stun 1 tour
-
-**Phase 2 (< 50% HP):**
-- **Trigger:** Grakk hurle de rage, aura rouge apparaît
-- **Changements:**
-  - +50% dégâts sur toutes les attaques
-  - +1 PM
-  - Nouvelles capacités débloquées
-- **Nouvelles Capacités:**
-  - Tourbillon de Rage (4 PA) : 20 dégâts AoE rayon 2, +1 Rage par ennemi touché
-  - Frappe Dévastatrice (5 PA) : 30 dégâts, -5 Armure à la cible pour 2 tours
-
-**Mécanique Spéciale:**
-- **Rage du Chef** : À chaque Soldat Gobelin vaincu, Grakk gagne +2 dégâts permanent
-- **Invocations:** Grakk invoque 2 Soldats tous les 3 tours
-
-**Stratégie du Joueur:**
-1. Éliminer rapidement les invocations pour limiter les bonus de Grakk
-2. Utiliser le contrôle pour éviter la Charge Brutale
-3. En Phase 2, focus burst pour terminer rapidement
-4. Kael peut tanker la plupart des attaques
-5. Ayla doit AoE les invocations
-
-**Récompenses:**
-- 200 XP
-- 200 Or
-- 1 Carte Rare garantie (choix parmi 3)
-- Clé de l'Acte 2
+| Principe | Description |
+|----------|-------------|
+| **Identité Claire** | Apparence et pattern cohérents |
+| **Contrepartie** | Forces compensées par faiblesses |
+| **Prévisibilité** | Pattern lisible, joueur peut stratégiser |
+| **Challenge** | Doit forcer adaptation tactique |
 
 ---
 
-### L'Archimage Corrompu - Zephyros (Boss Acte 2)
+### Thématiques Recommandées
 
-**Apparence:**
-- Mage humain vieilli
-- Robe pourpre corrompue
-- Bâton flottant de runes noires
-- Aura de magie sombre
-
-**Statistiques:**
-```
-HP:     150  ██████████ (Santé plus faible mais mécanique défensive)
-Armure: 3    ███░░░░░░░
-PA:     6    ██████████
-PM:     2    ████░░░░░░
-Vitesse: 5   █████░░░░░
-```
-
-**Mécanique Unique: Boucliers Élémentaires**
-
-Zephyros possède 3 Boucliers Élémentaires qui orbitent autour de lui:
-- **Bouclier de Feu** : Absorbe 30 HP de dégâts de feu
-- **Bouclier de Glace** : Absorbe 30 HP de dégâts de glace
-- **Bouclier de Foudre** : Absorbe 30 HP de dégâts de foudre
-
-**Règle:** Les dégâts du type correspondant détruisent le bouclier. Les autres types de dégâts sont réduits de 50%.
-
-**Phases du Combat:**
-
-**Phase 1 (3 Boucliers actifs):**
-- **Comportement:** Défensif, reste à distance
-- **Capacités:**
-  - Projectile Élémentaire (2 PA) : 8 dégâts (type aléatoire), portée infinie
-  - Invocation Élémentaire (3 PA) : Invoque 1 Élémentaire aléatoire (Feu, Glace, Foudre)
-  - Nova Magique (4 PA) : 10 dégâts AoE rayon 3, type = bouclier actif
-
-**Phase 2 (1-2 Boucliers actifs):**
-- **Comportement:** Agressif, sorts plus puissants
-- **Capacités supplémentaires:**
-  - Chaîne d'Éclairs (4 PA) : 15 dégâts à 3 cibles, portée 6
-  - Téléportation Arcane (2 PA) : Se téléporte, laisse une zone de dégâts à l'ancien emplacement
-
-**Phase 3 (Tous boucliers détruits):**
-- **Trigger:** Zephyros crie "ASSEZ!", explosion magique
-- **Changements:**
-  - Gagne 50 HP de Bouclier permanent (non-élémentaire)
-  - Tous les sorts coûtent -1 PA
-  - Dégâts augmentés de 50%
-- **Capacité Ultime:**
-  - Météore Apocalyptique (6 PA) : 25 dégâts AoE rayon 4, crée zones de feu durables
-
-**Stratégie du Joueur:**
-1. Diversifier les types de dégâts pour détruire les boucliers
-2. Éliminer les Élémentaires invoqués rapidement
-3. En Phase 3, burst maximal avant le Météore
-4. Ayla excelle dans ce combat (variété élémentaire)
-5. Utiliser la mobilité pour éviter les AoE
-
-**Récompenses:**
-- 300 XP
-- 400 Or
-- 1 Carte Épique garantie (choix parmi 3)
-- Déblocage de la zone de l'Acte 3
-
----
-
-### Le Roi Liche - Malachar (Boss Final Acte 3)
-
-**Apparence:**
-- Squelette en armure de liche
-- Couronne de fer rouillé
-- Cape éthérée
-- Épée maudite et grimoire
-
-**Statistiques:**
-```
-HP:     300  ██████████ (Combat en 3 phases)
-Armure: 10   ██████████
-PA:     7    ██████████
-PM:     3    ██████░░░░
-Vitesse: 6   ██████░░░░
-```
-
-**Immunités:**
-- Poison (Mort-vivant)
-- Drain de Vie (Pas de vie à drainer)
-
-**Phases du Combat:**
-
-**Phase 1 (100% → 66% HP) - Le Nécromancien:**
-- **Focus:** Invocations et magie nécrotique
-- **Capacités:**
-  - Rayon de Mort (3 PA) : 12 dégâts magiques, portée infinie, ignore 50% de l'Armure
-  - Armée des Morts (4 PA) : Invoque 3 Squelettes Guerriers
-  - Malédiction (3 PA) : -30% dégâts infligés à tous les ennemis pour 3 tours
-  - Drain d'Âme (4 PA) : 15 dégâts, Malachar gagne 15 HP
-
-**Phase 2 (66% → 33% HP) - Le Guerrier Maudit:**
-- **Trigger:** Malachar dégaine son épée maudite
-- **Changements:**
-  - +2 PM
-  - Passe en combat de mêlée
-  - Nouvelle barre d'Armure (+10 Armure)
-- **Capacités:**
-  - Frappe Maudite (3 PA) : 18 dégâts physiques + Malédiction (réduction de soins 50%)
-  - Charge Fantomatique (3 PA) : Téléportation jusqu'à 5 cases, 20 dégâts à l'arrivée
-  - Aura de Terreur (Passif) : -1 PA à tous les ennemis dans un rayon de 3 cases
-  - Invocation Réduite (3 PA) : Invoque 2 Squelettes
-
-**Phase 3 (< 33% HP) - Forme Finale:**
-- **Trigger:** Malachar fusionne avec son trône, transformation
-- **Changements:**
-  - Immobile (0 PM) mais portée infinie sur tous les sorts
-  - Bouclier régénératif (+20 Bouclier par tour)
-  - Double Actions (peut jouer 2 tours de suite tous les 3 tours)
-- **Capacités:**
-  - Tsunami Nécrotique (5 PA) : 20 dégâts magiques AoE sur TOUTE la grille
-  - Résurrection des Héros (6 PA) : Invoque 2 Champions Squelettes (mini-boss)
-  - Griffes de l'Au-Delà (4 PA) : 25 dégâts à une cible, Stun 1 tour
-  - Renaissance (Passif) : À 0 HP, ressuscite une fois avec 50 HP (peut être empêché avec damage burst)
-
-**Mécanique Spéciale: Les Quatre Phylactères**
-
-Au début du combat, 4 Phylactères apparaissent aux coins de la grille.
-- **HP:** 20 chacun
-- **Effet:** Tant qu'un Phylactère est actif, Malachar régénère 10 HP par tour
-- **Stratégie:** Détruire les Phylactères est optionnel mais recommandé
-
-**Stratégie du Joueur:**
-1. **Début:** Décider si on détruit les Phylactères (ralentit mais facilite)
-2. **Phase 1:** Focus sur les invocations, burst Malachar
-3. **Phase 2:** Kite ou tanker selon la composition, attention à l'Aura de Terreur
-4. **Phase 3:** BURST MAXIMAL, éliminer les Champions immédiatement
-5. **Équipe recommandée:** 4 personnages, composition équilibrée
-
-**Récompenses:**
-- 500 XP
-- 1000 Or
-- 1 Carte Légendaire (choix parmi 3)
-- Déblocage du Mode Difficile
-- Fin de la Campagne Principale
-
----
-
-## 🎲 Patterns d'IA
-
-### Types de Comportement
-
-**Agressif:**
-- Attaque la cible la plus proche ou la plus faible
-- Utilise toutes les ressources pour maximiser les dégâts
-- Ignore la défense personnelle
-
-**Défensif:**
-- Reste à distance
-- Utilise les boucliers et soins
-- Recule quand menacé
-
-**Tactique:**
-- Évalue la situation avant d'agir
-- Utilise le terrain à son avantage
-- Priorise les cibles selon le contexte
-
-**Support:**
-- Aide les alliés (buffs, soins)
-- Évite le combat direct
-- Cible prioritaire pour le joueur
-
----
-
-## 📊 Scaling de Difficulté
-
-### Formule de Scaling
-
-**HP Ennemis:**
-```
-HP Scaled = HP Base × (1 + 0.1 × Niveau du Joueur)
-```
-
-**Dégâts Ennemis:**
-```
-Dégâts Scaled = Dégâts Base × (1 + 0.08 × Niveau du Joueur)
-```
-
-**XP et Or:**
-```
-XP/Or Scaled = Valeur Base × (1 + 0.05 × Niveau du Joueur)
-```
+| Thème | Style | Exemples |
+|-------|-------|----------|
+| **Gobelins** | Agressif, nombreux | Guerrier, Archer, Chaman |
+| **Morts-Vivants** | Lent, régénération | Squelette, Zombie, Nécromancien |
+| **Élémentaires** | Spécialisés élément | Feu, Eau, Air, Terre |
+| **Dragons** | Boss, puissants | Dragon Rouge, Noir, Bleu |
+| **Démons** | Corruptions, drain | Succube, Démon Majeur |
 
 ---
 
 **Dernière mise à jour:** 11 Janvier 2026
+**Version:** 2.0
 **Responsable:** Design Ennemis Project TDB
+
+**Documents Connexes:**
+- [Combat_System.md](Combat_System.md) - Système de combat
+- [Card_System.md](Card_System.md) - Cartes utilisées par ennemis
+- [GDD_Main.md](GDD_Main.md) - Vision globale

@@ -2,7 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 
 // Enum pour le coût de la carte
-public enum CardCostType { None, PA }
+public enum CardCostType 
+{ 
+    None, 
+    PA, 
+    Other 
+}
 
 // Enum pour spécifier le type de cible valide
 public enum CardTargetType
@@ -80,6 +85,15 @@ public enum CardElementType
     Eau         // Eau
 }
 
+public enum CardEffectType
+{
+    None,       // Aucun
+    Riposte,    // Riposte
+    Taunt,      // Taunt
+    Knockback,  // Knockback
+    Debuff      // Debuff
+}
+
 [CreateAssetMenu(fileName = "NewCardData", menuName = "Card/Card Data")]
 public class CardData : ScriptableObject
 {
@@ -101,6 +115,7 @@ public class CardData : ScriptableObject
     [Header("Coût et ressources")]
     // Coût en PA (Points d'Action)
     public int costPA = 0; 
+    public int costOther = 0;
 
     [Header("Type et cible")]
     // Type de cible valide
@@ -135,6 +150,16 @@ public class CardData : ScriptableObject
     public int movementAmount = 0;
     // Points de vie restaurés
     public int healAmount = 0;
+    // Defense
+    public int defenseAmount = 0;
+    // Damage sur soi
+    public int damageSelf =0;
+    // Augmentation de dommage
+    public int atkIncreased = 0;
+
+    [Header("Effets secondaire")]
+    //Riposte
+    public CardEffectType effectType = CardEffectType.None;
 
     [Header("Modificateur d'Émotion")]
     [Tooltip("Modifie la jauge émotionnelle du lanceur (positif = vers Contrariété/Tank, négatif = vers Rage/DPS)")]

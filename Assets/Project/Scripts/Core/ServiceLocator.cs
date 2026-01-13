@@ -141,4 +141,15 @@ public class ServiceLocator
     {
         _instance = null;
     }
+
+    // ========== INITIALISATION AUTOMATIQUE ==========
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitializeOnLoad()
+    {
+        if (_instance == null)
+        {
+            _instance = new ServiceLocator();
+            Debug.Log("ServiceLocator: Initialisé au chargement du jeu");
+        }
+    }
 }

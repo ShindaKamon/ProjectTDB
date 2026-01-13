@@ -332,4 +332,15 @@ public class CombatFeedbackManager : MonoBehaviour
 
         StartCoroutine(ShakeUnit(target, shakeDuration, shakeIntensity));
     }
+
+    // ========== INITIALISATION AUTOMATIQUE ==========
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitializeOnLoad()
+    {
+        _instance = FindFirstObjectByType<CombatFeedbackManager>();
+        if (_instance != null)
+        {
+            Debug.Log("CombatFeedbackManager: Initialisé au chargement du jeu");
+        }
+    }
 }

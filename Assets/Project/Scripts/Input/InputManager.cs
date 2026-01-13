@@ -148,18 +148,23 @@ public class InputManager : MonoBehaviour
         // --- GESTION DU CLIC GAUCHE ---
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
-            // Vérifier d'abord si le pointeur est sur un élément de l'UI
             if (EventSystem.current.IsPointerOverGameObject())
             {
-                // Si le pointeur est sur l'UI, et qu'une carte est sélectionnée, nous ne voulons PAS interagir avec le monde
+                var hoveredUI = EventSystem.current.currentSelectedGameObject;
+                // Autorise le clic sur le monde si ce n’est pas la main UI
                 if (_handUIController != null && _handUIController.SelectedCard != null)
                 {
-                    Debug.Log("Clic gauche sur UI avec carte sélectionnée. Le clic est consommé par l'UI.");
-                    return; // Le clic a été géré par l'UI (ex: sélection/désélection d'une carte UI)
+                    if (hoveredUI == null || hoveredUI.GetComponentInParent<HandUIController>() == null)
+                    {
+                        Debug.Log("Clic gauche vers le monde, carte sélectionnée : tentative de jeu");
+                        // on continue vers HandleCardPlay
+                    }
+                    else
+                    {
+                        Debug.Log("Clic gauche sur la main UI consommé.");
+                        return;
+                    }
                 }
-                // Si pas de carte sélectionnée, et clic sur UI, laisser l'UI gérer (ex: bouton Fin de tour)
-                Debug.Log("Clic gauche sur UI sans carte sélectionnée. Le clic est consommé par l'UI.");
-                return;
             }
 
             // Si le pointeur n'est PAS sur l'UI, alors c'est une interaction avec le monde

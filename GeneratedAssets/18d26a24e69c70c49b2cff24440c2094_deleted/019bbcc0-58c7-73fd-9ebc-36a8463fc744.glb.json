@@ -1,0 +1,11 @@
+{
+    "asset": "18d26a24e69c70c49b2cff24440c2094",
+    "fileName": "019bbcc0-58c7-73fd-9ebc-36a8463fc744.glb",
+    "prompt": "personnage 3D hero fantasy inspiré de l'image Ilya avec armure dorée, tenue blanche et cape, posture réaliste",
+    "negativePrompt": "",
+    "model": "05e5b649-f94c-4ec6-852c-2a9c4a0af3ab",
+    "modelName": "Hunyuan 3D 3.0 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "25f06faa8dbdffdd43e3bba64264f124",
+    "refinementMode": "Generation"
+}

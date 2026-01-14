@@ -1,0 +1,11 @@
+{
+    "asset": "a1dc9f1f39f5b8d4abf5fe2da4ceb13f",
+    "fileName": "019bbcd7-0689-76ee-b9b0-3d6289c4a42a.glb",
+    "prompt": "Personnage 3D unique hero fantasy inspiré de l'image TestIlya : armure dorée, cape blanche, cheveux bruns, posture neutre réaliste",
+    "negativePrompt": "",
+    "model": "05e5b649-f94c-4ec6-852c-2a9c4a0af3ab",
+    "modelName": "Hunyuan 3D 3.0 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "3f122ac3e6ed80b24e0707b9608790c6",
+    "refinementMode": "Generation"
+}

@@ -16,6 +16,8 @@ public class BattleUIManager : MonoBehaviour
 
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
+    private IlyaUnit _currentPlayer;
+    private EmotionSystem _playerEmotionSystem;
 
     void Awake()
     {
@@ -196,6 +198,62 @@ public class BattleUIManager : MonoBehaviour
                 _enemyCardPreview.HidePreview();
             }
         }
+    }
+
+    /// <summary>
+    /// Enregistre le joueur pour mettre à jour l'Orbe de vie
+    /// </summary>
+    public void RegisterPlayer(IlyaUnit player)
+    {
+        if (player == null) return;
+
+        // Nettoyage si un joueur était déjà enregistré
+        if (_currentPlayer != null)
+        {
+            _currentPlayer.OnHealthChanged -= OnPlayerHealthChanged;
+            if (_playerEmotionSystem != null)
+            {
+                _playerEmotionSystem.OnEmotionChanged -= OnPlayerEmotionChanged;
+                _playerEmotionSystem.OnTransformationChanged -= OnPlayerTransformationChanged;
+            }
+        }
+
+        _currentPlayer = player;
+        _currentPlayer.TryGetComponent(out _playerEmotionSystem);
+
+        // Abonnements aux événements
+        _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
+        
+        if (_playerEmotionSystem != null)
+        {
+            _playerEmotionSystem.OnEmotionChanged += OnPlayerEmotionChanged;
+            _playerEmotionSystem.OnTransformationChanged += OnPlayerTransformationChanged;
+        }
+
+        // Mise à jour initiale
+        UpdatePlayerOrbUI();
+        Debug.Log($"BattleUIManager: Joueur {player.name} connecté à l'Orbe de vie");
+    }
+
+    private void OnPlayerHealthChanged(int current, int max) => UpdatePlayerOrbUI();
+    private void OnPlayerEmotionChanged(float current, float max) => UpdatePlayerOrbUI();
+    private void OnPlayerTransformationChanged(EmotionSystem.TransformationState state) => UpdatePlayerOrbUI();
+
+    private void UpdatePlayerOrbUI()
+    {
+        if (_currentPlayer == null) return;
+
+        Color orbColor = Color.white;
+        if (_playerEmotionSystem != null && _playerEmotionSystem.IsTransformed())
+        {
+            var transData = _playerEmotionSystem.GetCurrentState() == EmotionSystem.TransformationState.Positive 
+                ? _playerEmotionSystem.GetPositiveTransformation() 
+                : _playerEmotionSystem.GetNegativeTransformation();
+            
+            if (transData != null) orbColor = transData.glowColor;
+        }
+
+        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), orbColor);
     }
 
     public void UpdatePlayerOrb (float currentHP, float maxHP, Color emotionColor)

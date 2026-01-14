@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Ilya
   m_EditorClassIdentifier: Assembly-CSharp::ChampionData
   championName: Ilya
-  prefab: {fileID: 1411125681048226662, guid: fecb917b4fd5e254db5e058d38513389, type: 3}
+  prefab: {fileID: 1411125681048226662, guid: 28d27df1b4044d74ba2b89c31f9f17df, type: 3}
   famillyType: 1
   elementType: 1
   maxHealth: 100
@@ -22,9 +22,9 @@ MonoBehaviour:
   physicalDefense: 10
   magicalDefense: 10
   startingDeck:
-  - {fileID: 11400000, guid: 3ea8d71d287d45c4c9a119009a314627, type: 2}
-  - {fileID: 11400000, guid: 24f6a61c2b5a48c4d90e21741618a37f, type: 2}
+  - {fileID: 11400000, guid: a5c57b05c828686409fbd8eee8ffb3a4, type: 2}
   - {fileID: 11400000, guid: 48fc4de4e2df1144d96c2a75b555caa3, type: 2}
+  - {fileID: 11400000, guid: 24f6a61c2b5a48c4d90e21741618a37f, type: 2}
   familyEmotionData: {fileID: 11400000, guid: 730ce7dcd45c9a74b99936064ce32841, type: 2}
   positiveTransformation: {fileID: 0}
   negativeTransformation: {fileID: 0}

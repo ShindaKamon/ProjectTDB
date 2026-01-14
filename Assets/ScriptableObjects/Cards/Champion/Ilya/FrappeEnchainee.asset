@@ -19,13 +19,18 @@ MonoBehaviour:
   elementType: 0
   artwork: {fileID: 0}
   costPA: 2
+  costOther: 0
   targetType: 2
   targetRange: 1
-  areaEffect: 0
+  areaEffect: 1
   aoeRadius: 0
-  affectedTarget: 0
+  affectedTarget: 2
   damageType: 1
   damageAmount: 20
   movementAmount: 0
   healAmount: 0
+  defenseAmount: 0
+  damageSelf: 0
+  atkIncreased: 0
+  effectType: 0
   emotionModifier: 0

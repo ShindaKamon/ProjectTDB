@@ -30,9 +30,15 @@ public class HealthBarManager : MonoBehaviour
     
     public HealthBar CreateHealthBar(Transform target, Vector3 offset, Color color, int maxHP)
     {
-        if (healthBarPrefab == null || healthBarsCanvas == null)
+        if (healthBarPrefab == null)
         {
-            Debug.LogError("HealthBarManager mal configuré !");
+            Debug.LogError("HealthBarManager: Le champ 'Health Bar Prefab' n'est pas assigné dans l'Inspector !");
+            return null;
+        }
+
+        if (healthBarsCanvas == null)
+        {
+            Debug.LogError("HealthBarManager: Aucun Canvas trouvé pour afficher les barres de vie !");
             return null;
         }
         

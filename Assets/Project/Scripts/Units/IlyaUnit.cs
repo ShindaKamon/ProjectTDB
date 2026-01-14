@@ -31,8 +31,14 @@ public class IlyaUnit : Champion
     {
         base.Start(); // Appelle le Start de Unit (gère l'initialisation automatique)
 
-        // Recrée la barre de vie avec les bonnes stats (au cas où elle aurait été créée avant l'initialisation)
-        CreateHealthBar();
+        // Désactivé : On utilise l'Orbe de vie (UI) au lieu de la barre flottante pour le joueur
+        // CreateHealthBar();
+
+        // Connecte l'unité à l'Orbe de vie via le BattleUIManager
+        if (BattleUIManager.Instance != null)
+        {
+            BattleUIManager.Instance.RegisterPlayer(this);
+        }
 
         Debug.Log($"{name} (Ilya) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, DEFP: {_physicalDefense}, DEFM: {_magicalDefense}");
     }

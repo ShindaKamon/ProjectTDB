@@ -1,0 +1,26 @@
+{
+    "asset": "9b72d60b98f4e574e8f2b33f90e0e876",
+    "fileName": "019bbcba-5b70-7740-9eaf-8fbb9c810b65.png",
+    "prompt": "image reference du personnage hero fantasy avec armure dorée et tenue blanche pour la génération 3D",
+    "negativePrompt": "",
+    "model": "2e08f181-6547-40b4-b51e-f6cc1fd63500",
+    "modelName": "Gemini 3.0 Pro",
+    "customSeed": -1,
+    "w3CTraceId": "5c9250e243add4845160772438107dfe",
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

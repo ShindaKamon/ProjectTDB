@@ -69,16 +69,19 @@ public class EnemyAI : MonoBehaviour
             if (nextCard != null && nextCard.targetType == CardTargetType.Enemy)
             {
                 int maxCardRange = nextCard.targetRange;
-                float currentDistance = Vector2.Distance(_enemyUnit.GetCurrentGridPos(), closestPlayerUnit.GetCurrentGridPos());
+                int currentDistance = GetManhattanDistance(_enemyUnit.GetCurrentGridPos(), closestPlayerUnit.GetCurrentGridPos());
+                bool isAligned = Mathf.Approximately(_enemyUnit.GetCurrentGridPos().x, closestPlayerUnit.GetCurrentGridPos().x)
+                              || Mathf.Approximately(_enemyUnit.GetCurrentGridPos().y, closestPlayerUnit.GetCurrentGridPos().y);
 
-                if (currentDistance > maxCardRange)
+                // Doit se rapprocher si hors portée OU pas aligné (pas de tir en diagonale)
+                if (currentDistance > maxCardRange || !isAligned)
                 {
                     needsToMoveCloser = true;
-                    Debug.Log($"{_enemyUnit.name} doit se rapprocher (distance: {currentDistance}, portée carte: {maxCardRange})");
+                    Debug.Log($"{_enemyUnit.name} doit se rapprocher (distance: {currentDistance}, portée: {maxCardRange}, aligné: {isAligned})");
                 }
                 else
                 {
-                    Debug.Log($"{_enemyUnit.name} est déjà à portée de carte ({currentDistance} <= {maxCardRange}), pas de déplacement");
+                    Debug.Log($"{_enemyUnit.name} est déjà à portée et aligné ({currentDistance} <= {maxCardRange}), pas de déplacement");
                 }
             }
             else if (nextCard != null)
@@ -173,10 +176,14 @@ public class EnemyAI : MonoBehaviour
             // Si l'ennemi a des cartes, s'arrête à portée de carte
             if (maxCardRange > 0)
             {
-                float distanceToTarget = Vector2.Distance(currentPos, targetPos);
-                if (distanceToTarget <= maxCardRange)
+                // Utilise la distance de Manhattan (cardinale) au lieu de euclidienne
+                int manhattanDistance = GetManhattanDistance(currentPos, targetPos);
+
+                // Vérifie aussi l'alignement pour éviter de s'arrêter en diagonale
+                bool isAligned = Mathf.Approximately(currentPos.x, targetPos.x) || Mathf.Approximately(currentPos.y, targetPos.y);
+                if (manhattanDistance <= maxCardRange && isAligned)
                 {
-                    Debug.Log($"À portée de carte ({maxCardRange}) après {i} mouvements");
+                    Debug.Log($"À portée de carte ({maxCardRange}) après {i} mouvements, distance Manhattan: {manhattanDistance}");
                     break; // On est assez proche pour jouer une carte
                 }
             }
@@ -197,6 +204,14 @@ public class EnemyAI : MonoBehaviour
         }
 
         return path;
+    }
+
+    /// <summary>
+    /// Calcule la distance de Manhattan (pas de diagonales)
+    /// </summary>
+    private int GetManhattanDistance(Vector2 from, Vector2 to)
+    {
+        return Mathf.RoundToInt(Mathf.Abs(from.x - to.x) + Mathf.Abs(from.y - to.y));
     }
 
     /// <summary>
@@ -257,6 +272,13 @@ public class EnemyAI : MonoBehaviour
             // Calculer la distance au joueur depuis cette case
             float distToTarget = Vector2.Distance(nextPos, targetPos);
 
+            // Pénalise les positions non alignées (diagonales) pour forcer un mouvement type "Tour" (Rook)
+            // Si ni x ni y ne sont alignés avec la cible, on ajoute un malus
+            if (!Mathf.Approximately(nextPos.x, targetPos.x) && !Mathf.Approximately(nextPos.y, targetPos.y))
+            {
+                distToTarget += 1.0f; // Malus suffisant pour préférer une case alignée plus lointaine
+            }
+
             if (distToTarget < bestDistanceToTarget)
             {
                 bestDistanceToTarget = distToTarget;
@@ -311,14 +333,19 @@ public class EnemyAI : MonoBehaviour
             return false;
         }
 
-        // Vérifie la portée pour les cartes ciblant l'ennemi
+        // Vérifie la portée pour les cartes ciblant l'ennemi (distance de Manhattan, pas de diagonales)
         if (card.targetType == CardTargetType.Enemy)
         {
-            float distance = Vector2.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
-            if (distance > card.targetRange)
+            int distance = GetManhattanDistance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
+
+            // Vérifie aussi l'alignement (pas de tir en diagonale)
+            bool isAligned = Mathf.Approximately(_enemy.GetCurrentGridPos().x, closestPlayer.GetCurrentGridPos().x)
+                          || Mathf.Approximately(_enemy.GetCurrentGridPos().y, closestPlayer.GetCurrentGridPos().y);
+
+            if (distance > card.targetRange || !isAligned)
             {
-                Debug.Log($"{_enemy.name}: {card.cardName} hors de portée ({distance} > {card.targetRange})");
-                return false; // Hors de portée
+                Debug.Log($"{_enemy.name}: {card.cardName} hors de portée ou pas aligné (distance: {distance}, portée: {card.targetRange}, aligné: {isAligned})");
+                return false; // Hors de portée ou pas aligné
             }
         }
 
@@ -349,15 +376,18 @@ public class EnemyAI : MonoBehaviour
                 // Carte offensive contre joueur
                 if (card.targetType == CardTargetType.Enemy)
                 {
-                    // Vérifie la portée
-                    float distance = Vector2.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
-                    if (distance <= card.targetRange)
+                    // Vérifie la portée (Manhattan) et l'alignement
+                    int distance = GetManhattanDistance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
+                    bool isAligned = Mathf.Approximately(_enemy.GetCurrentGridPos().x, closestPlayer.GetCurrentGridPos().x)
+                                  || Mathf.Approximately(_enemy.GetCurrentGridPos().y, closestPlayer.GetCurrentGridPos().y);
+
+                    if (distance <= card.targetRange && isAligned)
                     {
                         targetUnit = closestPlayer;
                     }
                     else
                     {
-                        Debug.LogWarning($"{_enemy.name}: Cible hors de portée pour {card.cardName}");
+                        Debug.LogWarning($"{_enemy.name}: Cible hors de portée ou pas aligné pour {card.cardName}");
                     }
                 }
                 // Carte de soin sur soi-même
@@ -371,6 +401,22 @@ public class EnemyAI : MonoBehaviour
             {
                 // Pour l'instant, cible la position du joueur le plus proche
                 targetTile = closestPlayer.GetCurrentGridPos();
+            }
+        }
+
+        // Tourne pour faire face à la cible avant d'exécuter l'effet
+        if (targetUnit != null && targetUnit != _enemy) // Ne tourne pas pour s'auto-cibler
+        {
+            yield return StartCoroutine(_enemy.LookAtCoroutine(targetUnit.transform.position));
+        }
+        else if (card.targetsTile)
+        {
+            Tile tile = Services.Grid.GetTileAtPosition(targetTile);
+            if (tile != null)
+            {
+                // Cible le centre de la tuile
+                Vector3 targetWorldPos = tile.transform.position + new Vector3(0, 0.5f, 0);
+                yield return StartCoroutine(_enemy.LookAtCoroutine(targetWorldPos));
             }
         }
 

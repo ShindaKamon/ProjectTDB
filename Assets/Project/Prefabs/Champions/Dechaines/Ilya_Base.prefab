@@ -78,6 +78,8 @@ MonoBehaviour:
   _maxActionPoints: 3
   _physicalDefense: 10
   _magicalDefense: 10
+  _rageCard: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
+  _damageThresholdForRage: 10
 --- !u!114 &-5450767280855593228
 MonoBehaviour:
   m_ObjectHideFlags: 0

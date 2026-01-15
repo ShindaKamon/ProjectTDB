@@ -15,10 +15,11 @@ MonoBehaviour:
   cardName: DEVOTION ABSOLUE
   description: "Taunt ennemis (2 tours)\n+20 DEF pendant 2 tours\n\nENRAGE (1):\nDur\xE9e
     : 3 tours (au lieu de 2)\n+30 DEF (au lieu de 20)"
-  famillyType: 0
+  familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
+  isRageCard: 0
   costPA: 2
   costOther: 0
   targetType: 1
@@ -33,5 +34,16 @@ MonoBehaviour:
   defenseAmount: 20
   damageSelf: 0
   atkIncreased: 0
-  effectType: 0
-  emotionModifier: 0
+  statBoostDuration: 0
+  effectType: 2
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToConsume: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
+  consumeAnyRageCard: 1
+  consumeAmount: 1
+  consumeDamageBonus: 0
+  consumeHealBonus: 0
+  consumeDefenseBonus: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0

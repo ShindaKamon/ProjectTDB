@@ -12,6 +12,8 @@ public class DeckManager : MonoBehaviour
     private List<CardData> _discardPile = new List<CardData>();
 
     public System.Action OnHandChanged; // Événement pour notifier les changements dans la main
+    public System.Action<int> OnDeckChanged; // Notifie changement taille deck
+    public System.Action<int> OnDiscardChanged; // Notifie changement taille défausse
 
     public void InitializeDeck(List<CardData> initialCards)
     {
@@ -25,6 +27,8 @@ public class DeckManager : MonoBehaviour
         }
 
         ShuffleDeck();
+        OnDeckChanged?.Invoke(_deck.Count);
+        OnDiscardChanged?.Invoke(_discardPile.Count);
         Debug.Log("Deck initialisé et mélangé avec " + _deck.Count + " cartes.");
         DrawCards(_maxHandSize); // Piocher la main de départ après l'initialisation
     }
@@ -45,6 +49,16 @@ public class DeckManager : MonoBehaviour
     public List<CardData> GetHand()
     {
         return _hand;
+    }
+
+    public int GetDeckCount()
+    {
+        return _deck.Count;
+    }
+
+    public int GetDiscardCount()
+    {
+        return _discardPile.Count;
     }
 
     public CardData DrawCard()
@@ -72,6 +86,7 @@ public class DeckManager : MonoBehaviour
         _deck.RemoveAt(0);
         _hand.Add(drawnCard);
         OnHandChanged?.Invoke();
+        OnDeckChanged?.Invoke(_deck.Count);
         Debug.Log("Carte piochée : " + drawnCard.cardName + ". Cartes restantes dans le deck : " + _deck.Count);
         return drawnCard;
     }
@@ -91,6 +106,7 @@ public class DeckManager : MonoBehaviour
             _hand.Remove(cardToPlay);
             _discardPile.Add(cardToPlay);
             OnHandChanged?.Invoke();
+            OnDiscardChanged?.Invoke(_discardPile.Count);
             Debug.Log("Carte jouée : " + cardToPlay.cardName + ". " + _hand.Count + " cartes restantes en main.");
         }
         else
@@ -105,6 +121,8 @@ public class DeckManager : MonoBehaviour
         _deck.AddRange(_discardPile);
         _discardPile.Clear();
         ShuffleDeck();
+        OnDeckChanged?.Invoke(_deck.Count);
+        OnDiscardChanged?.Invoke(_discardPile.Count);
     }
 
     public void DiscardHand()
@@ -113,6 +131,7 @@ public class DeckManager : MonoBehaviour
         _discardPile.AddRange(_hand);
         _hand.Clear();
         OnHandChanged?.Invoke();
+        OnDiscardChanged?.Invoke(_discardPile.Count);
     }
 
     /// <summary>
@@ -123,6 +142,7 @@ public class DeckManager : MonoBehaviour
         if (card != null)
         {
             _deck.Add(card);
+            OnDeckChanged?.Invoke(_deck.Count);
             Debug.Log($"Carte {card.cardName} ajoutée au deck.");
         }
     }
@@ -138,6 +158,7 @@ public class DeckManager : MonoBehaviour
             if (_deck.Contains(card))
             {
                 _deck.Remove(card);
+                OnDeckChanged?.Invoke(_deck.Count);
                 Debug.Log($"Carte {card.cardName} retirée du deck.");
             }
             // Cherche dans la main
@@ -151,8 +172,68 @@ public class DeckManager : MonoBehaviour
             else if (_discardPile.Contains(card))
             {
                 _discardPile.Remove(card);
+                OnDiscardChanged?.Invoke(_discardPile.Count);
                 Debug.Log($"Carte {card.cardName} retirée de la défausse.");
             }
         }
+    }
+
+    // Ajoute une carte spécifique directement à la main (ex: carte Rage)
+    public void AddCardToHand(CardData cardToAdd)
+    {
+        if (cardToAdd == null) return;
+
+        // On autorise le dépassement de la taille de main pour les cartes ajoutées directement (Rage, Fetch, etc.)
+        _hand.Add(cardToAdd);
+        OnHandChanged?.Invoke();
+        Debug.Log($"DeckManager: Carte spéciale {cardToAdd.cardName} ajoutée à la main.");
+    }
+
+    /// <summary>
+    /// Cherche des cartes spécifiques dans le deck et les ajoute à la main
+    /// </summary>
+    public void FetchCards(System.Predicate<CardData> match, int count)
+    {
+        int foundCount = 0;
+        // Parcours inversé pour pouvoir supprimer sans casser l'index
+        for (int i = _deck.Count - 1; i >= 0; i--)
+        {
+            if (foundCount >= count) break;
+            
+            if (match(_deck[i]))
+            {
+                CardData card = _deck[i];
+                _deck.RemoveAt(i);
+                AddCardToHand(card);
+                foundCount++;
+            }
+        }
+        
+        if (foundCount > 0)
+        {
+            Debug.Log($"DeckManager: {foundCount} cartes récupérées du deck.");
+            OnDeckChanged?.Invoke(_deck.Count);
+            ShuffleDeck();
+        }
+    }
+
+    /// <summary>
+    /// Défausse des cartes correspondant à un critère (ex: Cartes Rage)
+    /// Retourne true si le nombre requis a été défaussé
+    /// </summary>
+    public bool DiscardCards(System.Predicate<CardData> match, int count)
+    {
+        var cardsToDiscard = _hand.Where(c => match(c)).Take(count).ToList();
+        
+        if (cardsToDiscard.Count < count) return false;
+
+        foreach (var card in cardsToDiscard)
+        {
+            _hand.Remove(card);
+            _discardPile.Add(card);
+        }
+        OnHandChanged?.Invoke();
+        OnDiscardChanged?.Invoke(_discardPile.Count);
+        return true;
     }
 }

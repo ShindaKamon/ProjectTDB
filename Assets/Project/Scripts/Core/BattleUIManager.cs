@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Gère la connexion automatique des UI de combat (Boss Health Bar, Enemy Card Preview)
@@ -12,7 +13,11 @@ public class BattleUIManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private BossHealthBarUI _bossHealthBar;
     [SerializeField] private EnemyCardPreviewUI _enemyCardPreview;
-    [SerializeField] private HealthOrbController _playerHealthOrb; //TEST ORB
+    [SerializeField] private HealthOrbController _playerHealthOrb;
+    [SerializeField] private RageStackUI _rageStackUI;
+
+    [Header("Settings")]
+    [SerializeField] private Color _defaultOrbColor = Color.red;
 
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
@@ -35,6 +40,42 @@ public class BattleUIManager : MonoBehaviour
         if (_playerHealthOrb == null)
         {
             _playerHealthOrb = ComponentLocator.FindSingleObjectOfType<HealthOrbController>("BatleUIManager setup");            
+        }
+
+        // Récupère la couleur initiale de l'orbe pour ne pas l'écraser avec du blanc/rouge par défaut
+        if (_playerHealthOrb != null)
+        {
+            Image orbImage = null;
+            var allImages = _playerHealthOrb.GetComponentsInChildren<Image>(true);
+            
+            // 1. Cherche spécifiquement "Liquid_Texture" qui contient la couleur (demande spécifique)
+            foreach (var img in allImages)
+            {
+                if (img.name == "Liquid_Texture")
+                {
+                    orbImage = img;
+                    break;
+                }
+            }
+
+            // 2. Fallback : Cherche l'image "Filled" (la jauge) si Liquid_Texture n'est pas trouvé
+            if (orbImage == null)
+            {
+                foreach (var img in allImages)
+                {
+                    if (img.type == Image.Type.Filled)
+                    {
+                        orbImage = img;
+                        break;
+                    }
+                }
+            }
+
+            if (orbImage != null)
+            {
+                _defaultOrbColor = orbImage.color;
+                Debug.Log($"BattleUIManager: Couleur initiale de l'orbe détectée sur '{orbImage.name}': {_defaultOrbColor}");
+            }
         }
 
         // Trouve automatiquement les UI si non assignées
@@ -62,6 +103,16 @@ public class BattleUIManager : MonoBehaviour
             else
             {
                 Debug.LogWarning("BattleUIManager: EnemyCardPreviewUI introuvable dans la scène!");
+            }
+        }
+
+        // Auto-trouve RageStackUI si non assignée
+        if (_rageStackUI == null)
+        {
+            _rageStackUI = ComponentLocator.FindSingleObjectOfType<RageStackUI>("BattleUIManager setup");
+            if (_rageStackUI != null)
+            {
+                Debug.Log("BattleUIManager: RageStackUI trouvée automatiquement");
             }
         }
     }
@@ -223,11 +274,18 @@ public class BattleUIManager : MonoBehaviour
 
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
-        
+
         if (_playerEmotionSystem != null)
         {
             _playerEmotionSystem.OnEmotionChanged += OnPlayerEmotionChanged;
             _playerEmotionSystem.OnTransformationChanged += OnPlayerTransformationChanged;
+        }
+
+        // Connecte le RageStackUI au joueur
+        if (_rageStackUI != null)
+        {
+            _rageStackUI.SetPlayer(player);
+            Debug.Log($"BattleUIManager: RageStackUI connecté à {player.name}");
         }
 
         // Mise à jour initiale
@@ -243,7 +301,7 @@ public class BattleUIManager : MonoBehaviour
     {
         if (_currentPlayer == null) return;
 
-        Color orbColor = Color.white;
+        Color orbColor = _defaultOrbColor;
         if (_playerEmotionSystem != null && _playerEmotionSystem.IsTransformed())
         {
             var transData = _playerEmotionSystem.GetCurrentState() == EmotionSystem.TransformationState.Positive 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChampionData
   championName: Astra
   prefab: {fileID: 1411125681048226662, guid: 395e18028c5a7724e833e5fe86f44cc7, type: 3}
-  famillyType: 2
+  familyType: 2
   elementType: 2
   maxHealth: 100
   movementRange: 3

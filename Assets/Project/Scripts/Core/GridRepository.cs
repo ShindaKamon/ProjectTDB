@@ -82,12 +82,50 @@ public class GridRepository
 
     /// <summary>
     /// Convertit une position monde en position grille
+    /// Trouve la tuile la plus proche (cardinales uniquement, pas de diagonales)
     /// </summary>
     public Vector2 GetGridPosFromWorldPos(Vector3 worldPos)
     {
-        int x = Mathf.RoundToInt(worldPos.x + _width / 2.0f);
-        int y = Mathf.RoundToInt(worldPos.z + _height / 2.0f);
-        return new Vector2(x, y);
+        // Calcul de base
+        int baseX = Mathf.RoundToInt(worldPos.x + _width / 2.0f);
+        int baseY = Mathf.RoundToInt(worldPos.z + _height / 2.0f);
+        Vector2 basePos = new Vector2(baseX, baseY);
+
+        // Si la position de base existe, on la retourne
+        if (_tiles.ContainsKey(basePos))
+        {
+            return basePos;
+        }
+
+        // Sinon, cherche la tuile la plus proche parmi les 4 voisins cardinaux uniquement
+        float minDist = float.MaxValue;
+        Vector2 closestPos = basePos;
+
+        // Seulement les 4 directions cardinales (pas de diagonales)
+        Vector2[] cardinalOffsets = new Vector2[]
+        {
+            new Vector2(0, 0),   // Position de base
+            new Vector2(0, 1),   // Haut
+            new Vector2(0, -1),  // Bas
+            new Vector2(1, 0),   // Droite
+            new Vector2(-1, 0)   // Gauche
+        };
+
+        foreach (Vector2 offset in cardinalOffsets)
+        {
+            Vector2 checkPos = new Vector2(baseX + offset.x, baseY + offset.y);
+            if (_tiles.TryGetValue(checkPos, out Tile tile))
+            {
+                float dist = Vector3.Distance(worldPos, tile.transform.position);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closestPos = checkPos;
+                }
+            }
+        }
+
+        return closestPos;
     }
 
     /// <summary>

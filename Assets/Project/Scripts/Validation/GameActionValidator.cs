@@ -37,6 +37,15 @@ public static class GameActionValidator
             }
         }
 
+        // Validation des cartes Rage (stock plein = impossible de jouer)
+        if (card.isRageCard && player is IRageUser rageUser)
+        {
+            if (rageUser.IsRageStockFull())
+            {
+                return ValidationResult.Fail("Stock de Rage plein (5/5) - Consommez de la Rage avant de jouer cette carte");
+            }
+        }
+
         return ValidationResult.Success();
     }
 

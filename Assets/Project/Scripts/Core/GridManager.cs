@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 /// <summary>
 /// GridManager adapté pour Émotions Tactics
@@ -28,6 +29,7 @@ public class GridManager : MonoBehaviour, IGridService
     
     [Header("=== Managers ===")]
     [SerializeField] private InputManager _inputManager;
+    [SerializeField] private Button _endTurnButton; // Référence au bouton Fin de Tour
     
     // ===== DONNÉES INTERNES =====
     private Dictionary<Vector2, Tile> _tiles;
@@ -186,16 +188,19 @@ public class GridManager : MonoBehaviour, IGridService
         if (ChampionSelectManager.SelectedChampion != null)
         {
             GameObject playerUnitGO = Instantiate(ChampionSelectManager.SelectedChampion.prefab);
-            // OPTIMISATION Phase 3.3: ComponentLocator
-            instantiatedPlayerUnit = playerUnitGO.GetRequiredComponent<Unit>("Champion sélectionné");
+            
+            // On récupère le composant spécifique du champion (ex: IlyaUnit) pour appeler son initialisation.
+            // NOTE: Ceci suppose que le prefab du champion a un script dérivé de Unit (comme IlyaUnit) qui gère son initialisation.
+            instantiatedPlayerUnit = playerUnitGO.GetRequiredComponent<IlyaUnit>("Champion sélectionné");
+
             if (instantiatedPlayerUnit != null)
             {
                 // Initialise le champion du joueur avec ses données et la position de départ
-                instantiatedPlayerUnit.Initialize(ChampionSelectManager.SelectedChampion, _playerSpawnGridPos, Unit.UnitFaction.Player);
+                (instantiatedPlayerUnit as IlyaUnit)?.Initialize(ChampionSelectManager.SelectedChampion, _playerSpawnGridPos);
 
                 // Initialise le DeckManager de l'unité joueur (OPTIMISATION Phase 3.3: ComponentLocator)
                 DeckManager playerDeckManager = instantiatedPlayerUnit.GetRequiredComponent<DeckManager>("DeckManager du champion");
-                if (playerDeckManager != null)
+                if (playerDeckManager != null && ChampionSelectManager.SelectedChampion != null)
                 {
                     if (ChampionSelectManager.SelectedChampion.startingDeck != null && ChampionSelectManager.SelectedChampion.startingDeck.Count > 0)
                     {
@@ -228,12 +233,21 @@ public class GridManager : MonoBehaviour, IGridService
         {
             if (!_units.Contains(unit)) // Évite d'ajouter le joueur si déjà instancié
             {
+                // Si un champion a été instancié, on désactive les unités "placeholder" (Unit de base)
+                // pour éviter d'avoir un cube qui traîne (le cube "Player" de la scène).
+                if (instantiatedPlayerUnit != null && unit.GetType() == typeof(Unit))
+                {
+                    Debug.Log($"Unité placeholder ignorée: {unit.name}");
+                    unit.gameObject.SetActive(false);
+                    continue;
+                }
+
                 // Vérifie si c'est un Enemy avec EnemyData
                 Enemy enemy = unit as Enemy;
                 if (enemy != null)
                 {
                     // Initialise l'ennemi avec EnemyData si pas encore fait
-                    if (enemy.GetEnemyData() != null && enemy.GetHealth() == 0)
+                    if (!enemy.IsInitialized() && enemy.GetEnemyData() != null)
                     {
                         enemy.InitializeEnemy(enemy.GetEnemyData(), GetGridPosFromWorldPos(enemy.transform.position));
                         Debug.Log($"Ennemi initialisé: {enemy.name}");
@@ -255,10 +269,16 @@ public class GridManager : MonoBehaviour, IGridService
                         Debug.LogError("GridManager: BattleUIManager.Instance est NULL!");
                     }
                 }
-                // Sinon, c'est une Unit de base (pour compatibilité avec anciennes unités)
-                else if (unit.championData != null && unit.GetHealth() == 0)
+                // Sinon, c'est une autre unité (un champion placé dans la scène)
+                else if (!unit.IsInitialized())
                 {
-                    unit.Initialize(unit.championData, GetGridPosFromWorldPos(unit.transform.position), unit.GetFaction());
+                    // Tente d'initialiser comme un champion (ex: IlyaUnit)
+                    IlyaUnit championInScene = unit as IlyaUnit;
+                    if (championInScene != null && championInScene.championData != null)
+                    {
+                        championInScene.Initialize(championInScene.championData, GetGridPosFromWorldPos(unit.transform.position));
+                        Debug.Log($"Champion de la scène initialisé: {championInScene.name}");
+                    }
                 }
                 _units.Add(unit);
             }
@@ -433,11 +453,13 @@ public class GridManager : MonoBehaviour, IGridService
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
             _inputManager.enabled = true;
+            if (_endTurnButton != null) _endTurnButton.interactable = true;
             Debug.Log($"Tour du joueur : {unit.name}");
         }
         else // Ennemi
         {
             _inputManager.enabled = false;
+            if (_endTurnButton != null) _endTurnButton.interactable = false;
             // OPTIMISATION Phase 3.3: ComponentLocator
             if (unit.TryGetComponentSafe(out EnemyAI enemyAI))
             {

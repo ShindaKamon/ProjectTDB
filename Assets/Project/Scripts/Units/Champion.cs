@@ -10,6 +10,10 @@ using UnityEngine;
 /// </summary>
 public abstract class Champion : Unit, IActionPointsUser
 {
+    // ========== CHAMPION DATA ==========
+    [Header("Champion Data")]
+    [SerializeField] public ChampionData championData;
+
     // ========== SYSTÈME PA (Points d'Action) ==========
     // Les champions utilisent leurs PA pour jouer des cartes de leur deck personnel
     // Utilise la composition avec ActionPointsComponent pour éviter la duplication de code
@@ -66,19 +70,36 @@ public abstract class Champion : Unit, IActionPointsUser
         _actionPointsComponent.SetMaxPA(value);
     }
 
+    // Surcharge pour définir la faction automatiquement
+    public override UnitFaction GetFaction() => UnitFaction.Player;
+
     // ========== INITIALISATION ==========
 
     /// <summary>
-    /// Initialise les stats du champion depuis ChampionData
-    /// Surcharge la méthode de Unit pour ajouter l'initialisation des PA
+    /// Initialise le champion avec les données ChampionData.
     /// </summary>
-    protected override void InitUnitStats(ChampionData data)
+    public void Initialize(ChampionData data, Vector2 initialGridPos)
     {
-        base.InitUnitStats(data); // Initialise HP, Movement
+        if (_isInitialized) return;
+
+        // Assigne la data utilisée pour l'initialisation
+        this.championData = data;
+
+        // Définit le nom
+        gameObject.name = data.championName;
+
+        // Initialise les stats de base (HP, Movement) via Unit
+        InitUnitStats(data.maxHealth, data.movementRange);
 
         // Initialise le component PA depuis ChampionData
         _maxActionPoints = data.maxActionPoints;
         _actionPointsComponent = new ActionPointsComponent(_maxActionPoints, $"{name} (Champion)");
+
+        // Initialise les aspects communs (Position, Faction, State) via Unit
+        base.Initialize(initialGridPos);
+
+        // Initialise le système d'émotion (méthode de Unit)
+        InitEmotionSystem(data);
 
         Debug.Log($"{name} (Champion): Stats initialisées - HP: {GetHealth()}/{GetMaxHealth()}, PA: {GetCurrentPA()}/{GetMaxPA()}, PM: {GetMaxMovementPoints()}");
     }

@@ -9,7 +9,7 @@ public class FamilyEmotionData : ScriptableObject
 {
     [Header("Identité de la Famille")]
     [Tooltip("Type de famille concernée")]
-    public CardFamillyType familyType = CardFamillyType.None;
+    public CardFamilyType familyType = CardFamilyType.None;
 
     [Header("Noms des États Émotionnels")]
     [Tooltip("Nom de l'émotion positive (Gauche) - Ex: Contrariété pour Déchaînés")]

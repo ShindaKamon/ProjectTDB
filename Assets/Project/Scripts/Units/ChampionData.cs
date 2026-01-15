@@ -9,7 +9,7 @@ public class ChampionData : ScriptableObject
     // Référence au GameObject du champion
     public GameObject prefab;
     // Type de famille
-    public CardFamillyType famillyType = CardFamillyType.None;
+    public CardFamilyType familyType = CardFamilyType.None;
     // Type d'élément
     public CardElementType elementType = CardElementType.None;
 

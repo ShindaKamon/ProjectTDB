@@ -10,15 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: CoeurIncandescent
+  m_Name: Rage
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: COEUR INCANDESCENT
-  description: Heal de 20PV.
-  famillyType: 1
+  cardName: Rage
+  description: 
+  familyType: 0
   classeType: 0
   elementType: 0
-  artwork: {fileID: 0}
-  costPA: 2
+  artwork: {fileID: -362512316, guid: d041b1f8e91f5194081ff0ddd81ce2b5, type: 3}
+  isRageCard: 1
+  costPA: 0
+  costOther: 0
   targetType: 1
   targetRange: 0
   areaEffect: 0
@@ -27,5 +29,20 @@ MonoBehaviour:
   damageType: 0
   damageAmount: 0
   movementAmount: 0
-  healAmount: 20
-  emotionModifier: 0
+  healAmount: 0
+  defenseAmount: 0
+  damageSelf: 0
+  atkIncreased: 0
+  statBoostDuration: 0
+  effectType: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToConsume: {fileID: 0}
+  consumeAnyRageCard: 0
+  consumeAmount: 0
+  consumeDamageBonus: 0
+  consumeHealBonus: 0
+  consumeDefenseBonus: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0

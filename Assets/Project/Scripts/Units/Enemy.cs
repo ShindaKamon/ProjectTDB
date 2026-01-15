@@ -51,6 +51,9 @@ public class Enemy : Unit, IActionPointsUser
     public EnemyData GetEnemyData() => _enemyData;
     public bool IsBoss() => _enemyData != null && _enemyData.isBoss;
 
+    // Surcharge pour définir la faction automatiquement
+    public override UnitFaction GetFaction() => UnitFaction.Enemy;
+
     /// <summary>
     /// Retourne la prochaine carte qui sera jouée (visible par le joueur)
     /// </summary>
@@ -93,21 +96,15 @@ public class Enemy : Unit, IActionPointsUser
 
         _enemyData = data;
 
-        // Initialise les stats de base depuis EnemyData
-        _maxHealth = data.maxHealth;
-        _health = _maxHealth;
-        _maxMovementPoints = data.movementRange;
-
+        // Initialise les stats de base via la classe Unit
+        InitUnitStats(data.maxHealth, data.movementRange);
+        
         // Initialise le component PA
         _maxActionPoints = data.maxActionPoints;
         _actionPointsComponent = new ActionPointsComponent(_maxActionPoints, $"{gameObject.name} (Enemy)");
 
         // Les ennemis n'ont pas d'attaque de base, tout passe par les cartes
         _attackDamage = 0;
-
-        // Initialise position et faction
-        _currentGridPos = initialGridPos;
-        SetFaction(UnitFaction.Enemy);
 
         // Copie le deck de combat (pattern)
         _combatDeck.Clear();
@@ -116,28 +113,16 @@ public class Enemy : Unit, IActionPointsUser
             _combatDeck.AddRange(data.combatDeck);
         }
         _currentCardIndex = 0;
-
-        // Définit le nom
+        
+        // Initialise les aspects communs (position, faction, etc.) via la classe Unit
+        // et définit le nom du GameObject.
         gameObject.name = data.enemyName;
-
-        // Positionne l'ennemi dans le monde
-        if (Services.Grid != null)
-        {
-            Tile tile = Services.Grid.GetTileAtPosition(_currentGridPos);
-            if (tile != null)
-            {
-                transform.position = tile.gameObject.transform.position + new Vector3(0, 0.5f, 0);
-                Debug.Log($"{name} (Enemy) initialisé et positionné à {_currentGridPos}");
-            }
-        }
+        Initialize(initialGridPos);
 
         // Notifie la prochaine carte
         OnNextCardChanged?.Invoke(GetNextCard());
 
         Debug.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, PA: {GetCurrentPA()}/{GetMaxPA()}, Deck: {_combatDeck.Count} cartes");
-
-        // Marque l'ennemi comme initialisé
-        _isInitialized = true;
     }
 
     protected override void Start()

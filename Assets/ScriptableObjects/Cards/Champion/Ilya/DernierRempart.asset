@@ -16,7 +16,7 @@ MonoBehaviour:
   description: 'Ilya gagne 30 de DEF
 
     Taunt tout les ennemis sur le plateau.'
-  famillyType: 0
+  familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}

@@ -53,7 +53,7 @@ public enum CardDamageType
 
 }
 
-public enum CardFamillyType
+public enum CardFamilyType
 {
     None,
     Dechaines,      // Rouge
@@ -104,13 +104,15 @@ public class CardData : ScriptableObject
     // Description de la carte
     public string description = "Description de la carte.";
     // Type de famille
-    public CardFamillyType famillyType = CardFamillyType.None;
+    public CardFamilyType familyType = CardFamilyType.None;
     // Type de classe
     public CardClasseType classeType = CardClasseType.None;
     // Type d'élément
     public CardElementType elementType = CardElementType.None;
     // Illustration de la carte
     public Sprite artwork;
+    // Rage carte
+    public bool isRageCard = false;
 
     [Header("Coût et ressources")]
     // Coût en PA (Points d'Action)
@@ -156,17 +158,32 @@ public class CardData : ScriptableObject
     public int damageSelf =0;
     // Augmentation de dommage
     public int atkIncreased = 0;
+    // Durée du boost de stat
+    public int statBoostDuration = 0;
 
     [Header("Effets secondaire")]
-    //Riposte
+    //Riposte, Taunt, Knockback, etc
     public CardEffectType effectType = CardEffectType.None;
+    // Nombre de carte à piocher
+    public int drawAmount = 0; 
+    // Carte spécifique à aller chercher dans le deck (Tutor)
+    public CardData cardToFetch;
+    // Nombre de copies à aller chercher
+    public int fetchAmount = 0;
 
-    [Header("Modificateur d'Émotion")]
-    [Tooltip("Modifie la jauge émotionnelle du lanceur (positif = vers Contrariété/Tank, négatif = vers Rage/DPS)")]
-    [Range(-50f, 50f)]
-    public float emotionModifier = 0f; 
+    [Header("Boost par Rage")]
+    [Tooltip("Rage requise pour activer le boost (0 = pas de boost, -1 = consomme TOUTE la Rage)")]
+    public int rageRequired = 0;
+    [Tooltip("Multiplicateur des effets si boost activé (ex: 2 = double les dégâts/soins/défense)")]
+    public float rageBoostMultiplier = 1f;
+    [Tooltip("Bonus fixe ajouté PAR Rage consommée (utile avec rageRequired = -1)")]
+    public int rageBonusPerStack = 0;
 
-   
+    [Header("Génération de Cartes")]
+    // Carte à ajouter au deck
+    public CardData cardToAddToDeck;
+    // Nombre de copie à ajouter
+    public int cardsToAddCount = 0;
 
     // Méthode pour vérifier si une unité est une cible valide
     public bool IsValidTarget(Unit source, Unit target)
@@ -281,6 +298,77 @@ public class CardData : ScriptableObject
     {
         Debug.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
+        // --- NOUVEAU : STOCKAGE DE RAGE ---
+        // Si c'est une carte Rage, on l'ajoute au stock du lanceur (si c'est Ilya)
+        if (isRageCard)
+        {
+            if (source is IRageUser rageUser)
+            {
+                rageUser.AddRageStock(1);
+            }
+        }
+
+        // Variables locales pour les valeurs finales (modifiables par boost)
+        int finalDamage = damageAmount;
+        int finalHeal = healAmount;
+        int finalDefense = defenseAmount;
+        int finalDraw = drawAmount;
+        int finalFetch = fetchAmount;
+        int finalAtk = atkIncreased;
+
+        // --- SYSTÈME DE BOOST PAR RAGE ---
+        int rageConsumed = 0;
+        bool boostActivated = false;
+
+        if (rageRequired != 0 && source is IlyaUnit ilyaPlayer)
+        {
+            int currentRage = ilyaPlayer.GetRageStock();
+
+            // Mode "Consommer TOUTE la Rage" (rageRequired = -1)
+            if (rageRequired == -1 && currentRage > 0)
+            {
+                if (ilyaPlayer.ConsumeRageStock(currentRage))
+                {
+                    rageConsumed = currentRage;
+                    boostActivated = true;
+                }
+            }
+            // Mode "Consommer X Rage" (rageRequired > 0)
+            else if (rageRequired > 0 && currentRage >= rageRequired)
+            {
+                if (ilyaPlayer.ConsumeRageStock(rageRequired))
+                {
+                    rageConsumed = rageRequired;
+                    boostActivated = true;
+                }
+            }
+
+            // Applique le boost
+            if (boostActivated)
+            {
+                // Multiplicateur sur les valeurs de base
+                finalDamage = Mathf.RoundToInt(finalDamage * rageBoostMultiplier);
+                finalHeal = Mathf.RoundToInt(finalHeal * rageBoostMultiplier);
+                finalDefense = Mathf.RoundToInt(finalDefense * rageBoostMultiplier);
+                finalDraw = Mathf.RoundToInt(finalDraw * rageBoostMultiplier);
+                finalFetch = Mathf.RoundToInt(finalFetch * rageBoostMultiplier);
+                finalAtk = Mathf.RoundToInt(finalAtk * rageBoostMultiplier);
+
+                // Bonus fixe par Rage consommée
+                if (rageBonusPerStack > 0)
+                {
+                    finalDamage += rageBonusPerStack * rageConsumed;
+                    finalHeal += rageBonusPerStack * rageConsumed;
+                    finalDefense += rageBonusPerStack * rageConsumed;
+                    finalDraw += rageBonusPerStack * rageConsumed;
+                    finalFetch += rageBonusPerStack * rageConsumed;
+                    finalAtk += rageBonusPerStack * rageConsumed;
+                }
+
+                Debug.Log($"🔥 BOOST ! {source.name} consomme {rageConsumed} Rage → Dégâts: {finalDamage}, Soins: {finalHeal}, Défense: {finalDefense}, Attaque: {finalAtk}, Pioche: {finalDraw}, Fetch: {finalFetch}");
+            }
+        }
+
         // Détermine l'épicentre de l'effet
         Vector2 effectEpicenter;
         if (targetsUnit && targetUnit != null)
@@ -304,15 +392,15 @@ public class CardData : ScriptableObject
 
             foreach (Unit unit in affectedUnits)
             {
-                if (damageAmount > 0)
+                if (finalDamage > 0)
                 {
-                    unit.TakeDamage(damageAmount);
-                    Debug.Log($"  → {unit.name} prend {damageAmount} dégâts AOE");
+                    unit.TakeDamage(finalDamage);
+                    Debug.Log($"  → {unit.name} prend {finalDamage} dégâts AOE");
                 }
-                if (healAmount > 0)
+                if (finalHeal > 0)
                 {
-                    unit.Heal(healAmount);
-                    Debug.Log($"  → {unit.name} récupère {healAmount} PV AOE");
+                    unit.Heal(finalHeal);
+                    Debug.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
                 }
             }
         }
@@ -321,22 +409,29 @@ public class CardData : ScriptableObject
         {
             if (targetsUnit && targetUnit != null)
             {
-                if (damageAmount > 0)
+                if (finalDamage > 0)
                 {
-                    targetUnit.TakeDamage(damageAmount);
-                    Debug.Log($"{source.name} inflige {damageAmount} dégâts à {targetUnit.name} avec {cardName}.");
+                    targetUnit.TakeDamage(finalDamage);
+                    Debug.Log($"{source.name} inflige {finalDamage} dégâts à {targetUnit.name} avec {cardName}.");
                 }
-                if (healAmount > 0)
+                if (finalHeal > 0)
                 {
-                    targetUnit.Heal(healAmount);
-                    Debug.Log($"{source.name} soigne {targetUnit.name} de {healAmount} PV avec {cardName}.");
+                    targetUnit.Heal(finalHeal);
+                    Debug.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
                 }
             }
-            else if (targetType == CardTargetType.Self && healAmount > 0)
+            else if (targetType == CardTargetType.Self && finalHeal > 0)
             {
-                source.Heal(healAmount);
-                Debug.Log($"{source.name} se soigne de {healAmount} PV avec {cardName}.");
+                source.Heal(finalHeal);
+                Debug.Log($"{source.name} se soigne de {finalHeal} PV avec {cardName}.");
             }
+        }
+
+        // Dégâts sur soi-même (ex: cartes puissantes mais risquées)
+        if (damageSelf > 0)
+        {
+            source.TakeDamage(damageSelf);
+            Debug.Log($"{source.name} subit {damageSelf} dégâts de contrecoup avec {cardName}.");
         }
 
         if (movementAmount > 0)
@@ -346,13 +441,51 @@ public class CardData : ScriptableObject
             Debug.Log($"{source.name} gagne {movementAmount} points de mouvement supplémentaires avec {cardName}.");
         }
 
-        // Appliquer le modificateur d'émotion si l'unité a un système d'émotion
-        if (emotionModifier != 0f)
+        // --- NOUVELLES CAPACITÉS ---
+
+        // 1. Pioche de cartes
+        if (finalDraw > 0)
         {
-            // Utiliser SendMessage pour éviter la dépendance directe
-            source.SendMessage("ModifyEmotion", emotionModifier, SendMessageOptions.DontRequireReceiver);
-            string direction = emotionModifier > 0 ? "Contrariété/Tank" : "Rage/DPS";
-            Debug.Log($"{source.name} modifie son émotion vers {direction} de {emotionModifier:+F1;-F1;0} avec {cardName}.");
+            if (source.TryGetComponentSafe(out DeckManager deckManager))
+            {
+                deckManager.DrawCards(finalDraw);
+            }
+        }
+
+        // 2. Aller chercher une carte spécifique (Fetch)
+        if (cardToFetch != null && finalFetch > 0)
+        {
+            if (source.TryGetComponentSafe(out DeckManager deckManager))
+            {
+                deckManager.FetchCards(c => c == cardToFetch, finalFetch);
+            }
+        }
+
+        // 4. Gain de Stats (Force / Défense)
+        if (finalAtk != 0 || finalDefense != 0)
+        {
+            // Si la cible est définie, on l'utilise, sinon si c'est Self/None, c'est le lanceur
+            Unit statTarget = (targetsUnit && targetUnit != null) ? targetUnit : source;
+
+            // Applique les stats (nécessite la méthode ModifyStats sur Unit)
+            // Note: defenseAmount est appliqué aux deux défenses (P et M) pour simplifier
+            statTarget.ModifyStats(finalAtk, finalDefense, finalDefense, statBoostDuration);
+        }
+
+        // 5. Ajout de cartes au deck (Génération de Rage ou autre)
+        if (cardToAddToDeck != null && cardsToAddCount > 0)
+        {
+            if (source.TryGetComponentSafe(out DeckManager deckManager))
+            {
+                for (int i = 0; i < cardsToAddCount; i++)
+                {
+                    deckManager.AddCardToDeck(cardToAddToDeck);
+                }
+                
+                deckManager.ShuffleDeck();
+                
+                Debug.Log($"{source.name} ajoute {cardsToAddCount}x {cardToAddToDeck.cardName} à son deck.");
+            }
         }
     }
 }
@@ -365,25 +498,25 @@ public static class CardVisualHelper
     /// <summary>
     /// Retourne la couleur associée à une famille
     /// </summary>
-    public static Color GetFamilyColor(CardFamillyType family)
+    public static Color GetFamilyColor(CardFamilyType family)
     {
         switch (family)
         {
-            case CardFamillyType.Dechaines:
+            case CardFamilyType.Dechaines:
                 return new Color(0.8f, 0f, 0f); // Rouge
-            case CardFamillyType.Dissidents:
+            case CardFamilyType.Dissidents:
                 return new Color(0f, 0.4f, 0f); // Vert foncé
-            case CardFamillyType.Insurgents:
+            case CardFamilyType.Insurgents:
                 return new Color(1f, 0.92f, 0f); // Jaune
-            case CardFamillyType.Exiles:
+            case CardFamilyType.Exiles:
                 return new Color(0f, 0f, 0.5f); // Bleu foncé
-            case CardFamillyType.Reprouves:
+            case CardFamilyType.Reprouves:
                 return new Color(0.5f, 0f, 0.5f); // Violet
-            case CardFamillyType.Gardiens:
+            case CardFamilyType.Gardiens:
                 return new Color(0.5f, 1f, 0.5f); // Vert clair
-            case CardFamillyType.Eveilles:
+            case CardFamilyType.Eveilles:
                 return new Color(0.5f, 0.8f, 1f); // Bleu clair
-            case CardFamillyType.Precurseurs:
+            case CardFamilyType.Precurseurs:
                 return new Color(1f, 0.5f, 0f); // Orange
             default:
                 return Color.white;
@@ -413,18 +546,18 @@ public static class CardVisualHelper
     /// <summary>
     /// Retourne le nom français de la famille
     /// </summary>
-    public static string GetFamilyName(CardFamillyType family)
+    public static string GetFamilyName(CardFamilyType family)
     {
         switch (family)
         {
-            case CardFamillyType.Dechaines: return "Déchaînés";
-            case CardFamillyType.Dissidents: return "Dissidents";
-            case CardFamillyType.Insurgents: return "Insurgents";
-            case CardFamillyType.Exiles: return "Exilés";
-            case CardFamillyType.Reprouves: return "Réprouvés";
-            case CardFamillyType.Gardiens: return "Gardiens";
-            case CardFamillyType.Eveilles: return "Éveillés";
-            case CardFamillyType.Precurseurs: return "Précurseurs";
+            case CardFamilyType.Dechaines: return "Déchaînés";
+            case CardFamilyType.Dissidents: return "Dissidents";
+            case CardFamilyType.Insurgents: return "Insurgents";
+            case CardFamilyType.Exiles: return "Exilés";
+            case CardFamilyType.Reprouves: return "Réprouvés";
+            case CardFamilyType.Gardiens: return "Gardiens";
+            case CardFamilyType.Eveilles: return "Éveillés";
+            case CardFamilyType.Precurseurs: return "Précurseurs";
             default: return "Sans Famille";
         }
     }

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: MartyrDefiant
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: MARTYR DEFIANT
-  description: "Gagne Riposte.\nGange 2 Rage dans le deck.\n\nENRAGEE :\nDouble la
-    Rage g\xE9n\xE9r\xE9"
-  famillyType: 0
+  description: "Gagne Riposte.\nGagne 2 Rage dans le deck.\n\nENRAGEE (1) :\nDouble
+    la Rage g\xE9n\xE9r\xE9"
+  familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
+  isRageCard: 0
   costPA: 1
   costOther: 0
   targetType: 1
@@ -33,5 +34,16 @@ MonoBehaviour:
   defenseAmount: 0
   damageSelf: 0
   atkIncreased: 0
+  statBoostDuration: 0
   effectType: 1
-  emotionModifier: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToConsume: {fileID: 0}
+  consumeAnyRageCard: 1
+  consumeAmount: 0
+  consumeDamageBonus: 0
+  consumeHealBonus: 0
+  consumeDefenseBonus: 0
+  cardToAddToDeck: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
+  cardsToAddCount: 2

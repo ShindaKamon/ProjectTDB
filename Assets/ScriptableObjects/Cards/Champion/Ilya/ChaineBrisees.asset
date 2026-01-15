@@ -15,11 +15,13 @@ MonoBehaviour:
   cardName: CHAINES BRISEES
   description: "Transformation D\xE9chain\xE9s (3 tours max).\nRetire toutes les
     rages du deck et de la main."
-  famillyType: 0
+  familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
+  isRageCard: 0
   costPA: 5
+  costOther: 0
   targetType: 1
   targetRange: 0
   areaEffect: 0
@@ -29,4 +31,19 @@ MonoBehaviour:
   damageAmount: 0
   movementAmount: 0
   healAmount: 0
-  emotionModifier: 0
+  defenseAmount: 0
+  damageSelf: 0
+  atkIncreased: 0
+  statBoostDuration: 0
+  effectType: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToConsume: {fileID: 0}
+  consumeAnyRageCard: 1
+  consumeAmount: 0
+  consumeDamageBonus: 0
+  consumeHealBonus: 0
+  consumeDefenseBonus: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0

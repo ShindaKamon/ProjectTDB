@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChampionData
   championName: Nova
   prefab: {fileID: 1411125681048226662, guid: 921518088bcdb70469c4ea716e423ce6, type: 3}
-  famillyType: 3
+  familyType: 3
   elementType: 3
   maxHealth: 100
   movementRange: 3

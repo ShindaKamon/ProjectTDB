@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: FRAPPE ENCHAINEE
   description: "20 d\xE9g\xE2ts physiques\n\nENRAGE (1):\n35 d\xE9g\xE2ts physiques"
-  famillyType: 0
+  familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
+  isRageCard: 0
   costPA: 2
   costOther: 0
   targetType: 2
@@ -32,5 +33,16 @@ MonoBehaviour:
   defenseAmount: 0
   damageSelf: 0
   atkIncreased: 0
+  statBoostDuration: 0
   effectType: 0
-  emotionModifier: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToConsume: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
+  consumeAnyRageCard: 1
+  consumeAmount: 1
+  consumeDamageBonus: 15
+  consumeHealBonus: 0
+  consumeDefenseBonus: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0

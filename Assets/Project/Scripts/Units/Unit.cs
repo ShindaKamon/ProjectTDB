@@ -13,6 +13,7 @@ public class Unit : MonoBehaviour
     [SerializeField] protected Vector2 _initialGridPos = new Vector2(0, 0); // Par défaut à (0,0).
     // Vitesse de déplacement de l'unité.
     [SerializeField] private float _moveSpeed = 5f;
+    [SerializeField] private float _rotationSpeed = 10f; // Vitesse de rotation pour regarder vers la cible
 
     [Header("Health Bar Settings")]
     [SerializeField] private Vector3 healthBarOffset = new Vector3(0, 2f, 0);
@@ -37,11 +38,6 @@ public class Unit : MonoBehaviour
     protected int _attackDamage; // NOTE: Utilisé uniquement par IlyaUnit pour le système de transformation
     protected int _maxMovementPoints; // PM (Points de Mouvement) maximum
 
-    public ChampionData championData; // Référence aux données du champion.
-
-    // Nouvelle propriété pour la faction de l'unité.
-    [SerializeField] private UnitFaction _faction = UnitFaction.Player; // Par défaut, c'est une unité du joueur.
-
     // PM (Points de Mouvement) restants pour le tour actuel.
     private int _currentMovementPoints; // N'est pas SerializableField car géré en code.
 
@@ -54,44 +50,41 @@ public class Unit : MonoBehaviour
     // NOTE: Le système PA a été déplacé vers les classes Champion et Enemy
     // Unit ne contient plus que la base commune (HP, Movement, Position)
 
-    public void Initialize(ChampionData data, Vector2 initialGridPos, UnitFaction faction)
+    /// <summary>
+    /// Initialise les aspects communs de l'unité (position, faction, état).
+    /// Doit être appelée par les classes dérivées après l'initialisation des stats.
+    /// </summary>
+    public void Initialize(Vector2 initialGridPos)
     {
         // Protection contre la double initialisation
         if (_isInitialized)
         {
-            Debug.LogWarning($"{gameObject.name} est déjà initialisé. Initialisation ignorée.");
             return;
         }
-
-        championData = data;
+        
+        // Assigne les valeurs passées en paramètres
         _currentGridPos = initialGridPos;
-        _faction = faction;
-
-        if (championData == null)
-        {
-            Debug.LogError($"ChampionData n'est pas assigné à l'unité {gameObject.name} lors de l'initialisation !");
-            enabled = false;
-            return;
-        }
-
-        InitUnitStats(championData); // Appelle la méthode d'initialisation des stats de base
-
-        // Initialise le système d'émotion si disponible
-        InitEmotionSystem(championData);
-
-        // Définit le nom du GameObject de l'unité avec le nom du champion
-        gameObject.name = championData.championName;
 
         // Initialise la UnitState (Phase 3.4)
         _unitState = new UnitState(this);
 
-        // Positionne l'unité instantanément à sa position de grille initiale.
         if (Services.Grid != null)
         {
             Tile tile = Services.Grid.GetTileAtPosition(_currentGridPos);
             if (tile != null)
             {
                 transform.position = tile.gameObject.transform.position + new Vector3(0, 0.5f, 0);
+                
+                // Oriente l'unité selon sa faction au démarrage
+                if (GetFaction() == UnitFaction.Enemy)
+                {
+                    transform.rotation = Quaternion.Euler(0, 180f, 0); // Face au joueur (Sud)
+                }
+                else
+                {
+                    transform.rotation = Quaternion.identity; // Face aux ennemis (Nord)
+                }
+                
                 Debug.Log($"{name} initialisé et positionné à la tuile {_currentGridPos}");
             }
             else
@@ -108,22 +101,16 @@ public class Unit : MonoBehaviour
         _isInitialized = true;
     }
 
+    public bool IsInitialized() => _isInitialized;
+
     protected virtual void Start()
     {
         // Si l'unité n'a pas été initialisée (unités placées manuellement dans la scène)
+        // Les classes dérivées (Enemy, Champion) sont responsables de leur propre initialisation dans leur Start().
         if (!_isInitialized)
         {
-            if (championData != null)
-            {
-                Vector2 currentWorldGridPos = Services.Grid.GetGridPosFromWorldPos(transform.position);
-                Initialize(championData, currentWorldGridPos, _faction);
-            }
-            else
-            {
-                Debug.LogError($"L'unité {gameObject.name} n'a pas de ChampionData assigné et ne peut pas être initialisée.");
-                enabled = false;
-                return;
-            }
+            Debug.LogWarning($"L'unité {gameObject.name} a été placée dans la scène mais n'a pas été initialisée par son script dérivé (ex: Enemy, Champion).");
+            enabled = false;
         }
 
         // Ne crée la barre de vie QUE si c'est une Unit de base (pas une classe dérivée comme IlyaUnit)
@@ -168,43 +155,28 @@ public class Unit : MonoBehaviour
         }
     }
 
-    // Méthode pour initialiser les stats de base de l'unité (peut être surchargée)
-    protected virtual void InitUnitStats(ChampionData data)
+    /// <summary>
+    /// Initialise les stats de base de l'unité. Doit être appelée par les classes dérivées.
+    /// </summary>
+    protected virtual void InitUnitStats(int maxHealth, int movementRange)
     {
-        // Validation centralisée des données
-        ValidationResult validation = GameActionValidator.ValidateChampionData(data);
-        if (!validation.IsValid)
-        {
-            Debug.LogError($"❌ Échec initialisation Unit : {validation.ErrorMessage}");
-            enabled = false;
-            return;
-        }
-
-        _maxHealth = data.maxHealth;
+        _maxHealth = maxHealth;
         _health = _maxHealth;
-        _maxMovementPoints = data.movementRange;
-
-        // NOTE: Les PA sont maintenant gérés par les classes dérivées (Champion, Enemy)
-        // Plus d'attaque de base, tout passe par les cartes
+        _maxMovementPoints = movementRange;
         _attackDamage = 0;
     }
 
     /// <summary>
-    /// Initialise le système d'émotion avec les données du champion
+    /// Initialise le système d'émotion. Doit être appelé par les classes de champion.
     /// </summary>
     protected virtual void InitEmotionSystem(ChampionData data)
     {
-        // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car toutes les unités n'ont pas EmotionSystem)
         if (this.TryGetComponentSafe(out EmotionSystem emotionSystem))
         {
-            // Configure les données émotionnelles de la famille
             emotionSystem.SetFamilyEmotionData(data.familyEmotionData);
-
-            // Configure les transformations et seuils depuis ChampionData
             emotionSystem.SetPositiveTransformation(data.positiveTransformation);
             emotionSystem.SetNegativeTransformation(data.negativeTransformation);
             emotionSystem.SetThresholds(data.positiveThreshold, data.negativeThreshold);
-
             string emotionNames = data.familyEmotionData != null
                 ? $"{data.familyEmotionData.positiveEmotionName}/{data.familyEmotionData.neutralEmotionName}/{data.familyEmotionData.negativeEmotionName}"
                 : "Non défini";
@@ -245,6 +217,22 @@ public class Unit : MonoBehaviour
         // Si l'unité est en mouvement, la déplace progressivement vers la cible.
         if (_isMoving)
         {
+            // Calcule la direction vers la cible
+            Vector3 direction = _targetWorldPosition - transform.position;
+            direction.y = 0; // On ignore la hauteur pour la rotation
+
+            // Applique la rotation seulement si on a une direction horizontale significative
+            // Cela évite que l'unité ne se mette de travers quand elle est très proche de la cible
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+            }
+
+            // CORRECTION : Force l'unité à rester parfaitement droite (X et Z à 0)
+            // Cela empêche l'unité de se pencher ou d'être "de travers" pendant le mouvement
+            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
+
             transform.position = Vector3.MoveTowards(transform.position, _targetWorldPosition, _moveSpeed * Time.deltaTime);
 
             // Vérifie si l'unité a atteint sa position cible actuelle.
@@ -271,6 +259,9 @@ public class Unit : MonoBehaviour
                         // Phase 3.4: Termine le mouvement
                         _unitState?.EndMoving();
 
+                        // CORRECTION : Force l'unité à être droite à l'arrêt
+                        transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
+
                         Debug.Log($"{name} a atteint sa destination finale.");
                     }
                 }
@@ -281,6 +272,27 @@ public class Unit : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Fait tourner l'unité pour faire face à une position mondiale.
+    /// </summary>
+    public IEnumerator LookAtCoroutine(Vector3 targetPosition)
+    {
+        Vector3 direction = targetPosition - transform.position;
+        direction.y = 0; // On ne veut tourner que sur l'axe Y
+
+        if (direction.sqrMagnitude < 0.01f) yield break; // Déjà face à la cible ou trop proche
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        // Tourne jusqu'à ce que l'angle soit négligeable
+        while (Quaternion.Angle(transform.rotation, targetRotation) > 1.0f)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+            yield return null;
+        }
+        transform.rotation = targetRotation; // Snap final pour la précision
     }
 
     // Méthode pour infliger des dégâts à cette unité.
@@ -395,12 +407,6 @@ public class Unit : MonoBehaviour
         _attackDamage = value;
     }
 
-    // Setter pour la faction de l'unité (utilisé lors de l'instanciation du champion sélectionné)
-    public void SetFaction(UnitFaction newFaction)
-    {
-        _faction = newFaction;
-    }
-
     /// <summary>
     /// Retourne la UnitState (Phase 3.4)
     /// </summary>
@@ -461,9 +467,9 @@ public class Unit : MonoBehaviour
     }
 
     // Getter pour la faction de l'unité.
-    public UnitFaction GetFaction()
+    public virtual UnitFaction GetFaction()
     {
-        return _faction;
+        return UnitFaction.Player; // Par défaut, une Unit de base est considérée comme Player (ou neutre)
     }
 
     // Getter pour la position de grille actuelle de l'unité.
@@ -485,4 +491,13 @@ public class Unit : MonoBehaviour
 
     // NOTE: Les méthodes PA (GetCurrentPA, GetMaxPA, SetMaxPA, SpendPA, RefreshPA)
     // ont été déplacées vers les classes Champion et Enemy
+
+    /// <summary>
+    /// Modifie les stats de l'unité (ATK, DEF P, DEF M)
+    /// </summary>
+    public virtual void ModifyStats(int atk, int defP, int defM, int duration)
+    {
+        _attackDamage += atk;
+        if (atk != 0) Debug.Log($"{name}: ATK modifiée de {atk} (Total: {_attackDamage}) pour {duration} tours");
+    }
 } 

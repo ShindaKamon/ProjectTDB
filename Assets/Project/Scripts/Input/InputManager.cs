@@ -233,16 +233,14 @@ public class InputManager : MonoBehaviour
             }
         }
 
-        bool playedSuccessfully = false;
-
         // Cas spécial : Carte Self (doit cliquer sur le joueur lui-même)
         if (selectedCard.targetType == CardTargetType.Self)
         {
             // Vérifie qu'on a cliqué sur l'unité active (le joueur)
             if (targetUnit != null && targetUnit == activeUnit)
             {
-                _handUIController.PlaySelectedCard(activeUnit, default);
-                playedSuccessfully = true;
+                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, activeUnit, default));
+                return; // La coroutine gère la suite
             }
             else
             {
@@ -255,8 +253,8 @@ public class InputManager : MonoBehaviour
         else if (!selectedCard.targetsUnit && !selectedCard.targetsTile)
         {
             // Pour les cartes sans cible, on peut cliquer n'importe où
-            _handUIController.PlaySelectedCard(null, default);
-            playedSuccessfully = true;
+            StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, default));
+            return; // La coroutine gère la suite
         }
         // Vérifie la portée de la carte pour les autres types
         else
@@ -272,13 +270,13 @@ public class InputManager : MonoBehaviour
         }
 
         // Logique pour jouer la carte avec validation stricte (sauf si déjà jouée)
-        if (!playedSuccessfully && selectedCard.targetsUnit && targetUnit != null)
+        if (selectedCard.targetsUnit && targetUnit != null)
         {
             // Vérifie que l'unité est une cible valide selon le type de carte
             if (selectedCard.IsValidTarget(activeUnit, targetUnit))
             {
-                _handUIController.PlaySelectedCard(targetUnit, default);
-                playedSuccessfully = true;
+                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, default));
+                return; // La coroutine gère la suite
             }
             else
             {
@@ -291,8 +289,8 @@ public class InputManager : MonoBehaviour
             // Vérifie que la tuile est une cible valide selon le type de carte
             if (selectedCard.IsValidTileTarget(targetTile))
             {
-                _handUIController.PlaySelectedCard(null, targetTilePos);
-                playedSuccessfully = true;
+                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, targetTilePos));
+                return; // La coroutine gère la suite
             }
             else
             {
@@ -303,15 +301,13 @@ public class InputManager : MonoBehaviour
         else if (!selectedCard.targetsUnit && !selectedCard.targetsTile)
         {
             // Carte sans cible, joue immédiatement
-            _handUIController.PlaySelectedCard(null, default);
-            playedSuccessfully = true;
+            StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, default));
+            return; // La coroutine gère la suite
         }
 
-        if (!playedSuccessfully)
-        {
-            // Cible invalide, désélectionne la carte
-            _handUIController.DeselectCard();
-        }
+        // Si on arrive ici, c'est que la cible était invalide ou hors de portée
+        // (car les cas valides font un 'return' après avoir lancé la coroutine)
+        _handUIController.DeselectCard();
     }
 
     private void HandleUnitInteraction(GameObject clickedObject, Unit activeUnit)
@@ -430,5 +426,27 @@ public class InputManager : MonoBehaviour
             EventBus.Publish(new ResetTileColorsEvent());
             Debug.Log($"{unit.name} n'a plus de PM.");
         }
+    }
+
+    private IEnumerator PlayCardSequence(CardData card, Unit source, Unit target, Vector2 targetTilePos)
+    {
+        // 1. Tourne pour faire face à la cible
+        if (target != null && target != source)
+        {
+            yield return StartCoroutine(source.LookAtCoroutine(target.transform.position));
+        }
+        else if (card.targetsTile)
+        {
+            Tile tile = Services.Grid.GetTileAtPosition(targetTilePos);
+            if (tile != null)
+            {
+                // Cible le centre de la tuile
+                Vector3 targetWorldPos = tile.transform.position + new Vector3(0, 0.5f, 0);
+                yield return StartCoroutine(source.LookAtCoroutine(targetWorldPos));
+            }
+        }
+
+        // 2. Joue la carte après la rotation
+        _handUIController.PlaySelectedCard(target, targetTilePos);
     }
 }

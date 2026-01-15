@@ -591,15 +591,14 @@ public class HandUIController : MonoBehaviour
         if (cardUIElement == null || cardUIElement.CardData == null) return;
 
         Unit activeUnit = Services.Grid?.GetActiveUnit();
-        IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
 
         bool canAfford = false;
 
         if (cardUIElement.CardData.costPA > 0)
         {
-            if (ilyaUnit != null)
+            if (activeUnit is IActionPointsUser paUser)
             {
-                canAfford = ilyaUnit.GetCurrentPA() >= cardUIElement.CardData.costPA;
+                canAfford = paUser.GetCurrentPA() >= cardUIElement.CardData.costPA;
             }
             else
             {

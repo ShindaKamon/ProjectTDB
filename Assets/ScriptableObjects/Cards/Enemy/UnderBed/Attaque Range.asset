@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: Attaque Range
   description: "- 20 d\xE9g\xE2ts physiques"
-  famillyType: 0
+  familyType: 0
   classeType: 0
   artwork: {fileID: 0}
   costPA: 2

@@ -20,7 +20,7 @@ Les **Champions** de Project TDB appartiennent à l'une des **8 Familles**, chac
 |----------|------|-------------|
 | **Nom** | Text | Nom du champion |
 | **Prefab** | GameObject | Modèle 3D/2D du champion |
-| **Famille** | CardFamillyType | Une des 8 familles |
+| **Famille** | CardFamilyType | Une des 8 familles |
 | **Élément** | CardElementType | Feu, Ombre, Lumière, Eau ou None |
 
 ---

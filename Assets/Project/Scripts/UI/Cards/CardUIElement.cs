@@ -203,6 +203,14 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         // Vérifier si le clic est sur le bouton gauche de la souris
         if (eventData.button == PointerEventData.InputButton.Left)
         {
+            // Ne pas permettre de cliquer pendant le tour ennemi
+            TurnStateMachine turnMachine = Services.Grid?.GetTurnStateMachine();
+            if (turnMachine != null && !turnMachine.CanPlayerAct())
+            {
+                Debug.LogWarning("Ce n'est pas votre tour !");
+                return;
+            }
+
             // Ne pas permettre de cliquer si la carte n'est pas jouable
             if (!_isAffordable)
             {
@@ -223,11 +231,11 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
 
         _isHovered = true;
 
-        // Ne pas animer si la carte n'est pas jouable
-        if (!_isAffordable) return;
-
-        // Notifier le HandUIController
+        // Toujours notifier le HandUIController (pour monter la carte au premier plan)
         OnCardHoverEnter?.Invoke(gameObject);
+
+        // Ne pas animer visuellement si la carte n'est pas jouable
+        if (!_isAffordable) return;
 
         // Hover : augmentation de taille + rotation + tint
         _targetScale = _originalScale * _hoverScale;

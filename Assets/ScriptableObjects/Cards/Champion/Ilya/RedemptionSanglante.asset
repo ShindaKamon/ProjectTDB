@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RedemptionSanglante
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: REDEMPTION SANGLANTE
-  description: "Consomme une carte Rage de la main.\nHeal 10PV par Rage consomm\xE9e."
+  description: "Heal 10PV par Rage consomm\xE9e."
   familyType: 0
   classeType: 0
   elementType: 0
@@ -38,11 +38,8 @@ MonoBehaviour:
   drawAmount: 0
   cardToFetch: {fileID: 0}
   fetchAmount: 0
-  cardToConsume: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
-  consumeAnyRageCard: 1
-  consumeAmount: 1
-  consumeDamageBonus: 0
-  consumeHealBonus: 10
-  consumeDefenseBonus: 0
+  rageRequired: -1
+  rageBoostMultiplier: 0
+  rageBonusPerStack: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

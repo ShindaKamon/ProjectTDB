@@ -106,11 +106,12 @@ public class HandUIController : MonoBehaviour
                 return;
             }
 
-            // S'abonner aux changements de PA si c'est IlyaUnit
+            // S'abonner aux changements de PA et de Rage si c'est IlyaUnit
             IlyaUnit ilyaUnit = Services.Grid.GetActiveUnit() as IlyaUnit;
             if (ilyaUnit != null)
             {
                 ilyaUnit.OnActionPointsChanged += HandlePAChanged;
+                ilyaUnit.OnRageStockChanged += HandleRageStockChanged;
             }
 
             _isInitialized = true;
@@ -129,7 +130,7 @@ public class HandUIController : MonoBehaviour
             _playerDeckManager.OnHandChanged -= UpdateHandUI; // Se désabonner pour éviter les fuites de mémoire
         }
 
-        // Se désabonner des changements de PA
+        // Se désabonner des changements de PA et de Rage
         // Vérifie que le service est disponible avant d'y accéder (évite erreurs lors de la destruction de scène)
         if (Services.IsGridServiceAvailable())
         {
@@ -140,6 +141,7 @@ public class HandUIController : MonoBehaviour
                 if (ilyaUnit != null)
                 {
                     ilyaUnit.OnActionPointsChanged -= HandlePAChanged;
+                    ilyaUnit.OnRageStockChanged -= HandleRageStockChanged;
                 }
             }
         }
@@ -149,6 +151,14 @@ public class HandUIController : MonoBehaviour
     /// Appelé quand les PA changent pour mettre à jour l'état des cartes
     /// </summary>
     private void HandlePAChanged(int current, int max)
+    {
+        RefreshCardAffordability();
+    }
+
+    /// <summary>
+    /// Appelé quand le stock de Rage change pour mettre à jour l'état des cartes Rage
+    /// </summary>
+    private void HandleRageStockChanged(int rageStock)
     {
         RefreshCardAffordability();
     }
@@ -591,24 +601,30 @@ public class HandUIController : MonoBehaviour
         if (cardUIElement == null || cardUIElement.CardData == null) return;
 
         Unit activeUnit = Services.Grid?.GetActiveUnit();
+        CardData card = cardUIElement.CardData;
 
-        bool canAfford = false;
+        bool canAfford = true;
 
-        if (cardUIElement.CardData.costPA > 0)
+        // Vérification des PA
+        if (card.costPA > 0)
         {
             if (activeUnit is IActionPointsUser paUser)
             {
-                canAfford = paUser.GetCurrentPA() >= cardUIElement.CardData.costPA;
+                canAfford = paUser.GetCurrentPA() >= card.costPA;
             }
             else
             {
                 canAfford = false; // Les unités non-Ilya ne peuvent pas jouer de cartes avec coût PA
             }
         }
-        else
+
+        // Vérification du stock de Rage pour les cartes Rage
+        if (canAfford && card.isRageCard && activeUnit is IRageUser rageUser)
         {
-            // Carte gratuite (0 PA)
-            canAfford = true;
+            if (rageUser.IsRageStockFull())
+            {
+                canAfford = false; // Stock de Rage plein (5/5)
+            }
         }
 
         cardUIElement.SetAffordable(canAfford);

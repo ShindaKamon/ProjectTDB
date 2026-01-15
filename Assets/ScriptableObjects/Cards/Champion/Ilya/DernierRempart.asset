@@ -15,11 +15,13 @@ MonoBehaviour:
   cardName: DERNIER REMPART
   description: 'Ilya gagne 30 de DEF
 
-    Taunt tout les ennemis sur le plateau.'
+
+    ENRAGEE (1)'
   familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
+  isRageCard: 0
   costPA: 4
   costOther: 0
   targetType: 1
@@ -34,5 +36,13 @@ MonoBehaviour:
   defenseAmount: 30
   damageSelf: 0
   atkIncreased: 0
+  statBoostDuration: 0
   effectType: 2
-  emotionModifier: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  rageRequired: 0
+  rageBoostMultiplier: 1
+  rageBonusPerStack: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0

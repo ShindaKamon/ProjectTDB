@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: RageInterieure
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: RAGE INTERIEURE
-  description: "Pioche 1 carte Rage.\n\nENRAGEE (1) :\nPioche 2 Rages \xE0 la place."
+  description: 'Pioche 1 carte Rage.
+
+'
   familyType: 0
   classeType: 0
   elementType: 0
@@ -38,11 +40,8 @@ MonoBehaviour:
   drawAmount: 0
   cardToFetch: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
   fetchAmount: 1
-  cardToConsume: {fileID: 0}
-  consumeAnyRageCard: 1
-  consumeAmount: 0
-  consumeDamageBonus: 0
-  consumeHealBonus: 0
-  consumeDefenseBonus: 0
+  rageRequired: 0
+  rageBoostMultiplier: 1
+  rageBonusPerStack: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

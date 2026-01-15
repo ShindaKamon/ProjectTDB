@@ -313,7 +313,7 @@ MonoBehaviour:
   - {fileID: 1800863462}
   - {fileID: 731542982}
   _filledColor: {r: 0.8, g: 0.1, b: 0.1, a: 1}
-  _emptyColor: {r: 1, g: 1, b: 1, a: 1}
+  _emptyColor: {r: 0, g: 0, b: 0, a: 1}
   _maxVisibleIcons: 5
   _popAnimationScale: 1.3
   _animationDuration: 0.15
@@ -822,7 +822,7 @@ MonoBehaviour:
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   _curveThickness: 10
   _curveSegments: 50
-  _curveBendStrength: 0.7
+  _curveBendStrength: 0.5
 --- !u!222 &295576731
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1015,7 +1015,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2485,7 +2485,7 @@ MonoBehaviour:
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   _outerRadius: 30
   _innerRadius: 20
-  _crosshairSize: 15
+  _crosshairSize: 10
   _lineThickness: 3
   _circleSegments: 32
 --- !u!222 &1019063084

@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: CanaliserColere
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: CANALISE COLERE
-  description: "Pioche 2 cartes Rage du deck.\n\nENRAGEE (1):\nPioche 3 carte Rage
-    \xE0 la place."
+  description: 'Pioche 2 cartes Rage du deck.
+
+
+'
   familyType: 0
   classeType: 0
   elementType: 0
@@ -39,11 +41,8 @@ MonoBehaviour:
   drawAmount: 0
   cardToFetch: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
   fetchAmount: 2
-  cardToConsume: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
-  consumeAnyRageCard: 1
-  consumeAmount: 1
-  consumeDamageBonus: 0
-  consumeHealBonus: 0
-  consumeDefenseBonus: 0
+  rageRequired: 0
+  rageBoostMultiplier: 0
+  rageBonusPerStack: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

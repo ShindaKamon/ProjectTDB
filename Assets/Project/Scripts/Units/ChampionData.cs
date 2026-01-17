@@ -17,23 +17,9 @@ public class ChampionData : ScriptableObject
     public int maxHealth = 100;                // HP (Points de Vie) maximum
     public int movementRange = 3;              // PM (Points de Mouvement) maximum
     public int maxActionPoints = 5;            // PA (Points d'Action) maximum
-    public int physicalDefense = 10;           // Défense physique
-    public int magicalDefense = 10;            // Défense magique
+    public int attackDamage = 10;              // ATK (Attaque) - dégâts de base
+    public int defense = 10;                   // Défense (réduit les dégâts reçus)
 
     [Header("Deck de Départ")]
     public List<CardData> startingDeck = new List<CardData>();
-
-    [Header("Système d'Émotion et Transformations")]
-    [Tooltip("Données des émotions de la famille (définit les noms des 3 états émotionnels)")]
-    // Emotion positive
-    public FamilyEmotionData familyEmotionData;
-    [Tooltip("Transformation positive (Gauche) - déclenchée à +100")]
-    // Emotion negative
-    public TransformationData positiveTransformation;
-    [Tooltip("Transformation négative (Droite) - déclenchée à -100")]
-    public TransformationData negativeTransformation;
-    [Tooltip("Seuil pour déclencher la transformation positive")]
-    public float positiveThreshold = 100f;
-    [Tooltip("Seuil pour déclencher la transformation négative")]
-    public float negativeThreshold = -100f;
 }

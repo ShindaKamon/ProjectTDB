@@ -40,6 +40,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     private bool _isHovered = false;
     private bool _isSelected = false;
 
+    private Color _originalCostTextColor = Color.black;
     private Vector3 _targetScale;
     private Quaternion _targetRotation;
     private Color _targetTint;
@@ -70,6 +71,11 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         if (_glowImage != null)
         {
             _glowImage.gameObject.SetActive(false);
+        }
+
+        if (_cardCostText != null)
+        {
+            _originalCostTextColor = _cardCostText.color;
         }
     }
 
@@ -194,7 +200,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         // Change la couleur du texte de coût pour indiquer qu'on ne peut pas jouer la carte
         if (_cardCostText != null)
         {
-            _cardCostText.color = affordable ? Color.white : Color.red;
+            _cardCostText.color = affordable ? _originalCostTextColor : Color.red;
         }
     }
 

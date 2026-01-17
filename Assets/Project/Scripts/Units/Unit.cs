@@ -31,6 +31,30 @@ public class Unit : MonoBehaviour
     // Événement déclenché lorsque l'unité meurt.
     public event System.Action<Unit> OnUnitDied; // Nouveau: passe l'unité qui est morte.
     public event System.Action<int, int> OnHealthChanged; // Nouveau: (currentHealth, maxHealth)
+    public event System.Action<int, int> OnMovementPointsChanged; // (currentPM, maxPM)
+    public event System.Action OnStatsModified; // Déclenché quand ATK/DEF changent
+
+    // ========== SYSTÈME DE BUFFS TEMPORAIRES ==========
+
+    /// <summary>
+    /// Structure représentant un buff de stat temporaire
+    /// </summary>
+    public struct StatBuff
+    {
+        public int atkModifier;
+        public int defModifier;
+        public int remainingTurns;
+
+        public StatBuff(int atk, int def, int duration)
+        {
+            atkModifier = atk;
+            defModifier = def;
+            remainingTurns = duration;
+        }
+    }
+
+    // Liste des buffs actifs sur l'unité
+    protected List<StatBuff> _activeBuffs = new List<StatBuff>();
 
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
@@ -158,30 +182,12 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Initialise les stats de base de l'unité. Doit être appelée par les classes dérivées.
     /// </summary>
-    protected virtual void InitUnitStats(int maxHealth, int movementRange)
+    protected virtual void InitUnitStats(int maxHealth, int movementRange, int attackDamage = 0)
     {
         _maxHealth = maxHealth;
         _health = _maxHealth;
         _maxMovementPoints = movementRange;
-        _attackDamage = 0;
-    }
-
-    /// <summary>
-    /// Initialise le système d'émotion. Doit être appelé par les classes de champion.
-    /// </summary>
-    protected virtual void InitEmotionSystem(ChampionData data)
-    {
-        if (this.TryGetComponentSafe(out EmotionSystem emotionSystem))
-        {
-            emotionSystem.SetFamilyEmotionData(data.familyEmotionData);
-            emotionSystem.SetPositiveTransformation(data.positiveTransformation);
-            emotionSystem.SetNegativeTransformation(data.negativeTransformation);
-            emotionSystem.SetThresholds(data.positiveThreshold, data.negativeThreshold);
-            string emotionNames = data.familyEmotionData != null
-                ? $"{data.familyEmotionData.positiveEmotionName}/{data.familyEmotionData.neutralEmotionName}/{data.familyEmotionData.negativeEmotionName}"
-                : "Non défini";
-            Debug.Log($"EmotionSystem configuré pour {data.championName} - Émotions: {emotionNames}");
-        }
+        _attackDamage = attackDamage;
     }
 
     // Méthode pour déplacer l'unité vers une tuile spécifique de la grille.
@@ -321,20 +327,36 @@ public class Unit : MonoBehaviour
 
         if (_health <= 0)
         {
-            Debug.Log($"{name} a été vaincu !");
+            Die();
+        }
+    }
 
-            // Phase 3.4: Marque comme mort
-            _unitState?.SetDead();
+    /// <summary>
+    /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus comme la Rage)
+    /// </summary>
+    public void PayHealth(int amount)
+    {
+        if (amount <= 0) return;
+        
+        // Vérifie si l'unité est déjà morte
+        if (_unitState != null && _unitState.IsDead()) return;
 
-            OnUnitDied?.Invoke(this);
+        _health = Mathf.Clamp(_health - amount, 0, _maxHealth);
+        Debug.Log($"{name} paie {amount} PV (Coût). PV restants : {_health}/{_maxHealth}");
+        OnHealthChanged?.Invoke(_health, _maxHealth);
 
-            // Détruit la barre de vie
-            if (healthBar != null)
-            {
-                Destroy(healthBar.gameObject);
-            }
+        // Feedback visuel (utilise le système de dégâts pour l'affichage, mais c'est un coût)
+        EventBus.Publish(new UnitDamagedEvent(this, this, amount));
 
-            Destroy(gameObject);
+        // Met à jour la barre de vie
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealth(_health, _maxHealth);
+        }
+
+        if (_health <= 0)
+        {
+            Die();
         }
     }
 
@@ -342,10 +364,20 @@ public class Unit : MonoBehaviour
     public void Heal(int amount)
     {
         // Ne soigne pas si déjà à max HP
-        int actualHealAmount = Mathf.Min(amount, _maxHealth - _health);
+        int missingHealth = _maxHealth - _health;
+        int actualHealAmount = Mathf.Min(amount, missingHealth);
 
         _health = Mathf.Clamp(_health + amount, 0, _maxHealth);
-        Debug.Log($"{name} récupère {amount} PV. PV actuels : {_health}/{_maxHealth}");
+        
+        if (actualHealAmount < amount)
+        {
+            Debug.Log($"{name} récupère {actualHealAmount} PV (Plafonné par MaxHP). Tentative de soin: {amount}. PV: {_health}/{_maxHealth}");
+        }
+        else
+        {
+            Debug.Log($"{name} récupère {amount} PV. PV actuels : {_health}/{_maxHealth}");
+        }
+
         OnHealthChanged?.Invoke(_health, _maxHealth); // Déclenche l'événement de changement de PV
 
         // Phase 4.1: Publie l'événement de soins pour le système de combat visuals
@@ -361,15 +393,15 @@ public class Unit : MonoBehaviour
         }
     }
 
-    // Setters publics pour les stats (utilisés par EmotionSystem et classes dérivées).
+    // Setters publics pour les stats (utilisés par les classes dérivées)
     public void SetMaxMovementPoints(int value)
     {
         _maxMovementPoints = value;
     }
 
     /// <summary>
-    /// Modifie la santé maximum de l'unité (utilisé par EmotionSystem pour les transformations)
-    /// Ajuste aussi la santé actuelle proportionnellement pour éviter les incohérences
+    /// Modifie la santé maximum de l'unité.
+    /// Ajuste aussi la santé actuelle proportionnellement pour éviter les incohérences.
     /// </summary>
     public void SetMaxHealth(int value)
     {
@@ -429,6 +461,7 @@ public class Unit : MonoBehaviour
         _currentMovementPoints -= amount;
         if (_currentMovementPoints < 0) _currentMovementPoints = 0;
         Debug.Log($"{name} a dépensé {amount} PM. Restant : {_currentMovementPoints}");
+        OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
     }
 
     // Méthode pour réinitialiser les PM au début du tour
@@ -436,6 +469,7 @@ public class Unit : MonoBehaviour
     {
         _currentMovementPoints = _maxMovementPoints;
         Debug.Log($"{name}: PM réinitialisés à {_currentMovementPoints}.");
+        OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
     }
 
     // Getters pour les propriétés de l'unité (nécessaires pour l'affichage UI).
@@ -448,6 +482,27 @@ public class Unit : MonoBehaviour
     public int GetAttackDamage()
     {
         return _attackDamage;
+    }
+
+    /// <summary>
+    /// Gère la mort de l'unité
+    /// </summary>
+    protected virtual void Die()
+    {
+        Debug.Log($"{name} a été vaincu !");
+
+        // Phase 3.4: Marque comme mort
+        _unitState?.SetDead();
+
+        OnUnitDied?.Invoke(this);
+
+        // Détruit la barre de vie
+        if (healthBar != null)
+        {
+            Destroy(healthBar.gameObject);
+        }
+
+        Destroy(gameObject);
     }
 
     /// <summary>
@@ -493,11 +548,160 @@ public class Unit : MonoBehaviour
     // ont été déplacées vers les classes Champion et Enemy
 
     /// <summary>
-    /// Modifie les stats de l'unité (ATK, DEF P, DEF M)
+    /// Modifie les stats de l'unité (ATK, DEF).
+    /// Si duration > 0, crée un buff temporaire qui sera retiré après X tours.
+    /// Si duration == 0, le buff est permanent.
     /// </summary>
-    public virtual void ModifyStats(int atk, int defP, int defM, int duration)
+    public virtual void ModifyStats(int atk, int def, int duration)
     {
+        // Applique immédiatement les modifications
         _attackDamage += atk;
-        if (atk != 0) Debug.Log($"{name}: ATK modifiée de {atk} (Total: {_attackDamage}) pour {duration} tours");
+
+        // Si duration > 0, enregistre le buff pour le retirer plus tard
+        if (duration > 0 && (atk != 0 || def != 0))
+        {
+            _activeBuffs.Add(new StatBuff(atk, def, duration));
+            Debug.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, DEF: {def} pour {duration} tour(s)");
+        }
+        else if (atk != 0)
+        {
+            Debug.Log($"{name}: ATK modifiée de {atk} (Total: {_attackDamage}) - permanent");
+        }
+
+        OnStatsModified?.Invoke();
+    }
+
+    /// <summary>
+    /// Appelé au début du tour de l'unité pour décrémenter et retirer les buffs expirés
+    /// </summary>
+    public virtual void ProcessBuffsOnTurnStart()
+    {
+        if (_activeBuffs.Count == 0) return;
+
+        bool statsChanged = false;
+
+        // Parcourt les buffs en sens inverse pour pouvoir supprimer pendant l'itération
+        for (int i = _activeBuffs.Count - 1; i >= 0; i--)
+        {
+            StatBuff buff = _activeBuffs[i];
+            buff.remainingTurns--;
+
+            if (buff.remainingTurns <= 0)
+            {
+                // Retire les effets du buff
+                _attackDamage -= buff.atkModifier;
+                // Note: DEF est géré par les classes dérivées (IlyaUnit, Enemy)
+
+                Debug.Log($"{name}: Buff expiré - ATK restaurée de {buff.atkModifier}");
+                _activeBuffs.RemoveAt(i);
+                statsChanged = true;
+            }
+            else
+            {
+                // Met à jour le buff avec la nouvelle durée
+                _activeBuffs[i] = buff;
+            }
+        }
+
+        if (statsChanged)
+        {
+            OnStatsModified?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Retourne la liste des buffs actifs (pour les classes dérivées)
+    /// </summary>
+    protected List<StatBuff> GetActiveBuffs() => _activeBuffs;
+
+    /// <summary>
+    /// Permet aux classes dérivées de déclencher l'événement OnStatsModified
+    /// </summary>
+    protected void NotifyStatsModified()
+    {
+        OnStatsModified?.Invoke();
+    }
+
+    /// <summary>
+    /// Retourne la valeur d'attaque de l'unité
+    /// </summary>
+    public int GetAttack()
+    {
+        return _attackDamage;
+    }
+
+    /// <summary>
+    /// Applique un knockback à l'unité dans une direction donnée
+    /// </summary>
+    /// <param name="direction">Direction du knockback (normalisée)</param>
+    /// <param name="distance">Nombre de cases à repousser</param>
+    /// <returns>La position finale après le knockback</returns>
+    public Vector2 ApplyKnockback(Vector2 direction, int distance)
+    {
+        if (distance <= 0) return GetCurrentGridPos();
+
+        Vector2 currentPos = GetCurrentGridPos();
+        Vector2 finalPos = currentPos;
+
+        // Normalise la direction en mouvement de grille (1 case à la fois)
+        Vector2 stepDirection = new Vector2(
+            Mathf.RoundToInt(direction.x),
+            Mathf.RoundToInt(direction.y)
+        );
+
+        // Si la direction est diagonale, on prend la composante la plus forte
+        if (stepDirection.x != 0 && stepDirection.y != 0)
+        {
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+                stepDirection.y = 0;
+            else
+                stepDirection.x = 0;
+        }
+
+        // Repousse case par case
+        for (int i = 0; i < distance; i++)
+        {
+            Vector2 nextPos = finalPos + stepDirection;
+
+            // Vérifie si la case suivante est valide
+            Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
+            if (nextTile == null)
+            {
+                Debug.Log($"{name}: Knockback arrêté - bord de la grille à {nextPos}");
+                break;
+            }
+
+            // Vérifie si la case est occupée
+            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(nextPos);
+            if (unitOnTile != null)
+            {
+                Debug.Log($"{name}: Knockback arrêté - unité {unitOnTile.name} à {nextPos}");
+                break;
+            }
+
+            finalPos = nextPos;
+        }
+
+        // Si l'unité a bougé, on la déplace
+        if (finalPos != currentPos)
+        {
+            // Crée un chemin simple pour le déplacement visuel
+            List<Tile> knockbackPath = new List<Tile>();
+            Vector2 pathPos = currentPos;
+            while (pathPos != finalPos)
+            {
+                pathPos += stepDirection;
+                Tile tile = Services.Grid.GetTileAtPosition(pathPos);
+                if (tile != null) knockbackPath.Add(tile);
+            }
+
+            if (knockbackPath.Count > 0)
+            {
+                MoveToTile(knockbackPath);
+                Debug.Log($"{name}: Knockback de {currentPos} vers {finalPos} ({knockbackPath.Count} cases)");
+            }
+        }
+
+        return finalPos;
     }
 } 

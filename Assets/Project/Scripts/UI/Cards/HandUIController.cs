@@ -538,34 +538,65 @@ public class HandUIController : MonoBehaviour
         }
 
         // Validation centralisée : le ciblage est-il valide ?
-        if (_selectedCard.targetsUnit)
+        // Cas spécial : les cartes de charge peuvent cibler soit une tuile vide, soit un ennemi
+        if (_selectedCard.isChargeCard)
         {
-            ValidationResult targetResult = GameActionValidator.CanTargetUnit(_selectedCard, activeUnit, targetUnit);
-            if (!targetResult.IsValid)
+            // Pour les cartes de charge, on valide la position cible (qu'elle vienne d'un ennemi ou d'une tuile)
+            Vector2 chargeTargetPos = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
+            ValidationResult chargeResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, chargeTargetPos);
+            if (!chargeResult.IsValid)
             {
-                Debug.LogWarning($"❌ Ciblage invalide : {targetResult.ErrorMessage}");
+                Debug.LogWarning($"❌ Ciblage de charge invalide : {chargeResult.ErrorMessage}");
                 return;
             }
         }
-
-        if (_selectedCard.targetsTile)
+        else
         {
-            ValidationResult tileResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, targetTile);
-            if (!tileResult.IsValid)
+            if (_selectedCard.targetsUnit)
             {
-                Debug.LogWarning($"❌ Ciblage de tuile invalide : {tileResult.ErrorMessage}");
-                return;
+                ValidationResult targetResult = GameActionValidator.CanTargetUnit(_selectedCard, activeUnit, targetUnit);
+                if (!targetResult.IsValid)
+                {
+                    Debug.LogWarning($"❌ Ciblage invalide : {targetResult.ErrorMessage}");
+                    return;
+                }
+            }
+
+            if (_selectedCard.targetsTile)
+            {
+                ValidationResult tileResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, targetTile);
+                if (!tileResult.IsValid)
+                {
+                    Debug.LogWarning($"❌ Ciblage de tuile invalide : {tileResult.ErrorMessage}");
+                    return;
+                }
             }
         }
 
         // Toutes les validations passées, exécuter la carte
-        _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
+        if (_selectedCard.isChargeCard)
+        {
+            // Carte de charge : le lanceur se déplace vers la cible (case vide ou ennemi)
+            // Si targetUnit est défini, utilise sa position comme cible
+            Vector2 chargeTarget = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
+            _selectedCard.ExecuteChargeEffect(activeUnit, chargeTarget);
+        }
+        else
+        {
+            _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
+        }
         _playerDeckManager.PlayCard(_selectedCard);
 
         // Déduire le coût en PA (validation déjà faite par CanPlayCard)
         if (_selectedCard.costPA > 0 && activeUnit is IActionPointsUser paUser)
         {
             paUser.SpendPA(_selectedCard.costPA);
+        }
+
+        // Déduire le coût en PV
+        if (_selectedCard.costHP > 0)
+        {
+            activeUnit.PayHealth(_selectedCard.costHP);
         }
 
         // Nettoyage UI
@@ -615,6 +646,15 @@ public class HandUIController : MonoBehaviour
             else
             {
                 canAfford = false; // Les unités non-Ilya ne peuvent pas jouer de cartes avec coût PA
+            }
+        }
+
+        // Vérification des PV (Coût HP)
+        if (canAfford && card.costHP > 0)
+        {
+            if (activeUnit.GetHealth() < card.costHP)
+            {
+                canAfford = false;
             }
         }
 

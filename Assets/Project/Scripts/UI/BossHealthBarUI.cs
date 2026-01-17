@@ -28,7 +28,6 @@ public class BossHealthBarUI : MonoBehaviour
         if (_healthSlider != null)
         {
             _healthSlider.minValue = 0;
-            _healthSlider.maxValue = 1;
             _healthSlider.direction = Slider.Direction.LeftToRight;
             _healthSlider.transition = Selectable.Transition.None;
             _healthSlider.interactable = false;
@@ -128,7 +127,8 @@ public class BossHealthBarUI : MonoBehaviour
     {
         if (_healthSlider != null)
         {
-            _healthSlider.value = Mathf.Clamp01((float)currentHP / maxHP);
+            _healthSlider.maxValue = maxHP;
+            _healthSlider.value = currentHP;
         }
 
         if (_healthText != null)

@@ -58,19 +58,42 @@ public class InputManager : MonoBehaviour
                 bool isValidHoverTarget = false;
 
                 // Vérifie si on survole une unité (OPTIMISATION Phase 3.3: ComponentLocator)
-                if (hoveredObject.TryGetComponentSafe(out Unit hoveredUnit) && currentSelectedCard.targetsUnit)
+                // Note: Les cartes de charge peuvent aussi cibler des ennemis même si targetsTile est true
+                bool canTargetUnit = currentSelectedCard.targetsUnit ||
+                    (currentSelectedCard.isChargeCard && hoveredObject.TryGetComponentSafe(out Unit _));
+
+                if (hoveredObject.TryGetComponentSafe(out Unit hoveredUnit) && canTargetUnit)
                 {
-                    // Vérifie d'abord que l'unité est dans la portée
                     Vector2 sourcePos = activeUnit.GetCurrentGridPos();
                     Vector2 targetPos = hoveredUnit.GetCurrentGridPos();
-                    List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
-                    Tile targetTile = Services.Grid.GetTileAtPosition(targetPos);
 
-                    // On survole une unité, elle est dans la portée ET c'est une cible valide
-                    if (tilesInRange.Contains(targetTile) && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
+                    // Pour les cartes de charge, vérifie la ligne droite et la portée Manhattan
+                    if (currentSelectedCard.isChargeCard)
                     {
-                        hoveredPos = hoveredUnit.GetCurrentGridPos();
-                        isValidHoverTarget = true;
+                        Tile unitTile = Services.Grid.GetTileAtPosition(targetPos);
+                        int manhattanDist = Mathf.RoundToInt(Mathf.Abs(targetPos.x - sourcePos.x) + Mathf.Abs(targetPos.y - sourcePos.y));
+
+                        // Valide si en ligne droite, dans la portée, et c'est un ennemi
+                        if (currentSelectedCard.IsValidChargeTarget(unitTile, activeUnit) &&
+                            manhattanDist <= currentSelectedCard.targetRange &&
+                            hoveredUnit.GetFaction() != activeUnit.GetFaction())
+                        {
+                            hoveredPos = targetPos;
+                            isValidHoverTarget = true;
+                        }
+                    }
+                    else
+                    {
+                        // Comportement normal pour les autres cartes
+                        List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
+                        Tile targetTile = Services.Grid.GetTileAtPosition(targetPos);
+
+                        // On survole une unité, elle est dans la portée ET c'est une cible valide
+                        if (tilesInRange.Contains(targetTile) && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
+                        {
+                            hoveredPos = hoveredUnit.GetCurrentGridPos();
+                            isValidHoverTarget = true;
+                        }
                     }
                 }
                 else
@@ -89,9 +112,14 @@ public class InputManager : MonoBehaviour
                             List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
 
                             // Vérifie si la tuile est dans la portée ET que c'est une cible valide
+                            // Pour les cartes de charge, utilise la validation spécifique (ligne droite)
+                            bool isValidTarget = currentSelectedCard.isChargeCard
+                                ? currentSelectedCard.IsValidChargeTarget(hoveredTile, activeUnit)
+                                : currentSelectedCard.IsValidTileTarget(hoveredTile);
+
                             if (currentSelectedCard.targetsTile &&
                                 tilesInRange.Contains(hoveredTile) &&
-                                currentSelectedCard.IsValidTileTarget(hoveredTile))
+                                isValidTarget)
                             {
                                 isValidHoverTarget = true;
                             }
@@ -256,20 +284,65 @@ public class InputManager : MonoBehaviour
             StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, default));
             return; // La coroutine gère la suite
         }
-        // Vérifie la portée de la carte pour les autres types
-        else
+        // Cas spécial : Carte de charge ciblant un ennemi directement (doit être traité AVANT la vérification de portée classique)
+        if (selectedCard.isChargeCard && targetUnit != null && targetUnit.GetFaction() != activeUnit.GetFaction())
         {
             Vector2 sourcePos = activeUnit.GetCurrentGridPos();
-            float distance = Vector2.Distance(sourcePos, targetTilePos);
-            if (distance > selectedCard.targetRange)
+            Vector2 enemyPos = targetUnit.GetCurrentGridPos();
+
+            // Vérifie que l'ennemi est en ligne droite
+            Tile enemyTile = Services.Grid.GetTileAtPosition(enemyPos);
+            if (!selectedCard.IsValidChargeTarget(enemyTile, activeUnit))
             {
-                // Hors de portée, désélectionne la carte
+                Debug.Log($"Charge invalide : {targetUnit.name} n'est pas en ligne droite");
                 _handUIController.DeselectCard();
                 return;
             }
+
+            // Vérifie la portée en distance Manhattan (pour les cartes en ligne)
+            int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(enemyPos.x - sourcePos.x) + Mathf.Abs(enemyPos.y - sourcePos.y));
+            if (manhattanDistance > selectedCard.targetRange)
+            {
+                Debug.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {manhattanDistance}, portée: {selectedCard.targetRange})");
+                _handUIController.DeselectCard();
+                return;
+            }
+
+            Debug.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {manhattanDistance}");
+            // Joue la carte avec la position de l'ennemi comme cible
+            StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, enemyPos));
+            return;
         }
 
-        // Logique pour jouer la carte avec validation stricte (sauf si déjà jouée)
+        // Vérifie la portée de la carte pour les autres types
+        else if (selectedCard.targetsUnit || selectedCard.targetsTile)
+        {
+            Vector2 sourcePos = activeUnit.GetCurrentGridPos();
+
+            // Pour les cartes de charge sur tuile vide, utilise la distance Manhattan
+            if (selectedCard.isChargeCard)
+            {
+                int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(targetTilePos.x - sourcePos.x) + Mathf.Abs(targetTilePos.y - sourcePos.y));
+                if (manhattanDistance > selectedCard.targetRange)
+                {
+                    _handUIController.DeselectCard();
+                    return;
+                }
+            }
+            else
+            {
+                float distance = Vector2.Distance(sourcePos, targetTilePos);
+                if (distance > selectedCard.targetRange)
+                {
+                    // Hors de portée, désélectionne la carte
+                    _handUIController.DeselectCard();
+                    return;
+                }
+            }
+        }
+
+        // Logique pour jouer la carte avec validation stricte
+
         if (selectedCard.targetsUnit && targetUnit != null)
         {
             // Vérifie que l'unité est une cible valide selon le type de carte
@@ -287,7 +360,12 @@ public class InputManager : MonoBehaviour
         else if (selectedCard.targetsTile && targetTile != null)
         {
             // Vérifie que la tuile est une cible valide selon le type de carte
-            if (selectedCard.IsValidTileTarget(targetTile))
+            // Pour les cartes de charge, utilise la validation spécifique (ligne droite)
+            bool isValidTarget = selectedCard.isChargeCard
+                ? selectedCard.IsValidChargeTarget(targetTile, activeUnit)
+                : selectedCard.IsValidTileTarget(targetTile);
+
+            if (isValidTarget)
             {
                 StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, targetTilePos));
                 return; // La coroutine gère la suite

@@ -10,40 +10,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: ChaineBrisees
+  m_Name: CoupDechaine
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: CHAINES BRISEES
-  description: "Transformation D\xE9chain\xE9s (3 tours max).\nRetire toutes les
-    rages du deck et de la main."
+  cardName: "Coups D\xE9cha\xEEn\xE9s"
+  description: "Inflige 80 d\xE9g\xE2ts.\nPerd 20 PV."
   familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
   isRageCard: 0
-  costPA: 5
+  costPA: 2
+  costHP: 20
   costOther: 0
-  targetType: 1
-  targetRange: 0
+  targetType: 2
+  targetRange: 1
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
-  damageType: 0
-  damageAmount: 0
+  damageAmount: 80
   movementAmount: 0
   healAmount: 0
   defenseAmount: 0
   damageSelf: 0
+  lifestealFixedAmount: 0
   atkIncreased: 0
   statBoostDuration: 0
   effectType: 0
+  knockbackDistance: 1
+  isChargeCard: 0
   drawAmount: 0
   cardToFetch: {fileID: 0}
   fetchAmount: 0
-  cardToConsume: {fileID: 0}
-  consumeAnyRageCard: 1
-  consumeAmount: 0
-  consumeDamageBonus: 0
-  consumeHealBonus: 0
-  consumeDefenseBonus: 0
+  rageMode: 0
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

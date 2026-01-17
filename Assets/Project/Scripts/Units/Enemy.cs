@@ -18,8 +18,7 @@ public class Enemy : Unit, IActionPointsUser
     // ========== SYSTÈME PA (Points d'Action) ==========
     // Les ennemis ont leur propre système PA pour jouer leurs cartes de pattern
     // Utilise la composition avec ActionPointsComponent pour éviter la duplication de code
-    [Header("Enemy Action Points")]
-    [SerializeField] private int _maxActionPoints = 2;         // PA (Points d'Action) maximum par tour (valeur initiale)
+    // Note: maxActionPoints est initialisé depuis EnemyData, pas besoin de SerializeField
 
     // Component qui gère la logique PA
     private ActionPointsComponent _actionPointsComponent;
@@ -96,15 +95,11 @@ public class Enemy : Unit, IActionPointsUser
 
         _enemyData = data;
 
-        // Initialise les stats de base via la classe Unit
-        InitUnitStats(data.maxHealth, data.movementRange);
-        
-        // Initialise le component PA
-        _maxActionPoints = data.maxActionPoints;
-        _actionPointsComponent = new ActionPointsComponent(_maxActionPoints, $"{gameObject.name} (Enemy)");
+        // Initialise les stats de base via la classe Unit (HP, PM, ATK)
+        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage);
 
-        // Les ennemis n'ont pas d'attaque de base, tout passe par les cartes
-        _attackDamage = 0;
+        // Initialise le component PA depuis EnemyData
+        _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{gameObject.name} (Enemy)");
 
         // Copie le deck de combat (pattern)
         _combatDeck.Clear();

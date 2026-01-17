@@ -86,24 +86,12 @@ public class ChampionSelectManager : MonoBehaviour
 
         if (_selectedChampionNameText != null) _selectedChampionNameText.text = _currentSelectedChampion.championName;
 
-        // Construire la chaîne de stats (plus d'attaque, tout passe par les cartes)
-        string stats = $"PV Max: {_currentSelectedChampion.maxHealth}\n";
-        stats += $"Mouvement: {_currentSelectedChampion.movementRange}\n";
-
-        // Ajouter les stats spécifiques si disponibles
-        if (_currentSelectedChampion.maxActionPoints > 0)
-        {
-            stats += $"PA Max: {_currentSelectedChampion.maxActionPoints}\n";
-            stats += $"Défense P: {_currentSelectedChampion.physicalDefense}\n";
-            stats += $"Défense M: {_currentSelectedChampion.magicalDefense}\n";
-
-            // Affiche les émotions si disponibles
-            if (_currentSelectedChampion.familyEmotionData != null)
-            {
-                stats += $"Famille: {_currentSelectedChampion.familyEmotionData.familyType}\n";
-                stats += $"Émotions: {_currentSelectedChampion.familyEmotionData.positiveEmotionName}/{_currentSelectedChampion.familyEmotionData.neutralEmotionName}/{_currentSelectedChampion.familyEmotionData.negativeEmotionName}\n";
-            }
-        }
+        // Construire la chaîne de stats
+        string stats = $"HP: {_currentSelectedChampion.maxHealth}\n";
+        stats += $"PM: {_currentSelectedChampion.movementRange}\n";
+        stats += $"PA: {_currentSelectedChampion.maxActionPoints}\n";
+        stats += $"ATK: {_currentSelectedChampion.attackDamage}\n";
+        stats += $"DEF: {_currentSelectedChampion.defense}\n";
 
         if (_selectedChampionStatsText != null) _selectedChampionStatsText.text = stats;
     }

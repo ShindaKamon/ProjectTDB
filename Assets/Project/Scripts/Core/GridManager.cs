@@ -443,12 +443,8 @@ public class GridManager : MonoBehaviour, IGridService
     
     private void HandleTurnStart(Unit unit)
     {
-        // Appliquer les effets de début de tour (transformation)
-        // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car toutes les unités n'ont pas EmotionSystem)
-        if (unit.TryGetComponentSafe(out EmotionSystem emotionSystem))
-        {
-            emotionSystem.ApplyTurnEffects();
-        }
+        // Traite les buffs temporaires (décrémente durée, retire les expirés)
+        unit.ProcessBuffsOnTurnStart();
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
@@ -649,6 +645,13 @@ public class GridManager : MonoBehaviour, IGridService
         Vector2 sourcePos = source.GetCurrentGridPos();
         int range = card.targetRange;
 
+        // Pour les cartes de charge, affiche uniquement les cases en ligne droite
+        if (card.isChargeCard)
+        {
+            ShowChargeTargets(sourcePos, range, source);
+            return;
+        }
+
         // Obtient toutes les tuiles dans la portée de la carte
         List<Tile> tilesInRange = GetAttackTiles(sourcePos, range, source);
 
@@ -659,6 +662,45 @@ public class GridManager : MonoBehaviour, IGridService
         }
 
         Debug.Log($"Portée affichée pour {card.cardName} (portée: {range})");
+    }
+
+    /// <summary>
+    /// Affiche les cibles valides pour une carte de charge (lignes droites uniquement)
+    /// Affiche les cases vides ET les ennemis comme cibles valides
+    /// </summary>
+    private void ShowChargeTargets(Vector2 sourcePos, int range, Unit source)
+    {
+        // Directions : haut, bas, gauche, droite
+        Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+
+        foreach (Vector2 dir in directions)
+        {
+            for (int i = 1; i <= range; i++)
+            {
+                Vector2 targetPos = sourcePos + dir * i;
+                Tile tile = GetTileAtPosition(targetPos);
+
+                if (tile == null) break; // Bord de la grille
+
+                Unit unitOnTile = GetUnitAtGridPos(targetPos);
+                if (unitOnTile != null)
+                {
+                    // Il y a une unité
+                    if (unitOnTile.GetFaction() != source.GetFaction())
+                    {
+                        // C'est un ennemi : cible valide (rouge pour indiquer qu'on peut le charger)
+                        tile.SetColor(Color.red);
+                    }
+                    // On s'arrête ici (on ne peut pas cibler au-delà d'une unité)
+                    break;
+                }
+
+                // Case vide valide, on la colorie en jaune
+                tile.SetColor(_cardTargetColor);
+            }
+        }
+
+        Debug.Log($"Portée de charge affichée (portée: {range}, lignes droites uniquement)");
     }
 
     /// <summary>

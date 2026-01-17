@@ -269,20 +269,3 @@ public class EmotionChangedEvent : GameEvent
         MaxEmotion = maxEmotion;
     }
 }
-
-/// <summary>
-/// Publié quand une transformation est déclenchée
-/// </summary>
-public class TransformationTriggeredEvent : GameEvent
-{
-    public Unit Unit { get; private set; }
-    public EmotionSystem.TransformationState NewState { get; private set; }
-    public TransformationData TransformationData { get; private set; }
-
-    public TransformationTriggeredEvent(Unit unit, EmotionSystem.TransformationState newState, TransformationData transformationData)
-    {
-        Unit = unit;
-        NewState = newState;
-        TransformationData = transformationData;
-    }
-}

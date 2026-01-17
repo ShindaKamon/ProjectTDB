@@ -37,6 +37,15 @@ public static class GameActionValidator
             }
         }
 
+        // Validation des PV (Coût HP)
+        if (card.costHP > 0)
+        {
+            if (player.GetHealth() < card.costHP)
+            {
+                return ValidationResult.Fail($"PV insuffisants : {player.GetHealth()}/{card.costHP} requis");
+            }
+        }
+
         // Validation des cartes Rage (stock plein = impossible de jouer)
         if (card.isRageCard && player is IRageUser rageUser)
         {
@@ -137,11 +146,33 @@ public static class GameActionValidator
         if (!card.targetsTile)
             return ValidationResult.Success();
 
-        // Validation de la portée
-        float distance = Vector2.Distance(source.GetCurrentGridPos(), targetTilePos);
-        if (distance > card.targetRange)
+        Vector2 sourcePos = source.GetCurrentGridPos();
+
+        // Pour les cartes de charge, utilise la distance Manhattan et vérifie la ligne droite
+        if (card.isChargeCard)
         {
-            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance:F1}/{card.targetRange}");
+            // Vérifie que la cible est en ligne droite
+            bool isInLine = (sourcePos.x == targetTilePos.x || sourcePos.y == targetTilePos.y);
+            if (!isInLine)
+            {
+                return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
+            }
+
+            // Distance Manhattan pour les cartes en ligne
+            int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(targetTilePos.x - sourcePos.x) + Mathf.Abs(targetTilePos.y - sourcePos.y));
+            if (manhattanDistance > card.targetRange)
+            {
+                return ValidationResult.Fail($"{card.cardName} hors de portée : {manhattanDistance}/{card.targetRange}");
+            }
+        }
+        else
+        {
+            // Validation de la portée classique (distance euclidienne)
+            float distance = Vector2.Distance(sourcePos, targetTilePos);
+            if (distance > card.targetRange)
+            {
+                return ValidationResult.Fail($"{card.cardName} hors de portée : {distance:F1}/{card.targetRange}");
+            }
         }
 
         return ValidationResult.Success();

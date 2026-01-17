@@ -22,7 +22,6 @@ public class BattleUIManager : MonoBehaviour
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
     private IlyaUnit _currentPlayer;
-    private EmotionSystem _playerEmotionSystem;
 
     void Awake()
     {
@@ -262,24 +261,12 @@ public class BattleUIManager : MonoBehaviour
         if (_currentPlayer != null)
         {
             _currentPlayer.OnHealthChanged -= OnPlayerHealthChanged;
-            if (_playerEmotionSystem != null)
-            {
-                _playerEmotionSystem.OnEmotionChanged -= OnPlayerEmotionChanged;
-                _playerEmotionSystem.OnTransformationChanged -= OnPlayerTransformationChanged;
-            }
         }
 
         _currentPlayer = player;
-        _currentPlayer.TryGetComponent(out _playerEmotionSystem);
 
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
-
-        if (_playerEmotionSystem != null)
-        {
-            _playerEmotionSystem.OnEmotionChanged += OnPlayerEmotionChanged;
-            _playerEmotionSystem.OnTransformationChanged += OnPlayerTransformationChanged;
-        }
 
         // Connecte le RageStackUI au joueur
         if (_rageStackUI != null)
@@ -294,24 +281,12 @@ public class BattleUIManager : MonoBehaviour
     }
 
     private void OnPlayerHealthChanged(int current, int max) => UpdatePlayerOrbUI();
-    private void OnPlayerEmotionChanged(float current, float max) => UpdatePlayerOrbUI();
-    private void OnPlayerTransformationChanged(EmotionSystem.TransformationState state) => UpdatePlayerOrbUI();
 
     private void UpdatePlayerOrbUI()
     {
         if (_currentPlayer == null) return;
 
-        Color orbColor = _defaultOrbColor;
-        if (_playerEmotionSystem != null && _playerEmotionSystem.IsTransformed())
-        {
-            var transData = _playerEmotionSystem.GetCurrentState() == EmotionSystem.TransformationState.Positive 
-                ? _playerEmotionSystem.GetPositiveTransformation() 
-                : _playerEmotionSystem.GetNegativeTransformation();
-            
-            if (transData != null) orbColor = transData.glowColor;
-        }
-
-        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), orbColor);
+        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), _defaultOrbColor);
     }
 
     public void UpdatePlayerOrb (float currentHP, float maxHP, Color emotionColor)

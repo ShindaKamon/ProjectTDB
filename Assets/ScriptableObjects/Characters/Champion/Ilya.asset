@@ -16,22 +16,19 @@ MonoBehaviour:
   prefab: {fileID: 1411125681048226662, guid: 28d27df1b4044d74ba2b89c31f9f17df, type: 3}
   familyType: 1
   elementType: 1
-  maxHealth: 100
-  movementRange: 3
+  maxHealth: 120
+  movementRange: 4
   maxActionPoints: 5
-  physicalDefense: 10
-  magicalDefense: 10
+  attackDamage: 15
+  defense: 10
   startingDeck:
-  - {fileID: 11400000, guid: 48fc4de4e2df1144d96c2a75b555caa3, type: 2}
-  - {fileID: 11400000, guid: 24f6a61c2b5a48c4d90e21741618a37f, type: 2}
-  - {fileID: 11400000, guid: 3ea8d71d287d45c4c9a119009a314627, type: 2}
-  - {fileID: 11400000, guid: 62b14b504e5b0ab45b943053d7ba1e02, type: 2}
-  - {fileID: 11400000, guid: a5c57b05c828686409fbd8eee8ffb3a4, type: 2}
-  - {fileID: 11400000, guid: 0228e68ba41a065428c4cda514150e56, type: 2}
-  - {fileID: 11400000, guid: 742faeee4a50603438b2857fc2e86241, type: 2}
-  - {fileID: 11400000, guid: 4c0a482872234fa439e417d8b772f3db, type: 2}
-  familyEmotionData: {fileID: 11400000, guid: 730ce7dcd45c9a74b99936064ce32841, type: 2}
-  positiveTransformation: {fileID: 0}
-  negativeTransformation: {fileID: 0}
-  positiveThreshold: 100
-  negativeThreshold: -100
+  - {fileID: 11400000, guid: 4e30fcf18ee783c4d98143ccb2c7b3af, type: 2}
+  - {fileID: 11400000, guid: 109f8462ff8a492409df918dd158f1bc, type: 2}
+  - {fileID: 11400000, guid: 733cee944ceeecd48ad545e676656455, type: 2}
+  - {fileID: 11400000, guid: 95538918e4d5d064bb78054dff0a2cbd, type: 2}
+  - {fileID: 11400000, guid: 9e529d9f0707ad743b60808567330888, type: 2}
+  - {fileID: 11400000, guid: 745933f9ba07936429c7583d1ee03c7f, type: 2}
+  - {fileID: 11400000, guid: 2038514d845dcce49aa404c828f05998, type: 2}
+  - {fileID: 11400000, guid: 2a36a736c18f6f8458b6c7b2be809a34, type: 2}
+  - {fileID: 11400000, guid: 4d3be0cb379bbe34fa8bcfdce4c79429, type: 2}
+  - {fileID: 11400000, guid: d5c97946455bcdd4381a4637f7396ad2, type: 2}

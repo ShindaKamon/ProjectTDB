@@ -45,14 +45,6 @@ public enum CardAffectedTarget
     AnyUnit         // N'importe quelle unité
 }
 
-public enum CardDamageType
-{
-    None,           // Aucun
-    Physical,       // Dommage physique
-    Magical         // Dommage magique
-
-}
-
 public enum CardFamilyType
 {
     None,
@@ -94,6 +86,25 @@ public enum CardEffectType
     Debuff      // Debuff
 }
 
+/// <summary>
+/// Mode de consommation de Rage pour les cartes
+/// </summary>
+public enum RageConsumeMode
+{
+    None,           // Pas de consommation de Rage
+    Fixed,          // Consomme un montant fixe de Rage (rageCost)
+    All             // Consomme TOUTE la Rage disponible
+}
+
+/// <summary>
+/// Type de scaling des effets avec la Rage
+/// </summary>
+public enum RageScalingType
+{
+    Flat,           // Bonus fixe par Rage (ex: +10 heal par Rage)
+    Percent         // Bonus en pourcentage par Rage (ex: +25% dégâts par Rage)
+}
+
 [CreateAssetMenu(fileName = "NewCardData", menuName = "Card/Card Data")]
 public class CardData : ScriptableObject
 {
@@ -117,6 +128,7 @@ public class CardData : ScriptableObject
     [Header("Coût et ressources")]
     // Coût en PA (Points d'Action)
     public int costPA = 0; 
+    public int costHP = 0; // Coût en Points de Vie
     public int costOther = 0;
 
     [Header("Type et cible")]
@@ -144,8 +156,6 @@ public class CardData : ScriptableObject
     public CardAffectedTarget affectedTarget = CardAffectedTarget.None;
  
     [Header("Effets principaux")]
-    // Type de dommage
-    public CardDamageType damageType = CardDamageType.None;
     // Dégâts infligés par la carte
     public int damageAmount = 0;
     // Points de mouvement ajoutés ou déplacés
@@ -156,6 +166,8 @@ public class CardData : ScriptableObject
     public int defenseAmount = 0;
     // Damage sur soi
     public int damageSelf =0;
+    // Vol de vie (Soin sur le lanceur si dégâts infligés)
+    public int lifestealFixedAmount = 0;
     // Augmentation de dommage
     public int atkIncreased = 0;
     // Durée du boost de stat
@@ -164,6 +176,10 @@ public class CardData : ScriptableObject
     [Header("Effets secondaire")]
     //Riposte, Taunt, Knockback, etc
     public CardEffectType effectType = CardEffectType.None;
+    // Distance de knockback (si effectType = Knockback)
+    public int knockbackDistance = 1;
+    // Si true, la carte est une charge : le lanceur se déplace vers la cible et repousse les ennemis sur le chemin
+    public bool isChargeCard = false;
     // Nombre de carte à piocher
     public int drawAmount = 0; 
     // Carte spécifique à aller chercher dans le deck (Tutor)
@@ -172,12 +188,14 @@ public class CardData : ScriptableObject
     public int fetchAmount = 0;
 
     [Header("Boost par Rage")]
-    [Tooltip("Rage requise pour activer le boost (0 = pas de boost, -1 = consomme TOUTE la Rage)")]
-    public int rageRequired = 0;
-    [Tooltip("Multiplicateur des effets si boost activé (ex: 2 = double les dégâts/soins/défense)")]
-    public float rageBoostMultiplier = 1f;
-    [Tooltip("Bonus fixe ajouté PAR Rage consommée (utile avec rageRequired = -1)")]
-    public int rageBonusPerStack = 0;
+    [Tooltip("Mode de consommation de Rage")]
+    public RageConsumeMode rageMode = RageConsumeMode.None;
+    [Tooltip("Coût en Rage (uniquement si mode = Fixed)")]
+    public int rageCost = 0;
+    [Tooltip("Type de scaling : Flat = bonus fixe par Rage, Percent = % par Rage")]
+    public RageScalingType rageScaling = RageScalingType.Flat;
+    [Tooltip("Bonus par Rage consommée (Flat: +X par Rage, Percent: +X% par Rage)")]
+    public int rageBonus = 0;
 
     [Header("Génération de Cartes")]
     // Carte à ajouter au deck
@@ -232,6 +250,35 @@ public class CardData : ScriptableObject
 
             default:
                 return false;
+        }
+    }
+
+    /// <summary>
+    /// Vérifie si une tuile est une cible valide pour une carte de charge (en ligne droite uniquement)
+    /// Accepte les cases vides OU les cases avec un ennemi
+    /// </summary>
+    public bool IsValidChargeTarget(Tile tile, Unit source)
+    {
+        if (tile == null || source == null) return false;
+        if (!isChargeCard) return IsValidTileTarget(tile);
+
+        Vector2 sourcePos = source.GetCurrentGridPos();
+        Vector2 tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
+
+        // La charge ne peut cibler qu'en ligne droite (horizontale ou verticale)
+        bool isInLine = (sourcePos.x == tilePos.x || sourcePos.y == tilePos.y);
+        if (!isInLine) return false;
+
+        // Vérifie si la case est vide OU contient un ennemi
+        Unit unitOnTile = Services.Grid.GetUnitAtGridPos(tilePos);
+        if (unitOnTile == null)
+        {
+            return true; // Case vide = valide
+        }
+        else
+        {
+            // Case occupée : valide seulement si c'est un ennemi
+            return unitOnTile.GetFaction() != source.GetFaction();
         }
     }
 
@@ -315,59 +362,69 @@ public class CardData : ScriptableObject
         int finalDraw = drawAmount;
         int finalFetch = fetchAmount;
         int finalAtk = atkIncreased;
+        int finalLifesteal = lifestealFixedAmount;
 
-        // --- SYSTÈME DE BOOST PAR RAGE ---
+        // --- SYSTÈME DE BOOST PAR RAGE (Simplifié) ---
         int rageConsumed = 0;
-        bool boostActivated = false;
 
-        if (rageRequired != 0 && source is IlyaUnit ilyaPlayer)
+        if (rageMode != RageConsumeMode.None && source is IlyaUnit ilyaPlayer)
         {
             int currentRage = ilyaPlayer.GetRageStock();
 
-            // Mode "Consommer TOUTE la Rage" (rageRequired = -1)
-            if (rageRequired == -1 && currentRage > 0)
+            // Détermine combien de Rage consommer
+            if (rageMode == RageConsumeMode.All && currentRage > 0)
             {
+                // Consomme TOUTE la Rage
                 if (ilyaPlayer.ConsumeRageStock(currentRage))
                 {
                     rageConsumed = currentRage;
-                    boostActivated = true;
                 }
             }
-            // Mode "Consommer X Rage" (rageRequired > 0)
-            else if (rageRequired > 0 && currentRage >= rageRequired)
+            else if (rageMode == RageConsumeMode.Fixed && rageCost > 0 && currentRage >= rageCost)
             {
-                if (ilyaPlayer.ConsumeRageStock(rageRequired))
+                // Consomme un montant fixe
+                if (ilyaPlayer.ConsumeRageStock(rageCost))
                 {
-                    rageConsumed = rageRequired;
-                    boostActivated = true;
+                    rageConsumed = rageCost;
                 }
             }
 
-            // Applique le boost
-            if (boostActivated)
+            // Applique le boost si de la Rage a été consommée
+            if (rageConsumed > 0 && rageBonus > 0)
             {
-                // Multiplicateur sur les valeurs de base
-                finalDamage = Mathf.RoundToInt(finalDamage * rageBoostMultiplier);
-                finalHeal = Mathf.RoundToInt(finalHeal * rageBoostMultiplier);
-                finalDefense = Mathf.RoundToInt(finalDefense * rageBoostMultiplier);
-                finalDraw = Mathf.RoundToInt(finalDraw * rageBoostMultiplier);
-                finalFetch = Mathf.RoundToInt(finalFetch * rageBoostMultiplier);
-                finalAtk = Mathf.RoundToInt(finalAtk * rageBoostMultiplier);
-
-                // Bonus fixe par Rage consommée
-                if (rageBonusPerStack > 0)
+                if (rageScaling == RageScalingType.Flat)
                 {
-                    finalDamage += rageBonusPerStack * rageConsumed;
-                    finalHeal += rageBonusPerStack * rageConsumed;
-                    finalDefense += rageBonusPerStack * rageConsumed;
-                    finalDraw += rageBonusPerStack * rageConsumed;
-                    finalFetch += rageBonusPerStack * rageConsumed;
-                    finalAtk += rageBonusPerStack * rageConsumed;
-                }
+                    // Bonus FLAT : +rageBonus par Rage consommée
+                    int totalBonus = rageBonus * rageConsumed;
+                    
+                    // CORRECTION : On applique le bonus uniquement aux valeurs de base non nulles
+                    // Cela évite qu'une carte de Soin inflige des Dégâts (car damageAmount était 0 + bonus)
+                    // ou qu'une carte de Dégâts soigne l'ennemi.
+                    if (damageAmount > 0) finalDamage += totalBonus;
+                    if (healAmount > 0) finalHeal += totalBonus;
+                    if (defenseAmount > 0) finalDefense += totalBonus;
+                    if (atkIncreased > 0) finalAtk += totalBonus;
+                    if (lifestealFixedAmount > 0) finalLifesteal += totalBonus;
+                    // Draw et Fetch restent inchangés (pas de scaling)
 
-                Debug.Log($"🔥 BOOST ! {source.name} consomme {rageConsumed} Rage → Dégâts: {finalDamage}, Soins: {finalHeal}, Défense: {finalDefense}, Attaque: {finalAtk}, Pioche: {finalDraw}, Fetch: {finalFetch}");
+                    Debug.Log($"🔥 RAGE BOOST (Flat) ! {source.name} consomme {rageConsumed} Rage → +{totalBonus} aux effets");
+                }
+                else // RageScalingType.Percent
+                {
+                    // Bonus PERCENT : +rageBonus% par Rage consommée
+                    float percentBonus = 1f + (rageBonus * rageConsumed / 100f);
+                    finalDamage = Mathf.RoundToInt(finalDamage * percentBonus);
+                    finalHeal = Mathf.RoundToInt(finalHeal * percentBonus);
+                    finalDefense = Mathf.RoundToInt(finalDefense * percentBonus);
+                    finalAtk = Mathf.RoundToInt(finalAtk * percentBonus);
+                    finalLifesteal = Mathf.RoundToInt(finalLifesteal * percentBonus);
+
+                    Debug.Log($"🔥 RAGE BOOST (Percent) ! {source.name} consomme {rageConsumed} Rage → x{percentBonus:F2} aux effets");
+                }
             }
         }
+
+        Debug.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
 
         // Détermine l'épicentre de l'effet
         Vector2 effectEpicenter;
@@ -392,15 +449,23 @@ public class CardData : ScriptableObject
 
             foreach (Unit unit in affectedUnits)
             {
+                bool damageDealt = false;
                 if (finalDamage > 0)
                 {
+                    int hpBefore = unit.GetHealth();
                     unit.TakeDamage(finalDamage);
+                    if (unit.GetHealth() < hpBefore) damageDealt = true;
                     Debug.Log($"  → {unit.name} prend {finalDamage} dégâts AOE");
                 }
                 if (finalHeal > 0)
                 {
                     unit.Heal(finalHeal);
                     Debug.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
+                }
+                if (finalLifesteal > 0 && damageDealt)
+                {
+                    source.Heal(finalLifesteal);
+                    Debug.Log($"  → {source.name} vole {finalLifesteal} PV à {unit.name} (AOE)");
                 }
             }
         }
@@ -409,15 +474,23 @@ public class CardData : ScriptableObject
         {
             if (targetsUnit && targetUnit != null)
             {
+                bool damageDealt = false;
                 if (finalDamage > 0)
                 {
+                    int hpBefore = targetUnit.GetHealth();
                     targetUnit.TakeDamage(finalDamage);
+                    if (targetUnit.GetHealth() < hpBefore) damageDealt = true;
                     Debug.Log($"{source.name} inflige {finalDamage} dégâts à {targetUnit.name} avec {cardName}.");
                 }
                 if (finalHeal > 0)
                 {
                     targetUnit.Heal(finalHeal);
                     Debug.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
+                }
+                if (finalLifesteal > 0 && damageDealt)
+                {
+                    source.Heal(finalLifesteal);
+                    Debug.Log($"{source.name} vole {finalLifesteal} PV à {targetUnit.name}.");
                 }
             }
             else if (targetType == CardTargetType.Self && finalHeal > 0)
@@ -468,8 +541,7 @@ public class CardData : ScriptableObject
             Unit statTarget = (targetsUnit && targetUnit != null) ? targetUnit : source;
 
             // Applique les stats (nécessite la méthode ModifyStats sur Unit)
-            // Note: defenseAmount est appliqué aux deux défenses (P et M) pour simplifier
-            statTarget.ModifyStats(finalAtk, finalDefense, finalDefense, statBoostDuration);
+            statTarget.ModifyStats(finalAtk, finalDefense, statBoostDuration);
         }
 
         // 5. Ajout de cartes au deck (Génération de Rage ou autre)
@@ -481,12 +553,138 @@ public class CardData : ScriptableObject
                 {
                     deckManager.AddCardToDeck(cardToAddToDeck);
                 }
-                
+
                 deckManager.ShuffleDeck();
-                
+
                 Debug.Log($"{source.name} ajoute {cardsToAddCount}x {cardToAddToDeck.cardName} à son deck.");
             }
         }
+
+        // 6. Knockback simple (sur la cible)
+        if (effectType == CardEffectType.Knockback && !isChargeCard && targetUnit != null && knockbackDistance > 0)
+        {
+            Vector2 sourcePos = source.GetCurrentGridPos();
+            Vector2 targetPos = targetUnit.GetCurrentGridPos();
+            Vector2 knockbackDir = (targetPos - sourcePos).normalized;
+            targetUnit.ApplyKnockback(knockbackDir, knockbackDistance);
+        }
+    }
+
+    /// <summary>
+    /// Exécute l'effet de charge : le lanceur se déplace vers la cible, s'arrête si un ennemi bloque le chemin et le repousse
+    /// </summary>
+    /// <param name="source">L'unité qui charge</param>
+    /// <param name="targetTilePos">La position cible de la charge</param>
+    /// <param name="onComplete">Callback appelé quand la charge est terminée</param>
+    public void ExecuteChargeEffect(Unit source, Vector2 targetTilePos, System.Action onComplete = null)
+    {
+        if (!isChargeCard)
+        {
+            Debug.LogWarning($"{cardName} n'est pas une carte de charge!");
+            onComplete?.Invoke();
+            return;
+        }
+
+        Vector2 sourcePos = source.GetCurrentGridPos();
+
+        // Calcule la direction de déplacement (ligne droite uniquement)
+        Vector2 diff = targetTilePos - sourcePos;
+        Vector2 stepDirection;
+
+        if (Mathf.Abs(diff.x) > 0 && diff.y == 0)
+        {
+            // Mouvement horizontal
+            stepDirection = new Vector2(Mathf.Sign(diff.x), 0);
+        }
+        else if (Mathf.Abs(diff.y) > 0 && diff.x == 0)
+        {
+            // Mouvement vertical
+            stepDirection = new Vector2(0, Mathf.Sign(diff.y));
+        }
+        else
+        {
+            Debug.LogWarning($"Charge invalide : la cible n'est pas en ligne droite!");
+            onComplete?.Invoke();
+            return;
+        }
+
+        // Calcule le nombre de cases à parcourir (distance Manhattan)
+        int totalDistance = Mathf.RoundToInt(Mathf.Abs(diff.x) + Mathf.Abs(diff.y));
+
+        // Parcourt le chemin case par case
+        List<Tile> chargePath = new List<Tile>();
+        Vector2 currentPos = sourcePos;
+        Unit enemyHit = null;
+
+        Debug.Log($"🏃 CHARGE ! {source.name} de {sourcePos} vers {targetTilePos} (distance: {totalDistance}, direction: {stepDirection})");
+
+        for (int i = 0; i < totalDistance; i++)
+        {
+            Vector2 nextPos = currentPos + stepDirection;
+
+            Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
+            if (nextTile == null)
+            {
+                // Bord de la grille
+                Debug.Log($"🏃 CHARGE arrêtée : bord de grille à {nextPos}");
+                break;
+            }
+
+            // Vérifie s'il y a une unité sur la case
+            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(nextPos);
+            if (unitOnTile != null)
+            {
+                if (unitOnTile.GetFaction() != source.GetFaction())
+                {
+                    // C'est un ennemi : on s'arrête AVANT et on le frappe
+                    enemyHit = unitOnTile;
+                    Debug.Log($"🏃 CHARGE ! {source.name} percute {enemyHit.name} à {nextPos}");
+                }
+                else
+                {
+                    // C'est un allié, on s'arrête devant
+                    Debug.Log($"🏃 CHARGE arrêtée : allié {unitOnTile.name} à {nextPos}");
+                }
+                break;
+            }
+
+            // Case libre, on l'ajoute au chemin
+            chargePath.Add(nextTile);
+            currentPos = nextPos;
+        }
+
+        // Déplace le lanceur
+        if (chargePath.Count > 0)
+        {
+            source.MoveToTile(chargePath);
+            Debug.Log($"🏃 CHARGE ! {source.name} se déplace de {sourcePos} vers {currentPos}");
+        }
+
+        // Si un ennemi a été touché, applique le knockback et les dégâts
+        if (enemyHit != null)
+        {
+            Debug.Log($"🏃 CHARGE ! Ennemi touché: {enemyHit.name}, knockback: {knockbackDistance}, dégâts: {damageAmount}");
+
+            // Applique les dégâts de la charge
+            if (damageAmount > 0)
+            {
+                enemyHit.TakeDamage(damageAmount);
+                Debug.Log($"🏃 CHARGE ! {source.name} inflige {damageAmount} dégâts à {enemyHit.name}");
+            }
+
+            // Applique le knockback APRÈS les dégâts
+            if (knockbackDistance > 0)
+            {
+                Debug.Log($"🏃 KNOCKBACK ! Direction: {stepDirection}, Distance: {knockbackDistance}");
+                enemyHit.ApplyKnockback(stepDirection, knockbackDistance);
+            }
+        }
+        else
+        {
+            Debug.Log($"🏃 CHARGE ! Aucun ennemi touché");
+        }
+
+        onComplete?.Invoke();
     }
 }
 

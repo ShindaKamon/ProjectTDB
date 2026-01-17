@@ -10,39 +10,36 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: DevotionAbsolue
+  m_Name: SecondSouffle
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: DEVOTION ABSOLUE
-  description: '+20 DEF pendant 2 tours
-
-
-    ENRAGE (1)'
+  cardName: Second Souffle
+  description: "Consomme toute les Rages.\nSoigne de 10 PV par Rage consomm\xE9e."
   familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
   isRageCard: 0
-  costPA: 2
+  costPA: 1
   costOther: 0
   targetType: 1
   targetRange: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
-  damageType: 0
   damageAmount: 0
   movementAmount: 0
-  healAmount: 0
-  defenseAmount: 20
+  healAmount: 10
+  defenseAmount: 0
   damageSelf: 0
   atkIncreased: 0
   statBoostDuration: 0
-  effectType: 2
+  effectType: 0
   drawAmount: 0
   cardToFetch: {fileID: 0}
   fetchAmount: 0
-  rageRequired: 1
-  rageBoostMultiplier: 1
-  rageBonusPerStack: 0
+  rageMode: 2
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 10
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

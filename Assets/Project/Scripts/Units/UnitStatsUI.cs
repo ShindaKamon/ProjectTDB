@@ -4,7 +4,7 @@ using TMPro;
 
 /// <summary>
 /// Gère l'affichage UI des stats d'une unité
-/// Compatible avec Unit de base ET IlyaUnit + EmotionSystem
+/// Compatible avec Unit de base ET IlyaUnit
 /// </summary>
 public class UnitStatsUI : MonoBehaviour
 {
@@ -13,20 +13,13 @@ public class UnitStatsUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _hpText;
     [SerializeField] private TextMeshProUGUI _paText;
     [SerializeField] private TextMeshProUGUI _pmText;
-    [SerializeField] private TextMeshProUGUI _defensePText;
-    [SerializeField] private TextMeshProUGUI _defenseMText;
-    [SerializeField] private TextMeshProUGUI _emotionText;
+    [SerializeField] private TextMeshProUGUI _defenseText;
 
     [Header("Barres (optionnel)")]
     [SerializeField] private Slider _hpBar;
-    [SerializeField] private Slider _emotionBar;
-
-    [Header("Icônes état (optionnel)")]
-    [SerializeField] private GameObject _transformIcon;
 
     private IlyaUnit _ilyaUnit;
     private Unit _genericUnit;
-    private EmotionSystem _emotionSystem;
 
     /// <summary>
     /// Initialise l'UI pour une unité donnée
@@ -38,42 +31,20 @@ public class UnitStatsUI : MonoBehaviour
         {
             _ilyaUnit.OnActionPointsChanged -= UpdatePA;
         }
-        if (_emotionSystem != null)
-        {
-            _emotionSystem.OnEmotionChanged -= UpdateEmotion;
-            _emotionSystem.OnTransformationChanged -= UpdateTransformIcon;
-        }
 
         _genericUnit = unit;
         _ilyaUnit = unit as IlyaUnit;
-        unit.TryGetComponentSafe(out _emotionSystem);
 
         if (_ilyaUnit != null)
         {
             _ilyaUnit.OnActionPointsChanged += UpdatePA;
-
-            if (_emotionSystem != null)
-            {
-                _emotionSystem.OnEmotionChanged += UpdateEmotion;
-                _emotionSystem.OnTransformationChanged += UpdateTransformIcon;
-            }
-
             UpdateAll();
-
-            if (_emotionText != null) _emotionText.gameObject.SetActive(true);
-            if (_emotionBar != null) _emotionBar.gameObject.SetActive(true);
-            if (_defensePText != null) _defensePText.gameObject.SetActive(true);
-            if (_defenseMText != null) _defenseMText.gameObject.SetActive(true);
+            if (_defenseText != null) _defenseText.gameObject.SetActive(true);
         }
         else
         {
             UpdateBasicStats();
-
-            if (_emotionText != null) _emotionText.gameObject.SetActive(false);
-            if (_emotionBar != null) _emotionBar.gameObject.SetActive(false);
-            if (_defensePText != null) _defensePText.gameObject.SetActive(false);
-            if (_defenseMText != null) _defenseMText.gameObject.SetActive(false);
-            if (_transformIcon != null) _transformIcon.SetActive(false);
+            if (_defenseText != null) _defenseText.gameObject.SetActive(false);
         }
     }
 
@@ -88,14 +59,7 @@ public class UnitStatsUI : MonoBehaviour
             UpdateHP();
             UpdatePA(_ilyaUnit.GetCurrentPA(), _ilyaUnit.GetMaxPA());
             UpdatePM(_ilyaUnit.GetCurrentMovementPoints(), _ilyaUnit.GetMaxMovementPoints());
-            UpdateDefenseP();
-            UpdateDefenseM();
-
-            if (_emotionSystem != null)
-            {
-                UpdateEmotion(_emotionSystem.GetCurrentEmotion(), _emotionSystem.GetPositiveThreshold());
-                UpdateTransformIcon(_emotionSystem.GetCurrentState());
-            }
+            UpdateDefense();
         }
         else if (_genericUnit != null)
         {
@@ -155,43 +119,11 @@ public class UnitStatsUI : MonoBehaviour
         }
     }
 
-    private void UpdateDefenseP()
+    private void UpdateDefense()
     {
-        if (_defensePText != null && _ilyaUnit != null)
+        if (_defenseText != null && _ilyaUnit != null)
         {
-            _defensePText.text = $"DEF: {_ilyaUnit.GetPhysicalDefense()}";
-        }
-    }
-
-    private void UpdateDefenseM()
-    {
-        if (_defenseMText != null && _ilyaUnit != null)
-        {
-            _defenseMText.text = $"DEF: {_ilyaUnit.GetMagicalDefense()}";
-        }
-    }
-
-    private void UpdateEmotion(float currentEmotion, float maxEmotion)
-    {
-        if (_emotionText != null && _emotionSystem != null)
-        {
-            string emotionName = _emotionSystem.GetCurrentEmotionName();
-            _emotionText.text = $"Émotion: {emotionName}";
-        }
-
-        if (_emotionBar != null)
-        {
-            _emotionBar.minValue = -maxEmotion;
-            _emotionBar.maxValue = maxEmotion;
-            _emotionBar.value = currentEmotion;
-        }
-    }
-
-    private void UpdateTransformIcon(EmotionSystem.TransformationState state)
-    {
-        if (_transformIcon != null)
-        {
-            _transformIcon.SetActive(state != EmotionSystem.TransformationState.Neutral);
+            _defenseText.text = $"DEF: {_ilyaUnit.GetDefense()}";
         }
     }
 }

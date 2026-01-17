@@ -10,13 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: CanaliserColere
+  m_Name: TourbillonSanglant
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: CANALISE COLERE
-  description: 'Pioche 2 cartes Rage du deck.
-
-
-'
+  cardName: Tourbillon Sanglant
+  description: "Inflige 20 d\xE9g\xE2ts d'AOE.\nSoigne 10 PV par ennemis touch\xE9s."
   familyType: 0
   classeType: 0
   elementType: 0
@@ -26,11 +23,10 @@ MonoBehaviour:
   costOther: 0
   targetType: 1
   targetRange: 0
-  areaEffect: 0
-  aoeRadius: 0
-  affectedTarget: 0
-  damageType: 0
-  damageAmount: 0
+  areaEffect: 4
+  aoeRadius: 1
+  affectedTarget: 2
+  damageAmount: 20
   movementAmount: 0
   healAmount: 0
   defenseAmount: 0
@@ -39,10 +35,11 @@ MonoBehaviour:
   statBoostDuration: 0
   effectType: 0
   drawAmount: 0
-  cardToFetch: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
-  fetchAmount: 2
-  rageRequired: 0
-  rageBoostMultiplier: 0
-  rageBonusPerStack: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  rageMode: 0
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

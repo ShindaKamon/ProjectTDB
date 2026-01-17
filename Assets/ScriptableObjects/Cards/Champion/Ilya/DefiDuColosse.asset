@@ -10,38 +10,37 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: MartyrDefiant
+  m_Name: DefiDuColosse
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: MARTYR DEFIANT
-  description: 'Gagne Riposte.
-
-    Gagne 2 Rage dans le deck.'
+  cardName: "D\xE9fi du Colosse"
+  description: "Provoque tout les ennemis \xE0 port\xE9e de 2.\nGagne 10 DEF par
+    ennemis provoqu\xE9s pendant 2 tours."
   familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
   isRageCard: 0
-  costPA: 1
+  costPA: 2
   costOther: 0
   targetType: 1
   targetRange: 0
-  areaEffect: 0
-  aoeRadius: 0
-  affectedTarget: 0
-  damageType: 0
+  areaEffect: 4
+  aoeRadius: 2
+  affectedTarget: 2
   damageAmount: 0
   movementAmount: 0
   healAmount: 0
-  defenseAmount: 0
+  defenseAmount: 10
   damageSelf: 0
   atkIncreased: 0
-  statBoostDuration: 0
-  effectType: 1
+  statBoostDuration: 2
+  effectType: 2
   drawAmount: 0
   cardToFetch: {fileID: 0}
   fetchAmount: 0
-  rageRequired: 0
-  rageBoostMultiplier: 1
-  rageBonusPerStack: 0
-  cardToAddToDeck: {fileID: 11400000, guid: 2e8733e5d8f5a1b488596dfbd31ab960, type: 2}
-  cardsToAddCount: 2
+  rageMode: 0
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0

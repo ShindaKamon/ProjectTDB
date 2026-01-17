@@ -10,36 +10,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: FrappeEnchainee
+  m_Name: SoifDeSang
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: FRAPPE ENCHAINEE
-  description: "20 d\xE9g\xE2ts physiques\n\nENRAGE (1)"
+  cardName: Soif de sang
+  description: "Inflige 20 d\xE9g\xE2ts.\nSoigne 10 PV."
   familyType: 0
   classeType: 0
   elementType: 0
   artwork: {fileID: 0}
   isRageCard: 0
-  costPA: 2
+  costPA: 1
+  costHP: 0
   costOther: 0
   targetType: 2
   targetRange: 1
-  areaEffect: 1
+  areaEffect: 0
   aoeRadius: 0
-  affectedTarget: 2
-  damageType: 1
+  affectedTarget: 0
   damageAmount: 20
   movementAmount: 0
   healAmount: 0
   defenseAmount: 0
   damageSelf: 0
+  lifestealFixedAmount: 10
   atkIncreased: 0
   statBoostDuration: 0
   effectType: 0
+  knockbackDistance: 1
+  isChargeCard: 0
   drawAmount: 0
   cardToFetch: {fileID: 0}
   fetchAmount: 0
-  rageRequired: 1
-  rageBoostMultiplier: 1
-  rageBonusPerStack: 0
+  rageMode: 0
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0

@@ -21,7 +21,7 @@ public class BattleUIManager : MonoBehaviour
 
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
-    private IlyaUnit _currentPlayer;
+    private Champion _currentPlayer;
 
     void Awake()
     {
@@ -253,7 +253,7 @@ public class BattleUIManager : MonoBehaviour
     /// <summary>
     /// Enregistre le joueur pour mettre à jour l'Orbe de vie
     /// </summary>
-    public void RegisterPlayer(IlyaUnit player)
+    public void RegisterPlayer(Champion player)
     {
         if (player == null) return;
 
@@ -268,11 +268,17 @@ public class BattleUIManager : MonoBehaviour
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
 
-        // Connecte le RageStackUI au joueur
-        if (_rageStackUI != null)
+        // Connecte le RageStackUI au joueur (seulement si c'est Ilya avec le système de Rage)
+        if (_rageStackUI != null && player is IlyaUnit ilyaPlayer)
         {
-            _rageStackUI.SetPlayer(player);
-            Debug.Log($"BattleUIManager: RageStackUI connecté à {player.name}");
+            _rageStackUI.SetPlayer(ilyaPlayer);
+            Debug.Log($"BattleUIManager: RageStackUI connecté à {ilyaPlayer.name}");
+        }
+        else if (_rageStackUI != null)
+        {
+            // Cache le RageStackUI si ce n'est pas Ilya (Vylos n'a pas de système de Rage)
+            _rageStackUI.gameObject.SetActive(false);
+            Debug.Log($"BattleUIManager: RageStackUI désactivé (joueur n'est pas Ilya)");
         }
 
         // Mise à jour initiale

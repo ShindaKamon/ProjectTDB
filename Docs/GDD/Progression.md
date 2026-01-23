@@ -1,49 +1,49 @@
-# 📈 Système de Progression - Project TDB
+# ðŸ“ˆ SystÃ¨me de Progression - Project TDB
 
 **Version:** 1.0
 **Date:** 11 Janvier 2026
 
 ---
 
-## 🎯 Vue d'Ensemble
+## ðŸŽ¯ Vue d'Ensemble
 
-Le système de progression de **Project TDB** offre plusieurs axes d'amélioration qui se complètent pour créer une sensation de puissance croissante tout en maintenant un challenge équilibré. La progression est conçue pour récompenser à la fois le temps investi et la maîtrise des mécaniques.
+Le systÃ¨me de progression de **Project TDB** offre plusieurs axes d'amÃ©lioration qui se complÃ¨tent pour crÃ©er une sensation de puissance croissante tout en maintenant un challenge Ã©quilibrÃ©. La progression est conÃ§ue pour rÃ©compenser Ã  la fois le temps investi et la maÃ®trise des mÃ©caniques.
 
 ---
 
-## 📊 Progression des Personnages
+## ðŸ“Š Progression des Personnages
 
-### Système de Niveau
+### SystÃ¨me de Niveau
 
 **Niveau Maximum:** 10
 
-**Expérience Requise par Niveau:**
+**ExpÃ©rience Requise par Niveau:**
 ```
-Niveau 1 → 2:   100 XP
-Niveau 2 → 3:   150 XP
-Niveau 3 → 4:   200 XP
-Niveau 4 → 5:   250 XP
-Niveau 5 → 6:   300 XP
-Niveau 6 → 7:   350 XP
-Niveau 7 → 8:   400 XP
-Niveau 8 → 9:   450 XP
-Niveau 9 → 10:  500 XP
+Niveau 1 â†’ 2:   100 XP
+Niveau 2 â†’ 3:   150 XP
+Niveau 3 â†’ 4:   200 XP
+Niveau 4 â†’ 5:   250 XP
+Niveau 5 â†’ 6:   300 XP
+Niveau 6 â†’ 7:   350 XP
+Niveau 7 â†’ 8:   400 XP
+Niveau 8 â†’ 9:   450 XP
+Niveau 9 â†’ 10:  500 XP
 
 Total pour Niveau 10: 2700 XP
 ```
 
 **Sources d'XP:**
-- Combat gagné: 100 XP
+- Combat gagnÃ©: 100 XP
 - Ennemi commun vaincu: 15 XP
-- Ennemi élite vaincu: 40 XP
-- Ennemi spécial vaincu: 60 XP
+- Ennemi Ã©lite vaincu: 40 XP
+- Ennemi spÃ©cial vaincu: 60 XP
 - Boss vaincu: 200-500 XP
 - Objectifs secondaires: 50 XP
-- Combat parfait (aucun dégât reçu): +50% XP
+- Combat parfait (aucun dÃ©gÃ¢t reÃ§u): +50% XP
 
-### Amélioration des Statistiques par Niveau
+### AmÃ©lioration des Statistiques par Niveau
 
-**Ilya (Épéiste):**
+**Ilya (Ã‰pÃ©iste):**
 ```
 Niveau 1:  HP 100, Armure 5,  PA 4, PM 3
 Niveau 2:  HP 110, Armure 5,  PA 4, PM 3
@@ -73,10 +73,10 @@ Niveau 10: HP 160, Armure 6,  PA 7, PM 4  [Talent 4]
 
 ### Arbre de Talents
 
-**Système:**
+**SystÃ¨me:**
 - 1 Point de Talent par niveau (10 points au total)
 - Talents par paliers: Niveaux 1, 3, 5, 7, 10
-- Choix binaire à chaque palier (2 options)
+- Choix binaire Ã  chaque palier (2 options)
 
 **Exemple: Ilya**
 
@@ -85,132 +85,132 @@ Niveau 10: HP 160, Armure 6,  PA 7, PM 4  [Talent 4]
 - **Combattant Aguerri** : +10 HP maximum
 
 **Palier 2 (Niveau 3):**
-- **Frappe Critique** : 20% de chance de doubler les dégâts
+- **Frappe Critique** : 20% de chance de doubler les dÃ©gÃ¢ts
 - **Mouvement Fluide** : +1 PM permanent
 
 **Palier 3 (Niveau 5):**
-- **Maître d'Armes** : Les cartes d'attaque coûtent -1 PA (min 1)
-- **Régénération de Rage** : +1 Rage au début de chaque tour
+- **MaÃ®tre d'Armes** : Les cartes d'attaque coÃ»tent -1 PA (min 1)
+- **RÃ©gÃ©nÃ©ration de Rage** : +1 Rage au dÃ©but de chaque tour
 
 **Palier 4 (Niveau 7):**
-- **Fureur Déchaînée** : À 10 Rage, gagne +50% dégâts
-- **Second Souffle** : Régénère 5 HP par ennemi vaincu
+- **Fureur DÃ©chaÃ®nÃ©e** : Ã€ 10 Rage, gagne +50% dÃ©gÃ¢ts
+- **Second Souffle** : RÃ©gÃ©nÃ¨re 5 HP par ennemi vaincu
 
 **Palier 5 (Niveau 10):**
-- **Légende Vivante** : +1 PA permanent
-- **Berserker** : À moins de 30% HP, tous les dégâts doublés
+- **LÃ©gende Vivante** : +1 PA permanent
+- **Berserker** : Ã€ moins de 30% HP, tous les dÃ©gÃ¢ts doublÃ©s
 
 **Design des Talents:**
-- Chaque choix offre un style de jeu différent
-- Pas de mauvais choix, seulement des préférences
-- Peut être réinitialisé moyennant 500 Or
+- Chaque choix offre un style de jeu diffÃ©rent
+- Pas de mauvais choix, seulement des prÃ©fÃ©rences
+- Peut Ãªtre rÃ©initialisÃ© moyennant 500 Or
 
 ---
 
-## 🃏 Progression du Deck
+## ðŸƒ Progression du Deck
 
 ### Acquisition de Cartes
 
 **Pendant la Campagne:**
 
-1. **Récompense de Combat:**
-   - Après chaque combat gagné
-   - Choix parmi 3 cartes aléatoires
-   - Rareté basée sur la difficulté du combat:
-     - Combat facile: 70% Commune, 25% Rare, 5% Épique
-     - Combat moyen: 50% Commune, 35% Rare, 15% Épique
-     - Combat difficile: 30% Commune, 40% Rare, 25% Épique, 5% Légendaire
+1. **RÃ©compense de Combat:**
+   - AprÃ¨s chaque combat gagnÃ©
+   - Choix parmi 3 cartes alÃ©atoires
+   - RaretÃ© basÃ©e sur la difficultÃ© du combat:
+     - Combat facile: 70% Commune, 25% Rare, 5% Ã‰pique
+     - Combat moyen: 50% Commune, 35% Rare, 15% Ã‰pique
+     - Combat difficile: 30% Commune, 40% Rare, 25% Ã‰pique, 5% LÃ©gendaire
 
 2. **Boutique:**
-   - Apparaît tous les 5 combats
-   - 6 cartes aléatoires disponibles à l'achat
-   - Prix: 50-200 Or selon la rareté
+   - ApparaÃ®t tous les 5 combats
+   - 6 cartes alÃ©atoires disponibles Ã  l'achat
+   - Prix: 50-200 Or selon la raretÃ©
 
-3. **Événements:**
-   - Événements aléatoires offrent des cartes
+3. **Ã‰vÃ©nements:**
+   - Ã‰vÃ©nements alÃ©atoires offrent des cartes
    - Parfois avec choix moraux
-   - Récompenses uniques
+   - RÃ©compenses uniques
 
 4. **Boss:**
-   - Cartes Rares/Épiques garanties
-   - Boss finaux donnent des Légendaires
+   - Cartes Rares/Ã‰piques garanties
+   - Boss finaux donnent des LÃ©gendaires
 
-### Amélioration de Cartes
+### AmÃ©lioration de Cartes
 
 **Upgrade (+):**
-- Coût: 100 Or
-- Disponible à la boutique ou après certains combats
-- Une carte peut être améliorée une seule fois
+- CoÃ»t: 100 Or
+- Disponible Ã  la boutique ou aprÃ¨s certains combats
+- Une carte peut Ãªtre amÃ©liorÃ©e une seule fois
 - Effets de l'upgrade:
-  - +30% dégâts
-  - OU -1 coût en PA
+  - +30% dÃ©gÃ¢ts
+  - OU -1 coÃ»t en PA
   - OU effet additionnel
 
 **Exemples d'Upgrades:**
 ```
-Frappe Rapide (1 PA, 5 dégâts)
-→ Frappe Rapide+ (1 PA, 7 dégâts)
+Frappe Rapide (1 PA, 5 dÃ©gÃ¢ts)
+â†’ Frappe Rapide+ (1 PA, 7 dÃ©gÃ¢ts)
 
 Bouclier (1 PA, +5 Bouclier)
-→ Bouclier+ (1 PA, +7 Bouclier, +2 HP)
+â†’ Bouclier+ (1 PA, +7 Bouclier, +2 HP)
 
-Boule de Feu (2 PA, 8 dégâts, Brûlure 2 stacks)
-→ Boule de Feu+ (2 PA, 10 dégâts, Brûlure 3 stacks)
+Boule de Feu (2 PA, 8 dÃ©gÃ¢ts, BrÃ»lure 2 stacks)
+â†’ Boule de Feu+ (2 PA, 10 dÃ©gÃ¢ts, BrÃ»lure 3 stacks)
 ```
 
 ### Suppression de Cartes
 
-**Système:**
-- Coût: 50 Or
-- Disponible à la boutique
+**SystÃ¨me:**
+- CoÃ»t: 50 Or
+- Disponible Ã  la boutique
 - Permet d'affiner le deck
-- Retire définitivement la carte
+- Retire dÃ©finitivement la carte
 
-**Stratégie:**
-- Supprimer les cartes de départ faibles tard dans la campagne
-- Affiner le deck vers un archétype précis
-- Réduire la taille du deck pour plus de consistance (20 cartes = optimal)
+**StratÃ©gie:**
+- Supprimer les cartes de dÃ©part faibles tard dans la campagne
+- Affiner le deck vers un archÃ©type prÃ©cis
+- RÃ©duire la taille du deck pour plus de consistance (20 cartes = optimal)
 
 ### Transformation de Cartes
 
-**Système:**
-- Rare, événements spéciaux uniquement
-- Change complètement la carte en une autre
-- Peut changer de rareté
+**SystÃ¨me:**
+- Rare, Ã©vÃ©nements spÃ©ciaux uniquement
+- Change complÃ¨tement la carte en une autre
+- Peut changer de raretÃ©
 
 **Exemples:**
 ```
-Frappe Rapide → Lame Tourbillonnante (rare)
-Bouclier → Contre-Attaque (rare)
+Frappe Rapide â†’ Lame Tourbillonnante (rare)
+Bouclier â†’ Contre-Attaque (rare)
 ```
 
 ---
 
-## 💰 Système Économique
+## ðŸ’° SystÃ¨me Ã‰conomique
 
 ### Monnaies
 
 **Or:**
 - Monnaie principale
-- Obtenu après chaque combat (10-50 Or)
-- Utilisé pour:
+- Obtenu aprÃ¨s chaque combat (10-50 Or)
+- UtilisÃ© pour:
   - Acheter des cartes
-  - Améliorer des cartes
+  - AmÃ©liorer des cartes
   - Supprimer des cartes
   - Acheter des objets
 
 **Gemmes (Monnaie Premium):**
-- Monnaie rare et précieuse
+- Monnaie rare et prÃ©cieuse
 - Obtenue:
-  - Récompense de boss (10-30 Gemmes)
-  - Succès (5-50 Gemmes)
-  - Défis quotidiens (10 Gemmes)
-- Utilisée pour:
-  - Débloquer des personnages (500 Gemmes)
-  - Acheter des cartes Légendaires (200 Gemmes)
-  - Cosmétiques (100-500 Gemmes)
+  - RÃ©compense de boss (10-30 Gemmes)
+  - SuccÃ¨s (5-50 Gemmes)
+  - DÃ©fis quotidiens (10 Gemmes)
+- UtilisÃ©e pour:
+  - DÃ©bloquer des personnages (500 Gemmes)
+  - Acheter des cartes LÃ©gendaires (200 Gemmes)
+  - CosmÃ©tiques (100-500 Gemmes)
 
-### Récompenses par Combat
+### RÃ©compenses par Combat
 
 **Combat Facile:**
 - 100 XP
@@ -231,19 +231,19 @@ Bouclier → Contre-Attaque (rare)
 **Boss:**
 - 300-500 XP
 - 200-500 Or
-- 1 Carte Rare/Épique/Légendaire garantie
+- 1 Carte Rare/Ã‰pique/LÃ©gendaire garantie
 - 20-50 Gemmes
 - Item unique (optionnel)
 
 ---
 
-## 🎁 Système de Récompenses
+## ðŸŽ SystÃ¨me de RÃ©compenses
 
-### Types de Récompenses
+### Types de RÃ©compenses
 
 **1. Cartes:**
 - Choix parmi 3 options
-- Rareté variable
+- RaretÃ© variable
 - Peut refuser (skip)
 
 **2. Or:**
@@ -263,32 +263,32 @@ Bouclier → Contre-Attaque (rare)
 - Exemples:
   - **Potion de Vie** : Restaure 50 HP
   - **Potion de Mana** : Restaure 5 Mana
-  - **Potion de Force** : +50% dégâts pour ce combat
+  - **Potion de Force** : +50% dÃ©gÃ¢ts pour ce combat
   - **Potion de Vitesse** : +2 PA pour ce tour
 
 **5. Gemmes:**
 - Monnaie premium
-- Récompense rare
+- RÃ©compense rare
 
 ### Bonus de Performance
 
 **Multiplicateurs d'XP et Or:**
-- **Combat Parfait** (aucun dégât reçu): ×1.5
-- **Victoire Rapide** (moins de 5 tours): ×1.2
-- **Aucune Carte Jouée** (défi): ×2.0
-- **Aucun Allié Vaincu**: ×1.3
+- **Combat Parfait** (aucun dÃ©gÃ¢t reÃ§u): Ã—1.5
+- **Victoire Rapide** (moins de 5 tours): Ã—1.2
+- **Aucune Carte JouÃ©e** (dÃ©fi): Ã—2.0
+- **Aucun AlliÃ© Vaincu**: Ã—1.3
 
 ---
 
-## 🏆 Méta-Progression
+## ðŸ† MÃ©ta-Progression
 
-### Déblocage de Personnages
+### DÃ©blocage de Personnages
 
 **Personnages de Base:**
-- Ilya: Débloqué dès le départ
-- Ayla: Débloqué dès le départ
+- Ilya: DÃ©bloquÃ© dÃ¨s le dÃ©part
+- Ayla: DÃ©bloquÃ© dÃ¨s le dÃ©part
 
-**Personnages Débloquables:**
+**Personnages DÃ©bloquables:**
 - **Kael:** Terminer l'Acte 1 OU 500 Gemmes
 - **Luna:** Terminer l'Acte 2 OU 500 Gemmes
 - **[Personnage 5]:** Terminer l'Acte 3 OU 500 Gemmes
@@ -297,68 +297,68 @@ Bouclier → Contre-Attaque (rare)
 ### Collection de Cartes
 
 **Catalogue:**
-- Toutes les cartes obtenues sont sauvegardées dans un catalogue
-- Peut consulter les cartes à tout moment
-- Statistiques d'utilisation (nombre de fois jouée, dégâts infligés, etc.)
+- Toutes les cartes obtenues sont sauvegardÃ©es dans un catalogue
+- Peut consulter les cartes Ã  tout moment
+- Statistiques d'utilisation (nombre de fois jouÃ©e, dÃ©gÃ¢ts infligÃ©s, etc.)
 
 **Objectif:**
 - Collectionner toutes les cartes du jeu
-- Récompense: Carte Légendaire unique "Collection Complète"
+- RÃ©compense: Carte LÃ©gendaire unique "Collection ComplÃ¨te"
 
-### Succès (Achievements)
+### SuccÃ¨s (Achievements)
 
 **Exemples:**
 - **Premier Sang** : Vaincre votre premier ennemi (10 Gemmes)
-- **Invincible** : Terminer un combat sans prendre de dégâts (25 Gemmes)
-- **Collectionneur** : Posséder 50 cartes différentes (50 Gemmes)
-- **Maître Tacticien** : Gagner 10 combats de suite sans perdre un allié (100 Gemmes)
-- **Légende** : Terminer la campagne en Mode Difficile (200 Gemmes)
+- **Invincible** : Terminer un combat sans prendre de dÃ©gÃ¢ts (25 Gemmes)
+- **Collectionneur** : PossÃ©der 50 cartes diffÃ©rentes (50 Gemmes)
+- **MaÃ®tre Tacticien** : Gagner 10 combats de suite sans perdre un alliÃ© (100 Gemmes)
+- **LÃ©gende** : Terminer la campagne en Mode Difficile (200 Gemmes)
 
-### Modes de Jeu Débloquables
+### Modes de Jeu DÃ©bloquables
 
-**Mode Histoire (Débloqué de base):**
+**Mode Histoire (DÃ©bloquÃ© de base):**
 - Campagne principale
 - 3 Actes
 
-**Mode Difficile (Débloquer: Terminer Mode Histoire):**
-- Ennemis +50% HP et dégâts
+**Mode Difficile (DÃ©bloquer: Terminer Mode Histoire):**
+- Ennemis +50% HP et dÃ©gÃ¢ts
 - -1 PA pour tous les personnages
-- Meilleurs loots (×1.5 Or et XP)
+- Meilleurs loots (Ã—1.5 Or et XP)
 
-**Mode Arène (Débloquer: Niveau 5 avec n'importe quel personnage):**
+**Mode ArÃ¨ne (DÃ©bloquer: Niveau 5 avec n'importe quel personnage):**
 - Combats sans fin
-- Difficulté croissante
+- DifficultÃ© croissante
 - Classement en ligne (optionnel)
-- Récompenses tous les 5 combats
+- RÃ©compenses tous les 5 combats
 
-**Défi Quotidien (Débloquer: Terminer l'Acte 1):**
-- Combat spécial avec règles modifiées chaque jour
+**DÃ©fi Quotidien (DÃ©bloquer: Terminer l'Acte 1):**
+- Combat spÃ©cial avec rÃ¨gles modifiÃ©es chaque jour
 - Exemples:
-  - "Pas de cartes de défense"
+  - "Pas de cartes de dÃ©fense"
   - "Ennemis commencent avec +50% HP"
-  - "Toutes les cartes coûtent 1 PA"
-- Récompenses: 50 Or + 10 Gemmes
+  - "Toutes les cartes coÃ»tent 1 PA"
+- RÃ©compenses: 50 Or + 10 Gemmes
 
 ---
 
-## 📈 Courbe de Progression
+## ðŸ“ˆ Courbe de Progression
 
 ### Design de la Courbe
 
 **Acte 1 (Niveaux 1-3):**
-- Introduction aux mécaniques
+- Introduction aux mÃ©caniques
 - Progression rapide
-- Combats faciles à moyens
+- Combats faciles Ã  moyens
 - Objectif: Familiarisation
 
 **Acte 2 (Niveaux 4-6):**
-- Augmentation de la difficulté
+- Augmentation de la difficultÃ©
 - Introduction de nouveaux ennemis
 - Diversification des decks
-- Objectif: Maîtrise
+- Objectif: MaÃ®trise
 
 **Acte 3 (Niveaux 7-10):**
-- Défis complexes
+- DÃ©fis complexes
 - Boss difficiles
 - Optimisation des decks
 - Objectif: Challenge
@@ -368,45 +368,45 @@ Bouclier → Contre-Attaque (rare)
 **Pour Atteindre Niveau 10 (Un Personnage):**
 - Environ 30-40 combats
 - 8-12 heures de jeu
-- Une campagne complète
+- Une campagne complÃ¨te
 
-**Pour Débloquer Tous les Personnages:**
-- 3 campagnes complètes (Mode Histoire + Difficile)
-- OU Farming de Gemmes (Mode Arène, Défis)
+**Pour DÃ©bloquer Tous les Personnages:**
+- 3 campagnes complÃ¨tes (Mode Histoire + Difficile)
+- OU Farming de Gemmes (Mode ArÃ¨ne, DÃ©fis)
 
-**Pour Collection Complète:**
+**Pour Collection ComplÃ¨te:**
 - 50+ heures de jeu
-- Multiples runs avec différents personnages
+- Multiples runs avec diffÃ©rents personnages
 
 ---
 
-## 🎯 Objectifs de Design
+## ðŸŽ¯ Objectifs de Design
 
 ### Sensation de Progression
 
 1. **Court Terme (Par Combat):**
-   - Nouvelle carte ou amélioration
+   - Nouvelle carte ou amÃ©lioration
    - Or pour futur achat
    - Progression vers le prochain niveau
 
 2. **Moyen Terme (Par Run/Campagne):**
    - Personnage qui monte en niveau
-   - Deck qui s'améliore
-   - Déblocage de talents
+   - Deck qui s'amÃ©liore
+   - DÃ©blocage de talents
 
-3. **Long Terme (Méta):**
-   - Déblocage de personnages
+3. **Long Terme (MÃ©ta):**
+   - DÃ©blocage de personnages
    - Collection de cartes
-   - Succès et cosmétiques
+   - SuccÃ¨s et cosmÃ©tiques
 
-### Équilibrage
+### Ã‰quilibrage
 
-- Progression significative mais pas écrasante
-- Le skill reste important même avec meilleur équipement
-- Nouvelles mécaniques introduites progressivement
-- Replayabilité grâce à la variété de builds
+- Progression significative mais pas Ã©crasante
+- Le skill reste important mÃªme avec meilleur Ã©quipement
+- Nouvelles mÃ©caniques introduites progressivement
+- ReplayabilitÃ© grÃ¢ce Ã  la variÃ©tÃ© de builds
 
 ---
 
-**Dernière mise à jour:** 11 Janvier 2026
+**DerniÃ¨re mise Ã  jour:** 11 Janvier 2026
 **Responsable:** Design Progression Project TDB

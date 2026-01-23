@@ -90,4 +90,30 @@ public class ActionPointsComponent : IActionPointsUser
         _unitName = unitName;
         OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
     }
+
+    /// <summary>
+    /// Réduit les PA courants d'un montant donné (utilisé pour les debuffs comme Stigmate)
+    /// </summary>
+    /// <param name="amount">Montant de PA à retirer</param>
+    public void ReduceCurrentPA(int amount)
+    {
+        if (amount <= 0) return;
+
+        _currentActionPoints = Mathf.Max(0, _currentActionPoints - amount);
+        OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
+        Debug.Log($"{_unitName}: PA réduits de {amount} (debuff). Restant: {_currentActionPoints}/{_maxActionPoints}");
+    }
+
+    /// <summary>
+    /// Ajoute des PA courants (utilisé pour les passifs comme Vylos)
+    /// </summary>
+    /// <param name="amount">Montant de PA à ajouter</param>
+    public void AddPA(int amount)
+    {
+        if (amount <= 0) return;
+
+        _currentActionPoints = Mathf.Min(_maxActionPoints, _currentActionPoints + amount);
+        OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
+        Debug.Log($"{_unitName}: PA ajoutés ({amount}). Total: {_currentActionPoints}/{_maxActionPoints}");
+    }
 }

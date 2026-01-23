@@ -1,72 +1,58 @@
-# 📘 Game Design Document - Project TDB
+# Game Design Document - Project TDB
 
 **Version:** 2.0
 **Date:** 11 Janvier 2026
 **Statut:** Développement actif
 **Mise à jour:** Reflète l'implémentation actuelle
 
----
-
-## 🎯 Vision du Jeu
+## Vision du Jeu
 
 **Project TDB** (Tactical Deck Builder) est un jeu de combat tactique au tour par tour qui fusionne la profondeur stratégique des jeux de grille avec la créativité du deck building et un système d'émotions unique. Le joueur contrôle des champions appartenant à **8 familles distinctes**, chacune avec son propre système émotionnel qui transforme leur style de combat.
 
 ### Concept Unique
 
-**Système d'Émotions Transformatives**
-- Chaque champion possède une jauge émotionnelle (-100 à +100)
-- Les cartes jouées influencent cette jauge
+**Système d'Emotions Transformatives**
+- Chaque champion possède une jauge émotionnelle (0 à 100)
+- Plusieurs paramètres influencent cette jauge
 - Atteindre les seuils déclenche des **transformations** qui changent radicalement les stats et le style de jeu
-- 3 états émotionnels par famille (Positif/Tank ↔ Neutre ↔ Négatif/DPS)
 
----
 
-## 🎨 Les 8 Familles
+## Les 8 Familles
 
-| Famille | Couleur | Identité | Style de Jeu |
-|---------|---------|----------|--------------|
-| **Déchaînés** | Rouge | Guerriers impulsifs maîtrisant la colère | Combattants physiques avec transformations extrêmes |
-| **Dissidents** | Vert Foncé | Rebelles tactiques adaptables | Contrôle et manipulation du terrain |
-| **Insurgents** | Jaune | Révolutionnaires charismatiques | Buffs d'équipe et mobilité |
-| **Exilés** | Bleu Foncé | Parias solitaires mystérieux | Magie sombre et invocations |
-| **Réprouvés** | Violet | Maudits cherchant la rédemption | Sacrifice et rédemption |
-| **Gardiens** | Vert Clair | Protecteurs nobles | Défense et soins |
-| **Éveillés** | Bleu Clair | Illuminés spirituels | Magie spirituelle et soutien |
-| **Précurseurs** | Orange | Pionniers innovants | Innovation et effets uniques |
+Chaque famille a sa propre identité thématique et son système d'émotions unique.
 
-**Émotions des Déchaînés (exemple):**
-- **Contrariété** (Positif/Tank) : État défensif et frustré
-- **Colère** (Neutre) : État de base équilibré
-- **Rage** (Négatif/DPS) : Fureur destructrice offensive
+| Famille         | Couleur    | Code Hex  | 
+|-----------------|------------|-----------|
+| **Déchaînés**   | Rouge      | #CC0000 | 
+| **Dissidents**  | Violet     | #800080 |
+| **Insurgents**  | Bleu Foncé | #000080 | 
+| **Exilés**      | Bleu Clair | #80CCFF |
+| **Réprouvés**   | Vert Foncé | #006600 | 
+| **Gardiens**    | Vert Clair | #80FF80 | 
+| **Eveillés**    | Jaune      | #FFEB00 | 
+| **Précurseurs** | Orange     | #FF8000 |
 
-Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famille.
 
----
+## Piliers de Design
 
-## 🎭 Piliers de Design
-
-### 1. Émotions et Transformations
+### 1. Emotions et Transformations
 - Système unique qui différencie Project TDB
 - Chaque carte influence l'état émotionnel du champion
-- Les transformations offrent des choix stratégiques (Tank vs DPS)
 - Les émotions sont personnalisées par famille
 
-### 2. Synergie Famille-Classe-Élément
+### 2. Synergie Famille-Classe-Elément
 - **8 Familles** : Identité thématique et émotions
-- **5 Classes** : Rôle tactique (Ancre, Tisseur, Ombrelame, Veilleur, Harmoniste)
-- **4 Éléments** : Types de dégâts et interactions (Feu, Ombre, Lumière, Eau)
-- Les cartes combinent ces 3 dimensions pour créer des synergies profondes
+- **5 Classes** : Gestion de l'émotion
 
 ### 3. Gestion Tactique Multi-dimensionnelle
 
-| Ressource | Description | Utilisation |
-|-----------|-------------|-------------|
-| **PA** (Points d'Action) | 3-5 par tour | Jouer des cartes |
-| **PM** (Points de Mouvement) | 2-4 par tour | Se déplacer sur la grille |
-| **HP** (Santé) | Variable selon champion | Points de vie |
-| **Défense Physique** | 10+ | Réduit dégâts physiques |
-| **Défense Magique** | 10+ | Réduit dégâts magiques |
-| **Jauge Émotionnelle** | -100 à +100 | Déclenche transformations |
+| Ressource                    | Description | Utilisation                      |
+|------------------------------|-------------|----------------------------------|
+| **PA** (Points d'Action)     | 3-5         | Pour jouer des cartes            |
+| **PM** (Points de Mouvement) | 2-4         | Pour se déplacer (1 PM = 1 case) |
+| **HP** (Points de Vie)       | Variable    | Tombe à 0 = vaincu               |
+| **Défense**                  | 10+         | Réduit dégâts physiques          |
+| **Jauge Emotionnelle**       | 0 à 100     | Déclenche transformations        |
 
 ### 4. Positionnement Tactique sur Grille
 - Grille avec système de coordonnées 2D
@@ -74,142 +60,100 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - Zones d'effet : Circle, Line, Cross, Cone
 - Ciblage précis : unités, tuiles vides, zones
 
----
 
-## 🎮 Boucle de Combat
+## Boucle de Combat
 
 ```
 1. INITIALISATION
-   ↓
+   â†“
 2. TOUR DU CHAMPION
-   • Pioche de cartes (jusqu'à 5 en main)
-   • Restauration des PA et PM
-   • Actions du joueur :
+   â€¢ Pioche de cartes (jusqu'à 5 en main)
+   â€¢ Restauration des PA et PM
+   â€¢ Actions du joueur :
      - Jouer des cartes
      - Se déplacer sur la grille
      - Gérer ses émotions
-   • Fin de tour
-   ↓
+   â€¢ Fin de tour
+   â†“
 3. TOUR ENNEMI
-   • IA choisit une action
-   • Joue une carte (selon pattern)
-   • Exécution de l'action
-   ↓
-4. VÉRIFICATION
-   • Tous les ennemis vaincus ? → VICTOIRE
-   • Tous les champions vaincus ? → DÉFAITE
-   • Sinon → Retour au tour du champion
-   ↓
-5. RÉCOMPENSES (si victoire)
+   â€¢ IA choisit une action
+   â€¢ Joue une carte (selon pattern)
+   â€¢ Exécution de l'action
+   â†“
+4. VERIFICATION
+   â€¢ Tous les ennemis vaincus ? â†’ VICTOIRE
+   â€¢ Tous les champions vaincus ? â†’ DEFAITE
+   â€¢ Sinon â†’ Retour au tour du champion
+   â†“
+5. RECOMPENSES (si victoire)
 ```
 
----
 
-## ⚔️ Systèmes Principaux
+## Systèmes Principaux
 
 ### Cartes et Deck Building
 
 **Caractéristiques des Cartes:**
-- Chaque carte appartient à une Famille, Classe et Élément
+- Chaque carte appartient à une Famille, Classe et Neutre
 - Coût en PA : 0 à 5+
 - Portée : 0 (soi-même) à infini
 - Zone d'effet : Aucune, Circle, Line, Cross, Cone
-- Modificateur d'émotion : -50 à +50
 
 **Types de Ciblage:**
 
-| Type | Description | Exemple |
-|------|-------------|---------|
-| None | Aucune cible | Buff automatique personnel |
-| Self | Soi-même uniquement | Se soigner |
-| Enemy | Un ou plusieurs ennemis | Attaque |
-| Ally | Alliés (sauf soi) | Buff allié |
-| AllyOrSelf | Alliés ET soi | Soins de groupe |
-| EmptyTile | Tuiles vides | Invocation, piège |
-| AnyTile | N'importe quelle tuile | Zone d'effet centrée |
+| Type            | Description             | Cas d'Usage       | Exemple                            |
+|-----------------|-------------------------|-------------------|------------------------------------|
+| **None**        | Aucune cible            | Effet automatique | Buff personnel instantané          |
+| **Self**        | Soi-même uniquement     | Auto-ciblage      | Se soigner, se buffer              |
+| **Enemy**       | Un ou plusieurs ennemis | Attaques standard | Frappe, Sort offensif              |
+| **Ally**        | Alliés (sauf soi)       | Support d'équipe  | Soigner un allié                   |
+| **AllyOrSelf**  | Alliés ET soi-même      | Support flexible  | Soins de groupe                    |
+| **AllyorEnemy** | Alliés ET ennemis       | Effets mixtes     | Explosion qui touche tout le monde |
+| **AnyUnit**     | N'importe quelle unité  | Polyvalent        | Télékinésie, déplacement forcé     |
+| **EmptyTile**   | Tuiles vides uniquement | Placement         | Invocation, piège, zone            |
+| **AnyTile**     | N'importe quelle tuile  | Zone centrée      | Météore, explosion ciblée          |
 
-**Types de Dégâts:**
-- **Physique** : Réduit par défense physique (minimum 1 dégât)
-- **Magique** : Réduit par défense magique (minimum 1 dégât)
 
-### Système d'Émotions
-
-**Fonctionnement:**
-- Jauge de -100 (DPS) à +100 (Tank)
-- Les cartes modifient la jauge (+/- 1 à 50 par carte)
-- 3 états : Positif, Neutre, Négatif
-- Les noms des états varient selon la famille
-
-**Transformations:**
-- Déclenchées à +100 (Tank) ou -100 (DPS)
-- Une seule transformation par combat
-- Modificateurs possibles :
-  - Stats : HP max, PA max, Défense, Mouvement
-  - Effets passifs : Dégâts bonus, Vol de vie, Régénération
-  - Visuels : Glow, effets de particules
-
-**Exemple : Déchaînés**
-
-| État | Seuil | Nom | Orientation | Bonus Typiques |
-|------|-------|-----|-------------|----------------|
-| Positif | +100 | Contrariété | Tank | +HP, +Défense |
-| Neutre | 0 | Colère | Équilibré | Stats de base |
-| Négatif | -100 | Rage | DPS | +Dégâts, +Critique |
-
-### Champions vs Ennemis
-
-| Caractéristique | Champions | Ennemis |
-|-----------------|-----------|---------|
-| **Deck** | Personnel, mélangé | Pattern fixe, séquentiel |
-| **PA** | 3-5 par tour | 2-4 par tour |
-| **Émotions** | Oui (optionnel) | Non |
-| **Contrôle** | Joueur | IA |
-| **Barre de vie** | Au-dessus de la tête | Au-dessus ou en haut (boss) |
-
----
-
-## 🏗️ Architecture Technique
+## Architecture Technique
 
 ### Patterns de Conception Utilisés
 
-| Pattern | Utilisation | Bénéfice |
-|---------|-------------|----------|
-| **Service Locator** | Accès global aux services (Grid, etc.) | Découplage, testabilité |
-| **Event Bus** | Communication entre systèmes | Découplage total |
-| **State Machine** | Gestion des tours et états d'unités | Code clair, transitions validées |
-| **Component Pattern** | Composition (ActionPointsComponent) | Réutilisation de code |
-| **Repository Pattern** | Accès optimisé aux données (GridRepository) | Performance |
-| **ScriptableObject** | Données (CardData, ChampionData, etc.) | Séparation données/logique |
+| Pattern                | Utilisation                                 | Bénéfice                         |
+|------------------------|---------------------------------------------|----------------------------------|
+| **Service Locator**    | Accès global aux services (Grid, etc.)      | Découplage, testabilité          |
+| **Event Bus**          | Communication entre systèmes                | Découplage total                 |
+| **State Machine**      | Gestion des tours et états d'unités         | Code clair, transitions validées |
+| **Component Pattern**  | Composition (ActionPointsComponent)         | Réutilisation de code            |
+| **Repository Pattern** | Accès optimisé aux données (GridRepository) | Performance                      |
+| **ScriptableObject**   | Données (CardData, ChampionData, etc.)      | Séparation données/logique       |
 
 ### Structure des Données
 
 **Champions:**
 - Nom, Prefab
-- Famille, Élément
-- Stats : HP, PA, PM, Défenses
+- Famille, Classe
+- Stats : HP, PA, PM, Défense
 - Deck de départ (liste de cartes)
 - Données d'émotions et transformations
 
 **Ennemis:**
-- Nom, Prefab, Élément
+- Nom, Prefab
 - Type : Normal ou Boss
-- Stats : HP, PA, PM, Défenses
+- Stats : HP, PA, PM, Défense
 - Deck pattern (ordre fixe de cartes)
 
 **Cartes:**
 - Nom, Description, Illustration
-- Famille, Classe, Élément
+- Famille, Classe
 - Coût en PA
 - Type de cible et portée
 - Zone d'effet
 - Effets : Dégâts, Soins, Mouvement
-- Modificateur d'émotion
 
----
 
-## 📊 État Actuel du Projet
+## Etat Actuel du Projet
 
-### ✅ Systèmes Implémentés
+### Systèmes Implémentés
 
 **Systèmes Core:**
 - [x] Service Locator pour services globaux
@@ -223,7 +167,7 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - [x] Champions avec gestion PA
 - [x] Ennemis avec pattern deck
 - [x] DeckManager (pioche, défausse, mélange)
-- [x] Système de cartes complet (8 familles, 5 classes, 4 éléments)
+- [x] Système de cartes complet (8 familles, 5 classes)
 - [x] Ciblage avancé (9 types de cibles, AOE variées)
 - [x] EmotionSystem avec transformations
 
@@ -242,7 +186,7 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - [x] Outils de debug UI
 - [x] Setup automatique de l'UI
 
-### 🔄 En Cours de Développement
+### En Cours de Développement
 
 - [ ] Contenu de cartes (création des 8 familles complètes)
 - [ ] IA ennemie avancée (patterns complexes)
@@ -251,17 +195,16 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - [ ] Méta-progression
 - [ ] Campagne et niveaux
 
-### ⏳ À Planifier
+### Planifier
 
 - [ ] Définition des émotions pour les 7 familles restantes
 - [ ] Modes de jeu additionnels
 - [ ] Tutoriel intégré
 - [ ] Polish audio et effets visuels
-- [ ] Équilibrage complet
+- [ ] Equilibrage complet
 
----
 
-## 🎯 Objectifs de Design
+## Objectifs de Design
 
 ### Court Terme (Version Alpha)
 - Finaliser les 8 familles avec leurs émotions uniques
@@ -282,33 +225,31 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - Campagne complète avec histoire
 - Modes de jeu variés (Arène, Défis, etc.)
 - Polish complet (audio, VFX, animations)
-- Équilibrage fin et retours communauté
+- Equilibrage fin et retours communauté
 
----
 
-## 📚 Inspirations
+## Inspirations
 
 ### Jeux de Référence
 
-| Jeu | Inspiration | Éléments Repris |
-|-----|-------------|-----------------|
-| **Slay the Spire** | Deck building roguelike | Construction de deck, progression |
-| **Into the Breach** | Tactique sur grille | Positionnement précis, conséquences claires |
-| **Darkest Dungeon** | Gestion stress | Système de stress/émotions |
-| **Limbus Company** | UI et émotions | Layout cartes, système EGO |
-| **XCOM** | Combat tour par tour | Ressources limitées, décisions tactiques |
+| Jeu                      | Inspiration          | Eléments Repris                             |
+|--------------------------|----------------------|---------------------------------------------|
+| **Waven**                | Deck building        | Construction de deck, progression           |
+| **Dofus**                | Tactique sur grille  | Positionnement précis, conséquences claires |
+| **Darkest Dungeon**      | Gestion stress       | Système de stress/émotions                  |
+| **Chaos Zero Nightmare** | UI et émotions       | Layout cartes, système EGO                  |
+| **Magic the Gathering**  | Création de deck     | Ressources limitées, décisions tactiques    |
 
 ### Ce qui Rend Project TDB Unique
 
 1. **8 Familles** avec systèmes d'émotions personnalisés
-2. **Transformations permanentes** (choix Tank vs DPS pendant combat)
-3. **Triple identité** des cartes (Famille + Classe + Élément)
-4. **Fusion** Deck Building + Grille Tactique + Émotions
+2. **Transformations** Système de puissance
+3. **Double identité** des cartes (Famille + Classe)
+4. **Fusion** Deck Building + Grille Tactique + Emotions
 5. **Profondeur stratégique** : chaque carte influence 3 systèmes (combat, position, émotions)
 
----
 
-## 🔮 Vision Future
+## Vision Future
 
 ### Extensibilité
 - Système de familles permet ajout facile de nouvelles familles
@@ -316,8 +257,8 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - Architecture modulaire pour nouveaux modes
 
 ### Rejouabilité
-- 8 familles × multiples archétypes = grande variété
-- Émotions ajoutent imprévisibilité et adaptation
+- 8 familles Ã— multiples archétypes = grande variété
+- Emotions ajoutent imprévisibilité et adaptation
 - Synergies entre familles dans équipes mixtes
 
 ### Potentiel Compétitif
@@ -325,15 +266,8 @@ Voir [Card_System.md](Card_System.md) pour les détails complets de chaque famil
 - Classements pour modes challenge
 - Meta évolutive avec patches de contenu
 
----
 
 **Dernière mise à jour:** 11 Janvier 2026
 **Version GDD:** 2.0
-**Responsable:** Équipe Project TDB
+**Responsable:** Equipe Project TDB
 
-**Documents Connexes:**
-- [Technical_Specs.md](Technical_Specs.md) - Architecture technique détaillée
-- [Card_System.md](Card_System.md) - Système de cartes complet
-- [Combat_System.md](Combat_System.md) - Mécanique de combat
-- [Characters.md](Characters.md) - Champions et données
-- [Enemies.md](Enemies.md) - Ennemis et boss

@@ -79,25 +79,17 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
         // Applique la défense (minimum 1 dégât)
         int actualDamage = Mathf.Max(1, rawDamage - _defense);
 
+        // Capture les PV avant dégâts pour calculer la perte réelle (après partage éventuel)
+        int hpBefore = _health;
+
         // Applique les dégâts (appelle la méthode de base Unit)
         base.TakeDamage(actualDamage);
 
-        Debug.Log($"{name} prend {actualDamage} dégâts (brut: {rawDamage}, DEF: {_defense})");
+        int damageTaken = hpBefore - _health;
+        Debug.Log($"{name} prend {damageTaken} dégâts réels (Calculé: {actualDamage}, Brut: {rawDamage}, DEF: {_defense})");
 
         // Mécanique de Rage : Génération de carte sur dégâts
-        // On ne génère de la rage que si l'unité est encore en vie
-        if (_health > 0 && _rageCard != null && _damageThresholdForRage > 0)
-        {
-            _accumulatedDamage += actualDamage;
-
-            if (_accumulatedDamage >= _damageThresholdForRage)
-            {
-                int cardsToGain = _accumulatedDamage / _damageThresholdForRage;
-                _accumulatedDamage %= _damageThresholdForRage;
-
-                AddRageCards(cardsToGain);
-            }
-        }
+        TryGenerateRage(damageTaken);
     }
 
     /// <summary>
@@ -110,19 +102,25 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
         // Appelle la méthode de base pour le paiement des PV
         base.PayHealth(amount);
 
-        // Mécanique de Rage : Génération de carte sur perte de PV (même logique que TakeDamage)
-        // On ne génère de la rage que si l'unité est encore en vie
-        if (_health > 0 && _rageCard != null && _damageThresholdForRage > 0)
+        // Mécanique de Rage : Génération de carte sur perte de PV
+        TryGenerateRage(amount);
+    }
+
+    /// <summary>
+    /// Tente de générer des cartes Rage basé sur les dégâts/PV perdus accumulés
+    /// </summary>
+    private void TryGenerateRage(int damageAmount)
+    {
+        // Ne génère de la rage que si l'unité est encore en vie et configurée pour
+        if (_health <= 0 || _rageCard == null || _damageThresholdForRage <= 0) return;
+
+        _accumulatedDamage += damageAmount;
+
+        if (_accumulatedDamage >= _damageThresholdForRage)
         {
-            _accumulatedDamage += amount;
-
-            if (_accumulatedDamage >= _damageThresholdForRage)
-            {
-                int cardsToGain = _accumulatedDamage / _damageThresholdForRage;
-                _accumulatedDamage %= _damageThresholdForRage;
-
-                AddRageCards(cardsToGain);
-            }
+            int cardsToGain = _accumulatedDamage / _damageThresholdForRage;
+            _accumulatedDamage %= _damageThresholdForRage;
+            AddRageCards(cardsToGain);
         }
     }
 

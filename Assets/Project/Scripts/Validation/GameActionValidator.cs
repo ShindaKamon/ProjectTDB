@@ -97,6 +97,11 @@ public static class GameActionValidator
                     return ValidationResult.Fail($"{card.cardName} ne peut cibler que les ennemis");
                 break;
 
+            case CardTargetType.EnemyOrTile:
+                if (!isEnemy)
+                    return ValidationResult.Fail($"{card.cardName} ne peut cibler que les ennemis (ou une tuile)");
+                break;
+
             case CardTargetType.Ally:
                 // Allié SAUF soi-même
                 if (!isAlly || isSelf)

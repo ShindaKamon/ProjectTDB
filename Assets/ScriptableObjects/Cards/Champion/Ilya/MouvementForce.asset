@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "Mouvement Forc\xE9"
   description: "Se d\xE9place de 2 cases en ligne droite.\nLe premier ennemi touch\xE9
-    recul de 2 cases.."
+    recul de 2 cases."
   familyType: 0
   classeType: 0
   elementType: 0
@@ -23,7 +23,7 @@ MonoBehaviour:
   costPA: 1
   costHP: 0
   costOther: 0
-  targetType: 7
+  targetType: 9
   targetRange: 4
   areaEffect: 0
   aoeRadius: 0

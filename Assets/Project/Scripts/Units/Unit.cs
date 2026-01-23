@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Unit : MonoBehaviour
+public class Unit : MonoBehaviour, IMarkable
 {
     // Nouvelle énumération pour les factions (Joueur ou Ennemi).
     public enum UnitFaction { Player, Enemy }
@@ -14,11 +14,6 @@ public class Unit : MonoBehaviour
     // Vitesse de déplacement de l'unité.
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotationSpeed = 10f; // Vitesse de rotation pour regarder vers la cible
-
-    [Header("Health Bar Settings")]
-    [SerializeField] private Vector3 healthBarOffset = new Vector3(0, 2f, 0);
-    [SerializeField] private Color healthBarColor = Color.green;
-
     private HealthBar healthBar;
 
     // Variables pour le déplacement fluide.
@@ -33,6 +28,9 @@ public class Unit : MonoBehaviour
     public event System.Action<int, int> OnHealthChanged; // Nouveau: (currentHealth, maxHealth)
     public event System.Action<int, int> OnMovementPointsChanged; // (currentPM, maxPM)
     public event System.Action OnStatsModified; // Déclenché quand ATK/DEF changent
+    public event System.Action<UnitMark> OnMarkApplied; // Déclenché quand une marque est appliquée
+    public event System.Action<UnitMark> OnMarkConsumed; // Déclenché quand une marque est consommée
+    public event System.Action<UnitMark> OnMarkExpired; // Déclenché quand une marque expire
 
     // ========== SYSTÈME DE BUFFS TEMPORAIRES ==========
 
@@ -55,6 +53,16 @@ public class Unit : MonoBehaviour
 
     // Liste des buffs actifs sur l'unité
     protected List<StatBuff> _activeBuffs = new List<StatBuff>();
+
+    // ========== SYSTÈME DE MARQUES ==========
+
+    // Liste des marques actives sur l'unité
+    protected List<UnitMark> _activeMarks = new List<UnitMark>();
+
+    // ========== SYSTÈME DE PARTAGE DE DÉGÂTS ==========
+    private Unit _damageShareReceiver; // L'unité qui recevra une partie des dégâts
+    private float _damageShareRatio;   // Pourcentage des dégâts transférés (0.0 à 1.0)
+    private int _damageShareDuration;  // Durée en tours
 
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
@@ -136,16 +144,9 @@ public class Unit : MonoBehaviour
             Debug.LogWarning($"L'unité {gameObject.name} a été placée dans la scène mais n'a pas été initialisée par son script dérivé (ex: Enemy, Champion).");
             enabled = false;
         }
-
-        // Ne crée la barre de vie QUE si c'est une Unit de base (pas une classe dérivée comme IlyaUnit)
-        // Les classes dérivées appelleront CreateHealthBar() elles-mêmes après leur propre initialisation
-        if (GetType() == typeof(Unit))
-        {
-            CreateHealthBar();
-        }
     }
 
-    protected void CreateHealthBar()
+    protected void CreateHealthBar(Vector3 offset, Color color)
     {
         // Si une barre existe déjà, détruit l'ancienne avant d'en créer une nouvelle
         if (healthBar != null)
@@ -167,8 +168,8 @@ public class Unit : MonoBehaviour
 
         healthBar = HealthBarManager.Instance.CreateHealthBar(
             transform,
-            healthBarOffset,
-            healthBarColor,
+            offset,
+            color,
             _maxHealth
         );
 
@@ -194,6 +195,16 @@ public class Unit : MonoBehaviour
     // Maintenant accepte un chemin (liste de tuiles) pour le déplacement case par case.
     public void MoveToTile(List<Tile> path)
     {
+        MoveToTile(path, false);
+    }
+
+    /// <summary>
+    /// Déplace l'unité le long d'un chemin de tuiles
+    /// </summary>
+    /// <param name="path">Le chemin à suivre</param>
+    /// <param name="forceMove">Si true, ignore la vérification d'état (utilisé pour knockback)</param>
+    public void MoveToTile(List<Tile> path, bool forceMove)
+    {
         if (path == null || path.Count == 0)
         {
             Debug.LogWarning($"{name}: Chemin de déplacement vide ou nul.");
@@ -201,15 +212,18 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        // Phase 3.4: Vérifie l'état avant de bouger
-        if (_unitState != null && !_unitState.CanMove())
+        // Phase 3.4: Vérifie l'état avant de bouger (sauf si forceMove)
+        if (!forceMove && _unitState != null && !_unitState.CanMove())
         {
             Debug.LogWarning($"{name}: Cannot move - state is {_unitState.GetCurrentState()}");
             return;
         }
 
-        // Phase 3.4: Marque comme "en mouvement"
-        _unitState?.BeginMoving();
+        // Phase 3.4: Marque comme "en mouvement" (sauf si forceMove car l'unité n'est pas Active)
+        if (!forceMove)
+        {
+            _unitState?.BeginMoving();
+        }
 
         _path = path; // Stocke le chemin.
         _isMoving = true; // Active le mouvement.
@@ -311,12 +325,71 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        _health = Mathf.Clamp(_health - damage, 0, _maxHealth);
-        Debug.Log($"{name} a pris {damage} dégâts. PV restants : {_health}/{_maxHealth}");
+        // Gestion du partage de dégâts
+        int damageToSelf = damage;
+        if (_damageShareReceiver != null && _damageShareDuration > 0 && !_damageShareReceiver.GetUnitState().IsDead())
+        {
+            int sharedDamage = Mathf.FloorToInt(damage * _damageShareRatio);
+            if (sharedDamage > 0)
+            {
+                damageToSelf -= sharedDamage;
+                Debug.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
+                // Applique les dégâts partagés au receveur
+                _damageShareReceiver.TakeDamage(sharedDamage);
+            }
+        }
+
+        _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
+        Debug.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
         // Note: On ne connaît pas forcément la source des dégâts ici, donc on passe null
+        EventBus.Publish(new UnitDamagedEvent(this, null, damage));
+
+        // Met à jour la barre de vie
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealth(_health, _maxHealth);
+        }
+
+        if (_health <= 0)
+        {
+            Die();
+        }
+    }
+
+    /// <summary>
+    /// Inflige des dégâts bruts qui ignorent l'armure et les boucliers (utilisé pour le poison, etc.)
+    /// </summary>
+    public void TakeRawDamage(int damage)
+    {
+        // Phase 3.4: Vérifie si l'unité peut recevoir des dégâts
+        if (_unitState != null && !_unitState.CanTakeDamage())
+        {
+            Debug.LogWarning($"{name}: Cannot take raw damage - already dead");
+            return;
+        }
+
+        // Gestion du partage de dégâts (même pour les dégâts bruts)
+        int damageToSelf = damage;
+        if (_damageShareReceiver != null && _damageShareDuration > 0 && !_damageShareReceiver.GetUnitState().IsDead())
+        {
+            int sharedDamage = Mathf.FloorToInt(damage * _damageShareRatio);
+            if (sharedDamage > 0)
+            {
+                damageToSelf -= sharedDamage;
+                Debug.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
+                // Applique les dégâts partagés au receveur (en dégâts bruts aussi)
+                _damageShareReceiver.TakeRawDamage(sharedDamage);
+            }
+        }
+
+        _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
+        Debug.Log($"{name} a pris {damageToSelf} dégâts bruts (ignore l'armure). PV restants : {_health}/{_maxHealth}");
+        OnHealthChanged?.Invoke(_health, _maxHealth);
+
+        // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
         EventBus.Publish(new UnitDamagedEvent(this, null, damage));
 
         // Met à jour la barre de vie
@@ -447,14 +520,6 @@ public class Unit : MonoBehaviour
         return _unitState;
     }
 
-    // LEGACY: Méthode d'attaque de base (obsolète, utilisée uniquement par IlyaUnit pour lifesteal)
-    // Les attaques se font maintenant via les cartes, cette méthode n'inflige plus de dégâts directs
-    public virtual void Attack(Unit target)
-    {
-        Debug.Log($"{name} attaque {target.name} et inflige {_attackDamage} dégâts.");
-        target.TakeDamage(_attackDamage);
-    }
-
     // Méthode pour dépenser des PM (Points de Mouvement)
     public void SpendMovement(int amount)
     {
@@ -493,6 +558,19 @@ public class Unit : MonoBehaviour
 
         // Phase 3.4: Marque comme mort
         _unitState?.SetDead();
+
+        // Nettoie les marques Stigmate
+        // 1. Si c'est un champion, retire tous les Stigmates qu'il a appliqués sur les ennemis
+        if (GetFaction() == UnitFaction.Player)
+        {
+            StigmateManager.RemoveAllStigmatesFromSource(this);
+        }
+
+        // 2. Retire toutes les marques sur cette unité (y compris Stigmate)
+        ClearAllMarks();
+
+        // 3. Nettoie les effets de PA en attente
+        StigmateManager.ClearPendingPALoss(this);
 
         OnUnitDied?.Invoke(this);
 
@@ -607,6 +685,14 @@ public class Unit : MonoBehaviour
         {
             OnStatsModified?.Invoke();
         }
+
+        // Gestion de la durée du partage de dégâts
+        if (_damageShareDuration > 0)
+        {
+            _damageShareDuration--;
+            if (_damageShareDuration <= 0)
+                Debug.Log($"{name}: Le lien de partage de dégâts avec {_damageShareReceiver?.name} a expiré.");
+        }
     }
 
     /// <summary>
@@ -697,11 +783,324 @@ public class Unit : MonoBehaviour
 
             if (knockbackPath.Count > 0)
             {
-                MoveToTile(knockbackPath);
+                // forceMove = true car le knockback doit fonctionner même si l'unité est en état Idle
+                MoveToTile(knockbackPath, true);
                 Debug.Log($"{name}: Knockback de {currentPos} vers {finalPos} ({knockbackPath.Count} cases)");
             }
         }
 
         return finalPos;
+    }
+
+    /// <summary>
+    /// Configure un lien de partage de dégâts
+    /// </summary>
+    public void SetDamageShare(Unit receiver, float ratio, int duration)
+    {
+        _damageShareReceiver = receiver;
+        _damageShareRatio = Mathf.Clamp01(ratio);
+        _damageShareDuration = duration;
+        Debug.Log($"{name}: Lien de partage de dégâts établi avec {receiver.name} (Ratio: {ratio:P0}, Durée: {duration} tours)");
+    }
+
+    // ========== IMPLÉMENTATION IMarkable ==========
+
+    /// <summary>
+    /// Applique une marque sur l'unité
+    /// </summary>
+    public void ApplyMark(UnitMark mark)
+    {
+        // Vérifie si l'unité peut recevoir des marques (pas morte)
+        if (_unitState != null && _unitState.IsDead())
+        {
+            Debug.LogWarning($"{name}: Cannot receive mark - unit is dead");
+            return;
+        }
+
+        // Cherche si une marque du même type existe déjà
+        int existingIndex = _activeMarks.FindIndex(m => m.markType == mark.markType);
+
+        if (existingIndex >= 0)
+        {
+            // Ajoute les stacks à la marque existante
+            UnitMark existing = _activeMarks[existingIndex];
+            existing = existing.AddStacks(mark.stacks);
+
+            // Met à jour la durée si la nouvelle est plus longue
+            if (mark.remainingTurns > existing.remainingTurns)
+            {
+                existing.remainingTurns = mark.remainingTurns;
+            }
+
+            // Met à jour le bonus si plus élevé
+            if (mark.bonusValue > existing.bonusValue)
+            {
+                existing.bonusValue = mark.bonusValue;
+            }
+
+            _activeMarks[existingIndex] = existing;
+            Debug.Log($"{name}: Marque {mark.markType} renforcée - Total stacks: {existing.stacks}");
+        }
+        else
+        {
+            // Ajoute une nouvelle marque
+            _activeMarks.Add(mark);
+            Debug.Log($"{name}: Nouvelle marque {mark.markType} appliquée ({mark.stacks} stack(s))");
+        }
+
+        // Publie l'événement
+        OnMarkApplied?.Invoke(mark);
+        EventBus.Publish(new UnitMarkedEvent(this, mark));
+    }
+
+    /// <summary>
+    /// Applique une marque avec les paramètres spécifiés
+    /// </summary>
+    public void ApplyMark(MarkType type, Unit source, int stacks = 1, int duration = 0, int bonusValue = 0)
+    {
+        UnitMark newMark = new UnitMark(type, source, stacks, duration, bonusValue);
+        ApplyMark(newMark);
+    }
+
+    /// <summary>
+    /// Consomme une marque et retourne ses données
+    /// </summary>
+    public UnitMark ConsumeMark(MarkType type, bool consumeAllStacks = true)
+    {
+        int index = _activeMarks.FindIndex(m => m.markType == type);
+
+        if (index < 0)
+        {
+            return new UnitMark(MarkType.None, null, 0, 0, 0);
+        }
+
+        UnitMark mark = _activeMarks[index];
+
+        if (consumeAllStacks || mark.stacks <= 1)
+        {
+            // Retire complètement la marque
+            _activeMarks.RemoveAt(index);
+            Debug.Log($"{name}: Marque {type} consommée ({mark.stacks} stack(s))");
+        }
+        else
+        {
+            // Retire un seul stack
+            mark = mark.RemoveStacks(1);
+            _activeMarks[index] = mark;
+
+            // Crée une copie avec 1 stack pour le retour
+            UnitMark consumedMark = new UnitMark(type, mark.appliedBy, 1, mark.remainingTurns, mark.bonusValue);
+            Debug.Log($"{name}: 1 stack de {type} consommé (reste: {mark.stacks})");
+
+            OnMarkConsumed?.Invoke(consumedMark);
+            EventBus.Publish(new MarkConsumedEvent(this, consumedMark));
+            return consumedMark;
+        }
+
+        OnMarkConsumed?.Invoke(mark);
+        EventBus.Publish(new MarkConsumedEvent(this, mark));
+        return mark;
+    }
+
+    /// <summary>
+    /// Consomme une marque appliquée par une source spécifique
+    /// </summary>
+    public UnitMark ConsumeMarkFromSource(MarkType type, Unit source)
+    {
+        int index = _activeMarks.FindIndex(m => m.markType == type && m.appliedBy == source);
+
+        if (index < 0)
+        {
+            return new UnitMark(MarkType.None, null, 0, 0, 0);
+        }
+
+        UnitMark mark = _activeMarks[index];
+        _activeMarks.RemoveAt(index);
+
+        Debug.Log($"{name}: Marque {type} de {source.name} consommée ({mark.stacks} stack(s))");
+
+        OnMarkConsumed?.Invoke(mark);
+        EventBus.Publish(new MarkConsumedEvent(this, mark));
+        return mark;
+    }
+
+    /// <summary>
+    /// Consomme TOUTES les marques appliquées par une source spécifique (utilisé pour AllMarks)
+    /// </summary>
+    public List<UnitMark> ConsumeAllMarksFromSource(Unit source)
+    {
+        List<UnitMark> consumedMarks = new List<UnitMark>();
+
+        // Trouve toutes les marques de cette source
+        List<UnitMark> marksToConsume = _activeMarks.FindAll(m => m.appliedBy == source);
+
+        foreach (UnitMark mark in marksToConsume)
+        {
+            _activeMarks.Remove(mark);
+            consumedMarks.Add(mark);
+
+            Debug.Log($"{name}: Marque {mark.markType} de {source.name} consommée ({mark.stacks} stack(s))");
+
+            OnMarkConsumed?.Invoke(mark);
+            EventBus.Publish(new MarkConsumedEvent(this, mark));
+        }
+
+        return consumedMarks;
+    }
+
+    /// <summary>
+    /// Retire une marque sans déclencher d'effet
+    /// </summary>
+    public void RemoveMark(MarkType type)
+    {
+        int index = _activeMarks.FindIndex(m => m.markType == type);
+
+        if (index >= 0)
+        {
+            UnitMark mark = _activeMarks[index];
+            _activeMarks.RemoveAt(index);
+            Debug.Log($"{name}: Marque {type} retirée");
+
+            OnMarkExpired?.Invoke(mark);
+            EventBus.Publish(new MarkExpiredEvent(this, mark, false));
+        }
+    }
+
+    /// <summary>
+    /// Vérifie si l'unité possède une marque d'un type donné
+    /// </summary>
+    public bool HasMark(MarkType type)
+    {
+        return _activeMarks.Exists(m => m.markType == type);
+    }
+
+    /// <summary>
+    /// Vérifie si l'unité possède une marque d'une source spécifique
+    /// </summary>
+    public bool HasMarkFromSource(MarkType type, Unit source)
+    {
+        return _activeMarks.Exists(m => m.markType == type && m.appliedBy == source);
+    }
+
+    /// <summary>
+    /// Retourne le nombre de stacks d'une marque
+    /// </summary>
+    public int GetMarkStacks(MarkType type)
+    {
+        UnitMark? mark = GetMark(type);
+        return mark?.stacks ?? 0;
+    }
+
+    /// <summary>
+    /// Retourne toutes les marques actives
+    /// </summary>
+    public List<UnitMark> GetAllMarks()
+    {
+        return new List<UnitMark>(_activeMarks);
+    }
+
+    /// <summary>
+    /// Retourne une marque spécifique si elle existe
+    /// </summary>
+    public UnitMark? GetMark(MarkType type)
+    {
+        int index = _activeMarks.FindIndex(m => m.markType == type);
+        if (index >= 0)
+        {
+            return _activeMarks[index];
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Traite les marques au début du tour (décrémente durées, retire les expirées, applique les effets)
+    /// </summary>
+    public void ProcessMarksOnTurnStart()
+    {
+        if (_activeMarks.Count == 0) return;
+
+        // Parcourt les marques en sens inverse pour pouvoir supprimer pendant l'itération
+        for (int i = _activeMarks.Count - 1; i >= 0; i--)
+        {
+            UnitMark mark = _activeMarks[i];
+
+            // Applique les effets des marques au début du tour
+            if (mark.markType == MarkType.Poison)
+            {
+                // Le poison inflige 10 dégâts bruts par stack
+                int poisonDamage = 10 * mark.stacks;
+                Debug.Log($"☠️ POISON ! {name} perd {poisonDamage} PV (dégâts bruts, ignore l'armure)");
+                TakeRawDamage(poisonDamage);
+            }
+
+            // Ne décrémente que les marques non-permanentes
+            if (!mark.IsPermanent)
+            {
+                bool expired = mark.DecrementTurn();
+
+                if (expired)
+                {
+                    Debug.Log($"{name}: Marque {mark.markType} expirée");
+                    _activeMarks.RemoveAt(i);
+
+                    OnMarkExpired?.Invoke(mark);
+                    EventBus.Publish(new MarkExpiredEvent(this, mark, true));
+                }
+                else
+                {
+                    _activeMarks[i] = mark;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Retourne le nombre total de marques actives sur l'unité
+    /// </summary>
+    public int GetTotalMarkCount()
+    {
+        return _activeMarks.Count;
+    }
+
+    /// <summary>
+    /// Compte le nombre de malus actifs (Marques, Debuffs de stats, Perte de PA prévue)
+    /// </summary>
+    public int GetDebuffCount()
+    {
+        int count = 0;
+
+        // 1. Marques (chaque type de marque compte pour 1)
+        count += _activeMarks.Count;
+
+        // 2. Debuffs de stats (chaque buff avec une stat négative compte pour 1)
+        foreach (var buff in _activeBuffs)
+        {
+            if (buff.atkModifier < 0 || buff.defModifier < 0)
+            {
+                count++;
+            }
+        }
+
+        // 3. Perte de PA (via StigmateManager)
+        if (StigmateManager.HasPendingPALoss(this))
+        {
+            count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Retire toutes les marques de l'unité
+    /// </summary>
+    public void ClearAllMarks()
+    {
+        foreach (var mark in _activeMarks)
+        {
+            OnMarkExpired?.Invoke(mark);
+            EventBus.Publish(new MarkExpiredEvent(this, mark, false));
+        }
+        _activeMarks.Clear();
+        Debug.Log($"{name}: Toutes les marques ont été retirées");
     }
 } 

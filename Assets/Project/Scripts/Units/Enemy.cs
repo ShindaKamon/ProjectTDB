@@ -141,7 +141,7 @@ public class Enemy : Unit, IActionPointsUser
         // Crée la barre de vie (sauf si c'est un boss - sera géré différemment)
         if (!IsBoss())
         {
-            CreateHealthBar();
+            CreateHealthBar(_enemyData.healthBarOffset, _enemyData.healthBarColor);
         }
     }
 
@@ -175,6 +175,16 @@ public class Enemy : Unit, IActionPointsUser
             return;
         }
         _actionPointsComponent.SetMaxPA(value);
+    }
+
+    public void ReduceCurrentPA(int amount)
+    {
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.ReduceCurrentPA(amount);
     }
 
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========

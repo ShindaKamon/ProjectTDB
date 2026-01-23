@@ -8,8 +8,10 @@ public class ChampionData : ScriptableObject
     public string championName = "Nouveau Champion";
     // Référence au GameObject du champion
     public GameObject prefab;
-    // Type de famille
+    // Type de famille (émotion de base - ex: Déchaînés = Colère)
     public CardFamilyType familyType = CardFamilyType.None;
+    // Type de classe (façon de gérer l'émotion - ex: Réprimé = Stocke)
+    public CardClasseType classeType = CardClasseType.None;
     // Type d'élément
     public CardElementType elementType = CardElementType.None;
 

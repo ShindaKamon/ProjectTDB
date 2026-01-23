@@ -10,6 +10,37 @@ public class InputManager : MonoBehaviour
     private CardData _previousSelectedCard = null; // Pour tracker les changements de sélection
     private Vector2 _lastHoveredTilePos = new Vector2(-1, -1); // Position de la dernière tuile survolée
 
+    /// <summary>
+    /// Tente d'extraire la position de grille d'un GameObject (tuile ou unité)
+    /// </summary>
+    /// <param name="gameObject">L'objet à analyser</param>
+    /// <param name="gridPos">La position de grille si trouvée</param>
+    /// <returns>True si une position valide a été trouvée</returns>
+    private bool TryGetGridPosition(GameObject gameObject, out Vector2 gridPos)
+    {
+        gridPos = Vector2.zero;
+
+        // Vérifie d'abord si c'est une tuile par son composant
+        if (gameObject.TryGetComponentSafe(out Tile tile))
+        {
+            gridPos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
+            return true;
+        }
+
+        // Fallback: parsing du nom "Tile X Y"
+        string[] nameParts = gameObject.name.Split(' ');
+        if (nameParts.Length == 3 && nameParts[0] == "Tile")
+        {
+            if (int.TryParse(nameParts[1], out int gridX) && int.TryParse(nameParts[2], out int gridY))
+            {
+                gridPos = new Vector2(gridX, gridY);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void Update()
     {
         // Phase 3.5: Utilise Services.Grid au lieu de Services.Grid
@@ -96,34 +127,23 @@ public class InputManager : MonoBehaviour
                         }
                     }
                 }
-                else
+                else if (TryGetGridPosition(hoveredObject, out hoveredPos))
                 {
-                    // Vérifie si on survole une tuile
-                    string[] nameParts = hoveredObject.name.Split(' ');
-                    if (nameParts.Length == 3 && nameParts[0] == "Tile")
+                    // Vérifie si on survole une tuile valide
+                    Tile hoveredTile = Services.Grid.GetTileAtPosition(hoveredPos);
+
+                    // Calcule la distance depuis l'unité active
+                    Vector2 sourcePos = activeUnit.GetCurrentGridPos();
+                    List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
+
+                    // Vérifie si la tuile est dans la portée ET que c'est une cible valide
+                    bool isValidTarget = currentSelectedCard.isChargeCard
+                        ? currentSelectedCard.IsValidChargeTarget(hoveredTile, activeUnit)
+                        : currentSelectedCard.IsValidTileTarget(hoveredTile);
+
+                    if (currentSelectedCard.targetsTile && tilesInRange.Contains(hoveredTile) && isValidTarget)
                     {
-                        if (int.TryParse(nameParts[1], out int gridX) && int.TryParse(nameParts[2], out int gridY))
-                        {
-                            hoveredPos = new Vector2(gridX, gridY);
-                            Tile hoveredTile = Services.Grid.GetTileAtPosition(hoveredPos);
-
-                            // Calcule la distance depuis l'unité active en utilisant le pathfinding (nombre de cases)
-                            Vector2 sourcePos = activeUnit.GetCurrentGridPos();
-                            List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
-
-                            // Vérifie si la tuile est dans la portée ET que c'est une cible valide
-                            // Pour les cartes de charge, utilise la validation spécifique (ligne droite)
-                            bool isValidTarget = currentSelectedCard.isChargeCard
-                                ? currentSelectedCard.IsValidChargeTarget(hoveredTile, activeUnit)
-                                : currentSelectedCard.IsValidTileTarget(hoveredTile);
-
-                            if (currentSelectedCard.targetsTile &&
-                                tilesInRange.Contains(hoveredTile) &&
-                                isValidTarget)
-                            {
-                                isValidHoverTarget = true;
-                            }
-                        }
+                        isValidHoverTarget = true;
                     }
                 }
 
@@ -160,6 +180,10 @@ public class InputManager : MonoBehaviour
                 _lastHoveredTilePos = new Vector2(-1, -1);
                 EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
             }
+        }
+        else if (currentSelectedCard == null)
+        {
+            HandleMovementHover(activeUnit);
         }
 
         // --- GESTION DU CLIC DROIT (Désélection prioritaire) ---
@@ -229,6 +253,66 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    private void HandleMovementHover(Unit activeUnit)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 1000f))
+        {
+            GameObject hoveredObject = hit.collider.gameObject;
+            Vector2 hoveredPos = Vector2.zero;
+            bool isValidHover = false;
+
+            // Vérifie si c'est une tuile ou une unité
+            if (TryGetGridPosition(hoveredObject, out hoveredPos))
+            {
+                isValidHover = true;
+            }
+            else if (hoveredObject.TryGetComponentSafe(out Unit hoveredUnit))
+            {
+                hoveredPos = hoveredUnit.GetCurrentGridPos();
+                isValidHover = true;
+            }
+
+            if (isValidHover)
+            {
+                if (hoveredPos != _lastHoveredTilePos)
+                {
+                    _lastHoveredTilePos = hoveredPos;
+
+                    // Réaffiche la portée de mouvement de base
+                    EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+
+                    // Vérifie si la tuile est accessible
+                    int availablePoints = activeUnit.GetCurrentMovementPoints();
+                    Dictionary<Tile, int> reachableTiles = Services.Grid.GetMovementTiles(
+                        activeUnit.GetCurrentGridPos(),
+                        availablePoints,
+                        activeUnit
+                    );
+
+                    Tile hoveredTile = Services.Grid.GetTileAtPosition(hoveredPos);
+                    if (hoveredTile != null && reachableTiles.ContainsKey(hoveredTile))
+                    {
+                        // Surligne la destination en Cyan pour indiquer le mouvement
+                        Services.Grid.HighlightTile(hoveredPos, Color.cyan);
+                    }
+                }
+            }
+            else if (_lastHoveredTilePos != new Vector2(-1, -1))
+            {
+                _lastHoveredTilePos = new Vector2(-1, -1);
+                EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+            }
+        }
+        else if (_lastHoveredTilePos != new Vector2(-1, -1))
+        {
+            _lastHoveredTilePos = new Vector2(-1, -1);
+            EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+        }
+    }
+
     private void HandleCardPlay(GameObject clickedObject, Unit activeUnit)
     {
         CardData selectedCard = _handUIController.SelectedCard;
@@ -246,18 +330,15 @@ public class InputManager : MonoBehaviour
             // Si on clique sur une unité, utilise sa position
             targetTilePos = targetUnit.GetCurrentGridPos();
         }
-        else
+        else if (TryGetGridPosition(clickedObject, out targetTilePos))
         {
             // Si on clique sur une tuile
-            string[] nameParts = clickedObject.name.Split(' ');
-            if (nameParts.Length == 3 && nameParts[0] == "Tile")
+            targetTile = Services.Grid.GetTileAtPosition(targetTilePos);
+
+            // On regarde s'il y a une unité dessus (permet de cibler l'unité en cliquant sur le bord de sa case)
+            if (targetTile != null)
             {
-                if (int.TryParse(nameParts[1], out int gridX) &&
-                    int.TryParse(nameParts[2], out int gridY))
-                {
-                    targetTilePos = new Vector2(gridX, gridY);
-                    targetTile = Services.Grid.GetTileAtPosition(targetTilePos);
-                }
+                targetUnit = Services.Grid.GetUnitAtGridPos(targetTilePos);
             }
         }
 
@@ -348,16 +429,13 @@ public class InputManager : MonoBehaviour
             // Vérifie que l'unité est une cible valide selon le type de carte
             if (selectedCard.IsValidTarget(activeUnit, targetUnit))
             {
-                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, default));
+                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, targetTilePos));
                 return; // La coroutine gère la suite
             }
-            else
-            {
-                // Cible invalide, désélectionne la carte
-                _handUIController.DeselectCard();
-            }
         }
-        else if (selectedCard.targetsTile && targetTile != null)
+        
+        // FIX: Fallback sur le ciblage de tuile si le ciblage d'unité n'a pas fonctionné (ou n'était pas applicable)
+        if (selectedCard.targetsTile && targetTile != null)
         {
             // Vérifie que la tuile est une cible valide selon le type de carte
             // Pour les cartes de charge, utilise la validation spécifique (ligne droite)
@@ -369,11 +447,6 @@ public class InputManager : MonoBehaviour
             {
                 StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, targetTilePos));
                 return; // La coroutine gère la suite
-            }
-            else
-            {
-                // Tuile invalide, désélectionne la carte
-                _handUIController.DeselectCard();
             }
         }
         else if (!selectedCard.targetsUnit && !selectedCard.targetsTile)
@@ -390,9 +463,6 @@ public class InputManager : MonoBehaviour
 
     private void HandleUnitInteraction(GameObject clickedObject, Unit activeUnit)
     {
-        // Vérifie si c'est IlyaUnit ou Unit de base
-        IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
-        
         // Récupère les points de mouvement disponibles (PM pour toutes les unités)
         int availablePoints = activeUnit.GetCurrentMovementPoints();
 
@@ -404,83 +474,59 @@ public class InputManager : MonoBehaviour
         {
             Debug.Log("Clic sur l'unité active.");
         }
-        else
+        else if (TryGetGridPosition(clickedObject, out Vector2 targetGridPos))
         {
-            // DÉPLACEMENT
-            string[] nameParts = clickedObject.name.Split(' ');
-            if (nameParts.Length == 3 && nameParts[0] == "Tile")
+            // DÉPLACEMENT - Vérifie si l'unité a encore des points de mouvement
+            if (availablePoints <= 0)
             {
-                if (int.TryParse(nameParts[1], out int gridX) && 
-                    int.TryParse(nameParts[2], out int gridY))
-                {
-                    Vector2 targetGridPos = new Vector2(gridX, gridY);
-
-                    // Vérifie si l'unité a encore des points de mouvement
-                    if (availablePoints <= 0)
-                    {
-                        Debug.LogWarning($"{activeUnit.name} n'a plus de PM ! (PM: {availablePoints})");
-                        return;
-                    }
-
-                    // Récupère les tuiles atteignables
-                    Dictionary<Tile, int> reachableTilesWithCost = Services.Grid.GetMovementTiles(
-                        activeUnit.GetCurrentGridPos(), 
-                        availablePoints, 
-                        activeUnit
-                    );
-
-                    Tile targetTile = Services.Grid.GetTileAtPosition(targetGridPos);
-
-                    if (targetTile != null && reachableTilesWithCost.ContainsKey(targetTile))
-                    {
-                        // Calcule le chemin
-                        List<Tile> pathToTarget = Services.Grid.GetPathToTile(
-                            activeUnit.GetCurrentGridPos(), 
-                            targetGridPos, 
-                            availablePoints, 
-                            activeUnit
-                        );
-
-                        if (pathToTarget != null && pathToTarget.Count > 0)
-                        {
-                            int movementCost = pathToTarget.Count;
-
-                            if (availablePoints >= movementCost)
-                            {
-                                Debug.Log($"{activeUnit.name} se déplace vers {targetGridPos} (coût: {movementCost})");
-
-                                // Efface l'ancien affichage (OPTIMISATION Phase 3.2: EventBus)
-                                EventBus.Publish(new ResetTileColorsEvent());
-                                
-                                // Déplace l'unité
-                                activeUnit.MoveToTile(pathToTarget);
-                                
-                                // IMPORTANT : Tous les déplacements dépensent des PM (Points de Mouvement)
-                                activeUnit.SpendMovement(movementCost);
-                                Debug.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
-                                
-                                // Met à jour l'UI
-                                Services.Grid.UpdateUnitUI();
-                                
-                                // Rafraîchit la portée après mouvement
-                                StartCoroutine(RefreshRangeAfterMovement(activeUnit));
-                            }
-                            else
-                            {
-                                Debug.LogWarning($"{activeUnit.name} n'a pas assez de points ({availablePoints}) pour {targetGridPos} (coût {movementCost})");
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Aucun chemin valide vers {targetGridPos}");
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"La tuile {targetGridPos} n'est pas atteignable.");
-                    }
-                }
+                Debug.LogWarning($"{activeUnit.name} n'a plus de PM ! (PM: {availablePoints})");
+                return;
             }
+
+            // Récupère les tuiles atteignables
+            Dictionary<Tile, int> reachableTilesWithCost = Services.Grid.GetMovementTiles(
+                activeUnit.GetCurrentGridPos(),
+                availablePoints,
+                activeUnit
+            );
+
+            Tile targetTile = Services.Grid.GetTileAtPosition(targetGridPos);
+
+            if (targetTile == null || !reachableTilesWithCost.ContainsKey(targetTile))
+            {
+                Debug.LogWarning($"La tuile {targetGridPos} n'est pas atteignable.");
+                return;
+            }
+
+            // Calcule le chemin
+            List<Tile> pathToTarget = Services.Grid.GetPathToTile(
+                activeUnit.GetCurrentGridPos(),
+                targetGridPos,
+                availablePoints,
+                activeUnit
+            );
+
+            if (pathToTarget == null || pathToTarget.Count == 0)
+            {
+                Debug.LogWarning($"Aucun chemin valide vers {targetGridPos}");
+                return;
+            }
+
+            int movementCost = pathToTarget.Count;
+            if (availablePoints < movementCost)
+            {
+                Debug.LogWarning($"{activeUnit.name} n'a pas assez de points ({availablePoints}) pour {targetGridPos} (coût {movementCost})");
+                return;
+            }
+
+            // Exécute le déplacement
+            Debug.Log($"{activeUnit.name} se déplace vers {targetGridPos} (coût: {movementCost})");
+            EventBus.Publish(new ResetTileColorsEvent());
+            activeUnit.MoveToTile(pathToTarget);
+            activeUnit.SpendMovement(movementCost);
+            Debug.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
+            Services.Grid.UpdateUnitUI();
+            StartCoroutine(RefreshRangeAfterMovement(activeUnit));
         }
     }
 

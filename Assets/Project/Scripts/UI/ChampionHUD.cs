@@ -3,8 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// HUD affichant les stats du champion (Ilya) à l'écran.
+/// HUD affichant les stats du champion à l'écran.
 /// Se met à jour automatiquement en s'abonnant aux événements de l'unité.
+/// Compatible avec tous les champions (Ilya, Vylos, etc.)
 /// </summary>
 public class ChampionHUD : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class ChampionHUD : MonoBehaviour
     [SerializeField] private float _lowHpThreshold = 0.3f;
     [SerializeField] private float _midHpThreshold = 0.6f;
 
-    private IlyaUnit _champion;
+    private Champion _champion;
     private bool _isConnected = false;
 
     void Start()
@@ -49,16 +50,16 @@ public class ChampionHUD : MonoBehaviour
         if (Services.Grid == null) return;
 
         Unit activeUnit = Services.Grid.GetActiveUnit();
-        if (activeUnit is IlyaUnit ilya)
+        if (activeUnit is Champion champion)
         {
-            SetChampion(ilya);
+            SetChampion(champion);
         }
     }
 
     /// <summary>
     /// Connecte le HUD à un champion spécifique
     /// </summary>
-    public void SetChampion(IlyaUnit champion)
+    public void SetChampion(Champion champion)
     {
         // Désabonnement de l'ancien champion
         if (_champion != null)
@@ -198,7 +199,18 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_defText != null && _champion != null)
         {
-            _defText.text = $"DEF: {_champion.GetDefense()}";
+            // Vérifie si le champion a une défense active (IlyaUnit a GetDefense() qui peut changer)
+            if (_champion is IlyaUnit ilyaUnit)
+            {
+                // Utilise la défense active (peut être modifiée par des buffs)
+                _defText.text = $"DEF: {ilyaUnit.GetDefense()}";
+            }
+            else
+            {
+                // Affiche la défense de base depuis ChampionData (pour l'affichage statique)
+                int baseDefense = _champion.GetBaseDefense();
+                _defText.text = $"DEF: {baseDefense}";
+            }
         }
     }
 }

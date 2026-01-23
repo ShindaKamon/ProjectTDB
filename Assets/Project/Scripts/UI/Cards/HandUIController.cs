@@ -106,11 +106,16 @@ public class HandUIController : MonoBehaviour
                 return;
             }
 
-            // S'abonner aux changements de PA et de Rage si c'est IlyaUnit
-            IlyaUnit ilyaUnit = Services.Grid.GetActiveUnit() as IlyaUnit;
-            if (ilyaUnit != null)
+            // S'abonner aux changements de PA si c'est un Champion
+            Champion champion = Services.Grid.GetActiveUnit() as Champion;
+            if (champion != null)
             {
-                ilyaUnit.OnActionPointsChanged += HandlePAChanged;
+                champion.OnActionPointsChanged += HandlePAChanged;
+            }
+            
+            // S'abonner aux changements de Rage si c'est IlyaUnit (seul champion avec Rage pour l'instant)
+            if (champion is IlyaUnit ilyaUnit)
+            {
                 ilyaUnit.OnRageStockChanged += HandleRageStockChanged;
             }
 
@@ -137,10 +142,15 @@ public class HandUIController : MonoBehaviour
             Unit activeUnit = Services.Grid.GetActiveUnit();
             if (activeUnit != null)
             {
-                IlyaUnit ilyaUnit = activeUnit as IlyaUnit;
-                if (ilyaUnit != null)
+                // Désabonnement PA (tous les champions)
+                if (activeUnit is Champion champion)
                 {
-                    ilyaUnit.OnActionPointsChanged -= HandlePAChanged;
+                    champion.OnActionPointsChanged -= HandlePAChanged;
+                }
+                
+                // Désabonnement Rage (seulement IlyaUnit)
+                if (activeUnit is IlyaUnit ilyaUnit)
+                {
                     ilyaUnit.OnRageStockChanged -= HandleRageStockChanged;
                 }
             }

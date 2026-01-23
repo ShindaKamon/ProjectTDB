@@ -68,8 +68,39 @@ public abstract class Champion : Unit, IActionPointsUser
         _actionPointsComponent.SetMaxPA(value);
     }
 
+    public void ReduceCurrentPA(int amount)
+    {
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Champion): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.ReduceCurrentPA(amount);
+    }
+
+    public void AddPA(int amount)
+    {
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Champion): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.AddPA(amount);
+    }
+
     // Surcharge pour définir la faction automatiquement
     public override UnitFaction GetFaction() => UnitFaction.Player;
+
+    // ========== GETTERS PUBLICS ==========
+
+    /// <summary>
+    /// Retourne la défense de base depuis ChampionData (pour l'affichage UI)
+    /// Note: Cette valeur peut ne pas être utilisée par tous les champions (ex: Vylos n'a pas de système de défense actif)
+    /// </summary>
+    public int GetBaseDefense()
+    {
+        return championData != null ? championData.defense : 0;
+    }
 
     // ========== INITIALISATION ==========
 

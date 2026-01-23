@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
+  m_Name: Vylos
+  m_EditorClassIdentifier: Assembly-CSharp::ChampionData
+  championName: Vylos
+  prefab: {fileID: 1411125681048226662, guid: 73244a77c69f5014c9bbae3962250ec5, type: 3}
+  familyType: 2
+  classeType: 1
+  elementType: 0
+  maxHealth: 100
+  movementRange: 3
+  maxActionPoints: 5
+  attackDamage: 10
+  defense: 10
+  startingDeck:
+  - {fileID: 11400000, guid: 4f5aebad5c464ec4cada5cea86b8a3b2, type: 2}
+  - {fileID: 11400000, guid: 5de2c7bc774fafa45884e1bdefbf6aa4, type: 2}
+  - {fileID: 11400000, guid: 54537d38d04b78947bbcd05ad3365e05, type: 2}
+  - {fileID: 11400000, guid: 9d4d5f91548ebed47b0568d3e224ea46, type: 2}
+  - {fileID: 11400000, guid: f0fbc3df6df28c14c975b4a81e5ecca6, type: 2}

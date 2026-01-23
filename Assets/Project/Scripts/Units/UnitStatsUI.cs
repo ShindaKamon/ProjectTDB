@@ -4,7 +4,7 @@ using TMPro;
 
 /// <summary>
 /// Gère l'affichage UI des stats d'une unité
-/// Compatible avec Unit de base ET IlyaUnit
+/// Compatible avec Unit de base ET Champion (Ilya, Vylos, etc.)
 /// </summary>
 public class UnitStatsUI : MonoBehaviour
 {
@@ -18,7 +18,7 @@ public class UnitStatsUI : MonoBehaviour
     [Header("Barres (optionnel)")]
     [SerializeField] private Slider _hpBar;
 
-    private IlyaUnit _ilyaUnit;
+    private Champion _champion;
     private Unit _genericUnit;
 
     /// <summary>
@@ -27,18 +27,19 @@ public class UnitStatsUI : MonoBehaviour
     public void SetUnit(Unit unit)
     {
         // Désabonnement de l'ancienne unité (si présente)
-        if (_ilyaUnit != null)
+        if (_champion != null)
         {
-            _ilyaUnit.OnActionPointsChanged -= UpdatePA;
+            _champion.OnActionPointsChanged -= UpdatePA;
         }
 
         _genericUnit = unit;
-        _ilyaUnit = unit as IlyaUnit;
+        _champion = unit as Champion;
 
-        if (_ilyaUnit != null)
+        if (_champion != null)
         {
-            _ilyaUnit.OnActionPointsChanged += UpdatePA;
+            _champion.OnActionPointsChanged += UpdatePA;
             UpdateAll();
+            // Affiche DEF pour tous les champions (depuis ChampionData)
             if (_defenseText != null) _defenseText.gameObject.SetActive(true);
         }
         else
@@ -53,12 +54,12 @@ public class UnitStatsUI : MonoBehaviour
     /// </summary>
     public void UpdateAll()
     {
-        if (_ilyaUnit != null)
+        if (_champion != null)
         {
             UpdateName();
             UpdateHP();
-            UpdatePA(_ilyaUnit.GetCurrentPA(), _ilyaUnit.GetMaxPA());
-            UpdatePM(_ilyaUnit.GetCurrentMovementPoints(), _ilyaUnit.GetMaxMovementPoints());
+            UpdatePA(_champion.GetCurrentPA(), _champion.GetMaxPA());
+            UpdatePM(_champion.GetCurrentMovementPoints(), _champion.GetMaxMovementPoints());
             UpdateDefense();
         }
         else if (_genericUnit != null)
@@ -121,9 +122,20 @@ public class UnitStatsUI : MonoBehaviour
 
     private void UpdateDefense()
     {
-        if (_defenseText != null && _ilyaUnit != null)
+        if (_defenseText != null && _champion != null)
         {
-            _defenseText.text = $"DEF: {_ilyaUnit.GetDefense()}";
+            // Vérifie si le champion a une défense active (IlyaUnit a GetDefense() qui peut changer)
+            if (_champion is IlyaUnit ilyaUnit)
+            {
+                // Utilise la défense active (peut être modifiée par des buffs)
+                _defenseText.text = $"DEF: {ilyaUnit.GetDefense()}";
+            }
+            else
+            {
+                // Affiche la défense de base depuis ChampionData (pour l'affichage statique)
+                int baseDefense = _champion.GetBaseDefense();
+                _defenseText.text = $"DEF: {baseDefense}";
+            }
         }
     }
 }

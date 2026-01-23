@@ -38,4 +38,10 @@ public interface IActionPointsUser
     /// Événement déclenché quand les PA changent
     /// </summary>
     event System.Action<int, int> OnActionPointsChanged; // (current, max)
+
+    /// <summary>
+    /// Réduit les PA courants d'un montant donné (utilisé pour les debuffs)
+    /// </summary>
+    /// <param name="amount">Montant de PA à retirer</param>
+    void ReduceCurrentPA(int amount);
 }

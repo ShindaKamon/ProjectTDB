@@ -15,7 +15,8 @@ MonoBehaviour:
   championName: Ilya
   prefab: {fileID: 1411125681048226662, guid: 28d27df1b4044d74ba2b89c31f9f17df, type: 3}
   familyType: 1
-  elementType: 1
+  classeType: 2
+  elementType: 0
   maxHealth: 120
   movementRange: 4
   maxActionPoints: 5
@@ -27,8 +28,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 733cee944ceeecd48ad545e676656455, type: 2}
   - {fileID: 11400000, guid: 95538918e4d5d064bb78054dff0a2cbd, type: 2}
   - {fileID: 11400000, guid: 9e529d9f0707ad743b60808567330888, type: 2}
+  - {fileID: 11400000, guid: d5c97946455bcdd4381a4637f7396ad2, type: 2}
   - {fileID: 11400000, guid: 745933f9ba07936429c7583d1ee03c7f, type: 2}
   - {fileID: 11400000, guid: 2038514d845dcce49aa404c828f05998, type: 2}
   - {fileID: 11400000, guid: 2a36a736c18f6f8458b6c7b2be809a34, type: 2}
   - {fileID: 11400000, guid: 4d3be0cb379bbe34fa8bcfdce4c79429, type: 2}
-  - {fileID: 11400000, guid: d5c97946455bcdd4381a4637f7396ad2, type: 2}

@@ -269,3 +269,52 @@ public class EmotionChangedEvent : GameEvent
         MaxEmotion = maxEmotion;
     }
 }
+
+// ========== ÉVÉNEMENTS DE MARQUES ==========
+
+/// <summary>
+/// Publié quand une marque est appliquée sur une unité
+/// </summary>
+public class UnitMarkedEvent : GameEvent
+{
+    public Unit MarkedUnit { get; private set; }
+    public UnitMark Mark { get; private set; }
+
+    public UnitMarkedEvent(Unit markedUnit, UnitMark mark)
+    {
+        MarkedUnit = markedUnit;
+        Mark = mark;
+    }
+}
+
+/// <summary>
+/// Publié quand une marque est consommée (déclenchée)
+/// </summary>
+public class MarkConsumedEvent : GameEvent
+{
+    public Unit MarkedUnit { get; private set; }
+    public UnitMark Mark { get; private set; }
+
+    public MarkConsumedEvent(Unit markedUnit, UnitMark mark)
+    {
+        MarkedUnit = markedUnit;
+        Mark = mark;
+    }
+}
+
+/// <summary>
+/// Publié quand une marque expire ou est retirée
+/// </summary>
+public class MarkExpiredEvent : GameEvent
+{
+    public Unit MarkedUnit { get; private set; }
+    public UnitMark Mark { get; private set; }
+    public bool ExpiredByTime { get; private set; } // true = durée écoulée, false = retirée manuellement
+
+    public MarkExpiredEvent(Unit markedUnit, UnitMark mark, bool expiredByTime)
+    {
+        MarkedUnit = markedUnit;
+        Mark = mark;
+        ExpiredByTime = expiredByTime;
+    }
+}

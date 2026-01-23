@@ -10,20 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
-  m_Name: Nova
+  m_Name: Calyx
   m_EditorClassIdentifier: Assembly-CSharp::ChampionData
-  championName: Nova
-  prefab: {fileID: 1411125681048226662, guid: 921518088bcdb70469c4ea716e423ce6, type: 3}
-  familyType: 3
-  elementType: 3
+  championName: Nouveau Champion
+  prefab: {fileID: 0}
+  familyType: 0
+  classeType: 0
+  elementType: 0
   maxHealth: 100
   movementRange: 3
   maxActionPoints: 5
-  physicalDefense: 10
-  magicalDefense: 10
+  attackDamage: 10
+  defense: 10
   startingDeck: []
-  familyEmotionData: {fileID: 0}
-  positiveTransformation: {fileID: 0}
-  negativeTransformation: {fileID: 0}
-  positiveThreshold: 100
-  negativeThreshold: -100

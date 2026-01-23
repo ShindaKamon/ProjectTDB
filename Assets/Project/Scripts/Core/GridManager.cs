@@ -189,14 +189,15 @@ public class GridManager : MonoBehaviour, IGridService
         {
             GameObject playerUnitGO = Instantiate(ChampionSelectManager.SelectedChampion.prefab);
             
-            // On récupère le composant spécifique du champion (ex: IlyaUnit) pour appeler son initialisation.
-            // NOTE: Ceci suppose que le prefab du champion a un script dérivé de Unit (comme IlyaUnit) qui gère son initialisation.
-            instantiatedPlayerUnit = playerUnitGO.GetRequiredComponent<IlyaUnit>("Champion sélectionné");
+            // On récupère le composant Champion pour appeler son initialisation.
+            // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (comme IlyaUnit, VylosUnit, etc.)
+            Champion instantiatedChampion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
+            instantiatedPlayerUnit = instantiatedChampion;
 
-            if (instantiatedPlayerUnit != null)
+            if (instantiatedChampion != null)
             {
                 // Initialise le champion du joueur avec ses données et la position de départ
-                (instantiatedPlayerUnit as IlyaUnit)?.Initialize(ChampionSelectManager.SelectedChampion, _playerSpawnGridPos);
+                instantiatedChampion.Initialize(ChampionSelectManager.SelectedChampion, _playerSpawnGridPos);
 
                 // Initialise le DeckManager de l'unité joueur (OPTIMISATION Phase 3.3: ComponentLocator)
                 DeckManager playerDeckManager = instantiatedPlayerUnit.GetRequiredComponent<DeckManager>("DeckManager du champion");
@@ -272,8 +273,8 @@ public class GridManager : MonoBehaviour, IGridService
                 // Sinon, c'est une autre unité (un champion placé dans la scène)
                 else if (!unit.IsInitialized())
                 {
-                    // Tente d'initialiser comme un champion (ex: IlyaUnit)
-                    IlyaUnit championInScene = unit as IlyaUnit;
+                    // Tente d'initialiser comme un champion (IlyaUnit, VylosUnit, etc.)
+                    Champion championInScene = unit as Champion;
                     if (championInScene != null && championInScene.championData != null)
                     {
                         championInScene.Initialize(championInScene.championData, GetGridPosFromWorldPos(unit.transform.position));
@@ -343,12 +344,12 @@ public class GridManager : MonoBehaviour, IGridService
         _activeUnit.RefreshMovement();
         Debug.Log($"{_activeUnit.name} : PM rafraîchis ({_activeUnit.GetCurrentMovementPoints()}/{_activeUnit.GetMaxMovementPoints()})");
 
-        // Si c'est IlyaUnit, rafraîchit aussi les PA
-        IlyaUnit ilyaUnit = _activeUnit as IlyaUnit;
-        if (ilyaUnit != null)
+        // Si c'est un Champion, rafraîchit aussi les PA
+        Champion champion = _activeUnit as Champion;
+        if (champion != null)
         {
-            ilyaUnit.RefreshPA();
-            Debug.Log($"{ilyaUnit.name} : PA rafraîchis ({ilyaUnit.GetCurrentPA()}/{ilyaUnit.GetMaxPA()})");
+            champion.RefreshPA();
+            Debug.Log($"{champion.name} : PA rafraîchis ({champion.GetCurrentPA()}/{champion.GetMaxPA()})");
         }
 
         // Pioche une carte si l'unité a un DeckManager (unités joueur uniquement)
@@ -445,6 +446,13 @@ public class GridManager : MonoBehaviour, IGridService
     {
         // Traite les buffs temporaires (décrémente durée, retire les expirés)
         unit.ProcessBuffsOnTurnStart();
+        
+        // Traite les marques au début du tour (dégâts de poison, etc.)
+        unit.ProcessMarksOnTurnStart();
+        
+        // Applique les pertes de PA en attente (effets Stigmate, etc.)
+        // Doit être appelé APRÈS RefreshActiveUnitTurn() pour que la perte soit appliquée sur les PA rafraîchis
+        StigmateManager.ProcessPendingPALoss(unit);
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
@@ -666,7 +674,8 @@ public class GridManager : MonoBehaviour, IGridService
 
     /// <summary>
     /// Affiche les cibles valides pour une carte de charge (lignes droites uniquement)
-    /// Affiche les cases vides ET les ennemis comme cibles valides
+    /// Affiche les cases vides ET les cases avec ennemis comme cibles valides (jaune)
+    /// L'ennemi sera surligné en rouge uniquement au hover (géré par InputManager)
     /// </summary>
     private void ShowChargeTargets(Vector2 sourcePos, int range, Unit source)
     {
@@ -688,8 +697,9 @@ public class GridManager : MonoBehaviour, IGridService
                     // Il y a une unité
                     if (unitOnTile.GetFaction() != source.GetFaction())
                     {
-                        // C'est un ennemi : cible valide (rouge pour indiquer qu'on peut le charger)
-                        tile.SetColor(Color.red);
+                        // C'est un ennemi : cible valide (jaune comme les autres cases)
+                        // La tuile rouge n'apparaîtra qu'au hover
+                        tile.SetColor(_cardTargetColor);
                     }
                     // On s'arrête ici (on ne peut pas cibler au-delà d'une unité)
                     break;

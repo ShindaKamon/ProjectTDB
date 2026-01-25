@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
   m_Name: Calyx
   m_EditorClassIdentifier: Assembly-CSharp::ChampionData
-  championName: Nouveau Champion
+  championName: Calyx
   prefab: {fileID: 0}
   familyType: 0
   classeType: 0

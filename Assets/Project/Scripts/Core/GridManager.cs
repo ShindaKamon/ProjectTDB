@@ -203,14 +203,19 @@ public class GridManager : MonoBehaviour, IGridService
                 DeckManager playerDeckManager = instantiatedPlayerUnit.GetRequiredComponent<DeckManager>("DeckManager du champion");
                 if (playerDeckManager != null && ChampionSelectManager.SelectedChampion != null)
                 {
-                    if (ChampionSelectManager.SelectedChampion.startingDeck != null && ChampionSelectManager.SelectedChampion.startingDeck.Count > 0)
+                    // Utiliser le deck personnalisé s'il existe, sinon le startingDeck
+                    var deckToUse = ChampionSelectManager.SelectedDeck != null && ChampionSelectManager.SelectedDeck.Count > 0
+                        ? ChampionSelectManager.SelectedDeck
+                        : ChampionSelectManager.SelectedChampion.startingDeck;
+
+                    if (deckToUse != null && deckToUse.Count > 0)
                     {
-                        playerDeckManager.InitializeDeck(ChampionSelectManager.SelectedChampion.startingDeck);
-                        Debug.Log($"Deck de {instantiatedPlayerUnit.name} initialisé avec {ChampionSelectManager.SelectedChampion.startingDeck.Count} cartes.");
+                        playerDeckManager.InitializeDeck(deckToUse);
+                        Debug.Log($"Deck de {instantiatedPlayerUnit.name} initialisé avec {deckToUse.Count} cartes.");
                     }
                     else
                     {
-                        Debug.LogWarning($"Le champion {instantiatedPlayerUnit.name} n'a pas de cartes de départ dans son ChampionData.");
+                        Debug.LogWarning($"Le champion {instantiatedPlayerUnit.name} n'a pas de deck valide.");
                     }
                 }
                 else

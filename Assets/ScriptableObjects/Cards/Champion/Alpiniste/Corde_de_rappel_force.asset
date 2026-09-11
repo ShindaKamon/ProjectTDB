@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: Corde_de_rappel_force
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Corde de rappel forc\xE9"
-  description: "Signature L'Alpiniste - sur un ennemi : d\xE9g\xE2ts + tir\xE9 vers
-    le lanceur (le tir\xE9 est approxim\xE9 en pouss\xE9e, la direction exacte =
-    Phase 4)."
+  description: "Signature L'Alpiniste - sur un ennemi : d\xE9g\xE2ts + tir\xE9 de
+    2 cases vers le lanceur (contr\xF4le offensif)."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
@@ -28,6 +27,7 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
   damageAmount: 35
   damageSelf: 0
   healAmount: 0
@@ -38,9 +38,10 @@ MonoBehaviour:
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
+  effectType: 3
   isChargeCard: 0
-  knockbackDistance: 0
+  knockbackDistance: 2
+  pullsTowardCaster: 1
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -62,3 +63,8 @@ MonoBehaviour:
   rageScaling: 0
   rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

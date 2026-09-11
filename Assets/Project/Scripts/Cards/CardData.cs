@@ -365,6 +365,9 @@ public class CardData : ScriptableObject
     [Tooltip("Distance de knockback/recul")]
     public int knockbackDistance = 0;
 
+    [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel forcé)")]
+    public bool pullsTowardCaster = false;
+
     [Space(5)]
     [Tooltip("Pourcentage de dégâts redirigés (si DamageShare)")]
     [Range(0, 100)]
@@ -1048,12 +1051,14 @@ public class CardData : ScriptableObject
             }
         }
 
-        // 6. Knockback simple (sur la cible)
+        // 6. Knockback simple (sur la cible) — pousse loin du lanceur, ou tire vers lui si pullsTowardCaster
         if (effectType == CardEffectType.Knockback && !isChargeCard && targetUnit != null && knockbackDistance > 0)
         {
             Vector2Int sourcePos = source.GetCurrentGridPos();
             Vector2Int targetPos = targetUnit.GetCurrentGridPos();
-            Vector2 knockbackDir = ((Vector2)targetPos - (Vector2)sourcePos).normalized;
+            Vector2 knockbackDir = pullsTowardCaster
+                ? ((Vector2)sourcePos - (Vector2)targetPos).normalized
+                : ((Vector2)targetPos - (Vector2)sourcePos).normalized;
             targetUnit.ApplyKnockback(knockbackDir, knockbackDistance);
         }
 

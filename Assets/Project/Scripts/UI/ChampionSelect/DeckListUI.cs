@@ -168,6 +168,10 @@ public class DeckListUI : MonoBehaviour
             _deckSlots[i].SetSelected(i == index);
         }
 
+        // Persiste le deck choisi (utilisé en combat), pas seulement l'aperçu
+        DeckSaveManager.SelectDeck(_currentChampion, index);
+        NotifyDeckSelected();
+
         UpdateSelectedDeckPreview();
         UpdateActionButtons();
     }

@@ -73,6 +73,7 @@ MonoBehaviour:
   _moveSpeed: 5
   _rotationSpeed: 10
   championData: {fileID: 11400000, guid: 13fbf2a764eade04c90c31687fdd56d3, type: 2}
+  _hasRageSystem: 0
   _rageCard: {fileID: 0}
   _damageThresholdForRage: 10
   _rageStock: 0

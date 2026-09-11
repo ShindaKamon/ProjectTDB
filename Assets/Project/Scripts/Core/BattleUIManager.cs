@@ -268,17 +268,17 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
 
-        // Connecte le RageStackUI au joueur (seulement si c'est Ilya avec le système de Rage)
-        if (_rageStackUI != null && player is IlyaUnit ilyaPlayer)
+        // Connecte le RageStackUI au joueur (seulement si son système de Rage est actif)
+        if (_rageStackUI != null && player is IlyaUnit ilyaPlayer && ilyaPlayer.HasRageSystem)
         {
             _rageStackUI.SetPlayer(ilyaPlayer);
             GameLog.Log($"BattleUIManager: RageStackUI connecté à {ilyaPlayer.name}");
         }
         else if (_rageStackUI != null)
         {
-            // Cache le RageStackUI si ce n'est pas Ilya (Vylos n'a pas de système de Rage)
+            // Cache le RageStackUI si le joueur n'a pas le système de Rage (ex: Vylos, Astra, Nova)
             _rageStackUI.gameObject.SetActive(false);
-            GameLog.Log($"BattleUIManager: RageStackUI désactivé (joueur n'est pas Ilya)");
+            GameLog.Log($"BattleUIManager: RageStackUI désactivé (joueur sans système de Rage)");
         }
 
         // Mise à jour initiale

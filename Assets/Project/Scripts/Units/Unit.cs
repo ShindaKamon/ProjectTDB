@@ -570,6 +570,9 @@ public class Unit : MonoBehaviour, IMarkable
 
         OnUnitDied?.Invoke(this);
 
+        // Phase 4.1: Publie l'événement de mort pour le système de combat visuals
+        EventBus.Publish(new UnitDiedEvent(this));
+
         // Détruit la barre de vie
         if (healthBar != null)
         {

@@ -16,6 +16,8 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
     private int _defense;
 
     [Header("=== Rage Mechanic ===")]
+    [Tooltip("Active le système de Rage pour cette unité (à désactiver pour les champions qui réutilisent la classe IlyaUnit sans avoir la mécanique de Rage, ex: Astra, Nova)")]
+    [SerializeField] private bool _hasRageSystem = true;
     [Tooltip("Carte Rage ajoutée à la main quand Ilya subit des dégâts")]
     [SerializeField] private CardData _rageCard;
     [Tooltip("Dégâts nécessaires pour générer une carte Rage")]
@@ -33,6 +35,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
 
     // ========== GETTERS PUBLICS ==========
 
+    public bool HasRageSystem => _hasRageSystem;
     public int GetDefense() => _defense;
     public int GetRageStock() => _rageStock;
     public int GetMaxRageStock() => _maxRageStock;

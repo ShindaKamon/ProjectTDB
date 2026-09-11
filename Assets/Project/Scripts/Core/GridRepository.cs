@@ -14,7 +14,7 @@ using UnityEngine;
 public class GridRepository
 {
     // ========== DONNÉES ==========
-    private readonly Dictionary<Vector2, Tile> _tiles;
+    private readonly Dictionary<Vector2Int, Tile> _tiles;
     private readonly List<Unit> _units;
     private readonly int _width;
     private readonly int _height;
@@ -23,11 +23,11 @@ public class GridRepository
     // Cache pour GetAttackTiles (évite recalcul pendant hover)
     private struct AttackTilesCacheKey
     {
-        public Vector2 Start;
+        public Vector2Int Start;
         public int Range;
         public Unit IgnoreUnit;
 
-        public AttackTilesCacheKey(Vector2 start, int range, Unit ignoreUnit)
+        public AttackTilesCacheKey(Vector2Int start, int range, Unit ignoreUnit)
         {
             Start = start;
             Range = range;
@@ -56,9 +56,9 @@ public class GridRepository
     /// <summary>
     /// Initialise le repository avec les données de la grille
     /// </summary>
-    public GridRepository(Dictionary<Vector2, Tile> tiles, List<Unit> units, int width, int height)
+    public GridRepository(Dictionary<Vector2Int, Tile> tiles, List<Unit> units, int width, int height)
     {
-        _tiles = tiles ?? new Dictionary<Vector2, Tile>();
+        _tiles = tiles ?? new Dictionary<Vector2Int, Tile>();
         _units = units ?? new List<Unit>();
         _width = width;
         _height = height;
@@ -71,7 +71,7 @@ public class GridRepository
     /// <summary>
     /// Retourne la tuile à une position donnée
     /// </summary>
-    public Tile GetTileAtPosition(Vector2 pos)
+    public Tile GetTileAtPosition(Vector2Int pos)
     {
         if (_tiles.TryGetValue(pos, out var tile))
         {
@@ -84,12 +84,12 @@ public class GridRepository
     /// Convertit une position monde en position grille
     /// Trouve la tuile la plus proche (cardinales uniquement, pas de diagonales)
     /// </summary>
-    public Vector2 GetGridPosFromWorldPos(Vector3 worldPos)
+    public Vector2Int GetGridPosFromWorldPos(Vector3 worldPos)
     {
         // Calcul de base
         int baseX = Mathf.RoundToInt(worldPos.x + _width / 2.0f);
         int baseY = Mathf.RoundToInt(worldPos.z + _height / 2.0f);
-        Vector2 basePos = new Vector2(baseX, baseY);
+        Vector2Int basePos = new Vector2Int(baseX, baseY);
 
         // Si la position de base existe, on la retourne
         if (_tiles.ContainsKey(basePos))
@@ -99,21 +99,21 @@ public class GridRepository
 
         // Sinon, cherche la tuile la plus proche parmi les 4 voisins cardinaux uniquement
         float minDist = float.MaxValue;
-        Vector2 closestPos = basePos;
+        Vector2Int closestPos = basePos;
 
         // Seulement les 4 directions cardinales (pas de diagonales)
-        Vector2[] cardinalOffsets = new Vector2[]
+        Vector2Int[] cardinalOffsets = new Vector2Int[]
         {
-            new Vector2(0, 0),   // Position de base
-            new Vector2(0, 1),   // Haut
-            new Vector2(0, -1),  // Bas
-            new Vector2(1, 0),   // Droite
-            new Vector2(-1, 0)   // Gauche
+            new Vector2Int(0, 0),   // Position de base
+            new Vector2Int(0, 1),   // Haut
+            new Vector2Int(0, -1),  // Bas
+            new Vector2Int(1, 0),   // Droite
+            new Vector2Int(-1, 0)   // Gauche
         };
 
-        foreach (Vector2 offset in cardinalOffsets)
+        foreach (Vector2Int offset in cardinalOffsets)
         {
-            Vector2 checkPos = new Vector2(baseX + offset.x, baseY + offset.y);
+            Vector2Int checkPos = new Vector2Int(baseX + offset.x, baseY + offset.y);
             if (_tiles.TryGetValue(checkPos, out Tile tile))
             {
                 float dist = Vector3.Distance(worldPos, tile.transform.position);
@@ -131,7 +131,7 @@ public class GridRepository
     /// <summary>
     /// Retourne toutes les tuiles de la grille
     /// </summary>
-    public Dictionary<Vector2, Tile> GetAllTiles()
+    public Dictionary<Vector2Int, Tile> GetAllTiles()
     {
         return _tiles;
     }
@@ -139,7 +139,7 @@ public class GridRepository
     /// <summary>
     /// Vérifie si une position existe dans la grille
     /// </summary>
-    public bool IsValidGridPosition(Vector2 pos)
+    public bool IsValidGridPosition(Vector2Int pos)
     {
         return _tiles.ContainsKey(pos);
     }
@@ -149,7 +149,7 @@ public class GridRepository
     /// <summary>
     /// Retourne l'unité à une position grille donnée (null si aucune)
     /// </summary>
-    public Unit GetUnitAtGridPos(Vector2 gridPos)
+    public Unit GetUnitAtGridPos(Vector2Int gridPos)
     {
         foreach (Unit unit in _units)
         {
@@ -230,18 +230,18 @@ public class GridRepository
     /// Retourne toutes les tuiles accessibles pour le mouvement avec leur coût
     /// Utilise BFS (Breadth-First Search) pour calculer les tuiles atteignables
     /// </summary>
-    public Dictionary<Tile, int> GetMovementTiles(Vector2 startPos, int range, Unit ignoreUnit = null)
+    public Dictionary<Tile, int> GetMovementTiles(Vector2Int startPos, int range, Unit ignoreUnit = null)
     {
         Dictionary<Tile, int> reachableTilesWithCost = new Dictionary<Tile, int>();
-        Queue<Vector2> queue = new Queue<Vector2>();
-        Dictionary<Vector2, int> visited = new Dictionary<Vector2, int>();
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        Dictionary<Vector2Int, int> visited = new Dictionary<Vector2Int, int>();
 
         queue.Enqueue(startPos);
         visited[startPos] = 0;
 
         while (queue.Count > 0)
         {
-            Vector2 currentPos = queue.Dequeue();
+            Vector2Int currentPos = queue.Dequeue();
             int currentCost = visited[currentPos];
             Tile currentTile = GetTileAtPosition(currentPos);
 
@@ -250,15 +250,15 @@ public class GridRepository
                 reachableTilesWithCost.Add(currentTile, currentCost);
             }
 
-            Vector2[] neighbors = new Vector2[]
+            Vector2Int[] neighbors = new Vector2Int[]
             {
-                currentPos + new Vector2(0, 1),
-                currentPos + new Vector2(0, -1),
-                currentPos + new Vector2(1, 0),
-                currentPos + new Vector2(-1, 0)
+                currentPos + new Vector2Int(0, 1),
+                currentPos + new Vector2Int(0, -1),
+                currentPos + new Vector2Int(1, 0),
+                currentPos + new Vector2Int(-1, 0)
             };
 
-            foreach (Vector2 neighborPos in neighbors)
+            foreach (Vector2Int neighborPos in neighbors)
             {
                 Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
                 bool isOccupied = (unitAtNeighbor != null && unitAtNeighbor != ignoreUnit);
@@ -281,7 +281,7 @@ public class GridRepository
     /// Retourne toutes les tuiles dans la portée d'attaque (ignore les obstacles d'unités)
     /// OPTIMISATION: Utilise un cache pour éviter de recalculer pendant le hover
     /// </summary>
-    public List<Tile> GetAttackTiles(Vector2 startPos, int range, Unit ignoreUnit = null)
+    public List<Tile> GetAttackTiles(Vector2Int startPos, int range, Unit ignoreUnit = null)
     {
         // Vérifie le cache
         AttackTilesCacheKey cacheKey = new AttackTilesCacheKey(startPos, range, ignoreUnit);
@@ -291,15 +291,15 @@ public class GridRepository
         }
 
         List<Tile> reachableTiles = new List<Tile>();
-        Queue<Vector2> queue = new Queue<Vector2>();
-        Dictionary<Vector2, int> visited = new Dictionary<Vector2, int>();
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        Dictionary<Vector2Int, int> visited = new Dictionary<Vector2Int, int>();
 
         queue.Enqueue(startPos);
         visited[startPos] = 0;
 
         while (queue.Count > 0)
         {
-            Vector2 currentPos = queue.Dequeue();
+            Vector2Int currentPos = queue.Dequeue();
             int currentCost = visited[currentPos];
             Tile currentTile = GetTileAtPosition(currentPos);
 
@@ -308,15 +308,15 @@ public class GridRepository
                 reachableTiles.Add(currentTile);
             }
 
-            Vector2[] neighbors = new Vector2[]
+            Vector2Int[] neighbors = new Vector2Int[]
             {
-                currentPos + new Vector2(0, 1),
-                currentPos + new Vector2(0, -1),
-                currentPos + new Vector2(1, 0),
-                currentPos + new Vector2(-1, 0)
+                currentPos + new Vector2Int(0, 1),
+                currentPos + new Vector2Int(0, -1),
+                currentPos + new Vector2Int(1, 0),
+                currentPos + new Vector2Int(-1, 0)
             };
 
-            foreach (Vector2 neighborPos in neighbors)
+            foreach (Vector2Int neighborPos in neighbors)
             {
                 if (_tiles.ContainsKey(neighborPos) &&
                     !visited.ContainsKey(neighborPos) &&
@@ -344,21 +344,21 @@ public class GridRepository
     /// Calcule le chemin le plus court entre deux positions
     /// Retourne une liste de tuiles à traverser (vide si impossible ou déjà sur la cible)
     /// </summary>
-    public List<Tile> GetPathToTile(Vector2 startPos, Vector2 targetPos, int maxRange, Unit ignoreUnit = null)
+    public List<Tile> GetPathToTile(Vector2Int startPos, Vector2Int targetPos, int maxRange, Unit ignoreUnit = null)
     {
         if (startPos == targetPos)
         {
             return new List<Tile>();
         }
 
-        Queue<Vector2> queue = new Queue<Vector2>();
-        Dictionary<Vector2, Vector2> parentMap = new Dictionary<Vector2, Vector2>();
-        Dictionary<Vector2, int> costMap = new Dictionary<Vector2, int>();
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        Dictionary<Vector2Int, Vector2Int> parentMap = new Dictionary<Vector2Int, Vector2Int>();
+        Dictionary<Vector2Int, int> costMap = new Dictionary<Vector2Int, int>();
 
         queue.Enqueue(startPos);
         costMap[startPos] = 0;
 
-        Vector2 currentPos;
+        Vector2Int currentPos;
         while (queue.Count > 0)
         {
             currentPos = queue.Dequeue();
@@ -369,15 +369,15 @@ public class GridRepository
                 break;
             }
 
-            Vector2[] neighbors = new Vector2[]
+            Vector2Int[] neighbors = new Vector2Int[]
             {
-                currentPos + new Vector2(0, 1),
-                currentPos + new Vector2(0, -1),
-                currentPos + new Vector2(1, 0),
-                currentPos + new Vector2(-1, 0)
+                currentPos + new Vector2Int(0, 1),
+                currentPos + new Vector2Int(0, -1),
+                currentPos + new Vector2Int(1, 0),
+                currentPos + new Vector2Int(-1, 0)
             };
 
-            foreach (Vector2 neighborPos in neighbors)
+            foreach (Vector2Int neighborPos in neighbors)
             {
                 Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
                 bool isOccupied = (unitAtNeighbor != null && unitAtNeighbor != ignoreUnit);
@@ -417,7 +417,7 @@ public class GridRepository
     /// Calcule le coût en PM pour atteindre une destination
     /// Retourne -1 si la destination est inaccessible
     /// </summary>
-    public int GetPathCost(Vector2 startPos, Vector2 targetPos, int maxRange, Unit ignoreUnit = null)
+    public int GetPathCost(Vector2Int startPos, Vector2Int targetPos, int maxRange, Unit ignoreUnit = null)
     {
         List<Tile> path = GetPathToTile(startPos, targetPos, maxRange, ignoreUnit);
         return path.Count > 0 ? path.Count : (startPos == targetPos ? 0 : -1);

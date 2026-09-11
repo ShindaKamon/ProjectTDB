@@ -138,7 +138,7 @@ public static class GameActionValidator
     /// <summary>
     /// Valide qu'une carte peut cibler une tuile spécifique
     /// </summary>
-    public static ValidationResult CanTargetTile(CardData card, Unit source, Vector2 targetTilePos)
+    public static ValidationResult CanTargetTile(CardData card, Unit source, Vector2Int targetTilePos)
     {
         // Validation des paramètres
         if (card == null)
@@ -151,7 +151,7 @@ public static class GameActionValidator
         if (!card.targetsTile)
             return ValidationResult.Success();
 
-        Vector2 sourcePos = source.GetCurrentGridPos();
+        Vector2Int sourcePos = source.GetCurrentGridPos();
 
         // Pour les cartes de charge, utilise la distance Manhattan et vérifie la ligne droite
         if (card.isChargeCard)
@@ -212,7 +212,7 @@ public static class GameActionValidator
     /// <summary>
     /// Valide qu'une unité peut se déplacer vers une destination spécifique
     /// </summary>
-    public static ValidationResult CanMoveToTile(Unit unit, Vector2 destinationPos, int pathCost)
+    public static ValidationResult CanMoveToTile(Unit unit, Vector2Int destinationPos, int pathCost)
     {
         // Validation de base
         ValidationResult baseCheck = CanMove(unit);

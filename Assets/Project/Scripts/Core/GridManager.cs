@@ -16,7 +16,7 @@ public class GridManager : MonoBehaviour, IGridService
     [SerializeField] private int _width = 10;
     [SerializeField] private int _height = 10;
     [SerializeField] private GameObject _tilePrefab;
-    [SerializeField] private Vector2 _playerSpawnGridPos = new Vector2(0,0); // Position de la grille où le joueur apparaîtra
+    [SerializeField] private Vector2Int _playerSpawnGridPos = new Vector2Int(0,0); // Position de la grille où le joueur apparaîtra
     
     [Header("=== Couleurs Portées ===")]
     [SerializeField] private Color _moveColor = Color.blue;
@@ -29,7 +29,7 @@ public class GridManager : MonoBehaviour, IGridService
     [SerializeField] private Button _endTurnButton; // Référence au bouton Fin de Tour
     
     // ===== DONNÉES INTERNES =====
-    private Dictionary<Vector2, Tile> _tiles;
+    private Dictionary<Vector2Int, Tile> _tiles;
     private List<Unit> _units;
     private Unit _activeUnit;
 
@@ -56,7 +56,7 @@ public class GridManager : MonoBehaviour, IGridService
             return;
         }
 
-        _tiles = new Dictionary<Vector2, Tile>();
+        _tiles = new Dictionary<Vector2Int, Tile>();
         _units = new List<Unit>();
         GenerateGrid();
 
@@ -163,7 +163,7 @@ public class GridManager : MonoBehaviour, IGridService
                 bool isOffset = (x % 2 == 0 && y % 2 != 0) || (x % 2 != 0 && y % 2 == 0);
                 tile.Init(isOffset);
 
-                _tiles[new Vector2(x, y)] = tile;
+                _tiles[new Vector2Int(x, y)] = tile;
             }
         }
         
@@ -587,20 +587,20 @@ public class GridManager : MonoBehaviour, IGridService
     // ===== PATHFINDING & PORTÉES =====
     // Toutes les méthodes de pathfinding délèguent maintenant au GridRepository
 
-    public Dictionary<Tile, int> GetMovementTiles(Vector2 startPos, int range, Unit ignoreUnit = null)
+    public Dictionary<Tile, int> GetMovementTiles(Vector2Int startPos, int range, Unit ignoreUnit = null)
         => _gridRepository.GetMovementTiles(startPos, range, ignoreUnit);
 
-    public List<Tile> GetAttackTiles(Vector2 startPos, int range, Unit ignoreUnit = null)
+    public List<Tile> GetAttackTiles(Vector2Int startPos, int range, Unit ignoreUnit = null)
         => _gridRepository.GetAttackTiles(startPos, range, ignoreUnit);
 
-    public List<Tile> GetPathToTile(Vector2 startPos, Vector2 targetPos, int maxRange, Unit ignoreUnit = null)
+    public List<Tile> GetPathToTile(Vector2Int startPos, Vector2Int targetPos, int maxRange, Unit ignoreUnit = null)
         => _gridRepository.GetPathToTile(startPos, targetPos, maxRange, ignoreUnit);
-    
+
     public void ResetAllTileColors()
     {
         foreach (var entry in _tiles)
         {
-            Vector2 pos = entry.Key;
+            Vector2Int pos = entry.Key;
             Tile tile = entry.Value;
             bool isOffset = (pos.x % 2 == 0 && pos.y % 2 != 0) || (pos.x % 2 != 0 && pos.y % 2 == 0);
             tile.ResetColor(isOffset);
@@ -623,15 +623,15 @@ public class GridManager : MonoBehaviour, IGridService
     /// </summary>
     public void InvalidateAttackTilesCache() => _gridRepository.InvalidateAttackTilesCache();
 
-    public Tile GetTileAtPosition(Vector2 pos) => _gridRepository.GetTileAtPosition(pos);
+    public Tile GetTileAtPosition(Vector2Int pos) => _gridRepository.GetTileAtPosition(pos);
 
-    public Vector2 GetGridPosFromWorldPos(Vector3 worldPos) => _gridRepository.GetGridPosFromWorldPos(worldPos);
+    public Vector2Int GetGridPosFromWorldPos(Vector3 worldPos) => _gridRepository.GetGridPosFromWorldPos(worldPos);
 
     public List<Unit> GetAllPlayerUnits() => _gridRepository.GetAllPlayerUnits();
 
     public List<Unit> GetAllEnemyUnits() => _gridRepository.GetAllEnemyUnits();
 
-    public Unit GetUnitAtGridPos(Vector2 gridPos) => _gridRepository.GetUnitAtGridPos(gridPos);
+    public Unit GetUnitAtGridPos(Vector2Int gridPos) => _gridRepository.GetUnitAtGridPos(gridPos);
 
     /// <summary>
     /// Retourne la TurnStateMachine (Phase 3.4)
@@ -649,7 +649,7 @@ public class GridManager : MonoBehaviour, IGridService
 
         ResetAllTileColors();
 
-        Vector2 sourcePos = source.GetCurrentGridPos();
+        Vector2Int sourcePos = source.GetCurrentGridPos();
         int range = card.targetRange;
 
         // Pour les cartes de charge, affiche uniquement les cases en ligne droite
@@ -676,16 +676,16 @@ public class GridManager : MonoBehaviour, IGridService
     /// Affiche les cases vides ET les cases avec ennemis comme cibles valides (jaune)
     /// L'ennemi sera surligné en rouge uniquement au hover (géré par InputManager)
     /// </summary>
-    private void ShowChargeTargets(Vector2 sourcePos, int range, Unit source)
+    private void ShowChargeTargets(Vector2Int sourcePos, int range, Unit source)
     {
         // Directions : haut, bas, gauche, droite
-        Vector2[] directions = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
-        foreach (Vector2 dir in directions)
+        foreach (Vector2Int dir in directions)
         {
             for (int i = 1; i <= range; i++)
             {
-                Vector2 targetPos = sourcePos + dir * i;
+                Vector2Int targetPos = sourcePos + dir * i;
                 Tile tile = GetTileAtPosition(targetPos);
 
                 if (tile == null) break; // Bord de la grille
@@ -715,7 +715,7 @@ public class GridManager : MonoBehaviour, IGridService
     /// <summary>
     /// Affiche la zone AOE autour d'une position donnée
     /// </summary>
-    public void ShowAOEZone(Vector2 epicenter, int radius, CardData card, Unit source)
+    public void ShowAOEZone(Vector2Int epicenter, int radius, CardData card, Unit source)
     {
         if (radius <= 0) return;
 
@@ -724,7 +724,7 @@ public class GridManager : MonoBehaviour, IGridService
 
         foreach (Tile tile in aoeArea)
         {
-            Vector2 tilePos = GetGridPosFromWorldPos(tile.transform.position);
+            Vector2Int tilePos = GetGridPosFromWorldPos(tile.transform.position);
             Unit unitOnTile = GetUnitAtGridPos(tilePos);
 
             // Colore différemment selon si une unité sera affectée
@@ -760,7 +760,7 @@ public class GridManager : MonoBehaviour, IGridService
     /// <summary>
     /// Surligne une tuile spécifique (pour hover)
     /// </summary>
-    public void HighlightTile(Vector2 tilePos, Color color)
+    public void HighlightTile(Vector2Int tilePos, Color color)
     {
         Tile tile = GetTileAtPosition(tilePos);
         if (tile != null)

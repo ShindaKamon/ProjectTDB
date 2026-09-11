@@ -102,10 +102,10 @@ public class UnitStateChangedEvent : GameEvent
 public class UnitMovedEvent : GameEvent
 {
     public Unit Unit { get; private set; }
-    public Vector2 FromPosition { get; private set; }
-    public Vector2 ToPosition { get; private set; }
+    public Vector2Int FromPosition { get; private set; }
+    public Vector2Int ToPosition { get; private set; }
 
-    public UnitMovedEvent(Unit unit, Vector2 fromPosition, Vector2 toPosition)
+    public UnitMovedEvent(Unit unit, Vector2Int fromPosition, Vector2Int toPosition)
     {
         Unit = unit;
         FromPosition = fromPosition;
@@ -155,9 +155,9 @@ public class CardPlayedEvent : GameEvent
     public CardData Card { get; private set; }
     public Unit Source { get; private set; }
     public Unit TargetUnit { get; private set; }
-    public Vector2 TargetTile { get; private set; }
+    public Vector2Int TargetTile { get; private set; }
 
-    public CardPlayedEvent(CardData card, Unit source, Unit targetUnit, Vector2 targetTile)
+    public CardPlayedEvent(CardData card, Unit source, Unit targetUnit, Vector2Int targetTile)
     {
         Card = card;
         Source = source;
@@ -216,12 +216,12 @@ public class ShowCardTargetsEvent : GameEvent
 /// </summary>
 public class ShowAOEZoneEvent : GameEvent
 {
-    public Vector2 Epicenter { get; private set; }
+    public Vector2Int Epicenter { get; private set; }
     public int Radius { get; private set; }
     public CardData Card { get; private set; }
     public Unit Source { get; private set; }
 
-    public ShowAOEZoneEvent(Vector2 epicenter, int radius, CardData card, Unit source)
+    public ShowAOEZoneEvent(Vector2Int epicenter, int radius, CardData card, Unit source)
     {
         Epicenter = epicenter;
         Radius = radius;

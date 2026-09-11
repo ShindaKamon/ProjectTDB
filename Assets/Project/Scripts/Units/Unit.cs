@@ -8,9 +8,9 @@ public class Unit : MonoBehaviour, IMarkable
     public enum UnitFaction { Player, Enemy }
 
     // La position actuelle de l'unité sur la grille (coordonnées X, Y).
-    [SerializeField] protected Vector2 _currentGridPos;
+    [SerializeField] protected Vector2Int _currentGridPos;
     // La position de grille initiale de l'unité, configurable dans l'Inspector.
-    [SerializeField] protected Vector2 _initialGridPos = new Vector2(0, 0); // Par défaut à (0,0).
+    [SerializeField] protected Vector2Int _initialGridPos = new Vector2Int(0, 0); // Par défaut à (0,0).
     // Vitesse de déplacement de l'unité.
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotationSpeed = 10f; // Vitesse de rotation pour regarder vers la cible
@@ -86,7 +86,7 @@ public class Unit : MonoBehaviour, IMarkable
     /// Initialise les aspects communs de l'unité (position, faction, état).
     /// Doit être appelée par les classes dérivées après l'initialisation des stats.
     /// </summary>
-    public void Initialize(Vector2 initialGridPos)
+    public void Initialize(Vector2Int initialGridPos)
     {
         // Protection contre la double initialisation
         if (_isInitialized)
@@ -606,7 +606,7 @@ public class Unit : MonoBehaviour, IMarkable
     }
 
     // Getter pour la position de grille actuelle de l'unité.
-    public Vector2 GetCurrentGridPos()
+    public Vector2Int GetCurrentGridPos()
     {
         return _currentGridPos;
     }
@@ -722,15 +722,15 @@ public class Unit : MonoBehaviour, IMarkable
     /// <param name="direction">Direction du knockback (normalisée)</param>
     /// <param name="distance">Nombre de cases à repousser</param>
     /// <returns>La position finale après le knockback</returns>
-    public Vector2 ApplyKnockback(Vector2 direction, int distance)
+    public Vector2Int ApplyKnockback(Vector2 direction, int distance)
     {
         if (distance <= 0) return GetCurrentGridPos();
 
-        Vector2 currentPos = GetCurrentGridPos();
-        Vector2 finalPos = currentPos;
+        Vector2Int currentPos = GetCurrentGridPos();
+        Vector2Int finalPos = currentPos;
 
         // Normalise la direction en mouvement de grille (1 case à la fois)
-        Vector2 stepDirection = new Vector2(
+        Vector2Int stepDirection = new Vector2Int(
             Mathf.RoundToInt(direction.x),
             Mathf.RoundToInt(direction.y)
         );
@@ -747,7 +747,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Repousse case par case
         for (int i = 0; i < distance; i++)
         {
-            Vector2 nextPos = finalPos + stepDirection;
+            Vector2Int nextPos = finalPos + stepDirection;
 
             // Vérifie si la case suivante est valide
             Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
@@ -773,7 +773,7 @@ public class Unit : MonoBehaviour, IMarkable
         {
             // Crée un chemin simple pour le déplacement visuel
             List<Tile> knockbackPath = new List<Tile>();
-            Vector2 pathPos = currentPos;
+            Vector2Int pathPos = currentPos;
             while (pathPos != finalPos)
             {
                 pathPos += stepDirection;

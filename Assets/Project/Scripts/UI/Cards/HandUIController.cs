@@ -507,7 +507,7 @@ public class HandUIController : MonoBehaviour
             if (activeUnit != null && clickedCard.targetType == CardTargetType.Self && clickedCard.isAOE)
             {
                 // Carte AOE Self : afficher la zone AOE autour du joueur
-                Vector2 playerPos = activeUnit.GetCurrentGridPos();
+                Vector2Int playerPos = activeUnit.GetCurrentGridPos();
                 // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
                 EventBus.Publish(new ShowAOEZoneEvent(playerPos, clickedCard.aoeRadius, clickedCard, activeUnit));
             }
@@ -517,7 +517,7 @@ public class HandUIController : MonoBehaviour
     }
 
     // Méthode pour jouer la carte actuellement sélectionnée
-    public void PlaySelectedCard(Unit targetUnit, Vector2 targetTile)
+    public void PlaySelectedCard(Unit targetUnit, Vector2Int targetTile)
     {
         // Validation des préconditions
         if (_selectedCard == null)
@@ -552,7 +552,7 @@ public class HandUIController : MonoBehaviour
         if (_selectedCard.isChargeCard)
         {
             // Pour les cartes de charge, on valide la position cible (qu'elle vienne d'un ennemi ou d'une tuile)
-            Vector2 chargeTargetPos = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
+            Vector2Int chargeTargetPos = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
             ValidationResult chargeResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, chargeTargetPos);
             if (!chargeResult.IsValid)
             {
@@ -588,7 +588,7 @@ public class HandUIController : MonoBehaviour
         {
             // Carte de charge : le lanceur se déplace vers la cible (case vide ou ennemi)
             // Si targetUnit est défini, utilise sa position comme cible
-            Vector2 chargeTarget = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
+            Vector2Int chargeTarget = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
             _selectedCard.ExecuteChargeEffect(activeUnit, chargeTarget);
         }
         else

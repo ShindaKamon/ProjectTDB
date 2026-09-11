@@ -107,7 +107,7 @@ public abstract class Champion : Unit, IActionPointsUser
     /// <summary>
     /// Initialise le champion avec les données ChampionData.
     /// </summary>
-    public void Initialize(ChampionData data, Vector2 initialGridPos)
+    public void Initialize(ChampionData data, Vector2Int initialGridPos)
     {
         if (_isInitialized) return;
 

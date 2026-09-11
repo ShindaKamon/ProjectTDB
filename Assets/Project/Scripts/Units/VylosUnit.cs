@@ -41,7 +41,7 @@ public class VylosUnit : Champion, IActionPointsUser
     /// <summary>
     /// Surcharge Initialize pour Vylos (pas de stats spéciales à initialiser pour l'instant)
     /// </summary>
-    public new void Initialize(ChampionData data, Vector2 initialGridPos)
+    public new void Initialize(ChampionData data, Vector2Int initialGridPos)
     {
         base.Initialize(data, initialGridPos);
 

@@ -33,41 +33,41 @@ public interface IGridService
     /// <summary>
     /// Retourne l'unité à une position grille donnée
     /// </summary>
-    Unit GetUnitAtGridPos(Vector2 gridPos);
+    Unit GetUnitAtGridPos(Vector2Int gridPos);
 
     // ========== TUILES ==========
 
     /// <summary>
     /// Retourne la tuile à une position donnée
     /// </summary>
-    Tile GetTileAtPosition(Vector2 pos);
+    Tile GetTileAtPosition(Vector2Int pos);
 
     /// <summary>
     /// Convertit une position monde en position grille
     /// </summary>
-    Vector2 GetGridPosFromWorldPos(Vector3 worldPos);
+    Vector2Int GetGridPosFromWorldPos(Vector3 worldPos);
 
     /// <summary>
     /// Surligne une tuile avec une couleur
     /// </summary>
-    void HighlightTile(Vector2 pos, Color color);
+    void HighlightTile(Vector2Int pos, Color color);
 
     // ========== PATHFINDING ==========
 
     /// <summary>
     /// Retourne toutes les tuiles accessibles pour le mouvement avec leur coût
     /// </summary>
-    Dictionary<Tile, int> GetMovementTiles(Vector2 startPos, int range, Unit ignoreUnit = null);
+    Dictionary<Tile, int> GetMovementTiles(Vector2Int startPos, int range, Unit ignoreUnit = null);
 
     /// <summary>
     /// Retourne toutes les tuiles dans la portée d'attaque
     /// </summary>
-    List<Tile> GetAttackTiles(Vector2 startPos, int range, Unit ignoreUnit = null);
+    List<Tile> GetAttackTiles(Vector2Int startPos, int range, Unit ignoreUnit = null);
 
     /// <summary>
     /// Calcule le chemin le plus court entre deux positions
     /// </summary>
-    List<Tile> GetPathToTile(Vector2 startPos, Vector2 targetPos, int maxRange, Unit ignoreUnit = null);
+    List<Tile> GetPathToTile(Vector2Int startPos, Vector2Int targetPos, int maxRange, Unit ignoreUnit = null);
 
     // ========== CACHE ==========
 

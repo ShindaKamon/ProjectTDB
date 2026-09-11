@@ -160,10 +160,10 @@ public class EnemyAI : MonoBehaviour
     }
 
     // Calcule un chemin complet vers la cible en utilisant tous les points de mouvement disponibles
-    private List<Tile> CalculatePathTowardsTarget(Vector2 targetPos)
+    private List<Tile> CalculatePathTowardsTarget(Vector2Int targetPos)
     {
         List<Tile> path = new List<Tile>();
-        Vector2 currentPos = _enemyUnit.GetCurrentGridPos();
+        Vector2Int currentPos = _enemyUnit.GetCurrentGridPos();
         int remainingMovement = _enemyUnit.GetCurrentMovementPoints();
 
         // Obtient la portée max des cartes de l'ennemi (si c'est un Enemy avec cartes)
@@ -189,9 +189,9 @@ public class EnemyAI : MonoBehaviour
             }
 
             // Trouver le meilleur prochain mouvement
-            Vector2 nextMove = FindBestMoveFrom(currentPos, targetPos);
+            Vector2Int nextMove = FindBestMoveFrom(currentPos, targetPos);
 
-            if (nextMove == Vector2.zero)
+            if (nextMove == Vector2Int.zero)
             {
                 Debug.Log($"Bloqué après {i} mouvements");
                 break; // Bloqué, on ne peut plus avancer
@@ -209,9 +209,9 @@ public class EnemyAI : MonoBehaviour
     /// <summary>
     /// Calcule la distance de Manhattan (pas de diagonales)
     /// </summary>
-    private int GetManhattanDistance(Vector2 from, Vector2 to)
+    private int GetManhattanDistance(Vector2Int from, Vector2Int to)
     {
-        return Mathf.RoundToInt(Mathf.Abs(from.x - to.x) + Mathf.Abs(from.y - to.y));
+        return Mathf.Abs(from.x - to.x) + Mathf.Abs(from.y - to.y);
     }
 
     /// <summary>
@@ -228,39 +228,39 @@ public class EnemyAI : MonoBehaviour
     }
 
     // Trouve le meilleur mouvement depuis une position donnée vers une cible
-    private Vector2 FindBestMoveFrom(Vector2 fromPos, Vector2 targetPos)
+    private Vector2Int FindBestMoveFrom(Vector2Int fromPos, Vector2Int targetPos)
     {
-        Vector2 direction = targetPos - fromPos;
+        Vector2Int direction = targetPos - fromPos;
 
         // Liste des directions à essayer (par ordre de priorité)
         // SEULEMENT des mouvements orthogonaux (pas de diagonales)
-        List<Vector2> directionsToTry = new List<Vector2>();
+        List<Vector2Int> directionsToTry = new List<Vector2Int>();
 
         // Direction principale (vers le joueur)
         if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
         {
             // Le joueur est plus à gauche/droite qu'en haut/bas
-            directionsToTry.Add(new Vector2(Mathf.Sign(direction.x), 0)); // Horizontal d'abord
-            directionsToTry.Add(new Vector2(0, Mathf.Sign(direction.y))); // Vertical ensuite
+            directionsToTry.Add(new Vector2Int((int)Mathf.Sign(direction.x), 0)); // Horizontal d'abord
+            directionsToTry.Add(new Vector2Int(0, (int)Mathf.Sign(direction.y))); // Vertical ensuite
         }
         else
         {
             // Le joueur est plus en haut/bas qu'à gauche/droite
-            directionsToTry.Add(new Vector2(0, Mathf.Sign(direction.y))); // Vertical d'abord
-            directionsToTry.Add(new Vector2(Mathf.Sign(direction.x), 0)); // Horizontal ensuite
+            directionsToTry.Add(new Vector2Int(0, (int)Mathf.Sign(direction.y))); // Vertical d'abord
+            directionsToTry.Add(new Vector2Int((int)Mathf.Sign(direction.x), 0)); // Horizontal ensuite
         }
 
         // Ajouter les autres directions orthogonales comme alternatives
-        directionsToTry.Add(new Vector2(-Mathf.Sign(direction.x), 0)); // Horizontal opposé
-        directionsToTry.Add(new Vector2(0, -Mathf.Sign(direction.y))); // Vertical opposé
+        directionsToTry.Add(new Vector2Int(-(int)Mathf.Sign(direction.x), 0)); // Horizontal opposé
+        directionsToTry.Add(new Vector2Int(0, -(int)Mathf.Sign(direction.y))); // Vertical opposé
 
         // Essayer chaque direction
-        Vector2 bestMove = Vector2.zero;
+        Vector2Int bestMove = Vector2Int.zero;
         float bestDistanceToTarget = float.MaxValue;
 
-        foreach (Vector2 dir in directionsToTry)
+        foreach (Vector2Int dir in directionsToTry)
         {
-            Vector2 nextPos = fromPos + dir;
+            Vector2Int nextPos = fromPos + dir;
 
             // Vérifier que la case est valide
             Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
@@ -362,7 +362,7 @@ public class EnemyAI : MonoBehaviour
 
         // Détermine la cible en fonction du type de carte
         Unit targetUnit = null;
-        Vector2 targetTile = Vector2.zero;
+        Vector2Int targetTile = Vector2Int.zero;
 
         // Trouve le joueur le plus proche pour les cartes offensives
         List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public struct ChargePathInfo
 {
     public bool IsValid;
-    public Vector2 StepDirection;
+    public Vector2Int StepDirection;
     public int Distance;
     public List<Tile> Path;
     public Unit EnemyHit;
@@ -24,26 +24,26 @@ public static class ChargeHelper
     /// Calcule la direction de charge entre deux positions (ligne droite uniquement)
     /// </summary>
     /// <returns>La direction normalisée ou Vector2.zero si pas en ligne droite</returns>
-    public static bool TryGetChargeDirection(Vector2 sourcePos, Vector2 targetPos, out Vector2 direction, out int distance)
+    public static bool TryGetChargeDirection(Vector2Int sourcePos, Vector2Int targetPos, out Vector2Int direction, out int distance)
     {
-        Vector2 diff = targetPos - sourcePos;
+        Vector2Int diff = targetPos - sourcePos;
 
         if (Mathf.Abs(diff.x) > 0 && diff.y == 0)
         {
             // Mouvement horizontal
-            direction = new Vector2(Mathf.Sign(diff.x), 0);
-            distance = Mathf.RoundToInt(Mathf.Abs(diff.x));
+            direction = new Vector2Int((int)Mathf.Sign(diff.x), 0);
+            distance = Mathf.Abs(diff.x);
             return true;
         }
         else if (Mathf.Abs(diff.y) > 0 && diff.x == 0)
         {
             // Mouvement vertical
-            direction = new Vector2(0, Mathf.Sign(diff.y));
-            distance = Mathf.RoundToInt(Mathf.Abs(diff.y));
+            direction = new Vector2Int(0, (int)Mathf.Sign(diff.y));
+            distance = Mathf.Abs(diff.y);
             return true;
         }
 
-        direction = Vector2.zero;
+        direction = Vector2Int.zero;
         distance = 0;
         return false;
     }
@@ -51,20 +51,20 @@ public static class ChargeHelper
     /// <summary>
     /// Calcule le chemin de charge complet, en s'arrêtant si une unité bloque
     /// </summary>
-    public static ChargePathInfo CalculateChargePath(Vector2 sourcePos, Vector2 targetPos, Unit source)
+    public static ChargePathInfo CalculateChargePath(Vector2Int sourcePos, Vector2Int targetPos, Unit source)
     {
-        if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2 stepDirection, out int totalDistance))
+        if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2Int stepDirection, out int totalDistance))
         {
             return ChargePathInfo.Invalid;
         }
 
         List<Tile> chargePath = new List<Tile>();
-        Vector2 currentPos = sourcePos;
+        Vector2Int currentPos = sourcePos;
         Unit enemyHit = null;
 
         for (int i = 0; i < totalDistance; i++)
         {
-            Vector2 nextPos = currentPos + stepDirection;
+            Vector2Int nextPos = currentPos + stepDirection;
             Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
 
             if (nextTile == null) break; // Bord de la grille
@@ -96,9 +96,9 @@ public static class ChargeHelper
     /// <summary>
     /// Vérifie si une position cible est valide pour une charge (chemin non bloqué)
     /// </summary>
-    public static bool IsValidChargeTarget(Vector2 sourcePos, Vector2 targetPos, Unit source)
+    public static bool IsValidChargeTarget(Vector2Int sourcePos, Vector2Int targetPos, Unit source)
     {
-        if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2 stepDirection, out int distance))
+        if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2Int stepDirection, out int distance))
         {
             return false;
         }
@@ -106,7 +106,7 @@ public static class ChargeHelper
         // Vérifie chaque case sur le chemin jusqu'à la cible
         for (int i = 1; i <= distance; i++)
         {
-            Vector2 checkPos = sourcePos + stepDirection * i;
+            Vector2Int checkPos = sourcePos + stepDirection * i;
             Unit unitOnPath = Services.Grid.GetUnitAtGridPos(checkPos);
 
             if (unitOnPath != null)
@@ -168,42 +168,19 @@ public enum CardAffectedTarget
 }
 
 /// <summary>
-/// Les 8 Familles représentent les types d'émotions que les champions incarnent
-/// Basé sur la Roue de Plutchik
+/// Les 8 Émotions de base (Couleurs)
 /// </summary>
-public enum CardFamilyType
+public enum EmotionType
 {
     None,
-    Dechaines,      // Colère - Rouge #CC0000
-    Dissidents,     // Dégoût - Violet #800080
-    Insurgents,     // Tristesse - Bleu foncé #000080
-    Exiles,         // Surprise - Bleu clair #80CCFF
-    Reprouves,      // Peur - Vert foncé #006600
-    Gardiens,       // Confiance - Vert clair #80FF80
-    Eveilles,       // Joie - Jaune #FFEB00
-    Precurseurs     // Anticipation - Orange #FF8000
-}
-
-/// <summary>
-/// Les 5 Classes représentent les différentes façons psychologiques de gérer une émotion
-/// </summary>
-public enum CardClasseType
-{
-    None,
-    Reprime,        // Stocke - Répression, accumulation lente, explosions retardées
-    Impulsif,       // Consomme - Catharsis, fluctuations rapides, burst
-    Alchimiste,     // Transforme - Émotion → Ressource magique
-    Emissaire,      // Déplace - Projection, transfert aux invocations
-    Evade           // Fuit/Substitue - Émotion → Substances, risque/récompense
-}
-
-public enum CardElementType
-{
-    None,
-    Feu,        // Feu
-    Ombre,      // Ombre
-    Lumiere,    // Lumière
-    Eau         // Eau
+    Colere,         // Rouge #CC0000
+    Degout,         // Violet #800080
+    Tristesse,      // Bleu foncé #000080
+    Surprise,       // Bleu clair #80CCFF
+    Peur,           // Vert foncé #006600
+    Confiance,      // Vert clair #80FF80
+    Joie,           // Jaune #FFEB00
+    Anticipation    // Orange #FF8000
 }
 
 public enum CardEffectType
@@ -265,14 +242,8 @@ public class CardData : ScriptableObject
     public Sprite artwork;
 
     [Space(5)]
-    [Tooltip("Famille émotionnelle (Roue de Plutchik)")]
-    public CardFamilyType familyType = CardFamilyType.None;
-
-    [Tooltip("Classe de gestion émotionnelle")]
-    public CardClasseType classeType = CardClasseType.None;
-
-    [Tooltip("Élément de la carte")]
-    public CardElementType elementType = CardElementType.None;
+    [Tooltip("Type d'émotion (Couleur)")]
+    public EmotionType emotionType = EmotionType.None;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                              2. COÛTS                                      ║
@@ -310,7 +281,7 @@ public class CardData : ScriptableObject
     public CardAffectedTarget affectedTarget = CardAffectedTarget.None;
 
     // Propriétés dérivées pour compatibilité
-    public bool targetsUnit => targetType == CardTargetType.Self || targetType == CardTargetType.Enemy || targetType == CardTargetType.Ally || targetType == CardTargetType.AllyOrSelf || targetType == CardTargetType.AnyUnit;
+    public bool targetsUnit => targetType == CardTargetType.Self || targetType == CardTargetType.Enemy || targetType == CardTargetType.Ally || targetType == CardTargetType.AllyOrSelf || targetType == CardTargetType.AllyorEnemy || targetType == CardTargetType.AnyUnit;
     public bool targetsTile => targetType == CardTargetType.EmptyTile || targetType == CardTargetType.AnyTile || targetType == CardTargetType.EnemyOrTile;
     public bool isAOE => areaEffect != CardAreaEffect.None && aoeRadius > 0;
     public bool affectsSelf => affectedTarget == CardAffectedTarget.Self || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AnyUnit;
@@ -492,6 +463,9 @@ public class CardData : ScriptableObject
             case CardTargetType.AllyOrSelf:
                 return target != null && target.GetFaction() == source.GetFaction();
 
+            case CardTargetType.AllyorEnemy:
+                return target != null && target != source;
+
             case CardTargetType.AnyUnit:
                 return target != null;
 
@@ -535,8 +509,8 @@ public class CardData : ScriptableObject
         if (tile == null || source == null) return false;
         if (!isChargeCard) return IsValidTileTarget(tile);
 
-        Vector2 sourcePos = source.GetCurrentGridPos();
-        Vector2 tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
+        Vector2Int sourcePos = source.GetCurrentGridPos();
+        Vector2Int tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
 
         return ChargeHelper.IsValidChargeTarget(sourcePos, tilePos, source);
     }
@@ -545,13 +519,13 @@ public class CardData : ScriptableObject
     private bool IsUnitOnTile(Tile tile)
     {
         // OPTIMISATION: Utilise GridRepository au lieu de FindObjectsByType
-        Vector2 tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
+        Vector2Int tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
         Unit unitOnTile = Services.Grid.GetUnitAtGridPos(tilePos);
         return unitOnTile != null;
     }
 
     // Méthode pour obtenir toutes les unités affectées par l'AOE
-    public List<Unit> GetAOEAffectedUnits(Unit source, Vector2 epicenter)
+    public List<Unit> GetAOEAffectedUnits(Unit source, Vector2Int epicenter)
     {
         List<Unit> affectedUnits = new List<Unit>();
 
@@ -565,7 +539,7 @@ public class CardData : ScriptableObject
 
         foreach (Unit unit in allUnits)
         {
-            Vector2 unitPos = unit.GetCurrentGridPos();
+            Vector2Int unitPos = unit.GetCurrentGridPos();
             float distance = Vector2.Distance(epicenter, unitPos);
 
             // Vérifie si l'unité est dans le rayon
@@ -600,7 +574,7 @@ public class CardData : ScriptableObject
     }
 
     // Méthode pour exécuter l'effet de la carte
-    public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2 targetTile = default)
+    public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default)
     {
         Debug.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
@@ -695,7 +669,7 @@ public class CardData : ScriptableObject
         Debug.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
 
         // Détermine l'épicentre de l'effet
-        Vector2 effectEpicenter;
+        Vector2Int effectEpicenter;
         if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
         {
             effectEpicenter = targetUnit.GetCurrentGridPos();
@@ -863,9 +837,9 @@ public class CardData : ScriptableObject
         // 6. Knockback simple (sur la cible)
         if (effectType == CardEffectType.Knockback && !isChargeCard && targetUnit != null && knockbackDistance > 0)
         {
-            Vector2 sourcePos = source.GetCurrentGridPos();
-            Vector2 targetPos = targetUnit.GetCurrentGridPos();
-            Vector2 knockbackDir = (targetPos - sourcePos).normalized;
+            Vector2Int sourcePos = source.GetCurrentGridPos();
+            Vector2Int targetPos = targetUnit.GetCurrentGridPos();
+            Vector2 knockbackDir = ((Vector2)targetPos - (Vector2)sourcePos).normalized;
             targetUnit.ApplyKnockback(knockbackDir, knockbackDistance);
         }
 
@@ -1066,7 +1040,7 @@ public class CardData : ScriptableObject
     /// <param name="source">L'unité qui charge</param>
     /// <param name="targetTilePos">La position cible de la charge</param>
     /// <param name="onComplete">Callback appelé quand la charge est terminée</param>
-    public void ExecuteChargeEffect(Unit source, Vector2 targetTilePos, System.Action onComplete = null)
+    public void ExecuteChargeEffect(Unit source, Vector2Int targetTilePos, System.Action onComplete = null)
     {
         if (!isChargeCard)
         {
@@ -1082,9 +1056,9 @@ public class CardData : ScriptableObject
     /// <summary>
     /// Coroutine qui exécute l'effet de charge avec attente du mouvement
     /// </summary>
-    private System.Collections.IEnumerator ExecuteChargeEffectCoroutine(Unit source, Vector2 targetTilePos, System.Action onComplete)
+    private System.Collections.IEnumerator ExecuteChargeEffectCoroutine(Unit source, Vector2Int targetTilePos, System.Action onComplete)
     {
-        Vector2 sourcePos = source.GetCurrentGridPos();
+        Vector2Int sourcePos = source.GetCurrentGridPos();
 
         // Utilise le helper pour calculer le chemin de charge
         ChargePathInfo pathInfo = ChargeHelper.CalculateChargePath(sourcePos, targetTilePos, source);
@@ -1149,32 +1123,32 @@ public class CardData : ScriptableObject
 }
 
 /// <summary>
-/// Classe helper pour obtenir les couleurs associées aux familles et éléments
+/// Classe helper pour obtenir les couleurs associées aux émotions et éléments
 /// </summary>
 public static class CardVisualHelper
 {
     /// <summary>
-    /// Retourne la couleur associée à une famille (codes hex du GDD v3.0)
+    /// Retourne la couleur associée à une émotion
     /// </summary>
-    public static Color GetFamilyColor(CardFamilyType family)
+    public static Color GetEmotionColor(EmotionType emotion)
     {
-        switch (family)
+        switch (emotion)
         {
-            case CardFamilyType.Dechaines:
+            case EmotionType.Colere:
                 return new Color(204f/255f, 0f, 0f);           // Colère - Rouge #CC0000
-            case CardFamilyType.Dissidents:
+            case EmotionType.Degout:
                 return new Color(128f/255f, 0f, 128f/255f);    // Dégoût - Violet #800080
-            case CardFamilyType.Insurgents:
+            case EmotionType.Tristesse:
                 return new Color(0f, 0f, 128f/255f);           // Tristesse - Bleu foncé #000080
-            case CardFamilyType.Exiles:
+            case EmotionType.Surprise:
                 return new Color(128f/255f, 204f/255f, 1f);    // Surprise - Bleu clair #80CCFF
-            case CardFamilyType.Reprouves:
+            case EmotionType.Peur:
                 return new Color(0f, 102f/255f, 0f);           // Peur - Vert foncé #006600
-            case CardFamilyType.Gardiens:
+            case EmotionType.Confiance:
                 return new Color(128f/255f, 1f, 128f/255f);    // Confiance - Vert clair #80FF80
-            case CardFamilyType.Eveilles:
+            case EmotionType.Joie:
                 return new Color(1f, 235f/255f, 0f);           // Joie - Jaune #FFEB00
-            case CardFamilyType.Precurseurs:
+            case EmotionType.Anticipation:
                 return new Color(1f, 128f/255f, 0f);           // Anticipation - Orange #FF8000
             default:
                 return Color.white;
@@ -1182,107 +1156,21 @@ public static class CardVisualHelper
     }
 
     /// <summary>
-    /// Retourne la couleur associée à un élément (pour usage futur)
+    /// Retourne le nom français de l'émotion
     /// </summary>
-    public static Color GetElementColor(CardElementType element)
+    public static string GetEmotionName(EmotionType emotion)
     {
-        switch (element)
+        switch (emotion)
         {
-            case CardElementType.Feu:
-                return new Color(1f, 0.3f, 0f); // Rouge-orange (feu)
-            case CardElementType.Ombre:
-                return new Color(0.2f, 0f, 0.3f); // Violet foncé (ombre)
-            case CardElementType.Lumiere:
-                return new Color(1f, 1f, 0.7f); // Jaune clair (lumière)
-            case CardElementType.Eau:
-                return new Color(0f, 0.5f, 1f); // Bleu (eau)
-            default:
-                return Color.white;
-        }
-    }
-
-    /// <summary>
-    /// Retourne le nom français de la famille
-    /// </summary>
-    public static string GetFamilyName(CardFamilyType family)
-    {
-        switch (family)
-        {
-            case CardFamilyType.Dechaines: return "Déchaînés";
-            case CardFamilyType.Dissidents: return "Dissidents";
-            case CardFamilyType.Insurgents: return "Insurgents";
-            case CardFamilyType.Exiles: return "Exilés";
-            case CardFamilyType.Reprouves: return "Réprouvés";
-            case CardFamilyType.Gardiens: return "Gardiens";
-            case CardFamilyType.Eveilles: return "Éveillés";
-            case CardFamilyType.Precurseurs: return "Précurseurs";
-            default: return "Sans Famille";
-        }
-    }
-
-    /// <summary>
-    /// Retourne l'émotion associée à une famille (Roue de Plutchik)
-    /// </summary>
-    public static string GetFamilyEmotion(CardFamilyType family)
-    {
-        switch (family)
-        {
-            case CardFamilyType.Dechaines: return "Colère";
-            case CardFamilyType.Dissidents: return "Dégoût";
-            case CardFamilyType.Insurgents: return "Tristesse";
-            case CardFamilyType.Exiles: return "Surprise";
-            case CardFamilyType.Reprouves: return "Peur";
-            case CardFamilyType.Gardiens: return "Confiance";
-            case CardFamilyType.Eveilles: return "Joie";
-            case CardFamilyType.Precurseurs: return "Anticipation";
+            case EmotionType.Colere: return "Colère";
+            case EmotionType.Degout: return "Dégoût";
+            case EmotionType.Tristesse: return "Tristesse";
+            case EmotionType.Surprise: return "Surprise";
+            case EmotionType.Peur: return "Peur";
+            case EmotionType.Confiance: return "Confiance";
+            case EmotionType.Joie: return "Joie";
+            case EmotionType.Anticipation: return "Anticipation";
             default: return "Neutre";
-        }
-    }
-
-    /// <summary>
-    /// Retourne le nom français de la classe
-    /// </summary>
-    public static string GetClassName(CardClasseType classe)
-    {
-        switch (classe)
-        {
-            case CardClasseType.Reprime: return "Réprimé";
-            case CardClasseType.Impulsif: return "Impulsif";
-            case CardClasseType.Alchimiste: return "Alchimiste";
-            case CardClasseType.Emissaire: return "Émissaire";
-            case CardClasseType.Evade: return "Évadé";
-            default: return "Sans Classe";
-        }
-    }
-
-    /// <summary>
-    /// Retourne la description de la classe (comment elle gère l'émotion)
-    /// </summary>
-    public static string GetClassDescription(CardClasseType classe)
-    {
-        switch (classe)
-        {
-            case CardClasseType.Reprime: return "Stocke l'émotion";
-            case CardClasseType.Impulsif: return "Consomme l'émotion";
-            case CardClasseType.Alchimiste: return "Transforme l'émotion";
-            case CardClasseType.Emissaire: return "Déplace l'émotion";
-            case CardClasseType.Evade: return "Fuit l'émotion";
-            default: return "";
-        }
-    }
-
-    /// <summary>
-    /// Retourne le nom français de l'élément
-    /// </summary>
-    public static string GetElementName(CardElementType element)
-    {
-        switch (element)
-        {
-            case CardElementType.Feu: return "Feu";
-            case CardElementType.Ombre: return "Ombre";
-            case CardElementType.Lumiere: return "Lumière";
-            case CardElementType.Eau: return "Eau";
-            default: return "Sans Élément";
         }
     }
 }

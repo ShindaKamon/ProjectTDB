@@ -8,7 +8,7 @@ public class InputManager : MonoBehaviour
 {
     [SerializeField] private HandUIController _handUIController; // Référence au HandUIController
     private CardData _previousSelectedCard = null; // Pour tracker les changements de sélection
-    private Vector2 _lastHoveredTilePos = new Vector2(-1, -1); // Position de la dernière tuile survolée
+    private Vector2Int _lastHoveredTilePos = new Vector2Int(-1, -1); // Position de la dernière tuile survolée
 
     /// <summary>
     /// Tente d'extraire la position de grille d'un GameObject (tuile ou unité)
@@ -16,9 +16,9 @@ public class InputManager : MonoBehaviour
     /// <param name="gameObject">L'objet à analyser</param>
     /// <param name="gridPos">La position de grille si trouvée</param>
     /// <returns>True si une position valide a été trouvée</returns>
-    private bool TryGetGridPosition(GameObject gameObject, out Vector2 gridPos)
+    private bool TryGetGridPosition(GameObject gameObject, out Vector2Int gridPos)
     {
-        gridPos = Vector2.zero;
+        gridPos = Vector2Int.zero;
 
         // Vérifie d'abord si c'est une tuile par son composant
         if (gameObject.TryGetComponentSafe(out Tile tile))
@@ -33,7 +33,7 @@ public class InputManager : MonoBehaviour
         {
             if (int.TryParse(nameParts[1], out int gridX) && int.TryParse(nameParts[2], out int gridY))
             {
-                gridPos = new Vector2(gridX, gridY);
+                gridPos = new Vector2Int(gridX, gridY);
                 return true;
             }
         }
@@ -73,7 +73,7 @@ public class InputManager : MonoBehaviour
                 EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
             }
             _previousSelectedCard = currentSelectedCard;
-            _lastHoveredTilePos = new Vector2(-1, -1); // Reset hover
+            _lastHoveredTilePos = new Vector2Int(-1, -1); // Reset hover
         }
 
         // Preview hover pour les cartes avec cibles (AOE ou non)
@@ -85,7 +85,7 @@ public class InputManager : MonoBehaviour
             if (Physics.Raycast(ray, out hit, 1000f))
             {
                 GameObject hoveredObject = hit.collider.gameObject;
-                Vector2 hoveredPos = Vector2.zero;
+                Vector2Int hoveredPos = Vector2Int.zero;
                 bool isValidHoverTarget = false;
 
                 // Vérifie si on survole une unité (OPTIMISATION Phase 3.3: ComponentLocator)
@@ -95,8 +95,8 @@ public class InputManager : MonoBehaviour
 
                 if (hoveredObject.TryGetComponentSafe(out Unit hoveredUnit) && canTargetUnit)
                 {
-                    Vector2 sourcePos = activeUnit.GetCurrentGridPos();
-                    Vector2 targetPos = hoveredUnit.GetCurrentGridPos();
+                    Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
+                    Vector2Int targetPos = hoveredUnit.GetCurrentGridPos();
 
                     // Pour les cartes de charge, vérifie la ligne droite et la portée Manhattan
                     if (currentSelectedCard.isChargeCard)
@@ -133,7 +133,7 @@ public class InputManager : MonoBehaviour
                     Tile hoveredTile = Services.Grid.GetTileAtPosition(hoveredPos);
 
                     // Calcule la distance depuis l'unité active
-                    Vector2 sourcePos = activeUnit.GetCurrentGridPos();
+                    Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
                     List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
 
                     // Vérifie si la tuile est dans la portée ET que c'est une cible valide
@@ -167,17 +167,17 @@ public class InputManager : MonoBehaviour
                         Services.Grid.HighlightTile(hoveredPos, Color.red);
                     }
                 }
-                else if (!isValidHoverTarget && _lastHoveredTilePos != new Vector2(-1, -1))
+                else if (!isValidHoverTarget && _lastHoveredTilePos != new Vector2Int(-1, -1))
                 {
                     // Si on ne survole plus de cible valide, réaffiche juste les cibles de base (OPTIMISATION Phase 3.2: EventBus)
-                    _lastHoveredTilePos = new Vector2(-1, -1);
+                    _lastHoveredTilePos = new Vector2Int(-1, -1);
                     EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
                 }
             }
-            else if (_lastHoveredTilePos != new Vector2(-1, -1))
+            else if (_lastHoveredTilePos != new Vector2Int(-1, -1))
             {
                 // Si le raycast ne touche rien, réinitialise (OPTIMISATION Phase 3.2: EventBus)
-                _lastHoveredTilePos = new Vector2(-1, -1);
+                _lastHoveredTilePos = new Vector2Int(-1, -1);
                 EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
             }
         }
@@ -261,7 +261,7 @@ public class InputManager : MonoBehaviour
         if (Physics.Raycast(ray, out hit, 1000f))
         {
             GameObject hoveredObject = hit.collider.gameObject;
-            Vector2 hoveredPos = Vector2.zero;
+            Vector2Int hoveredPos = Vector2Int.zero;
             bool isValidHover = false;
 
             // Vérifie si c'est une tuile ou une unité
@@ -300,15 +300,15 @@ public class InputManager : MonoBehaviour
                     }
                 }
             }
-            else if (_lastHoveredTilePos != new Vector2(-1, -1))
+            else if (_lastHoveredTilePos != new Vector2Int(-1, -1))
             {
-                _lastHoveredTilePos = new Vector2(-1, -1);
+                _lastHoveredTilePos = new Vector2Int(-1, -1);
                 EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
             }
         }
-        else if (_lastHoveredTilePos != new Vector2(-1, -1))
+        else if (_lastHoveredTilePos != new Vector2Int(-1, -1))
         {
-            _lastHoveredTilePos = new Vector2(-1, -1);
+            _lastHoveredTilePos = new Vector2Int(-1, -1);
             EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
         }
     }
@@ -321,7 +321,7 @@ public class InputManager : MonoBehaviour
         // OPTIMISATION Phase 3.3: ComponentLocator
         clickedObject.TryGetComponentSafe(out Unit targetUnit);
 
-        Vector2 targetTilePos = Vector2.zero;
+        Vector2Int targetTilePos = Vector2Int.zero;
         Tile targetTile = null;
 
         // Détermine la position cible
@@ -368,8 +368,8 @@ public class InputManager : MonoBehaviour
         // Cas spécial : Carte de charge ciblant un ennemi directement (doit être traité AVANT la vérification de portée classique)
         if (selectedCard.isChargeCard && targetUnit != null && targetUnit.GetFaction() != activeUnit.GetFaction())
         {
-            Vector2 sourcePos = activeUnit.GetCurrentGridPos();
-            Vector2 enemyPos = targetUnit.GetCurrentGridPos();
+            Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
+            Vector2Int enemyPos = targetUnit.GetCurrentGridPos();
 
             // Vérifie que l'ennemi est en ligne droite
             Tile enemyTile = Services.Grid.GetTileAtPosition(enemyPos);
@@ -398,7 +398,7 @@ public class InputManager : MonoBehaviour
         // Vérifie la portée de la carte pour les autres types
         else if (selectedCard.targetsUnit || selectedCard.targetsTile)
         {
-            Vector2 sourcePos = activeUnit.GetCurrentGridPos();
+            Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
 
             // Pour les cartes de charge sur tuile vide, utilise la distance Manhattan
             if (selectedCard.isChargeCard)
@@ -474,7 +474,7 @@ public class InputManager : MonoBehaviour
         {
             Debug.Log("Clic sur l'unité active.");
         }
-        else if (TryGetGridPosition(clickedObject, out Vector2 targetGridPos))
+        else if (TryGetGridPosition(clickedObject, out Vector2Int targetGridPos))
         {
             // DÉPLACEMENT - Vérifie si l'unité a encore des points de mouvement
             if (availablePoints <= 0)
@@ -552,7 +552,7 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private IEnumerator PlayCardSequence(CardData card, Unit source, Unit target, Vector2 targetTilePos)
+    private IEnumerator PlayCardSequence(CardData card, Unit source, Unit target, Vector2Int targetTilePos)
     {
         // 1. Tourne pour faire face à la cible
         if (target != null && target != source)

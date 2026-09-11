@@ -75,7 +75,7 @@ public class Enemy : Unit, IActionPointsUser
     /// <summary>
     /// Initialise l'ennemi avec EnemyData (au lieu de ChampionData)
     /// </summary>
-    public void InitializeEnemy(EnemyData data, Vector2 initialGridPos)
+    public void InitializeEnemy(EnemyData data, Vector2Int initialGridPos)
     {
         // Protection contre la double initialisation
         if (_isInitialized)
@@ -127,7 +127,7 @@ public class Enemy : Unit, IActionPointsUser
         {
             if (_enemyData != null)
             {
-                Vector2 currentWorldGridPos = Services.Grid.GetGridPosFromWorldPos(transform.position);
+                Vector2Int currentWorldGridPos = Services.Grid.GetGridPosFromWorldPos(transform.position);
                 InitializeEnemy(_enemyData, currentWorldGridPos);
             }
             else

@@ -43,7 +43,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
     /// <summary>
     /// Surcharge Initialize pour initialiser la défense depuis ChampionData
     /// </summary>
-    public new void Initialize(ChampionData data, Vector2 initialGridPos)
+    public new void Initialize(ChampionData data, Vector2Int initialGridPos)
     {
         base.Initialize(data, initialGridPos);
 

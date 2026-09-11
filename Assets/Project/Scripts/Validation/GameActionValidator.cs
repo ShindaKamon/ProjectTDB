@@ -322,10 +322,6 @@ public static class GameActionValidator
         if (card.targetRange < 0)
             return ValidationResult.Fail($"CardData '{card.cardName}' : targetRange doit être >= 0");
 
-        // Validation cohérence ciblage
-        if (card.targetsUnit && card.targetType == CardTargetType.None)
-            return ValidationResult.Fail($"CardData '{card.cardName}' : targetsUnit = true mais targetType = None");
-
         return ValidationResult.Success();
     }
 }

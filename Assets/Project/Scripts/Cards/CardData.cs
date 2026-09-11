@@ -1156,6 +1156,17 @@ public static class CardVisualHelper
     }
 
     /// <summary>
+    /// Retourne la couleur associée à un coût en PA
+    /// </summary>
+    public static Color GetCostColor(int cost)
+    {
+        if (cost <= 1) return new Color(0.3f, 0.8f, 0.4f);
+        if (cost == 2) return new Color(0.9f, 0.7f, 0.2f);
+        if (cost == 3) return new Color(0.9f, 0.4f, 0.2f);
+        return new Color(0.8f, 0.2f, 0.2f);
+    }
+
+    /// <summary>
     /// Retourne le nom français de l'émotion
     /// </summary>
     public static string GetEmotionName(EmotionType emotion)

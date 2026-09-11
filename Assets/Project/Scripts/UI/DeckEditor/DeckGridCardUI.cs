@@ -1,0 +1,116 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using TMPro;
+
+/// <summary>
+/// Affiche une carte dans la grille de deck avec sa quantite
+/// Style moderne avec artwork, badges et effets visuels
+/// </summary>
+public class DeckGridCardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+{
+    [Header("Structure principale")]
+    [SerializeField] private Image _cardFrame;        // Cadre/fond de la carte
+    [SerializeField] private Image _cardImage;        // Artwork de la carte
+    [SerializeField] private Image _familyBorder;     // Bordure colorée selon l'émotion
+
+    [Header("Badges")]
+    [SerializeField] private Image _costBadge;        // Fond du coût (coin haut gauche)
+    [SerializeField] private TextMeshProUGUI _costText;
+    [SerializeField] private Image _countBadge;       // Fond de la quantité (coin bas droite)
+    [SerializeField] private TextMeshProUGUI _countText;
+
+    [Header("Informations")]
+    [SerializeField] private TextMeshProUGUI _cardNameText;
+    [SerializeField] private Image _nameBackground;   // Fond semi-transparent pour le nom
+
+    [Header("Effets visuels")]
+    [SerializeField] private CanvasGroup _canvasGroup;
+    [SerializeField] private float _hoverScale = 1.05f;
+    [SerializeField] private float _hoverDuration = 0.1f;
+
+    private CardData _cardData;
+    private int _count;
+    private Vector3 _originalScale;
+    private RectTransform _rectTransform;
+
+    public CardData CardData => _cardData;
+    public int Count => _count;
+
+    void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+        if (_rectTransform != null)
+            _originalScale = _rectTransform.localScale;
+    }
+
+    /// <summary>
+    /// Configure l'affichage de la carte avec sa quantite
+    /// </summary>
+    public void Setup(CardData card, int count)
+    {
+        _cardData = card;
+        _count = count;
+
+        // Artwork
+        if (_cardImage != null)
+        {
+            if (card.artwork != null)
+            {
+                _cardImage.sprite = card.artwork;
+                _cardImage.color = Color.white;
+            }
+            else
+            {
+                // Fallback: afficher une couleur basée sur l'émotion
+                _cardImage.sprite = null;
+                _cardImage.color = CardVisualHelper.GetEmotionColor(card.emotionType);
+            }
+        }
+
+        // Bordure colorée selon l'émotion
+        if (_familyBorder != null)
+        {
+            _familyBorder.color = CardVisualHelper.GetEmotionColor(card.emotionType);
+        }
+
+        // Nom de la carte
+        if (_cardNameText != null)
+            _cardNameText.text = card.cardName;
+
+        // Badge de quantité (visible seulement si > 1)
+        if (_countText != null)
+            _countText.text = $"x{count}";
+
+        if (_countBadge != null)
+            _countBadge.gameObject.SetActive(count > 1);
+
+        // Badge de coût PA
+        if (_costText != null)
+            _costText.text = card.costPA.ToString();
+
+        // Couleur du badge de coût selon le coût
+        if (_costBadge != null)
+        {
+            _costBadge.color = CardVisualHelper.GetCostColor(card.costPA);
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (_rectTransform != null)
+        {
+            StopAllCoroutines();
+            StartCoroutine(UIHoverAnimator.ScaleTo(_rectTransform, _originalScale * _hoverScale, _hoverDuration));
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_rectTransform != null)
+        {
+            StopAllCoroutines();
+            StartCoroutine(UIHoverAnimator.ScaleTo(_rectTransform, _originalScale, _hoverDuration));
+        }
+    }
+}

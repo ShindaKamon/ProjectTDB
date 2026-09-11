@@ -11,6 +11,7 @@ public static class DeckSaveManager
     private const string SAVE_FILE_NAME = "decks.json";
     private static AllDecksData _cachedData;
     private static bool _isLoaded = false;
+    private static readonly HashSet<string> _syncedChampions = new HashSet<string>();
 
     private static string SaveFilePath => Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
 
@@ -68,6 +69,7 @@ public static class DeckSaveManager
 
     /// <summary>
     /// Récupère les decks d'un champion, crée le deck de base si nécessaire
+    /// Le deck de base est TOUJOURS synchronisé avec le startingDeck du ChampionData
     /// </summary>
     public static ChampionDecksData GetDecksForChampion(ChampionData champion)
     {
@@ -80,9 +82,81 @@ public static class DeckSaveManager
             championDecks = CreateDefaultDecksForChampion(champion);
             allDecks.SetChampionDecks(championDecks);
             SaveAllDecks();
+            _syncedChampions.Add(champion.championName);
+        }
+        else if (_syncedChampions.Add(champion.championName))
+        {
+            // Synchronise le deck de base avec le startingDeck actuel, une seule fois par
+            // chargement de cache (évite de rescanner/réécrire à chaque appel de cette méthode,
+            // qui est le point d'entrée de quasi toutes les opérations de ce manager)
+            SyncBaseDeck(championDecks, champion);
         }
 
         return championDecks;
+    }
+
+    /// <summary>
+    /// Synchronise le deck de base avec le startingDeck du ChampionData
+    /// </summary>
+    private static void SyncBaseDeck(ChampionDecksData championDecks, ChampionData champion)
+    {
+        // Trouver le deck de base
+        DeckData baseDeck = null;
+        foreach (var deck in championDecks.decks)
+        {
+            if (deck.isDefault)
+            {
+                baseDeck = deck;
+                break;
+            }
+        }
+
+        if (baseDeck == null) return;
+
+        bool needsSave = false;
+
+        // Reconstruire la liste des cartes depuis le startingDeck
+        var newCardNames = new List<string>();
+        foreach (var card in champion.startingDeck)
+        {
+            if (card != null)
+                newCardNames.Add(card.cardName);
+        }
+
+        // Mettre à jour les cartes si différent
+        if (!AreCardListsEqual(baseDeck.cardNames, newCardNames))
+        {
+            baseDeck.cardNames = newCardNames;
+            needsSave = true;
+            Debug.Log($"Cartes du deck de base synchronisées pour {champion.championName}");
+        }
+
+        // Synchroniser aussi l'émotion avec celle du champion
+        if (baseDeck.Emotion1 != champion.emotionType || baseDeck.Emotion2 != champion.emotionType)
+        {
+            baseDeck.Emotion1 = champion.emotionType;
+            baseDeck.Emotion2 = champion.emotionType;
+            needsSave = true;
+            Debug.Log($"Emotion du deck de base synchronisée pour {champion.championName}");
+        }
+
+        if (needsSave)
+            SaveAllDecks();
+    }
+
+    /// <summary>
+    /// Compare deux listes de noms de cartes
+    /// </summary>
+    private static bool AreCardListsEqual(List<string> list1, List<string> list2)
+    {
+        if (list1.Count != list2.Count) return false;
+
+        for (int i = 0; i < list1.Count; i++)
+        {
+            if (list1[i] != list2[i]) return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -100,7 +174,8 @@ public static class DeckSaveManager
                 cardNames.Add(card.cardName);
         }
 
-        var defaultDeck = new DeckData("Deck de base", "#E74C3C", cardNames, true);
+        // Le deck de base utilise l'émotion du champion
+        var defaultDeck = new DeckData("Deck de base", champion.emotionType, champion.emotionType, cardNames, true);
         data.decks.Add(defaultDeck);
         data.selectedDeckIndex = 0;
 
@@ -108,9 +183,9 @@ public static class DeckSaveManager
     }
 
     /// <summary>
-    /// Crée un nouveau deck custom pour un champion
+    /// Crée un nouveau deck custom pour un champion (deck vide)
     /// </summary>
-    public static DeckData CreateDeck(ChampionData champion, string deckName, string color)
+    public static DeckData CreateDeck(ChampionData champion, string deckName, EmotionType emotion1, EmotionType emotion2)
     {
         var championDecks = GetDecksForChampion(champion);
 
@@ -120,9 +195,9 @@ public static class DeckSaveManager
             return null;
         }
 
-        // Copier les cartes du deck de base
-        var baseDeck = championDecks.decks[0];
-        var newDeck = new DeckData(deckName, color, baseDeck.cardNames, false);
+        // Creer un deck VIDE (pas de copie du deck de base)
+        var emptyCardList = new List<string>();
+        var newDeck = new DeckData(deckName, emotion1, emotion2, emptyCardList, false);
 
         championDecks.decks.Add(newDeck);
         SaveAllDecks();
@@ -196,16 +271,17 @@ public static class DeckSaveManager
     }
 
     /// <summary>
-    /// Change la couleur d'un deck
+    /// Change les émotions d'un deck
     /// </summary>
-    public static void SetDeckColor(ChampionData champion, int deckIndex, string hexColor)
+    public static void SetDeckEmotions(ChampionData champion, int deckIndex, EmotionType emotion1, EmotionType emotion2)
     {
         var championDecks = GetDecksForChampion(champion);
 
         if (deckIndex < 0 || deckIndex >= championDecks.decks.Count)
             return;
 
-        championDecks.decks[deckIndex].deckColor = hexColor;
+        championDecks.decks[deckIndex].Emotion1 = emotion1;
+        championDecks.decks[deckIndex].Emotion2 = emotion2;
         SaveAllDecks();
     }
 
@@ -248,8 +324,69 @@ public static class DeckSaveManager
             var card = collection.GetCardByName(name);
             if (card != null)
                 cards.Add(card);
+            else
+                Debug.LogWarning($"Carte non trouvée dans la collection: '{name}'");
         }
         return cards;
+    }
+
+    /// <summary>
+    /// Récupère les cartes d'un deck, utilise directement le startingDeck pour le deck de base
+    /// </summary>
+    public static List<CardData> GetDeckCards(ChampionData champion, int deckIndex, CardCollection collection)
+    {
+        var championDecks = GetDecksForChampion(champion);
+
+        if (deckIndex < 0 || deckIndex >= championDecks.decks.Count)
+            return new List<CardData>();
+
+        var deck = championDecks.decks[deckIndex];
+
+        // Pour le deck de base, utiliser directement le startingDeck du champion
+        if (deck.isDefault && champion.startingDeck != null)
+        {
+            return new List<CardData>(champion.startingDeck);
+        }
+
+        // Pour les decks custom, utiliser la recherche par nom
+        return GetCardsFromNames(deck.cardNames, collection);
+    }
+
+    /// <summary>
+    /// Supprime toutes les données sauvegardées et force la régénération
+    /// </summary>
+    public static void DeleteAllSavedDecks()
+    {
+        if (File.Exists(SaveFilePath))
+        {
+            File.Delete(SaveFilePath);
+            Debug.Log($"Fichier de sauvegarde supprimé: {SaveFilePath}");
+        }
+        InvalidateCache();
+    }
+
+    /// <summary>
+    /// Réinitialise les decks d'un champion spécifique
+    /// </summary>
+    public static void ResetChampionDecks(ChampionData champion)
+    {
+        var allDecks = LoadAllDecks();
+
+        // Supprimer les données existantes pour ce champion
+        for (int i = allDecks.champions.Count - 1; i >= 0; i--)
+        {
+            if (allDecks.champions[i].championName == champion.championName)
+            {
+                allDecks.champions.RemoveAt(i);
+            }
+        }
+
+        // Recréer les données par défaut
+        var newData = CreateDefaultDecksForChampion(champion);
+        allDecks.SetChampionDecks(newData);
+        SaveAllDecks();
+
+        Debug.Log($"Decks réinitialisés pour {champion.championName}");
     }
 
     /// <summary>
@@ -259,5 +396,6 @@ public static class DeckSaveManager
     {
         _isLoaded = false;
         _cachedData = null;
+        _syncedChampions.Clear();
     }
 }

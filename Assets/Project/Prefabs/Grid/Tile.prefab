@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: b80609f82a79061469eff30a688c4c78, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -90,6 +90,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &1244813772543611257
 BoxCollider:
@@ -124,6 +125,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1e0c66eaf0062848ab8df9e72e56264, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tile
-  _baseColor: {r: 0.5566038, g: 0.5566038, b: 0.5566038, a: 0}
-  _offsetColor: {r: 0.1509434, g: 0.1509434, b: 0.1509434, a: 0}
+  _baseColor: {r: 0.72, g: 0.68, b: 0.6, a: 0}
+  _offsetColor: {r: 0.42, g: 0.38, b: 0.32, a: 0}
   _renderer: {fileID: 2462540990779622609}

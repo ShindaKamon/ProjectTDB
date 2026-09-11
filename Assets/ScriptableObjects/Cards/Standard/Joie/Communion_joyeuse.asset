@@ -24,8 +24,8 @@ MonoBehaviour:
   costOther: 0
   targetType: 1
   targetRange: 1
-  areaEffect: 4
-  aoeRadius: 99
+  areaEffect: 6
+  aoeRadius: 1
   affectedTarget: 4
   damageAmount: 0
   damageSelf: 0
@@ -61,3 +61,8 @@ MonoBehaviour:
   rageScaling: 0
   rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

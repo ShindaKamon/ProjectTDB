@@ -148,12 +148,12 @@ public enum CardTargetType
 public enum CardAreaEffect
 {
     None,           // Aucune zone
-    OneTile,        // Une case
-    Line,           // Une ligne
-    Cross,          // En croix
-    Circle,         // En cercle
-    Cone            // En cône
-
+    OneTile,        // Une case (l'épicentre uniquement)
+    Line,           // Ligne de aoeRadius cases depuis le lanceur, dans la direction de l'épicentre
+    Cross,          // Croix de aoeRadius cases de rayon centrée sur l'épicentre (axes seulement)
+    Circle,         // Cercle de aoeRadius cases de rayon centré sur l'épicentre
+    Cone,           // Cône de aoeRadius cases de portée depuis le lanceur, ouverture 90°
+    WholeTeam       // Toute l'équipe du lanceur, sans portée ni ligne de vue (ex: Communion joyeuse)
 }
 
 public enum CardAffectedTarget
@@ -581,38 +581,108 @@ public class CardData : ScriptableObject
 
         foreach (Unit unit in allUnits)
         {
-            Vector2Int unitPos = unit.GetCurrentGridPos();
-            float distance = Vector2.Distance(epicenter, unitPos);
+            if (!IsInAOEShape(source, epicenter, unit.GetCurrentGridPos()))
+                continue;
 
-            // Vérifie si l'unité est dans le rayon
-            if (distance <= aoeRadius)
+            bool shouldAffect;
+
+            // Vérifie si c'est le lanceur
+            if (unit == source)
             {
-                bool shouldAffect = false;
+                shouldAffect = affectsSelf;
+            }
+            // Vérifie si c'est un allié
+            else if (unit.GetFaction() == source.GetFaction())
+            {
+                shouldAffect = affectsAllies;
+            }
+            // C'est un ennemi
+            else
+            {
+                shouldAffect = affectsEnemies;
+            }
 
-                // Vérifie si c'est le lanceur
-                if (unit == source)
-                {
-                    shouldAffect = affectsSelf;
-                }
-                // Vérifie si c'est un allié
-                else if (unit.GetFaction() == source.GetFaction())
-                {
-                    shouldAffect = affectsAllies;
-                }
-                // C'est un ennemi
-                else
-                {
-                    shouldAffect = affectsEnemies;
-                }
-
-                if (shouldAffect)
-                {
-                    affectedUnits.Add(unit);
-                }
+            if (shouldAffect)
+            {
+                affectedUnits.Add(unit);
             }
         }
 
         return affectedUnits;
+    }
+
+    /// <summary>
+    /// Détermine si une case donnée est couverte par la forme de zone de la carte
+    /// (Circle/OneTile centrés sur l'épicentre ; Line/Cone tracés depuis le lanceur en
+    /// direction de l'épicentre, sur 8 directions ; WholeTeam ignore position/épicentre).
+    /// </summary>
+    private bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
+    {
+        switch (areaEffect)
+        {
+            case CardAreaEffect.OneTile:
+                return tilePos == epicenter;
+
+            case CardAreaEffect.Circle:
+                return Vector2.Distance(epicenter, tilePos) <= aoeRadius;
+
+            case CardAreaEffect.Cross:
+            {
+                Vector2Int diff = tilePos - epicenter;
+                bool onAxis = diff.x == 0 || diff.y == 0;
+                int dist = Mathf.Abs(diff.x) + Mathf.Abs(diff.y);
+                return onAxis && dist <= aoeRadius;
+            }
+
+            case CardAreaEffect.Line:
+            {
+                Vector2Int dir = GetSnappedDirection(source.GetCurrentGridPos(), epicenter);
+                if (dir == Vector2Int.zero) return tilePos == epicenter;
+
+                Vector2Int cur = source.GetCurrentGridPos();
+                for (int i = 1; i <= aoeRadius; i++)
+                {
+                    cur += dir;
+                    if (cur == tilePos) return true;
+                }
+                return false;
+            }
+
+            case CardAreaEffect.Cone:
+            {
+                Vector2Int sourcePos = source.GetCurrentGridPos();
+                Vector2Int dir = GetSnappedDirection(sourcePos, epicenter);
+                if (dir == Vector2Int.zero) return tilePos == epicenter;
+
+                Vector2Int toTile = tilePos - sourcePos;
+                if (toTile == Vector2Int.zero) return false; // le lanceur lui-même : géré via affectsSelf ailleurs
+
+                float distance = toTile.magnitude;
+                if (distance > aoeRadius) return false;
+
+                float angle = Vector2.Angle(dir, toTile);
+                return angle <= 45f; // ouverture totale de 90°
+            }
+
+            case CardAreaEffect.WholeTeam:
+                return true; // aucune contrainte de position (sans portée ni ligne de vue)
+
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Direction (8 cases possibles, diagonales incluses) la plus proche entre deux positions.
+    /// </summary>
+    private static Vector2Int GetSnappedDirection(Vector2Int from, Vector2Int to)
+    {
+        Vector2Int diff = to - from;
+        if (diff == Vector2Int.zero) return Vector2Int.zero;
+
+        int dx = diff.x == 0 ? 0 : (diff.x > 0 ? 1 : -1);
+        int dy = diff.y == 0 ? 0 : (diff.y > 0 ? 1 : -1);
+        return new Vector2Int(dx, dy);
     }
 
     /// <summary>

@@ -684,6 +684,21 @@ public class CardData : ScriptableObject
 
         GameLog.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
 
+        // --- MODIFICATEUR DE DÉGÂTS SORTANTS GÉNÉRIQUE (ex: Réflexe du grimpeur) ---
+        // Ne consomme le bonus que si la carte inflige réellement des dégâts, pour qu'il
+        // reste disponible si le joueur joue d'abord une carte de soin/buff.
+        if (finalDamage > 0 && source is IOutgoingDamageModifier dmgMod)
+        {
+            float multiplier = dmgMod.GetDamageMultiplier();
+            if (multiplier != 1f)
+            {
+                int before = finalDamage;
+                finalDamage = Mathf.RoundToInt(finalDamage * multiplier);
+                dmgMod.ConsumeDamageModifier();
+                GameLog.Log($"[CardData] {cardName}: dégâts modifiés par {source.name} : {before} -> {finalDamage} (x{multiplier:F2})");
+            }
+        }
+
         // Détermine l'épicentre de l'effet
         Vector2Int effectEpicenter;
         if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
@@ -1099,6 +1114,12 @@ public class CardData : ScriptableObject
             {
                 yield return null;
             }
+        }
+
+        // Notifie l'unité de son atterrissage (ex: Réflexe du grimpeur de L'Alpiniste)
+        if (source is IChargeLandingReactor landingReactor)
+        {
+            landingReactor.OnChargeLanded();
         }
 
         // Si un ennemi a été touché, applique le knockback et les dégâts

@@ -418,6 +418,14 @@ public class HandUIController : MonoBehaviour
     {
         GameLog.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
 
+        // Cas spécial : une carte "cible une carte de la main" (ex: Il triche) est sélectionnée
+        // et on clique sur une AUTRE carte -> c'est le ciblage, pas un changement de sélection.
+        if (_selectedCard != null && _selectedCard.targetsHandCard && clickedCard != _selectedCard)
+        {
+            PlayHandCardTargetingCard(clickedCard);
+            return;
+        }
+
         // Réinitialiser la position de la carte précédemment sélectionnée si elle suivait la souris
         ResetSelectedCardUIPosition();
         // Désélectionner visuellement toutes les cartes d'abord
@@ -624,6 +632,56 @@ public class HandUIController : MonoBehaviour
         GameLog.Log($"✅ Carte jouée avec succès");
     }
 
+    /// <summary>
+    /// Joue une carte qui cible une autre carte de la main (ex: Il triche sur "targetCard").
+    /// Maintenir Maj pendant le clic augmente le coût de +1 PA au lieu de le réduire de -1 PA.
+    /// </summary>
+    private void PlayHandCardTargetingCard(CardData targetCard)
+    {
+        if (_selectedCard == null || _playerDeckManager == null) return;
+
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        if (activeUnit == null)
+        {
+            Debug.LogError("Aucune unité active - impossible de jouer la carte.");
+            return;
+        }
+
+        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
+        if (!canPlayResult.IsValid)
+        {
+            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
+            return;
+        }
+
+        int delta = (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed) ? 1 : -1;
+        _playerDeckManager.ModifyCardCost(targetCard, delta);
+        GameLog.Log($"🎭 {_selectedCard.cardName} : coût de {targetCard.cardName} modifié de {(delta > 0 ? "+" : "")}{delta} PA (maintenir Maj = +1, sinon -1).");
+
+        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
+
+        _playerDeckManager.PlayCard(_selectedCard);
+
+        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
+        {
+            paUser.SpendPA(effectiveCostPA);
+        }
+
+        if (_selectedCard.costHP > 0)
+        {
+            activeUnit.PayHealth(_selectedCard.costHP);
+        }
+
+        Services.Grid.UpdateUnitUI();
+        _selectedCard = null;
+        ResetSelectedCardUIPosition();
+        ResetCardHighlights();
+        RefreshCardAffordability(); // le coût de targetCard a changé, rafraîchit son affichage en main
+        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+
+        GameLog.Log($"✅ Carte jouée avec succès");
+    }
+
     // Méthode pour surligner visuellement la carte sélectionnée
     private void HighlightSelectedCard(CardData cardToHighlight)
     {
@@ -651,6 +709,7 @@ public class HandUIController : MonoBehaviour
 
         // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
         int effectiveCostPA = _playerDeckManager != null ? _playerDeckManager.GetEffectiveCost(card) : card.costPA;
+        cardUIElement.RefreshCost(effectiveCostPA);
 
         // Vérification des PA
         if (effectiveCostPA > 0)

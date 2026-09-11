@@ -296,6 +296,10 @@ public class CardData : ScriptableObject
     [Tooltip("Types d'unités affectées dans la zone")]
     public CardAffectedTarget affectedTarget = CardAffectedTarget.None;
 
+    [Space(5)]
+    [Tooltip("Si true, cette carte cible une autre carte de la main du lanceur (ex: Il triche) au lieu d'une unité/tuile de la grille")]
+    public bool targetsHandCard = false;
+
     // Propriétés dérivées pour compatibilité
     public bool targetsUnit => targetType == CardTargetType.Self || targetType == CardTargetType.Enemy || targetType == CardTargetType.Ally || targetType == CardTargetType.AllyOrSelf || targetType == CardTargetType.AllyorEnemy || targetType == CardTargetType.AnyUnit;
     public bool targetsTile => targetType == CardTargetType.EmptyTile || targetType == CardTargetType.AnyTile || targetType == CardTargetType.EnemyOrTile;

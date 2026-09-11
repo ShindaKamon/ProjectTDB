@@ -125,6 +125,18 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         }
     }
 
+    /// <summary>
+    /// Met à jour uniquement le texte de coût affiché (ex: après un override via Il triche),
+    /// sans retoucher le reste des données de la carte.
+    /// </summary>
+    public void RefreshCost(int effectiveCostPA)
+    {
+        if (_cardCostText != null)
+        {
+            _cardCostText.text = effectiveCostPA.ToString();
+        }
+    }
+
     public void SetSelected(bool isSelected)
     {
         _isSelected = isSelected;

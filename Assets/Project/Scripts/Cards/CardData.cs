@@ -466,6 +466,17 @@ public class CardData : ScriptableObject
     [Tooltip("Si true, cette carte repositionne l'invocation active du lanceur au lieu d'en créer une nouvelle")]
     public bool isRepositionSummonCard = false;
 
+    // ╔════════════════════════════════════════════════════════════════════════════╗
+    // ║                         12. COMBO (Ace)                                    ║
+    // ╚════════════════════════════════════════════════════════════════════════════╝
+
+    [Header("═══ COMBO ═══")]
+    [Tooltip("Si true, les dégâts de cette carte augmentent selon les PA déjà dépensés ce tour avant elle")]
+    public bool scalesWithPASpentThisTurn = false;
+
+    [Tooltip("Bonus de dégâts par PA déjà dépensé ce tour avant cette carte")]
+    public int comboDamagePerPASpent = 0;
+
     // Alias pour compatibilité (anciennes propriétés → effectDuration)
     [System.Obsolete("Utiliser effectDuration à la place")]
     public int statBoostDuration { get => effectDuration; set => effectDuration = value; }
@@ -651,6 +662,11 @@ public class CardData : ScriptableObject
     {
         GameLog.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
+        // Passif "Main gagnante" (Ace) : détecte un motif avec la carte précédente AVANT de
+        // résoudre les effets, pour que le bonus s'applique à CETTE carte (ex: Paire).
+        IComboTracker comboTracker = source as IComboTracker;
+        comboTracker?.OnCardAboutToExecute(this);
+
         // Pour EnemyOrTile, si aucune unité n'est ciblée explicitement, on regarde sur la case cible
         if (targetType == CardTargetType.EnemyOrTile && targetUnit == null)
         {
@@ -741,6 +757,17 @@ public class CardData : ScriptableObject
 
         GameLog.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
 
+        // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis d'Ace) ---
+        if (scalesWithPASpentThisTurn && comboDamagePerPASpent > 0 && comboTracker != null)
+        {
+            int bonus = comboDamagePerPASpent * comboTracker.PASpentThisTurn;
+            if (bonus > 0)
+            {
+                finalDamage += bonus;
+                GameLog.Log($"[CardData] {cardName}: +{bonus} dégâts (combo, {comboTracker.PASpentThisTurn} PA déjà dépensés ce tour)");
+            }
+        }
+
         // --- MODIFICATEUR DE DÉGÂTS SORTANTS GÉNÉRIQUE (ex: Réflexe du grimpeur) ---
         // Ne consomme le bonus que si la carte inflige réellement des dégâts, pour qu'il
         // reste disponible si le joueur joue d'abord une carte de soin/buff.
@@ -804,7 +831,10 @@ public class CardData : ScriptableObject
                 if (totalUnitDamage > 0)
                 {
                     int hpBefore = unit.GetHealth();
-                    unit.TakeDamage(totalUnitDamage);
+                    if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
+                        unit.TakeRawDamage(totalUnitDamage); // Paire (Ace) : ignore les boucliers en %
+                    else
+                        unit.TakeDamage(totalUnitDamage);
                     if (unit.GetHealth() < hpBefore) damageDealt = true;
                     GameLog.Log($"  → {unit.name} prend {totalUnitDamage} dégâts AOE");
                 }
@@ -845,7 +875,10 @@ public class CardData : ScriptableObject
                 if (totalTargetDamage > 0)
                 {
                     int hpBefore = targetUnit.GetHealth();
-                    targetUnit.TakeDamage(totalTargetDamage);
+                    if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
+                        targetUnit.TakeRawDamage(totalTargetDamage); // Paire (Ace) : ignore les boucliers en %
+                    else
+                        targetUnit.TakeDamage(totalTargetDamage);
                     if (targetUnit.GetHealth() < hpBefore) damageDealt = true;
                     GameLog.Log($"{source.name} inflige {totalTargetDamage} dégâts à {targetUnit.name} avec {cardName}.");
                 }
@@ -1139,6 +1172,9 @@ public class CardData : ScriptableObject
             float ratio = Mathf.Clamp01(damageSharePercent / 100f);
             targetUnit.SetDamageShare(source, ratio, effectDuration > 0 ? effectDuration : 1);
         }
+
+        // Met à jour l'historique de combo (Main gagnante) pour la prochaine carte jouée
+        comboTracker?.OnCardResolved(this);
     }
 
     /// <summary>

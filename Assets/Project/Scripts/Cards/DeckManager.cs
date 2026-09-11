@@ -11,6 +11,12 @@ public class DeckManager : MonoBehaviour
     private List<CardData> _hand = new List<CardData>();
     private List<CardData> _discardPile = new List<CardData>();
 
+    // Surcouche de coût par carte (ex: "Il triche" d'Ace, ±1 PA). CardData est un
+    // ScriptableObject partagé : si la main contient 2 exemplaires de la même carte, les deux
+    // partagent le même override (limitation connue, acceptable tant qu'aucune UI de ciblage
+    // "carte de la main" n'existe pour choisir un exemplaire précis).
+    private readonly Dictionary<CardData, int> _costOverrides = new Dictionary<CardData, int>();
+
     public System.Action OnHandChanged; // Événement pour notifier les changements dans la main
     public System.Action<int> OnDeckChanged; // Notifie changement taille deck
     public System.Action<int> OnDiscardChanged; // Notifie changement taille défausse
@@ -113,6 +119,37 @@ public class DeckManager : MonoBehaviour
         {
             GameLog.LogWarning("La carte " + cardToPlay.cardName + " n'est pas dans la main.");
         }
+    }
+
+    /// <summary>
+    /// Coût effectif d'une carte, après application d'un éventuel override (ex: Il triche).
+    /// Toujours au moins 1 PA.
+    /// </summary>
+    public int GetEffectiveCost(CardData card)
+    {
+        if (card == null) return 0;
+        int delta = _costOverrides.TryGetValue(card, out int d) ? d : 0;
+        return Mathf.Max(1, card.costPA + delta);
+    }
+
+    /// <summary>
+    /// Modifie le coût d'une carte de ±delta PA (ex: Il triche modifie de ±1).
+    /// </summary>
+    public void ModifyCardCost(CardData card, int delta)
+    {
+        if (card == null || delta == 0) return;
+
+        int current = _costOverrides.TryGetValue(card, out int d) ? d : 0;
+        _costOverrides[card] = current + delta;
+        GameLog.Log($"DeckManager: coût de {card.cardName} modifié ({(delta > 0 ? "+" : "")}{delta}) -> coût effectif {GetEffectiveCost(card)}.");
+    }
+
+    /// <summary>
+    /// Retire tout override de coût sur une carte (ex: à la défausse/fin de partie).
+    /// </summary>
+    public void ClearCostOverride(CardData card)
+    {
+        if (card != null) _costOverrides.Remove(card);
     }
 
     private void ReshuffleDiscardIntoDeck()

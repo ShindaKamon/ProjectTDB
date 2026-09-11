@@ -21,14 +21,21 @@ public static class GameActionValidator
         if (card == null)
             return ValidationResult.Fail("Carte null - aucune carte sélectionnée");
 
+        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        int effectiveCostPA = card.costPA;
+        if (player.TryGetComponentSafe(out DeckManager deckManager))
+        {
+            effectiveCostPA = deckManager.GetEffectiveCost(card);
+        }
+
         // Validation des PA (uniquement pour IActionPointsUser)
-        if (card.costPA > 0)
+        if (effectiveCostPA > 0)
         {
             if (player is IActionPointsUser paUser)
             {
-                if (paUser.GetCurrentPA() < card.costPA)
+                if (paUser.GetCurrentPA() < effectiveCostPA)
                 {
-                    return ValidationResult.Fail($"PA insuffisants : {paUser.GetCurrentPA()}/{card.costPA} requis");
+                    return ValidationResult.Fail($"PA insuffisants : {paUser.GetCurrentPA()}/{effectiveCostPA} requis");
                 }
             }
             else

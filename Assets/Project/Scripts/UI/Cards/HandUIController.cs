@@ -595,12 +595,15 @@ public class HandUIController : MonoBehaviour
         {
             _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
         }
+        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
+
         _playerDeckManager.PlayCard(_selectedCard);
 
         // Déduire le coût en PA (validation déjà faite par CanPlayCard)
-        if (_selectedCard.costPA > 0 && activeUnit is IActionPointsUser paUser)
+        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
         {
-            paUser.SpendPA(_selectedCard.costPA);
+            paUser.SpendPA(effectiveCostPA);
         }
 
         // Déduire le coût en PV
@@ -646,12 +649,15 @@ public class HandUIController : MonoBehaviour
 
         bool canAfford = true;
 
+        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        int effectiveCostPA = _playerDeckManager != null ? _playerDeckManager.GetEffectiveCost(card) : card.costPA;
+
         // Vérification des PA
-        if (card.costPA > 0)
+        if (effectiveCostPA > 0)
         {
             if (activeUnit is IActionPointsUser paUser)
             {
-                canAfford = paUser.GetCurrentPA() >= card.costPA;
+                canAfford = paUser.GetCurrentPA() >= effectiveCostPA;
             }
             else
             {

@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Un accident d'escalade filme l'a brise ; il verifie et securise tout
     deux fois plutot qu'une.
   portrait: {fileID: 0}
-  prefab: {fileID: 0}
+  prefab: {fileID: 8911284436020867190, guid: ece5be0747ba1a348841f328d1f0f102, type: 3}
   emotionType: 0
   maxHealth: 100
   movementRange: 4

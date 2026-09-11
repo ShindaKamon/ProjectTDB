@@ -17,7 +17,7 @@ MonoBehaviour:
   description: A tout perdu sur une main legendaire ; il ne laisse plus jamais le
     hasard decider.
   portrait: {fileID: 0}
-  prefab: {fileID: 0}
+  prefab: {fileID: 5440214431298301374, guid: 557eea8d6f65ac94bac218fef4e68914, type: 3}
   emotionType: 0
   maxHealth: 100
   movementRange: 4

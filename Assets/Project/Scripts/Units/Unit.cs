@@ -241,17 +241,16 @@ public class Unit : MonoBehaviour, IMarkable
             Vector3 direction = _targetWorldPosition - transform.position;
             direction.y = 0; // On ignore la hauteur pour la rotation
 
-            // Applique la rotation seulement si on a une direction horizontale significative
-            // Cela évite que l'unité ne se mette de travers quand elle est très proche de la cible
+            // Applique la rotation seulement si on a une direction horizontale significative.
+            // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp,
+            // donc pas de passage transitoire par un angle en diagonale pendant les virages.
             if (direction.sqrMagnitude > 0.001f)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+                Vector3 cardinalDirection = Mathf.Abs(direction.x) > Mathf.Abs(direction.z)
+                    ? new Vector3(Mathf.Sign(direction.x), 0, 0)
+                    : new Vector3(0, 0, Mathf.Sign(direction.z));
+                transform.rotation = Quaternion.LookRotation(cardinalDirection);
             }
-
-            // CORRECTION : Force l'unité à rester parfaitement droite (X et Z à 0)
-            // Cela empêche l'unité de se pencher ou d'être "de travers" pendant le mouvement
-            transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
 
             transform.position = Vector3.MoveTowards(transform.position, _targetWorldPosition, _moveSpeed * Time.deltaTime);
 
@@ -278,9 +277,6 @@ public class Unit : MonoBehaviour, IMarkable
 
                         // Phase 3.4: Termine le mouvement
                         _unitState?.EndMoving();
-
-                        // CORRECTION : Force l'unité à être droite à l'arrêt
-                        transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
 
                         GameLog.Log($"{name} a atteint sa destination finale.");
                     }

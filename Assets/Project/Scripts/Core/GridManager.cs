@@ -634,6 +634,47 @@ public class GridManager : MonoBehaviour, IGridService
     public Unit GetUnitAtGridPos(Vector2Int gridPos) => _gridRepository.GetUnitAtGridPos(gridPos);
 
     /// <summary>
+    /// Instancie et enregistre une invocation sur la grille (voir IGridService.SpawnSummon).
+    /// </summary>
+    public SummonUnit SpawnSummon(GameObject prefab, Vector2Int gridPos, Unit owner, int maxHealth)
+    {
+        if (prefab == null)
+        {
+            GameLog.LogWarning("SpawnSummon: prefab null.");
+            return null;
+        }
+
+        if (!_tiles.ContainsKey(gridPos))
+        {
+            GameLog.LogWarning($"SpawnSummon: case {gridPos} hors grille.");
+            return null;
+        }
+
+        if (GetUnitAtGridPos(gridPos) != null)
+        {
+            GameLog.LogWarning($"SpawnSummon: case {gridPos} déjà occupée.");
+            return null;
+        }
+
+        GameObject summonGO = Instantiate(prefab);
+        SummonUnit summon = summonGO.GetComponent<SummonUnit>();
+        if (summon == null)
+        {
+            GameLog.LogWarning($"SpawnSummon: le prefab '{prefab.name}' n'a pas de composant SummonUnit.");
+            Destroy(summonGO);
+            return null;
+        }
+
+        summon.InitializeSummon(owner, gridPos, maxHealth);
+        _units.Add(summon);
+        _gridRepository.AddUnit(summon);
+        summon.OnUnitDied += HandleUnitDied; // même nettoyage que les unités initiales (voir InitUnits)
+
+        GameLog.Log($"Invocation créée : {summon.name} par {(owner != null ? owner.name : "inconnu")} à {gridPos}");
+        return summon;
+    }
+
+    /// <summary>
     /// Retourne la TurnStateMachine (Phase 3.4)
     /// </summary>
     public TurnStateMachine GetTurnStateMachine() => _turnStateMachine;

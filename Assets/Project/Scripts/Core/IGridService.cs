@@ -35,6 +35,13 @@ public interface IGridService
     /// </summary>
     Unit GetUnitAtGridPos(Vector2Int gridPos);
 
+    /// <summary>
+    /// Instancie et enregistre une invocation (SummonUnit) sur la grille, à la position
+    /// donnée. Retourne null si la case est invalide/occupée ou si le prefab n'a pas de
+    /// composant SummonUnit.
+    /// </summary>
+    SummonUnit SpawnSummon(GameObject prefab, Vector2Int gridPos, Unit owner, int maxHealth);
+
     // ========== TUILES ==========
 
     /// <summary>

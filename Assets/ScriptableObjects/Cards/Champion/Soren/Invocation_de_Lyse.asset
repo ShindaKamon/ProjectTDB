@@ -61,3 +61,6 @@ MonoBehaviour:
   rageScaling: 0
   rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 1
+  summonPrefab: {fileID: 6726855022100611391, guid: 1dc6c5e2b46bad34487c7fc86ab1fe94, type: 3}
+  isRepositionSummonCard: 0

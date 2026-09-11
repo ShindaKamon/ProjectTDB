@@ -2,13 +2,14 @@ using UnityEngine;
 
 /// <summary>
 /// SorenUnit hérite de Champion et représente le champion Soren.
-/// Squelette Phase 2 : PA/PM/stats de base uniquement.
-/// TODO Phase 3 : invocation de Lyse (Vector2Int, PV = moitié des PV actuels de Soren,
-/// recalculé en continu) + passif "Miroir fraternel" (écho à 40% de puissance sur une carte
-/// offensive si une invocation a une cible valide à sa propre portée).
+/// Passif : Miroir fraternel — géré côté carte (voir CardData.TryTriggerSummonEcho), qui
+/// consulte l'invocation active de Soren via ISummonOwner.
 /// </summary>
-public class SorenUnit : Champion, IActionPointsUser
+public class SorenUnit : Champion, IActionPointsUser, ISummonOwner
 {
+    private SummonUnit _activeSummon;
+    public SummonUnit ActiveSummon => _activeSummon;
+
     public new void Initialize(ChampionData data, Vector2Int initialGridPos)
     {
         base.Initialize(data, initialGridPos);
@@ -23,6 +24,54 @@ public class SorenUnit : Champion, IActionPointsUser
         if (Services.IsBattleUIServiceAvailable())
         {
             Services.BattleUI.RegisterPlayer(this);
+        }
+    }
+
+    // ========== ISummonOwner ==========
+
+    public void RegisterSummon(SummonUnit summon)
+    {
+        if (_activeSummon != null)
+        {
+            _activeSummon.OnUnitDied -= HandleSummonDied;
+        }
+
+        _activeSummon = summon;
+        summon.OnUnitDied += HandleSummonDied;
+        GameLog.Log($"{name}: invocation active enregistrée -> {summon.name}");
+    }
+
+    public void RepositionSummon(Vector2Int newPos)
+    {
+        if (_activeSummon == null)
+        {
+            GameLog.LogWarning($"{name}: aucune invocation active à repositionner.");
+            return;
+        }
+
+        if (Services.Grid.GetUnitAtGridPos(newPos) != null)
+        {
+            GameLog.LogWarning($"{name}: case {newPos} occupée, repositionnement annulé.");
+            return;
+        }
+
+        _activeSummon.TeleportTo(newPos);
+        GameLog.Log($"{name}: {_activeSummon.name} repositionnée à {newPos}");
+    }
+
+    private void HandleSummonDied(Unit diedUnit)
+    {
+        if ((Unit)_activeSummon == diedUnit)
+        {
+            _activeSummon = null;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (_activeSummon != null)
+        {
+            _activeSummon.OnUnitDied -= HandleSummonDied;
         }
     }
 }

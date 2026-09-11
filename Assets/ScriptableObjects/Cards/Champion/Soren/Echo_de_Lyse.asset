@@ -22,7 +22,7 @@ MonoBehaviour:
   costPA: 1
   costHP: 0
   costOther: 0
-  targetType: 0
+  targetType: 7
   targetRange: 3
   areaEffect: 0
   aoeRadius: 0
@@ -61,3 +61,6 @@ MonoBehaviour:
   rageScaling: 0
   rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 1

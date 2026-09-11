@@ -451,6 +451,21 @@ public class CardData : ScriptableObject
     [Tooltip("Dégâts supplémentaires par debuff sur la cible")]
     public int damagePerDebuff = 0;
 
+    // ╔════════════════════════════════════════════════════════════════════════════╗
+    // ║                         11. INVOCATION                                     ║
+    // ╚════════════════════════════════════════════════════════════════════════════╝
+
+    [Header("═══ INVOCATION ═══")]
+    [Tooltip("Si true, cette carte invoque une unité (SummonUnit) sur la case ciblée")]
+    public bool isSummonCard = false;
+
+    [Tooltip("Prefab de l'invocation (doit porter un composant SummonUnit)")]
+    public GameObject summonPrefab;
+
+    [Space(5)]
+    [Tooltip("Si true, cette carte repositionne l'invocation active du lanceur au lieu d'en créer une nouvelle")]
+    public bool isRepositionSummonCard = false;
+
     // Alias pour compatibilité (anciennes propriétés → effectDuration)
     [System.Obsolete("Utiliser effectDuration à la place")]
     public int statBoostDuration { get => effectDuration; set => effectDuration = value; }
@@ -589,6 +604,48 @@ public class CardData : ScriptableObject
         return affectedUnits;
     }
 
+    /// <summary>
+    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active et que cette
+    /// invocation a un ennemi à portée (même portée que la carte jouée, mesurée depuis sa
+    /// propre position), inflige un écho à 40% des dégâts de base sur l'ennemi le plus proche
+    /// de l'invocation. Choix de cible (le plus proche) et déclenchement automatique (plutôt
+    /// qu'un choix du joueur) sont des simplifications de première passe, à retravailler en
+    /// playtest si besoin (cf. notes de design du classeur source).
+    /// </summary>
+    private void TryTriggerSummonEcho(Unit source, int baseDamage)
+    {
+        if (baseDamage <= 0) return;
+        if (!(source is ISummonOwner summonOwner)) return;
+
+        SummonUnit summon = summonOwner.ActiveSummon;
+        if (summon == null) return;
+
+        UnitState summonState = summon.GetUnitState();
+        if (summonState != null && summonState.IsDead()) return;
+
+        Unit echoTarget = null;
+        float bestDist = float.MaxValue;
+
+        foreach (Unit unit in Services.Grid.GetAllUnits())
+        {
+            if (unit == null || unit == source || unit == summon) continue;
+            if (unit.GetFaction() == summon.GetFaction()) continue; // uniquement les ennemis de l'invocation
+
+            float dist = Vector2.Distance(summon.GetCurrentGridPos(), unit.GetCurrentGridPos());
+            if (dist <= targetRange && dist < bestDist)
+            {
+                bestDist = dist;
+                echoTarget = unit;
+            }
+        }
+
+        if (echoTarget == null) return;
+
+        int echoDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * 0.4f));
+        echoTarget.TakeDamage(echoDamage);
+        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {baseDamage}) sur {echoTarget.name}");
+    }
+
     // Méthode pour exécuter l'effet de la carte
     public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default)
     {
@@ -699,6 +756,21 @@ public class CardData : ScriptableObject
             }
         }
 
+        // --- INVOCATION / REPOSITIONNEMENT (ex: Invocation de Lyse, Écho de Lyse) ---
+        if (isSummonCard && summonPrefab != null)
+        {
+            Vector2Int spawnPos = targetsTile ? targetTile : source.GetCurrentGridPos();
+            var summon = Services.Grid.SpawnSummon(summonPrefab, spawnPos, source, source.GetHealth() / 2);
+            if (summon != null && source is ISummonOwner summonOwner)
+            {
+                summonOwner.RegisterSummon(summon);
+            }
+        }
+        else if (isRepositionSummonCard && targetsTile && source is ISummonOwner repositionOwner)
+        {
+            repositionOwner.RepositionSummon(targetTile);
+        }
+
         // Détermine l'épicentre de l'effet
         Vector2Int effectEpicenter;
         if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
@@ -804,6 +876,10 @@ public class CardData : ScriptableObject
                 GameLog.Log($"{source.name} se soigne de {finalHeal} PV avec {cardName}.");
             }
         }
+
+        // Passif "Miroir fraternel" (Soren) : écho à 40% de puissance sur une cible à portée
+        // de l'invocation active, si la carte jouée inflige des dégâts.
+        TryTriggerSummonEcho(source, finalDamage);
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)
         if (damageSelf > 0)

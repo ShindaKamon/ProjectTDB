@@ -29,42 +29,14 @@ public class CardCollection : ScriptableObject
     }
 
     /// <summary>
-    /// Récupère toutes les cartes d'une famille spécifique
+    /// Récupère toutes les cartes d'une émotion spécifique
     /// </summary>
-    public List<CardData> GetCardsByFamily(CardFamilyType family)
+    public List<CardData> GetCardsByEmotion(EmotionType emotion)
     {
         var result = new List<CardData>();
         foreach (var card in _allCards)
         {
-            if (card != null && card.familyType == family)
-                result.Add(card);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Récupère toutes les cartes d'une classe spécifique
-    /// </summary>
-    public List<CardData> GetCardsByClasse(CardClasseType classe)
-    {
-        var result = new List<CardData>();
-        foreach (var card in _allCards)
-        {
-            if (card != null && card.classeType == classe)
-                result.Add(card);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Récupère toutes les cartes d'un élément spécifique
-    /// </summary>
-    public List<CardData> GetCardsByElement(CardElementType element)
-    {
-        var result = new List<CardData>();
-        foreach (var card in _allCards)
-        {
-            if (card != null && card.elementType == element)
+            if (card != null && card.emotionType == emotion)
                 result.Add(card);
         }
         return result;

@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
 /// Popup pour créer un nouveau deck
-/// Permet de choisir un nom et une couleur
+/// Permet de choisir un nom et deux émotions (couleurs)
 /// </summary>
 public class CreateDeckPopup : MonoBehaviour
 {
@@ -14,25 +15,15 @@ public class CreateDeckPopup : MonoBehaviour
     [SerializeField] private Button _cancelButton;
     [SerializeField] private Transform _colorButtonsParent;
 
-    [Header("Couleurs disponibles")]
-    [SerializeField] private string[] _availableColors = new string[]
-    {
-        "#3498DB", // Bleu
-        "#2ECC71", // Vert
-        "#9B59B6", // Violet
-        "#E67E22", // Orange
-        "#1ABC9C", // Turquoise
-        "#E91E63"  // Rose
-    };
-
     [Header("Configuration")]
     [SerializeField] private GameObject _colorButtonPrefab;
+    private const int MAX_EMOTIONS = 2;
 
-    private string _selectedColor;
-    private Button _selectedColorButton;
-    private bool _isInitialized = false;
+    private List<EmotionType> _selectedEmotions = new List<EmotionType>();
+    private List<Button> _selectedEmotionButtons = new List<Button>();
+    private Dictionary<Button, EmotionType> _buttonToEmotion = new Dictionary<Button, EmotionType>();
 
-    public System.Action<string, string> OnDeckCreated; // (nom, couleur)
+    public System.Action<string, EmotionType, EmotionType> OnDeckCreated; // (nom, emotion1, emotion2)
 
     void Awake()
     {
@@ -45,54 +36,83 @@ public class CreateDeckPopup : MonoBehaviour
         if (_nameInput != null)
             _nameInput.onValueChanged.AddListener(OnNameChanged);
 
-        CreateColorButtons();
-        _isInitialized = true;
+        CreateEmotionButtons();
 
         // Ne pas appeler Hide() ici - le popup doit être désactivé dans la scène
     }
 
-    private void CreateColorButtons()
+    private void CreateEmotionButtons()
     {
         if (_colorButtonsParent == null || _colorButtonPrefab == null) return;
 
-        foreach (var hexColor in _availableColors)
+        // Créer un bouton pour chaque émotion (sauf None)
+        foreach (EmotionType emotion in System.Enum.GetValues(typeof(EmotionType)))
         {
+            if (emotion == EmotionType.None) continue;
+
             var buttonGO = Instantiate(_colorButtonPrefab, _colorButtonsParent);
             var button = buttonGO.GetComponent<Button>();
             var image = buttonGO.GetComponent<Image>();
 
-            if (image != null && ColorUtility.TryParseHtmlString(hexColor, out Color color))
+            // Appliquer la couleur de l'émotion
+            if (image != null)
             {
-                image.color = color;
+                image.color = CardVisualHelper.GetEmotionColor(emotion);
+            }
+
+            // Ajouter un texte avec le nom de l'émotion si possible
+            var text = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
+            if (text != null)
+            {
+                text.text = CardVisualHelper.GetEmotionName(emotion);
             }
 
             if (button != null)
             {
-                string colorCopy = hexColor; // Capture pour le closure
-                button.onClick.AddListener(() => SelectColor(colorCopy, button));
+                _buttonToEmotion[button] = emotion;
+                EmotionType capturedEmotion = emotion;
+                button.onClick.AddListener(() => SelectEmotion(capturedEmotion, button));
             }
         }
     }
 
-    private void SelectColor(string hexColor, Button button)
+    private void SelectEmotion(EmotionType emotion, Button button)
     {
-        _selectedColor = hexColor;
+        int existingIndex = _selectedEmotions.IndexOf(emotion);
 
-        // Désélectionner l'ancien bouton
-        if (_selectedColorButton != null)
+        // Si l'émotion est déjà sélectionnée, la désélectionner
+        if (existingIndex >= 0)
         {
-            var oldOutline = _selectedColorButton.GetComponent<Outline>();
-            if (oldOutline != null) oldOutline.enabled = false;
+            _selectedEmotions.RemoveAt(existingIndex);
+            _selectedEmotionButtons.RemoveAt(existingIndex);
+
+            var outline = button.GetComponent<Outline>();
+            if (outline != null) outline.enabled = false;
         }
-
-        // Sélectionner le nouveau
-        _selectedColorButton = button;
-        var outline = button.GetComponent<Outline>();
-        if (outline != null)
+        else
         {
-            outline.enabled = true;
-            outline.effectColor = Color.white;
-            outline.effectDistance = new Vector2(3, 3);
+            // Si on a déjà 2 émotions, retirer la première
+            if (_selectedEmotions.Count >= MAX_EMOTIONS)
+            {
+                var oldButton = _selectedEmotionButtons[0];
+                var oldOutline = oldButton.GetComponent<Outline>();
+                if (oldOutline != null) oldOutline.enabled = false;
+
+                _selectedEmotions.RemoveAt(0);
+                _selectedEmotionButtons.RemoveAt(0);
+            }
+
+            // Ajouter la nouvelle émotion
+            _selectedEmotions.Add(emotion);
+            _selectedEmotionButtons.Add(button);
+
+            var outline = button.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = true;
+                outline.effectColor = Color.white;
+                outline.effectDistance = new Vector2(3, 3);
+            }
         }
 
         UpdateCreateButtonState();
@@ -107,7 +127,7 @@ public class CreateDeckPopup : MonoBehaviour
     {
         if (_createButton != null)
         {
-            bool isValid = !string.IsNullOrWhiteSpace(_nameInput?.text) && !string.IsNullOrEmpty(_selectedColor);
+            bool isValid = !string.IsNullOrWhiteSpace(_nameInput?.text) && _selectedEmotions.Count == MAX_EMOTIONS;
             _createButton.interactable = isValid;
         }
     }
@@ -133,12 +153,16 @@ public class CreateDeckPopup : MonoBehaviour
 
         // Réinitialiser
         if (_nameInput != null)
+        {
             _nameInput.text = "";
+            _nameInput.ActivateInputField();
+            _nameInput.Select();
+        }
 
-        _selectedColor = null;
-        _selectedColorButton = null;
+        _selectedEmotions.Clear();
+        _selectedEmotionButtons.Clear();
 
-        // Désélectionner tous les boutons couleur
+        // Désélectionner tous les boutons émotion
         if (_colorButtonsParent != null)
         {
             foreach (Transform child in _colorButtonsParent)
@@ -158,10 +182,10 @@ public class CreateDeckPopup : MonoBehaviour
 
     private void OnCreatePressed()
     {
-        if (string.IsNullOrWhiteSpace(_nameInput?.text) || string.IsNullOrEmpty(_selectedColor))
+        if (string.IsNullOrWhiteSpace(_nameInput?.text) || _selectedEmotions.Count != MAX_EMOTIONS)
             return;
 
-        OnDeckCreated?.Invoke(_nameInput.text.Trim(), _selectedColor);
+        OnDeckCreated?.Invoke(_nameInput.text.Trim(), _selectedEmotions[0], _selectedEmotions[1]);
         Hide();
     }
 }

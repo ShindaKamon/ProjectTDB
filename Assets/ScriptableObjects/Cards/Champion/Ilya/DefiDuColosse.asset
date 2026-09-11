@@ -33,7 +33,7 @@ MonoBehaviour:
   defenseAmount: 10
   damageSelf: 0
   atkIncreased: 0
-  statBoostDuration: 2
+  effectDuration: 2
   effectType: 2
   drawAmount: 0
   cardToFetch: {fileID: 0}

@@ -16,7 +16,6 @@ public class DeckListUI : MonoBehaviour
     [Header("Boutons d'action")]
     [SerializeField] private Button _modifyButton;
     [SerializeField] private Button _deleteButton;
-    [SerializeField] private Button _selectButton;
 
     [Header("Popups")]
     [SerializeField] private CreateDeckPopup _createDeckPopup;
@@ -47,11 +46,77 @@ public class DeckListUI : MonoBehaviour
         if (_deleteButton != null)
             _deleteButton.onClick.AddListener(OnDeleteClicked);
 
-        if (_selectButton != null)
-            _selectButton.onClick.AddListener(OnSelectClicked);
-
         SetupPopupCallbacks();
+        ConfigureLayoutGroup();
         UpdateActionButtons();
+    }
+
+    /// <summary>
+    /// Configure le layout group du parent pour un affichage correct des slots
+    /// </summary>
+    private void ConfigureLayoutGroup()
+    {
+        if (_deckSlotsParent == null) return;
+
+        // Essayer HorizontalLayoutGroup d'abord
+        var horizontalLayout = _deckSlotsParent.GetComponent<HorizontalLayoutGroup>();
+        if (horizontalLayout != null)
+        {
+            // childControlWidth/Height = true pour que le LayoutElement soit respecté
+            horizontalLayout.childControlWidth = true;
+            horizontalLayout.childControlHeight = true;
+            horizontalLayout.childForceExpandWidth = false;
+            horizontalLayout.childForceExpandHeight = false;
+            horizontalLayout.spacing = 15f;
+            horizontalLayout.childAlignment = TextAnchor.MiddleCenter;
+        }
+        else
+        {
+            // Sinon GridLayoutGroup
+            var gridLayout = _deckSlotsParent.GetComponent<GridLayoutGroup>();
+            if (gridLayout != null)
+            {
+                gridLayout.cellSize = new Vector2(120f, 80f);
+                gridLayout.spacing = new Vector2(15f, 15f);
+                gridLayout.childAlignment = TextAnchor.MiddleCenter;
+            }
+            else
+            {
+                // Si aucun layout group, ajouter un HorizontalLayoutGroup
+                horizontalLayout = _deckSlotsParent.gameObject.AddComponent<HorizontalLayoutGroup>();
+                horizontalLayout.childControlWidth = true;
+                horizontalLayout.childControlHeight = true;
+                horizontalLayout.childForceExpandWidth = false;
+                horizontalLayout.childForceExpandHeight = false;
+                horizontalLayout.spacing = 15f;
+                horizontalLayout.childAlignment = TextAnchor.MiddleCenter;
+            }
+        }
+
+        // Configurer le bouton "+" pour qu'il ait la bonne taille dans le layout
+        ConfigureAddButton();
+    }
+
+    /// <summary>
+    /// Configure le bouton "+" pour qu'il s'aligne correctement avec les slots
+    /// </summary>
+    private void ConfigureAddButton()
+    {
+        if (_addDeckButton == null) return;
+
+        // Configurer le LayoutElement du bouton "+" (requis pour childControlWidth/Height)
+        var layoutElement = _addDeckButton.GetComponent<LayoutElement>();
+        if (layoutElement == null)
+            layoutElement = _addDeckButton.gameObject.AddComponent<LayoutElement>();
+
+        // Taille carrée pour le bouton "+"
+        layoutElement.minWidth = 80f;
+        layoutElement.minHeight = 80f;
+        layoutElement.preferredWidth = 80f;
+        layoutElement.preferredHeight = 80f;
+
+        // S'assurer que le bouton est toujours à la fin du layout
+        _addDeckButton.transform.SetAsLastSibling();
     }
 
     private void SetupPopupCallbacks()
@@ -96,7 +161,7 @@ public class DeckListUI : MonoBehaviour
 
         if (_currentDecksData == null || _deckSlotPrefab == null) return;
 
-        // Créer les nouveaux slots AVANT le bouton "+"
+        // Créer les nouveaux slots
         for (int i = 0; i < _currentDecksData.decks.Count; i++)
         {
             var deckData = _currentDecksData.decks[i];
@@ -105,7 +170,7 @@ public class DeckListUI : MonoBehaviour
 
             if (slot != null)
             {
-                // Placer le slot à l'index i (avant le bouton "+")
+                // Placer le slot à l'index i
                 slotGO.transform.SetSiblingIndex(i);
 
                 slot.Setup(deckData, i);
@@ -113,6 +178,12 @@ public class DeckListUI : MonoBehaviour
                 slot.OnSlotClicked += OnDeckSlotClicked;
                 _deckSlots.Add(slot);
             }
+        }
+
+        // S'assurer que le bouton "+" est toujours à la fin
+        if (_addDeckButton != null && _addDeckButton.transform.parent == _deckSlotsParent)
+        {
+            _addDeckButton.transform.SetAsLastSibling();
         }
     }
 
@@ -128,7 +199,8 @@ public class DeckListUI : MonoBehaviour
 
         if (_deckEditor != null && deckToShow != null)
         {
-            var cards = DeckSaveManager.GetCardsFromNames(deckToShow.cardNames, _cardCollection);
+            // Utilise directement le startingDeck pour le deck de base
+            var cards = DeckSaveManager.GetDeckCards(_currentChampion, _clickedDeckIndex, _cardCollection);
             _deckEditor.ShowDeck(_currentChampion, _clickedDeckIndex, deckToShow, cards, _cardCollection);
         }
     }
@@ -146,9 +218,6 @@ public class DeckListUI : MonoBehaviour
 
         if (_modifyButton != null)
             _modifyButton.interactable = hasDeckSelected;
-
-        if (_selectButton != null)
-            _selectButton.interactable = hasDeckSelected;
 
         // Le bouton supprimer est désactivé pour le deck de base (index 0 ou isDefault)
         if (_deleteButton != null)
@@ -198,7 +267,7 @@ public class DeckListUI : MonoBehaviour
         if (_deckEditor != null && _cardCollection != null)
         {
             var deck = _currentDecksData.decks[_clickedDeckIndex];
-            var cards = DeckSaveManager.GetCardsFromNames(deck.cardNames, _cardCollection);
+            var cards = DeckSaveManager.GetDeckCards(_currentChampion, _clickedDeckIndex, _cardCollection);
             _deckEditor.Open(_currentChampion, _clickedDeckIndex, deck, cards, _cardCollection);
         }
     }
@@ -218,20 +287,9 @@ public class DeckListUI : MonoBehaviour
             _confirmDeletePopup.Show(_clickedDeckIndex, deck.deckName);
     }
 
-    private void OnSelectClicked()
+    private void HandleDeckCreated(string deckName, EmotionType emotion1, EmotionType emotion2)
     {
-        if (_clickedDeckIndex < 0 || _currentDecksData == null) return;
-
-        DeckSaveManager.SelectDeck(_currentChampion, _clickedDeckIndex);
-        _currentDecksData = DeckSaveManager.GetDecksForChampion(_currentChampion);
-
-        NotifyDeckSelected();
-        Debug.Log($"Deck '{_currentDecksData.decks[_clickedDeckIndex].deckName}' sélectionné pour le combat.");
-    }
-
-    private void HandleDeckCreated(string deckName, string color)
-    {
-        var newDeck = DeckSaveManager.CreateDeck(_currentChampion, deckName, color);
+        var newDeck = DeckSaveManager.CreateDeck(_currentChampion, deckName, emotion1, emotion2);
         if (newDeck != null)
         {
             _currentDecksData = DeckSaveManager.GetDecksForChampion(_currentChampion);
@@ -293,25 +351,17 @@ public class DeckListUI : MonoBehaviour
 
     private void NotifyDeckSelected()
     {
-        if (_cardCollection == null || _currentDecksData == null) return;
+        if (_cardCollection == null || _currentDecksData == null || _currentChampion == null) return;
 
-        var selectedDeck = _currentDecksData.GetSelectedDeck();
-        if (selectedDeck != null)
-        {
-            var cards = DeckSaveManager.GetCardsFromNames(selectedDeck.cardNames, _cardCollection);
-            OnDeckSelected?.Invoke(cards);
-        }
+        var cards = DeckSaveManager.GetDeckCards(_currentChampion, _currentDecksData.selectedDeckIndex, _cardCollection);
+        OnDeckSelected?.Invoke(cards);
     }
 
     public List<CardData> GetSelectedDeckCards()
     {
-        if (_cardCollection == null || _currentDecksData == null)
+        if (_cardCollection == null || _currentDecksData == null || _currentChampion == null)
             return new List<CardData>();
 
-        var selectedDeck = _currentDecksData.GetSelectedDeck();
-        if (selectedDeck == null)
-            return new List<CardData>();
-
-        return DeckSaveManager.GetCardsFromNames(selectedDeck.cardNames, _cardCollection);
+        return DeckSaveManager.GetDeckCards(_currentChampion, _currentDecksData.selectedDeckIndex, _cardCollection);
     }
 }

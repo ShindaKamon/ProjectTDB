@@ -1,3 +1,5 @@
 ﻿<Solution>
-  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="ProjectTDB.csproj" />
+  <Project Path="ProjectTDB.Tests.EditMode.csproj" />
+  <Project Path="ProjectTDB.Editor.csproj" />
 </Solution>

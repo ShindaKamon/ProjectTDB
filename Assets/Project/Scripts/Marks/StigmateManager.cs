@@ -43,7 +43,7 @@ public static class StigmateManager
         // Vérifie si la cible a déjà un Stigmate de cette source
         if (target.HasMarkFromSource(MarkType.Stigmate, source))
         {
-            Debug.Log($"[Stigmate] {target.name} a déjà un Stigmate de {source.name}");
+            GameLog.Log($"[Stigmate] {target.name} a déjà un Stigmate de {source.name}");
             return;
         }
 
@@ -55,12 +55,12 @@ public static class StigmateManager
         {
             Unit oldestMarked = markedUnits[0]; // La première est la plus ancienne
             oldestMarked.RemoveMark(MarkType.Stigmate);
-            Debug.Log($"[Stigmate] Limite atteinte ! {oldestMarked.name} perd son Stigmate (remplacé par {target.name})");
+            GameLog.Log($"[Stigmate] Limite atteinte ! {oldestMarked.name} perd son Stigmate (remplacé par {target.name})");
         }
 
         // Applique le nouveau Stigmate (permanent = duration 0, pas de stacks = 1)
         target.ApplyMark(MarkType.Stigmate, source, 1, 0, healPerMark);
-        Debug.Log($"[Stigmate] {source.name} marque {target.name} avec Stigmate (heal bonus: {healPerMark})");
+        GameLog.Log($"[Stigmate] {source.name} marque {target.name} avec Stigmate (heal bonus: {healPerMark})");
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public static class StigmateManager
                 // Enregistre la perte de PA pour le prochain tour de l'ennemi
                 RegisterPALoss(markedUnit, PA_LOSS_ON_CONSUME);
 
-                Debug.Log($"[Stigmate] Consommé sur {markedUnit.name} - Heal: {healAmount}, PA -{PA_LOSS_ON_CONSUME} au prochain tour");
+                GameLog.Log($"[Stigmate] Consommé sur {markedUnit.name} - Heal: {healAmount}, PA -{PA_LOSS_ON_CONSUME} au prochain tour");
             }
         }
 
@@ -102,7 +102,7 @@ public static class StigmateManager
         if (totalHeal > 0)
         {
             source.Heal(totalHeal);
-            Debug.Log($"[Stigmate] {source.name} récupère {totalHeal} PV total ({consumedCount} Stigmate(s) consommé(s))");
+            GameLog.Log($"[Stigmate] {source.name} récupère {totalHeal} PV total ({consumedCount} Stigmate(s) consommé(s))");
         }
 
         return consumedCount;
@@ -149,7 +149,7 @@ public static class StigmateManager
             if (unit is IActionPointsUser paUser)
             {
                 paUser.ReduceCurrentPA(paLoss);
-                Debug.Log($"[Stigmate] {unit.name} perd {paLoss} PA (effet Stigmate)");
+                GameLog.Log($"[Stigmate] {unit.name} perd {paLoss} PA (effet Stigmate)");
             }
 
             _pendingPALoss.Remove(unit);
@@ -222,7 +222,7 @@ public static class StigmateManager
 
         if (markedUnits.Count > 0)
         {
-            Debug.Log($"[Stigmate] {source.name} est mort - {markedUnits.Count} Stigmate(s) retiré(s)");
+            GameLog.Log($"[Stigmate] {source.name} est mort - {markedUnits.Count} Stigmate(s) retiré(s)");
         }
     }
 }

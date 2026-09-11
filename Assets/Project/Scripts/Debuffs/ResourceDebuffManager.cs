@@ -65,7 +65,7 @@ public static class ResourceDebuffManager
             }
 
             _activeDebuffs[target].Add(debuff);
-            Debug.Log($"[Debuff] {target.name} reçoit un debuff de ressources pour {duration} tour(s) (PA: -{paReduction}, PM: -{pmReduction})");
+            GameLog.Log($"[Debuff] {target.name} reçoit un debuff de ressources pour {duration} tour(s) (PA: -{paReduction}, PM: -{pmReduction})");
         }
     }
 
@@ -78,14 +78,14 @@ public static class ResourceDebuffManager
         if (paReduction > 0 && target is IActionPointsUser paUser)
         {
             paUser.ReduceCurrentPA(paReduction);
-            Debug.Log($"⚡ {source?.name ?? "Effet"} retire {paReduction} PA à {target.name}");
+            GameLog.Log($"⚡ {source?.name ?? "Effet"} retire {paReduction} PA à {target.name}");
         }
 
         // Réduction de PM
         if (pmReduction > 0)
         {
             target.SpendMovement(pmReduction);
-            Debug.Log($"⚡ {source?.name ?? "Effet"} retire {pmReduction} PM à {target.name}");
+            GameLog.Log($"⚡ {source?.name ?? "Effet"} retire {pmReduction} PM à {target.name}");
         }
     }
 
@@ -117,7 +117,7 @@ public static class ResourceDebuffManager
             {
                 // Le debuff expire
                 debuffs.RemoveAt(i);
-                Debug.Log($"[Debuff] Debuff de ressources expiré sur {unit.name}");
+                GameLog.Log($"[Debuff] Debuff de ressources expiré sur {unit.name}");
             }
             else
             {

@@ -174,7 +174,7 @@ public static class ComponentLocator
         T obj = Object.FindAnyObjectByType<T>();
         if (obj == null && !string.IsNullOrEmpty(contextMessage))
         {
-            Debug.LogWarning($"ComponentLocator: {typeof(T).Name} introuvable dans la scène - {contextMessage}");
+            GameLog.LogWarning($"ComponentLocator: {typeof(T).Name} introuvable dans la scène - {contextMessage}");
         }
         return obj;
     }

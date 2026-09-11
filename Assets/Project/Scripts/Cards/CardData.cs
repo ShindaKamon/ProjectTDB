@@ -576,7 +576,7 @@ public class CardData : ScriptableObject
     // Méthode pour exécuter l'effet de la carte
     public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default)
     {
-        Debug.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
+        GameLog.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
         // Pour EnemyOrTile, si aucune unité n'est ciblée explicitement, on regarde sur la case cible
         if (targetType == CardTargetType.EnemyOrTile && targetUnit == null)
@@ -649,7 +649,7 @@ public class CardData : ScriptableObject
                     if (lifestealFixedAmount > 0) finalLifesteal += totalBonus;
                     // Draw et Fetch restent inchangés (pas de scaling)
 
-                    Debug.Log($"🔥 RAGE BOOST (Flat) ! {source.name} consomme {rageConsumed} Rage → +{totalBonus} aux effets");
+                    GameLog.Log($"🔥 RAGE BOOST (Flat) ! {source.name} consomme {rageConsumed} Rage → +{totalBonus} aux effets");
                 }
                 else // RageScalingType.Percent
                 {
@@ -661,12 +661,12 @@ public class CardData : ScriptableObject
                     finalAtk = Mathf.RoundToInt(finalAtk * percentBonus);
                     finalLifesteal = Mathf.RoundToInt(finalLifesteal * percentBonus);
 
-                    Debug.Log($"🔥 RAGE BOOST (Percent) ! {source.name} consomme {rageConsumed} Rage → x{percentBonus:F2} aux effets");
+                    GameLog.Log($"🔥 RAGE BOOST (Percent) ! {source.name} consomme {rageConsumed} Rage → x{percentBonus:F2} aux effets");
                 }
             }
         }
 
-        Debug.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
+        GameLog.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
 
         // Détermine l'épicentre de l'effet
         Vector2Int effectEpicenter;
@@ -687,7 +687,7 @@ public class CardData : ScriptableObject
         if (isAOE && aoeRadius > 0)
         {
             List<Unit> affectedUnits = GetAOEAffectedUnits(source, effectEpicenter);
-            Debug.Log($"🔥 AOE {cardName} : {affectedUnits.Count} unités affectées dans un rayon de {aoeRadius}");
+            GameLog.Log($"🔥 AOE {cardName} : {affectedUnits.Count} unités affectées dans un rayon de {aoeRadius}");
 
             foreach (Unit unit in affectedUnits)
             {
@@ -703,12 +703,12 @@ public class CardData : ScriptableObject
                     int hpBefore = unit.GetHealth();
                     unit.TakeDamage(totalUnitDamage);
                     if (unit.GetHealth() < hpBefore) damageDealt = true;
-                    Debug.Log($"  → {unit.name} prend {totalUnitDamage} dégâts AOE");
+                    GameLog.Log($"  → {unit.name} prend {totalUnitDamage} dégâts AOE");
                 }
                 if (finalHeal > 0)
                 {
                     unit.Heal(finalHeal);
-                    Debug.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
+                    GameLog.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
                 }
                 if (healSelfPerMarkOnTarget > 0)
                 {
@@ -717,13 +717,13 @@ public class CardData : ScriptableObject
                     if (healSelf > 0)
                     {
                         source.Heal(healSelf);
-                        Debug.Log($"  → {source.name} récupère {healSelf} PV (AOE sur {unit.name})");
+                        GameLog.Log($"  → {source.name} récupère {healSelf} PV (AOE sur {unit.name})");
                     }
                 }
                 if (finalLifesteal > 0 && damageDealt)
                 {
                     source.Heal(finalLifesteal);
-                    Debug.Log($"  → {source.name} vole {finalLifesteal} PV à {unit.name} (AOE)");
+                    GameLog.Log($"  → {source.name} vole {finalLifesteal} PV à {unit.name} (AOE)");
                 }
             }
         }
@@ -744,12 +744,12 @@ public class CardData : ScriptableObject
                     int hpBefore = targetUnit.GetHealth();
                     targetUnit.TakeDamage(totalTargetDamage);
                     if (targetUnit.GetHealth() < hpBefore) damageDealt = true;
-                    Debug.Log($"{source.name} inflige {totalTargetDamage} dégâts à {targetUnit.name} avec {cardName}.");
+                    GameLog.Log($"{source.name} inflige {totalTargetDamage} dégâts à {targetUnit.name} avec {cardName}.");
                 }
                 if (finalHeal > 0)
                 {
                     targetUnit.Heal(finalHeal);
-                    Debug.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
+                    GameLog.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
                 }
                 if (healSelfPerMarkOnTarget > 0)
                 {
@@ -758,19 +758,19 @@ public class CardData : ScriptableObject
                     if (healSelf > 0)
                     {
                         source.Heal(healSelf);
-                        Debug.Log($"{source.name} récupère {healSelf} PV grâce aux marques sur {targetUnit.name} ({markCount} marques).");
+                        GameLog.Log($"{source.name} récupère {healSelf} PV grâce aux marques sur {targetUnit.name} ({markCount} marques).");
                     }
                 }
                 if (finalLifesteal > 0 && damageDealt)
                 {
                     source.Heal(finalLifesteal);
-                    Debug.Log($"{source.name} vole {finalLifesteal} PV à {targetUnit.name}.");
+                    GameLog.Log($"{source.name} vole {finalLifesteal} PV à {targetUnit.name}.");
                 }
             }
             else if (targetType == CardTargetType.Self && finalHeal > 0)
             {
                 source.Heal(finalHeal);
-                Debug.Log($"{source.name} se soigne de {finalHeal} PV avec {cardName}.");
+                GameLog.Log($"{source.name} se soigne de {finalHeal} PV avec {cardName}.");
             }
         }
 
@@ -778,14 +778,14 @@ public class CardData : ScriptableObject
         if (damageSelf > 0)
         {
             source.TakeDamage(damageSelf);
-            Debug.Log($"{source.name} subit {damageSelf} dégâts de contrecoup avec {cardName}.");
+            GameLog.Log($"{source.name} subit {damageSelf} dégâts de contrecoup avec {cardName}.");
         }
 
         if (movementAmount > 0)
         {
             // La logique de mouvement sera gérée par l'InputManager ou une autre entité
             // pour l'instant, nous pouvons juste loguer l'intention.
-            Debug.Log($"{source.name} gagne {movementAmount} points de mouvement supplémentaires avec {cardName}.");
+            GameLog.Log($"{source.name} gagne {movementAmount} points de mouvement supplémentaires avec {cardName}.");
         }
 
         // --- NOUVELLES CAPACITÉS ---
@@ -830,7 +830,7 @@ public class CardData : ScriptableObject
 
                 deckManager.ShuffleDeck();
 
-                Debug.Log($"{source.name} ajoute {cardsToAddCount}x {cardToAddToDeck.cardName} à son deck.");
+                GameLog.Log($"{source.name} ajoute {cardsToAddCount}x {cardToAddToDeck.cardName} à son deck.");
             }
         }
 
@@ -875,7 +875,7 @@ public class CardData : ScriptableObject
                 // Consomme tous les Stigmates appliqués par ce champion
                 // healAmount de la carte = heal par ennemi marqué
                 int consumedCount = StigmateManager.ConsumeAllStigmates(source, healAmount);
-                Debug.Log($"🎯 STIGMATE ! {consumedCount} marque(s) consommée(s), heal: {healAmount} par marque");
+                GameLog.Log($"🎯 STIGMATE ! {consumedCount} marque(s) consommée(s), heal: {healAmount} par marque");
             }
             else
             {
@@ -933,7 +933,7 @@ public class CardData : ScriptableObject
                             if (bonusDamage > 0)
                             {
                                 markTarget.TakeDamage(bonusDamage);
-                                Debug.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {consumedMark.markType})");
+                                GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {consumedMark.markType})");
                             }
 
                             // Bonus de la marque
@@ -941,7 +941,7 @@ public class CardData : ScriptableObject
                             {
                                 int markBonus = consumedMark.bonusValue * consumedMark.stacks;
                                 markTarget.TakeDamage(markBonus);
-                                Debug.Log($"🎯 BONUS DE MARQUE ! {markBonus} dégâts supplémentaires");
+                                GameLog.Log($"🎯 BONUS DE MARQUE ! {markBonus} dégâts supplémentaires");
                             }
 
                             // Heal par marque consommée
@@ -965,14 +965,14 @@ public class CardData : ScriptableObject
                             if (bonusDamage > 0)
                             {
                                 markTarget.TakeDamage(bonusDamage);
-                                Debug.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {markToConsume})");
+                                GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {markToConsume})");
                             }
 
                             // Bonus supplémentaire de la marque
                             if (consumedMark.bonusValue > 0)
                             {
                                 markTarget.TakeDamage(consumedMark.bonusValue * consumedMark.stacks);
-                                Debug.Log($"🎯 BONUS DE MARQUE ! {consumedMark.bonusValue * consumedMark.stacks} dégâts supplémentaires");
+                                GameLog.Log($"🎯 BONUS DE MARQUE ! {consumedMark.bonusValue * consumedMark.stacks} dégâts supplémentaires");
                             }
 
                             // Heal par marque consommée
@@ -988,7 +988,7 @@ public class CardData : ScriptableObject
                 if (totalHeal > 0)
                 {
                     source.Heal(totalHeal);
-                    Debug.Log($"🎯 {source.name} récupère {totalHeal} PV (marques consommées)");
+                    GameLog.Log($"🎯 {source.name} récupère {totalHeal} PV (marques consommées)");
                 }
             }
         }
@@ -1019,7 +1019,7 @@ public class CardData : ScriptableObject
                 {
                     // Système générique pour les autres types de marques
                     markTarget.ApplyMark(markToApply, source, markStacks, markDuration, markBonusValue);
-                    Debug.Log($"🎯 MARQUE APPLIQUÉE ! {source.name} marque {markTarget.name} avec {markToApply} ({markStacks} stack(s), durée: {(markDuration == 0 ? "permanent" : markDuration + " tours")})");
+                    GameLog.Log($"🎯 MARQUE APPLIQUÉE ! {source.name} marque {markTarget.name} avec {markToApply} ({markStacks} stack(s), durée: {(markDuration == 0 ? "permanent" : markDuration + " tours")})");
                 }
             }
         }
@@ -1044,7 +1044,7 @@ public class CardData : ScriptableObject
     {
         if (!isChargeCard)
         {
-            Debug.LogWarning($"{cardName} n'est pas une carte de charge!");
+            GameLog.LogWarning($"{cardName} n'est pas une carte de charge!");
             onComplete?.Invoke();
             return;
         }
@@ -1065,18 +1065,18 @@ public class CardData : ScriptableObject
 
         if (!pathInfo.IsValid)
         {
-            Debug.LogWarning($"Charge invalide : la cible n'est pas en ligne droite!");
+            GameLog.LogWarning($"Charge invalide : la cible n'est pas en ligne droite!");
             onComplete?.Invoke();
             yield break;
         }
 
-        Debug.Log($"🏃 CHARGE ! {source.name} de {sourcePos} vers {targetTilePos} (distance: {pathInfo.Distance}, direction: {pathInfo.StepDirection})");
+        GameLog.Log($"🏃 CHARGE ! {source.name} de {sourcePos} vers {targetTilePos} (distance: {pathInfo.Distance}, direction: {pathInfo.StepDirection})");
 
         // Déplace le lanceur
         if (pathInfo.Path.Count > 0)
         {
             source.MoveToTile(pathInfo.Path);
-            Debug.Log($"🏃 CHARGE ! {source.name} se déplace ({pathInfo.Path.Count} cases)");
+            GameLog.Log($"🏃 CHARGE ! {source.name} se déplace ({pathInfo.Path.Count} cases)");
 
             // Attend que le mouvement soit terminé
             while (source.IsMoving())
@@ -1088,19 +1088,19 @@ public class CardData : ScriptableObject
         // Si un ennemi a été touché, applique le knockback et les dégâts
         if (pathInfo.EnemyHit != null)
         {
-            Debug.Log($"🏃 CHARGE ! Ennemi touché: {pathInfo.EnemyHit.name}, knockback: {knockbackDistance}, dégâts: {damageAmount}");
+            GameLog.Log($"🏃 CHARGE ! Ennemi touché: {pathInfo.EnemyHit.name}, knockback: {knockbackDistance}, dégâts: {damageAmount}");
 
             // Applique les dégâts de la charge
             if (damageAmount > 0)
             {
                 pathInfo.EnemyHit.TakeDamage(damageAmount);
-                Debug.Log($"🏃 CHARGE ! {source.name} inflige {damageAmount} dégâts à {pathInfo.EnemyHit.name}");
+                GameLog.Log($"🏃 CHARGE ! {source.name} inflige {damageAmount} dégâts à {pathInfo.EnemyHit.name}");
             }
 
             // Applique le knockback APRÈS les dégâts et APRÈS le mouvement
             if (knockbackDistance > 0)
             {
-                Debug.Log($"🏃 KNOCKBACK ! Direction: {pathInfo.StepDirection}, Distance: {knockbackDistance}");
+                GameLog.Log($"🏃 KNOCKBACK ! Direction: {pathInfo.StepDirection}, Distance: {knockbackDistance}");
                 pathInfo.EnemyHit.ApplyKnockback(pathInfo.StepDirection, knockbackDistance);
 
                 // Attend que le knockback soit terminé
@@ -1112,7 +1112,7 @@ public class CardData : ScriptableObject
         }
         else
         {
-            Debug.Log($"🏃 CHARGE ! Aucun ennemi touché");
+            GameLog.Log($"🏃 CHARGE ! Aucun ennemi touché");
         }
 
         // Rafraîchit l'affichage de la portée de mouvement après la charge et le knockback

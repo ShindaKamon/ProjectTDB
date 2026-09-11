@@ -59,7 +59,7 @@ public class TurnStateMachine
     {
         if (_currentState != TurnState.Initializing)
         {
-            Debug.LogWarning($"TurnStateMachine: Cannot start battle from state {_currentState}");
+            GameLog.LogWarning($"TurnStateMachine: Cannot start battle from state {_currentState}");
             return;
         }
 
@@ -82,7 +82,7 @@ public class TurnStateMachine
     {
         if (!CanTransitionToPlayerTurn())
         {
-            Debug.LogWarning($"TurnStateMachine: Cannot begin player turn from state {_currentState}");
+            GameLog.LogWarning($"TurnStateMachine: Cannot begin player turn from state {_currentState}");
             return;
         }
 
@@ -97,7 +97,7 @@ public class TurnStateMachine
     {
         if (!CanTransitionToEnemyTurn())
         {
-            Debug.LogWarning($"TurnStateMachine: Cannot begin enemy turn from state {_currentState}");
+            GameLog.LogWarning($"TurnStateMachine: Cannot begin enemy turn from state {_currentState}");
             return;
         }
 
@@ -112,7 +112,7 @@ public class TurnStateMachine
     {
         if (_currentState != TurnState.PlayerTurn && _currentState != TurnState.EnemyTurn)
         {
-            Debug.LogWarning($"TurnStateMachine: Cannot begin transition from state {_currentState}");
+            GameLog.LogWarning($"TurnStateMachine: Cannot begin transition from state {_currentState}");
             return;
         }
 
@@ -182,14 +182,14 @@ public class TurnStateMachine
     {
         if (_currentState == newState)
         {
-            Debug.LogWarning($"TurnStateMachine: Already in state {newState}");
+            GameLog.LogWarning($"TurnStateMachine: Already in state {newState}");
             return;
         }
 
         TurnState oldState = _currentState;
         _currentState = newState;
 
-        Debug.Log($"TurnStateMachine: {oldState} → {newState}");
+        GameLog.Log($"TurnStateMachine: {oldState} → {newState}");
 
         // Notifie les abonnés
         OnStateChanged?.Invoke(oldState, newState);

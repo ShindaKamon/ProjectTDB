@@ -117,11 +117,11 @@ public class Unit : MonoBehaviour, IMarkable
                     transform.rotation = Quaternion.identity; // Face aux ennemis (Nord)
                 }
                 
-                Debug.Log($"{name} initialisé et positionné à la tuile {_currentGridPos}");
+                GameLog.Log($"{name} initialisé et positionné à la tuile {_currentGridPos}");
             }
             else
             {
-                Debug.LogWarning($"Impossible de trouver la tuile à la position de grille : {_currentGridPos} pour {name}.");
+                GameLog.LogWarning($"Impossible de trouver la tuile à la position de grille : {_currentGridPos} pour {name}.");
             }
         }
         else
@@ -141,7 +141,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Les classes dérivées (Enemy, Champion) sont responsables de leur propre initialisation dans leur Start().
         if (!_isInitialized)
         {
-            Debug.LogWarning($"L'unité {gameObject.name} a été placée dans la scène mais n'a pas été initialisée par son script dérivé (ex: Enemy, Champion).");
+            GameLog.LogWarning($"L'unité {gameObject.name} a été placée dans la scène mais n'a pas été initialisée par son script dérivé (ex: Enemy, Champion).");
             enabled = false;
         }
     }
@@ -207,7 +207,7 @@ public class Unit : MonoBehaviour, IMarkable
     {
         if (path == null || path.Count == 0)
         {
-            Debug.LogWarning($"{name}: Chemin de déplacement vide ou nul.");
+            GameLog.LogWarning($"{name}: Chemin de déplacement vide ou nul.");
             _isMoving = false;
             return;
         }
@@ -215,7 +215,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Phase 3.4: Vérifie l'état avant de bouger (sauf si forceMove)
         if (!forceMove && _unitState != null && !_unitState.CanMove())
         {
-            Debug.LogWarning($"{name}: Cannot move - state is {_unitState.GetCurrentState()}");
+            GameLog.LogWarning($"{name}: Cannot move - state is {_unitState.GetCurrentState()}");
             return;
         }
 
@@ -228,7 +228,7 @@ public class Unit : MonoBehaviour, IMarkable
         _path = path; // Stocke le chemin.
         _isMoving = true; // Active le mouvement.
         _targetWorldPosition = _path[0].gameObject.transform.position + new Vector3(0, 0.5f, 0); // La première tuile du chemin est la première cible.
-        Debug.Log($"Déplacement de {name} le long d'un chemin de {path.Count} tuiles.");
+        GameLog.Log($"Déplacement de {name} le long d'un chemin de {path.Count} tuiles.");
     }
 
     // Update is called once per frame
@@ -282,7 +282,7 @@ public class Unit : MonoBehaviour, IMarkable
                         // CORRECTION : Force l'unité à être droite à l'arrêt
                         transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
 
-                        Debug.Log($"{name} a atteint sa destination finale.");
+                        GameLog.Log($"{name} a atteint sa destination finale.");
                     }
                 }
                 else
@@ -321,7 +321,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Phase 3.4: Vérifie si l'unité peut recevoir des dégâts
         if (_unitState != null && !_unitState.CanTakeDamage())
         {
-            Debug.LogWarning($"{name}: Cannot take damage - already dead");
+            GameLog.LogWarning($"{name}: Cannot take damage - already dead");
             return;
         }
 
@@ -333,14 +333,14 @@ public class Unit : MonoBehaviour, IMarkable
             if (sharedDamage > 0)
             {
                 damageToSelf -= sharedDamage;
-                Debug.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
+                GameLog.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
                 // Applique les dégâts partagés au receveur
                 _damageShareReceiver.TakeDamage(sharedDamage);
             }
         }
 
         _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
-        Debug.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
+        GameLog.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
@@ -367,7 +367,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Phase 3.4: Vérifie si l'unité peut recevoir des dégâts
         if (_unitState != null && !_unitState.CanTakeDamage())
         {
-            Debug.LogWarning($"{name}: Cannot take raw damage - already dead");
+            GameLog.LogWarning($"{name}: Cannot take raw damage - already dead");
             return;
         }
 
@@ -379,14 +379,14 @@ public class Unit : MonoBehaviour, IMarkable
             if (sharedDamage > 0)
             {
                 damageToSelf -= sharedDamage;
-                Debug.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
+                GameLog.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
                 // Applique les dégâts partagés au receveur (en dégâts bruts aussi)
                 _damageShareReceiver.TakeRawDamage(sharedDamage);
             }
         }
 
         _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
-        Debug.Log($"{name} a pris {damageToSelf} dégâts bruts (ignore l'armure). PV restants : {_health}/{_maxHealth}");
+        GameLog.Log($"{name} a pris {damageToSelf} dégâts bruts (ignore l'armure). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
@@ -415,7 +415,7 @@ public class Unit : MonoBehaviour, IMarkable
         if (_unitState != null && _unitState.IsDead()) return;
 
         _health = Mathf.Clamp(_health - amount, 0, _maxHealth);
-        Debug.Log($"{name} paie {amount} PV (Coût). PV restants : {_health}/{_maxHealth}");
+        GameLog.Log($"{name} paie {amount} PV (Coût). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Feedback visuel (utilise le système de dégâts pour l'affichage, mais c'est un coût)
@@ -444,11 +444,11 @@ public class Unit : MonoBehaviour, IMarkable
         
         if (actualHealAmount < amount)
         {
-            Debug.Log($"{name} récupère {actualHealAmount} PV (Plafonné par MaxHP). Tentative de soin: {amount}. PV: {_health}/{_maxHealth}");
+            GameLog.Log($"{name} récupère {actualHealAmount} PV (Plafonné par MaxHP). Tentative de soin: {amount}. PV: {_health}/{_maxHealth}");
         }
         else
         {
-            Debug.Log($"{name} récupère {amount} PV. PV actuels : {_health}/{_maxHealth}");
+            GameLog.Log($"{name} récupère {amount} PV. PV actuels : {_health}/{_maxHealth}");
         }
 
         OnHealthChanged?.Invoke(_health, _maxHealth); // Déclenche l'événement de changement de PV
@@ -494,7 +494,7 @@ public class Unit : MonoBehaviour, IMarkable
         _health = Mathf.RoundToInt(_maxHealth * healthPercentage);
         _health = Mathf.Clamp(_health, 1, _maxHealth); // Au minimum 1 HP
 
-        Debug.Log($"{name}: Max Health changé à {_maxHealth}, HP actuels ajustés à {_health}");
+        GameLog.Log($"{name}: Max Health changé à {_maxHealth}, HP actuels ajustés à {_health}");
 
         // Notifier le changement
         OnHealthChanged?.Invoke(_health, _maxHealth);
@@ -525,7 +525,7 @@ public class Unit : MonoBehaviour, IMarkable
     {
         _currentMovementPoints -= amount;
         if (_currentMovementPoints < 0) _currentMovementPoints = 0;
-        Debug.Log($"{name} a dépensé {amount} PM. Restant : {_currentMovementPoints}");
+        GameLog.Log($"{name} a dépensé {amount} PM. Restant : {_currentMovementPoints}");
         OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
     }
 
@@ -533,7 +533,7 @@ public class Unit : MonoBehaviour, IMarkable
     public void RefreshMovement()
     {
         _currentMovementPoints = _maxMovementPoints;
-        Debug.Log($"{name}: PM réinitialisés à {_currentMovementPoints}.");
+        GameLog.Log($"{name}: PM réinitialisés à {_currentMovementPoints}.");
         OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
     }
 
@@ -554,7 +554,7 @@ public class Unit : MonoBehaviour, IMarkable
     /// </summary>
     protected virtual void Die()
     {
-        Debug.Log($"{name} a été vaincu !");
+        GameLog.Log($"{name} a été vaincu !");
 
         // Phase 3.4: Marque comme mort
         _unitState?.SetDead();
@@ -639,11 +639,11 @@ public class Unit : MonoBehaviour, IMarkable
         if (duration > 0 && (atk != 0 || def != 0))
         {
             _activeBuffs.Add(new StatBuff(atk, def, duration));
-            Debug.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, DEF: {def} pour {duration} tour(s)");
+            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, DEF: {def} pour {duration} tour(s)");
         }
         else if (atk != 0)
         {
-            Debug.Log($"{name}: ATK modifiée de {atk} (Total: {_attackDamage}) - permanent");
+            GameLog.Log($"{name}: ATK modifiée de {atk} (Total: {_attackDamage}) - permanent");
         }
 
         OnStatsModified?.Invoke();
@@ -670,7 +670,7 @@ public class Unit : MonoBehaviour, IMarkable
                 _attackDamage -= buff.atkModifier;
                 // Note: DEF est géré par les classes dérivées (IlyaUnit, Enemy)
 
-                Debug.Log($"{name}: Buff expiré - ATK restaurée de {buff.atkModifier}");
+                GameLog.Log($"{name}: Buff expiré - ATK restaurée de {buff.atkModifier}");
                 _activeBuffs.RemoveAt(i);
                 statsChanged = true;
             }
@@ -691,7 +691,7 @@ public class Unit : MonoBehaviour, IMarkable
         {
             _damageShareDuration--;
             if (_damageShareDuration <= 0)
-                Debug.Log($"{name}: Le lien de partage de dégâts avec {_damageShareReceiver?.name} a expiré.");
+                GameLog.Log($"{name}: Le lien de partage de dégâts avec {_damageShareReceiver?.name} a expiré.");
         }
     }
 
@@ -753,7 +753,7 @@ public class Unit : MonoBehaviour, IMarkable
             Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
             if (nextTile == null)
             {
-                Debug.Log($"{name}: Knockback arrêté - bord de la grille à {nextPos}");
+                GameLog.Log($"{name}: Knockback arrêté - bord de la grille à {nextPos}");
                 break;
             }
 
@@ -761,7 +761,7 @@ public class Unit : MonoBehaviour, IMarkable
             Unit unitOnTile = Services.Grid.GetUnitAtGridPos(nextPos);
             if (unitOnTile != null)
             {
-                Debug.Log($"{name}: Knockback arrêté - unité {unitOnTile.name} à {nextPos}");
+                GameLog.Log($"{name}: Knockback arrêté - unité {unitOnTile.name} à {nextPos}");
                 break;
             }
 
@@ -785,7 +785,7 @@ public class Unit : MonoBehaviour, IMarkable
             {
                 // forceMove = true car le knockback doit fonctionner même si l'unité est en état Idle
                 MoveToTile(knockbackPath, true);
-                Debug.Log($"{name}: Knockback de {currentPos} vers {finalPos} ({knockbackPath.Count} cases)");
+                GameLog.Log($"{name}: Knockback de {currentPos} vers {finalPos} ({knockbackPath.Count} cases)");
             }
         }
 
@@ -800,7 +800,7 @@ public class Unit : MonoBehaviour, IMarkable
         _damageShareReceiver = receiver;
         _damageShareRatio = Mathf.Clamp01(ratio);
         _damageShareDuration = duration;
-        Debug.Log($"{name}: Lien de partage de dégâts établi avec {receiver.name} (Ratio: {ratio:P0}, Durée: {duration} tours)");
+        GameLog.Log($"{name}: Lien de partage de dégâts établi avec {receiver.name} (Ratio: {ratio:P0}, Durée: {duration} tours)");
     }
 
     // ========== IMPLÉMENTATION IMarkable ==========
@@ -813,7 +813,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Vérifie si l'unité peut recevoir des marques (pas morte)
         if (_unitState != null && _unitState.IsDead())
         {
-            Debug.LogWarning($"{name}: Cannot receive mark - unit is dead");
+            GameLog.LogWarning($"{name}: Cannot receive mark - unit is dead");
             return;
         }
 
@@ -839,13 +839,13 @@ public class Unit : MonoBehaviour, IMarkable
             }
 
             _activeMarks[existingIndex] = existing;
-            Debug.Log($"{name}: Marque {mark.markType} renforcée - Total stacks: {existing.stacks}");
+            GameLog.Log($"{name}: Marque {mark.markType} renforcée - Total stacks: {existing.stacks}");
         }
         else
         {
             // Ajoute une nouvelle marque
             _activeMarks.Add(mark);
-            Debug.Log($"{name}: Nouvelle marque {mark.markType} appliquée ({mark.stacks} stack(s))");
+            GameLog.Log($"{name}: Nouvelle marque {mark.markType} appliquée ({mark.stacks} stack(s))");
         }
 
         // Publie l'événement
@@ -880,7 +880,7 @@ public class Unit : MonoBehaviour, IMarkable
         {
             // Retire complètement la marque
             _activeMarks.RemoveAt(index);
-            Debug.Log($"{name}: Marque {type} consommée ({mark.stacks} stack(s))");
+            GameLog.Log($"{name}: Marque {type} consommée ({mark.stacks} stack(s))");
         }
         else
         {
@@ -890,7 +890,7 @@ public class Unit : MonoBehaviour, IMarkable
 
             // Crée une copie avec 1 stack pour le retour
             UnitMark consumedMark = new UnitMark(type, mark.appliedBy, 1, mark.remainingTurns, mark.bonusValue);
-            Debug.Log($"{name}: 1 stack de {type} consommé (reste: {mark.stacks})");
+            GameLog.Log($"{name}: 1 stack de {type} consommé (reste: {mark.stacks})");
 
             OnMarkConsumed?.Invoke(consumedMark);
             EventBus.Publish(new MarkConsumedEvent(this, consumedMark));
@@ -917,7 +917,7 @@ public class Unit : MonoBehaviour, IMarkable
         UnitMark mark = _activeMarks[index];
         _activeMarks.RemoveAt(index);
 
-        Debug.Log($"{name}: Marque {type} de {source.name} consommée ({mark.stacks} stack(s))");
+        GameLog.Log($"{name}: Marque {type} de {source.name} consommée ({mark.stacks} stack(s))");
 
         OnMarkConsumed?.Invoke(mark);
         EventBus.Publish(new MarkConsumedEvent(this, mark));
@@ -939,7 +939,7 @@ public class Unit : MonoBehaviour, IMarkable
             _activeMarks.Remove(mark);
             consumedMarks.Add(mark);
 
-            Debug.Log($"{name}: Marque {mark.markType} de {source.name} consommée ({mark.stacks} stack(s))");
+            GameLog.Log($"{name}: Marque {mark.markType} de {source.name} consommée ({mark.stacks} stack(s))");
 
             OnMarkConsumed?.Invoke(mark);
             EventBus.Publish(new MarkConsumedEvent(this, mark));
@@ -959,7 +959,7 @@ public class Unit : MonoBehaviour, IMarkable
         {
             UnitMark mark = _activeMarks[index];
             _activeMarks.RemoveAt(index);
-            Debug.Log($"{name}: Marque {type} retirée");
+            GameLog.Log($"{name}: Marque {type} retirée");
 
             OnMarkExpired?.Invoke(mark);
             EventBus.Publish(new MarkExpiredEvent(this, mark, false));
@@ -1029,7 +1029,7 @@ public class Unit : MonoBehaviour, IMarkable
             {
                 // Le poison inflige 10 dégâts bruts par stack
                 int poisonDamage = 10 * mark.stacks;
-                Debug.Log($"☠️ POISON ! {name} perd {poisonDamage} PV (dégâts bruts, ignore l'armure)");
+                GameLog.Log($"☠️ POISON ! {name} perd {poisonDamage} PV (dégâts bruts, ignore l'armure)");
                 TakeRawDamage(poisonDamage);
             }
 
@@ -1040,7 +1040,7 @@ public class Unit : MonoBehaviour, IMarkable
 
                 if (expired)
                 {
-                    Debug.Log($"{name}: Marque {mark.markType} expirée");
+                    GameLog.Log($"{name}: Marque {mark.markType} expirée");
                     _activeMarks.RemoveAt(i);
 
                     OnMarkExpired?.Invoke(mark);
@@ -1101,6 +1101,6 @@ public class Unit : MonoBehaviour, IMarkable
             EventBus.Publish(new MarkExpiredEvent(this, mark, false));
         }
         _activeMarks.Clear();
-        Debug.Log($"{name}: Toutes les marques ont été retirées");
+        GameLog.Log($"{name}: Toutes les marques ont été retirées");
     }
 } 

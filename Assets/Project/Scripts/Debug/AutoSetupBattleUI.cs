@@ -40,13 +40,13 @@ public class AutoSetupBattleUI : MonoBehaviour
     [ContextMenu("Setup Battle UI")]
     public void SetupAllBattleUI()
     {
-        Debug.Log("=== AUTO SETUP BATTLE UI ===");
+        GameLog.Log("=== AUTO SETUP BATTLE UI ===");
 
         // 1. Trouve ou crée le Canvas
         Canvas canvas = FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
-            Debug.Log("Création du Canvas...");
+            GameLog.Log("Création du Canvas...");
             GameObject canvasGO = new GameObject("BattleUICanvas");
             canvas = canvasGO.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -56,7 +56,7 @@ public class AutoSetupBattleUI : MonoBehaviour
             scaler.referenceResolution = new Vector2(1920, 1080);
 
             canvasGO.AddComponent<GraphicRaycaster>();
-            Debug.Log("✅ Canvas créé");
+            GameLog.Log("✅ Canvas créé");
         }
 
         // 2. Crée BattleUIManager si nécessaire
@@ -67,11 +67,11 @@ public class AutoSetupBattleUI : MonoBehaviour
             {
                 GameObject managerGO = new GameObject("BattleUIManager");
                 managerGO.AddComponent<BattleUIManager>();
-                Debug.Log("✅ BattleUIManager créé");
+                GameLog.Log("✅ BattleUIManager créé");
             }
             else
             {
-                Debug.Log("BattleUIManager existe déjà");
+                GameLog.Log("BattleUIManager existe déjà");
             }
         }
 
@@ -87,8 +87,8 @@ public class AutoSetupBattleUI : MonoBehaviour
             CreateEnemyCardPreviewUI(canvas);
         }
 
-        Debug.Log("=== SETUP TERMINÉ ===");
-        Debug.Log("Lance le jeu pour voir les UI s'afficher automatiquement!");
+        GameLog.Log("=== SETUP TERMINÉ ===");
+        GameLog.Log("Lance le jeu pour voir les UI s'afficher automatiquement!");
     }
 
     private void CreateBossHealthBarUI(Canvas canvas)
@@ -97,11 +97,11 @@ public class AutoSetupBattleUI : MonoBehaviour
         BossHealthBarUI existing = FindAnyObjectByType<BossHealthBarUI>();
         if (existing != null)
         {
-            Debug.Log("BossHealthBarUI existe déjà");
+            GameLog.Log("BossHealthBarUI existe déjà");
             return;
         }
 
-        Debug.Log("Création de Boss Health Bar UI...");
+        GameLog.Log("Création de Boss Health Bar UI...");
 
         // Crée le panel principal
         GameObject panel = new GameObject("BossHealthBarPanel");
@@ -220,7 +220,7 @@ public class AutoSetupBattleUI : MonoBehaviour
         hpTextField?.SetValue(bossUI, hpText);
         fillImageField?.SetValue(bossUI, fillImage);
 
-        Debug.Log("✅ Boss Health Bar UI créée!");
+        GameLog.Log("✅ Boss Health Bar UI créée!");
     }
 
     private void CreateEnemyCardPreviewUI(Canvas canvas)
@@ -229,11 +229,11 @@ public class AutoSetupBattleUI : MonoBehaviour
         EnemyCardPreviewUI existing = FindAnyObjectByType<EnemyCardPreviewUI>();
         if (existing != null)
         {
-            Debug.Log("EnemyCardPreviewUI existe déjà");
+            GameLog.Log("EnemyCardPreviewUI existe déjà");
             return;
         }
 
-        Debug.Log("Création de Enemy Card Preview UI...");
+        GameLog.Log("Création de Enemy Card Preview UI...");
 
         // Crée le panel principal
         GameObject panel = new GameObject("EnemyCardPreviewPanel");
@@ -333,6 +333,6 @@ public class AutoSetupBattleUI : MonoBehaviour
         descField?.SetValue(previewUI, descText);
         costField?.SetValue(previewUI, costText);
 
-        Debug.Log("✅ Enemy Card Preview UI créée!");
+        GameLog.Log("✅ Enemy Card Preview UI créée!");
     }
 }

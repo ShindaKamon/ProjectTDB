@@ -84,7 +84,7 @@ public class ChampionHUD : MonoBehaviour
             RefreshAllStats();
             _isConnected = true;
 
-            Debug.Log($"ChampionHUD: Connecté à {_champion.name}");
+            GameLog.Log($"ChampionHUD: Connecté à {_champion.name}");
         }
     }
 

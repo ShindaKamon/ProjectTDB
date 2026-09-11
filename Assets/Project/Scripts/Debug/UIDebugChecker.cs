@@ -30,15 +30,15 @@ public class UIDebugChecker : MonoBehaviour
 
     public void CheckAllUI()
     {
-        Debug.Log("========================================");
-        Debug.Log("=== DIAGNOSTIC UI BOSS & ENNEMI ===");
-        Debug.Log("========================================");
+        GameLog.Log("========================================");
+        GameLog.Log("=== DIAGNOSTIC UI BOSS & ENNEMI ===");
+        GameLog.Log("========================================");
 
         // 1. Vérifie BattleUIManager
         BattleUIManager battleUIManager = FindAnyObjectByType<BattleUIManager>();
         if (battleUIManager != null)
         {
-            Debug.Log("✅ BattleUIManager trouvé: " + battleUIManager.gameObject.name);
+            GameLog.Log("✅ BattleUIManager trouvé: " + battleUIManager.gameObject.name);
         }
         else
         {
@@ -50,7 +50,7 @@ public class UIDebugChecker : MonoBehaviour
         BossHealthBarUI bossUI = FindAnyObjectByType<BossHealthBarUI>();
         if (bossUI != null)
         {
-            Debug.Log("✅ BossHealthBarUI trouvé: " + bossUI.gameObject.name);
+            GameLog.Log("✅ BossHealthBarUI trouvé: " + bossUI.gameObject.name);
 
             // Vérifie les références via réflexion
             var containerField = typeof(BossHealthBarUI).GetField("_container",
@@ -63,7 +63,7 @@ public class UIDebugChecker : MonoBehaviour
             GameObject container = containerField?.GetValue(bossUI) as GameObject;
             if (container != null)
             {
-                Debug.Log("  ✅ Container assigné: " + container.name + " (Active: " + container.activeSelf + ")");
+                GameLog.Log("  ✅ Container assigné: " + container.name + " (Active: " + container.activeSelf + ")");
             }
             else
             {
@@ -72,20 +72,20 @@ public class UIDebugChecker : MonoBehaviour
 
             if (sliderField?.GetValue(bossUI) != null)
             {
-                Debug.Log("  ✅ Health Slider assigné");
+                GameLog.Log("  ✅ Health Slider assigné");
             }
             else
             {
-                Debug.LogWarning("  ⚠️ Health Slider non assigné");
+                GameLog.LogWarning("  ⚠️ Health Slider non assigné");
             }
 
             if (nameTextField?.GetValue(bossUI) != null)
             {
-                Debug.Log("  ✅ Boss Name Text assigné");
+                GameLog.Log("  ✅ Boss Name Text assigné");
             }
             else
             {
-                Debug.LogWarning("  ⚠️ Boss Name Text non assigné");
+                GameLog.LogWarning("  ⚠️ Boss Name Text non assigné");
             }
         }
         else
@@ -97,7 +97,7 @@ public class UIDebugChecker : MonoBehaviour
         EnemyCardPreviewUI previewUI = FindAnyObjectByType<EnemyCardPreviewUI>();
         if (previewUI != null)
         {
-            Debug.Log("✅ EnemyCardPreviewUI trouvé: " + previewUI.gameObject.name);
+            GameLog.Log("✅ EnemyCardPreviewUI trouvé: " + previewUI.gameObject.name);
 
             var containerField = typeof(EnemyCardPreviewUI).GetField("_previewContainer",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -107,7 +107,7 @@ public class UIDebugChecker : MonoBehaviour
             GameObject container = containerField?.GetValue(previewUI) as GameObject;
             if (container != null)
             {
-                Debug.Log("  ✅ Container assigné: " + container.name + " (Active: " + container.activeSelf + ")");
+                GameLog.Log("  ✅ Container assigné: " + container.name + " (Active: " + container.activeSelf + ")");
             }
             else
             {
@@ -116,11 +116,11 @@ public class UIDebugChecker : MonoBehaviour
 
             if (nameTextField?.GetValue(previewUI) != null)
             {
-                Debug.Log("  ✅ Card Name Text assigné");
+                GameLog.Log("  ✅ Card Name Text assigné");
             }
             else
             {
-                Debug.LogWarning("  ⚠️ Card Name Text non assigné");
+                GameLog.LogWarning("  ⚠️ Card Name Text non assigné");
             }
         }
         else
@@ -130,36 +130,36 @@ public class UIDebugChecker : MonoBehaviour
 
         // 4. Vérifie les ennemis
         Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
-        Debug.Log($"\n📊 Ennemis trouvés: {enemies.Length}");
+        GameLog.Log($"\n📊 Ennemis trouvés: {enemies.Length}");
 
         foreach (Enemy enemy in enemies)
         {
-            Debug.Log($"  - {enemy.name}:");
-            Debug.Log($"    • Est Boss: {enemy.IsBoss()}");
-            Debug.Log($"    • HP: {enemy.GetHealth()}/{enemy.GetMaxHealth()}");
-            Debug.Log($"    • PA: {enemy.GetCurrentPA()}/{enemy.GetMaxPA()}");
+            GameLog.Log($"  - {enemy.name}:");
+            GameLog.Log($"    • Est Boss: {enemy.IsBoss()}");
+            GameLog.Log($"    • HP: {enemy.GetHealth()}/{enemy.GetMaxHealth()}");
+            GameLog.Log($"    • PA: {enemy.GetCurrentPA()}/{enemy.GetMaxPA()}");
 
             CardData nextCard = enemy.GetNextCard();
             if (nextCard != null)
             {
-                Debug.Log($"    • Prochaine carte: {nextCard.cardName}");
+                GameLog.Log($"    • Prochaine carte: {nextCard.cardName}");
             }
             else
             {
-                Debug.LogWarning($"    ⚠️ Pas de carte dans le deck!");
+                GameLog.LogWarning($"    ⚠️ Pas de carte dans le deck!");
             }
         }
 
         // 5. Résumé
-        Debug.Log("\n========================================");
-        Debug.Log("=== RÉSUMÉ ===");
+        GameLog.Log("\n========================================");
+        GameLog.Log("=== RÉSUMÉ ===");
         if (battleUIManager != null && bossUI != null && previewUI != null)
         {
-            Debug.Log("✅ Tous les scripts UI sont présents");
+            GameLog.Log("✅ Tous les scripts UI sont présents");
 
             if (enemies.Length == 0)
             {
-                Debug.LogWarning("⚠️ Aucun ennemi dans la scène! Glisse un prefab Enemy pour tester.");
+                GameLog.LogWarning("⚠️ Aucun ennemi dans la scène! Glisse un prefab Enemy pour tester.");
             }
             else
             {
@@ -173,11 +173,11 @@ public class UIDebugChecker : MonoBehaviour
 
                 if (!hasBoss)
                 {
-                    Debug.LogWarning("⚠️ Aucun boss trouvé. Active 'Is Boss' dans l'EnemyData pour tester la barre de vie boss.");
+                    GameLog.LogWarning("⚠️ Aucun boss trouvé. Active 'Is Boss' dans l'EnemyData pour tester la barre de vie boss.");
                 }
                 if (!hasCards)
                 {
-                    Debug.LogWarning("⚠️ Aucun ennemi n'a de cartes. Ajoute des cartes au Combat Deck dans l'EnemyData.");
+                    GameLog.LogWarning("⚠️ Aucun ennemi n'a de cartes. Ajoute des cartes au Combat Deck dans l'EnemyData.");
                 }
             }
         }
@@ -185,6 +185,6 @@ public class UIDebugChecker : MonoBehaviour
         {
             Debug.LogError("❌ Configuration UI incomplète! Suis le guide QUICKSTART.md");
         }
-        Debug.Log("========================================\n");
+        GameLog.Log("========================================\n");
     }
 }

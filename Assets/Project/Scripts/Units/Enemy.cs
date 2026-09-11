@@ -64,7 +64,7 @@ public class Enemy : Unit, IActionPointsUser
         if (_currentCardIndex >= _combatDeck.Count)
         {
             _currentCardIndex = 0;
-            Debug.Log($"{name} (Enemy): Fin du cycle de cartes, retour au début du pattern");
+            GameLog.Log($"{name} (Enemy): Fin du cycle de cartes, retour au début du pattern");
         }
 
         return _combatDeck[_currentCardIndex];
@@ -80,7 +80,7 @@ public class Enemy : Unit, IActionPointsUser
         // Protection contre la double initialisation
         if (_isInitialized)
         {
-            Debug.LogWarning($"{gameObject.name} (Enemy) est déjà initialisé. Initialisation ignorée.");
+            GameLog.LogWarning($"{gameObject.name} (Enemy) est déjà initialisé. Initialisation ignorée.");
             return;
         }
 
@@ -117,7 +117,7 @@ public class Enemy : Unit, IActionPointsUser
         // Notifie la prochaine carte
         OnNextCardChanged?.Invoke(GetNextCard());
 
-        Debug.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, PA: {GetCurrentPA()}/{GetMaxPA()}, Deck: {_combatDeck.Count} cartes");
+        GameLog.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, PA: {GetCurrentPA()}/{GetMaxPA()}, Deck: {_combatDeck.Count} cartes");
     }
 
     protected override void Start()
@@ -198,14 +198,14 @@ public class Enemy : Unit, IActionPointsUser
         // Vérifie s'il reste des cartes
         if (_combatDeck == null || _combatDeck.Count == 0)
         {
-            Debug.LogWarning($"{name} (Enemy): Deck vide !");
+            GameLog.LogWarning($"{name} (Enemy): Deck vide !");
             return null;
         }
 
         if (_currentCardIndex >= _combatDeck.Count)
         {
             // Fin du deck, recommence au début (boucle)
-            Debug.Log($"{name} (Enemy): Fin du deck, retour au début");
+            GameLog.Log($"{name} (Enemy): Fin du deck, retour au début");
             _currentCardIndex = 0;
         }
 
@@ -214,12 +214,12 @@ public class Enemy : Unit, IActionPointsUser
         // Vérifie si on a assez de PA
         if (nextCard.costPA > GetCurrentPA())
         {
-            Debug.LogWarning($"{name} (Enemy): Pas assez de PA pour jouer {nextCard.cardName} (coût: {nextCard.costPA}, dispo: {GetCurrentPA()})");
+            GameLog.LogWarning($"{name} (Enemy): Pas assez de PA pour jouer {nextCard.cardName} (coût: {nextCard.costPA}, dispo: {GetCurrentPA()})");
             return null;
         }
 
         // Joue la carte
-        Debug.Log($"{name} (Enemy) joue la carte: {nextCard.cardName}");
+        GameLog.Log($"{name} (Enemy) joue la carte: {nextCard.cardName}");
         _currentCardIndex++;
 
         // Notifie la prochaine carte (pour la preview)
@@ -235,7 +235,7 @@ public class Enemy : Unit, IActionPointsUser
     {
         _currentCardIndex = 0;
         OnNextCardChanged?.Invoke(GetNextCard());
-        Debug.Log($"{name} (Enemy): Index du deck réinitialisé");
+        GameLog.Log($"{name} (Enemy): Index du deck réinitialisé");
     }
 
     /// <summary>

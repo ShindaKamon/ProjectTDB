@@ -68,7 +68,7 @@ public class GridManager : MonoBehaviour, IGridService
 
         // Enregistre ce GridManager comme IGridService dans le ServiceLocator (Phase 3.5)
         ServiceLocator.Instance.Register<IGridService>(this);
-        Debug.Log("GridManager: Enregistré dans ServiceLocator comme IGridService");
+        GameLog.Log("GridManager: Enregistré dans ServiceLocator comme IGridService");
 
         // S'abonne aux événements de l'EventBus
         EventBus.Subscribe<TurnEndRequestedEvent>(OnTurnEndRequested);
@@ -102,7 +102,7 @@ public class GridManager : MonoBehaviour, IGridService
     /// </summary>
     private void OnTurnEndRequested(TurnEndRequestedEvent e)
     {
-        Debug.Log($"[EventBus] Fin de tour demandée par {e.RequestingUnit?.name ?? "Inconnu"}");
+        GameLog.Log($"[EventBus] Fin de tour demandée par {e.RequestingUnit?.name ?? "Inconnu"}");
         OnEndTurnButtonClick();
     }
 
@@ -168,7 +168,7 @@ public class GridManager : MonoBehaviour, IGridService
         }
         
         transform.position = Vector3.zero;
-        Debug.Log($"Grille générée : {_width}x{_height} = {_tiles.Count} tuiles");
+        GameLog.Log($"Grille générée : {_width}x{_height} = {_tiles.Count} tuiles");
     }
 
     // ===== GESTION UNITÉS =====
@@ -205,25 +205,25 @@ public class GridManager : MonoBehaviour, IGridService
                     if (deckToUse != null && deckToUse.Count > 0)
                     {
                         playerDeckManager.InitializeDeck(deckToUse);
-                        Debug.Log($"Deck de {instantiatedPlayerUnit.name} initialisé avec {deckToUse.Count} cartes.");
+                        GameLog.Log($"Deck de {instantiatedPlayerUnit.name} initialisé avec {deckToUse.Count} cartes.");
                     }
                     else
                     {
-                        Debug.LogWarning($"Le champion {instantiatedPlayerUnit.name} n'a pas de deck valide.");
+                        GameLog.LogWarning($"Le champion {instantiatedPlayerUnit.name} n'a pas de deck valide.");
                     }
                 }
                 else
                 {
-                    Debug.LogWarning($"L'unité {instantiatedPlayerUnit.name} n'a pas de composant DeckManager.");
+                    GameLog.LogWarning($"L'unité {instantiatedPlayerUnit.name} n'a pas de composant DeckManager.");
                 }
                 _units.Add(instantiatedPlayerUnit);
                 _activeUnit = instantiatedPlayerUnit;
-                Debug.Log($"Champion sélectionné instancié : {instantiatedPlayerUnit.name} à {_playerSpawnGridPos}");
+                GameLog.Log($"Champion sélectionné instancié : {instantiatedPlayerUnit.name} à {_playerSpawnGridPos}");
             }
         }
         else
         {
-            Debug.LogWarning("Aucun champion sélectionné. Le jeu commencera sans unité joueur initialement.");
+            GameLog.LogWarning("Aucun champion sélectionné. Le jeu commencera sans unité joueur initialement.");
         }
 
         // 2. Trouve toutes les autres unités (ennemis) déjà présentes dans la scène
@@ -237,7 +237,7 @@ public class GridManager : MonoBehaviour, IGridService
                 // pour éviter d'avoir un cube qui traîne (le cube "Player" de la scène).
                 if (instantiatedPlayerUnit != null && unit.GetType() == typeof(Unit))
                 {
-                    Debug.Log($"Unité placeholder ignorée: {unit.name}");
+                    GameLog.Log($"Unité placeholder ignorée: {unit.name}");
                     unit.gameObject.SetActive(false);
                     continue;
                 }
@@ -250,18 +250,18 @@ public class GridManager : MonoBehaviour, IGridService
                     if (!enemy.IsInitialized() && enemy.GetEnemyData() != null)
                     {
                         enemy.InitializeEnemy(enemy.GetEnemyData(), GetGridPosFromWorldPos(enemy.transform.position));
-                        Debug.Log($"Ennemi initialisé: {enemy.name}");
+                        GameLog.Log($"Ennemi initialisé: {enemy.name}");
                     }
 
                     // Notifie le BattleUIManager pour connecter les UI
-                    Debug.Log($"GridManager: Tentative de connexion UI pour {enemy.name}...");
-                    Debug.Log($"  - IBattleUIService disponible: {Services.IsBattleUIServiceAvailable()}");
-                    Debug.Log($"  - enemy.IsBoss(): {enemy.IsBoss()}");
-                    Debug.Log($"  - enemy.GetEnemyData(): {enemy.GetEnemyData()?.enemyName}");
+                    GameLog.Log($"GridManager: Tentative de connexion UI pour {enemy.name}...");
+                    GameLog.Log($"  - IBattleUIService disponible: {Services.IsBattleUIServiceAvailable()}");
+                    GameLog.Log($"  - enemy.IsBoss(): {enemy.IsBoss()}");
+                    GameLog.Log($"  - enemy.GetEnemyData(): {enemy.GetEnemyData()?.enemyName}");
 
                     if (Services.IsBattleUIServiceAvailable())
                     {
-                        Debug.Log($"GridManager: Appel de OnEnemySpawned pour {enemy.name}");
+                        GameLog.Log($"GridManager: Appel de OnEnemySpawned pour {enemy.name}");
                         Services.BattleUI.OnEnemySpawned(enemy);
                     }
                     else
@@ -277,7 +277,7 @@ public class GridManager : MonoBehaviour, IGridService
                     if (championInScene != null && championInScene.championData != null)
                     {
                         championInScene.Initialize(championInScene.championData, GetGridPosFromWorldPos(unit.transform.position));
-                        Debug.Log($"Champion de la scène initialisé: {championInScene.name}");
+                        GameLog.Log($"Champion de la scène initialisé: {championInScene.name}");
                     }
                 }
                 _units.Add(unit);
@@ -292,7 +292,7 @@ public class GridManager : MonoBehaviour, IGridService
                 _activeUnit = _units[0];
             }
             
-            Debug.Log($"Unité active initiale : {_activeUnit.name}");
+            GameLog.Log($"Unité active initiale : {_activeUnit.name}");
 
             // Événements
             _activeUnit.OnMovementStepCompleted += HandleUnitMovementStep;
@@ -320,7 +320,7 @@ public class GridManager : MonoBehaviour, IGridService
             }
             else
             {
-                Debug.LogWarning($"GridManager.InitUnits: {_activeUnit.name} n'a pas de UnitState!");
+                GameLog.LogWarning($"GridManager.InitUnits: {_activeUnit.name} n'a pas de UnitState!");
             }
 
             // Gère le premier tour
@@ -328,7 +328,7 @@ public class GridManager : MonoBehaviour, IGridService
         }
         else
         {
-            Debug.LogWarning("Aucune unité (joueur ou ennemi) trouvée dans la scène.");
+            GameLog.LogWarning("Aucune unité (joueur ou ennemi) trouvée dans la scène.");
         }
     }
     
@@ -341,14 +341,14 @@ public class GridManager : MonoBehaviour, IGridService
 
         // Rafraîchit les PM pour toutes les unités
         _activeUnit.RefreshMovement();
-        Debug.Log($"{_activeUnit.name} : PM rafraîchis ({_activeUnit.GetCurrentMovementPoints()}/{_activeUnit.GetMaxMovementPoints()})");
+        GameLog.Log($"{_activeUnit.name} : PM rafraîchis ({_activeUnit.GetCurrentMovementPoints()}/{_activeUnit.GetMaxMovementPoints()})");
 
         // Si c'est un Champion, rafraîchit aussi les PA
         Champion champion = _activeUnit as Champion;
         if (champion != null)
         {
             champion.RefreshPA();
-            Debug.Log($"{champion.name} : PA rafraîchis ({champion.GetCurrentPA()}/{champion.GetMaxPA()})");
+            GameLog.Log($"{champion.name} : PA rafraîchis ({champion.GetCurrentPA()}/{champion.GetMaxPA()})");
         }
 
         // Pioche une carte si l'unité a un DeckManager (unités joueur uniquement)
@@ -356,7 +356,7 @@ public class GridManager : MonoBehaviour, IGridService
         if (_activeUnit.TryGetComponentSafe(out DeckManager deckManager))
         {
             deckManager.DrawCard();
-            Debug.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
+            GameLog.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
         }
     }
 
@@ -379,7 +379,7 @@ public class GridManager : MonoBehaviour, IGridService
         }
 
         _activeUnit = _units[nextIndex];
-        Debug.Log($"=== Tour de : {_activeUnit.name} ===");
+        GameLog.Log($"=== Tour de : {_activeUnit.name} ===");
 
         // Phase 3.4: Met l'ancienne unité en état Idle
         if (previousUnit != null)
@@ -399,7 +399,7 @@ public class GridManager : MonoBehaviour, IGridService
         }
         else
         {
-            Debug.LogWarning($"GridManager.NextTurn: {_activeUnit.name} n'a pas de UnitState!");
+            GameLog.LogWarning($"GridManager.NextTurn: {_activeUnit.name} n'a pas de UnitState!");
         }
 
         // Invalide tous les caches (OPTIMISATION: nouvel état de jeu)
@@ -434,7 +434,7 @@ public class GridManager : MonoBehaviour, IGridService
     
     public void OnEndTurnButtonClick()
     {
-        Debug.Log("=== Fin de tour ===");
+        GameLog.Log("=== Fin de tour ===");
         ResetAllTileColors();
         NextTurn();
     }
@@ -457,7 +457,7 @@ public class GridManager : MonoBehaviour, IGridService
         {
             _inputManager.enabled = true;
             if (_endTurnButton != null) _endTurnButton.interactable = true;
-            Debug.Log($"Tour du joueur : {unit.name}");
+            GameLog.Log($"Tour du joueur : {unit.name}");
         }
         else // Ennemi
         {
@@ -486,7 +486,7 @@ public class GridManager : MonoBehaviour, IGridService
     
     private void HandleUnitDied(Unit diedUnit)
     {
-        Debug.Log($"{diedUnit.name} est mort.");
+        GameLog.Log($"{diedUnit.name} est mort.");
         
         diedUnit.OnMovementStepCompleted -= HandleUnitMovementStep;
         diedUnit.OnUnitDied -= HandleUnitDied;
@@ -495,7 +495,7 @@ public class GridManager : MonoBehaviour, IGridService
         
         if (_activeUnit == diedUnit)
         {
-            Debug.Log("L'unité active est morte. Passage au tour suivant.");
+            GameLog.Log("L'unité active est morte. Passage au tour suivant.");
             OnEndTurnButtonClick();
         }
         else
@@ -525,7 +525,7 @@ public class GridManager : MonoBehaviour, IGridService
             _cachedStatsUI = FindFirstObjectByType<UnitStatsUI>();
             if (_cachedStatsUI == null)
             {
-                Debug.LogWarning("UnitStatsUI introuvable ! Ajoute le script sur le Canvas.");
+                GameLog.LogWarning("UnitStatsUI introuvable ! Ajoute le script sur le Canvas.");
                 return;
             }
         }
@@ -573,15 +573,15 @@ public class GridManager : MonoBehaviour, IGridService
     {
         if (unit == null)
         {
-            Debug.LogWarning("ShowMovementRange: unit est null");
+            GameLog.LogWarning("ShowMovementRange: unit est null");
             return;
         }
 
-        Debug.Log($"ShowMovementRange appelé pour {unit.name}");
+        GameLog.Log($"ShowMovementRange appelé pour {unit.name}");
         ResetAllTileColors();
         DisplayMovementRange(unit);
 
-        Debug.Log($"Portée de mouvement affichée pour {unit.name} : {unit.GetCurrentMovementPoints()}/{unit.GetMaxMovementPoints()} PM");
+        GameLog.Log($"Portée de mouvement affichée pour {unit.name} : {unit.GetCurrentMovementPoints()}/{unit.GetMaxMovementPoints()} PM");
     }
     
     // ===== PATHFINDING & PORTÉES =====
@@ -668,7 +668,7 @@ public class GridManager : MonoBehaviour, IGridService
             tile.SetColor(_cardTargetColor);
         }
 
-        Debug.Log($"Portée affichée pour {card.cardName} (portée: {range})");
+        GameLog.Log($"Portée affichée pour {card.cardName} (portée: {range})");
     }
 
     /// <summary>
@@ -709,7 +709,7 @@ public class GridManager : MonoBehaviour, IGridService
             }
         }
 
-        Debug.Log($"Portée de charge affichée (portée: {range}, lignes droites uniquement)");
+        GameLog.Log($"Portée de charge affichée (portée: {range}, lignes droites uniquement)");
     }
 
     /// <summary>

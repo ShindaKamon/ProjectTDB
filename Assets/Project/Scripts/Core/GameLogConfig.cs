@@ -5,10 +5,10 @@ using UnityEngine;
 /// (hors éditeur et hors Development Build). Les erreurs et exceptions
 /// restent tracées pour le diagnostic des crashes joueurs.
 ///
-/// NOTE : ceci supprime l'écriture des logs, pas le coût de construction
-/// des chaînes interpolées passées à Debug.Log. Un wrapper GameLog avec
-/// [Conditional] sur les ~400 sites d'appel reste à faire pour éliminer
-/// aussi ces allocations.
+/// Ce filtre runtime reste utile en garde-fou (Development Build, appels
+/// Debug.Log restants), mais la plupart des sites d'appel passent par
+/// GameLog (voir GameLog.cs), qui élimine aussi le coût de construction
+/// des chaînes interpolées grâce à [Conditional].
 /// </summary>
 public static class GameLogConfig
 {

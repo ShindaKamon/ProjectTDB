@@ -22,7 +22,7 @@ public class BossHealthBarUI : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("BossHealthBarUI: Start() appelé");
+        GameLog.Log("BossHealthBarUI: Start() appelé");
 
         // Configure le slider
         if (_healthSlider != null)
@@ -31,11 +31,11 @@ public class BossHealthBarUI : MonoBehaviour
             _healthSlider.direction = Slider.Direction.LeftToRight;
             _healthSlider.transition = Selectable.Transition.None;
             _healthSlider.interactable = false;
-            Debug.Log("BossHealthBarUI: Slider configuré");
+            GameLog.Log("BossHealthBarUI: Slider configuré");
         }
         else
         {
-            Debug.LogWarning("BossHealthBarUI: _healthSlider est null!");
+            GameLog.LogWarning("BossHealthBarUI: _healthSlider est null!");
         }
 
         // Cache la barre au démarrage SEULEMENT si aucun boss n'est déjà tracké
@@ -44,16 +44,16 @@ public class BossHealthBarUI : MonoBehaviour
             if (_trackedBoss == null)
             {
                 _container.SetActive(false);
-                Debug.Log("BossHealthBarUI: Container caché au démarrage (aucun boss tracké)");
+                GameLog.Log("BossHealthBarUI: Container caché au démarrage (aucun boss tracké)");
             }
             else
             {
-                Debug.Log("BossHealthBarUI: Container laissé visible (boss déjà tracké: " + _trackedBoss.name + ")");
+                GameLog.Log("BossHealthBarUI: Container laissé visible (boss déjà tracké: " + _trackedBoss.name + ")");
             }
         }
         else
         {
-            Debug.LogWarning("BossHealthBarUI: _container est null! Assigne-le dans l'Inspector.");
+            GameLog.LogWarning("BossHealthBarUI: _container est null! Assigne-le dans l'Inspector.");
         }
     }
 
@@ -108,7 +108,7 @@ public class BossHealthBarUI : MonoBehaviour
             //     _bossPortrait.sprite = boss.GetEnemyData().portrait;
             // }
 
-            Debug.Log($"BossHealthBarUI: Tracking {_trackedBoss.name}");
+            GameLog.Log($"BossHealthBarUI: Tracking {_trackedBoss.name}");
         }
         else
         {
@@ -142,7 +142,7 @@ public class BossHealthBarUI : MonoBehaviour
     /// </summary>
     private void OnBossDied(Unit boss)
     {
-        Debug.Log($"BossHealthBarUI: {boss.name} a été vaincu !");
+        GameLog.Log($"BossHealthBarUI: {boss.name} a été vaincu !");
 
         // Cache la barre après un court délai (pour l'effet visuel)
         Invoke(nameof(HideBossBar), 2f);

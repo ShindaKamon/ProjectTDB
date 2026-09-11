@@ -54,7 +54,7 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
             _damageNumberCanvas = ComponentLocator.FindSingleObjectOfType<Canvas>("CombatFeedbackManager: Recherche Canvas");
             if (_damageNumberCanvas != null)
             {
-                Debug.Log("CombatFeedbackManager: Canvas trouvé automatiquement");
+                GameLog.Log("CombatFeedbackManager: Canvas trouvé automatiquement");
             }
             else
             {
@@ -159,13 +159,13 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
     {
         if (_damageNumberPrefab == null)
         {
-            Debug.LogWarning("CombatFeedbackManager: _damageNumberPrefab n'est pas assigné!");
+            GameLog.LogWarning("CombatFeedbackManager: _damageNumberPrefab n'est pas assigné!");
             return;
         }
 
         if (_damageNumberParent == null)
         {
-            Debug.LogWarning("CombatFeedbackManager: _damageNumberParent est null!");
+            GameLog.LogWarning("CombatFeedbackManager: _damageNumberParent est null!");
             return;
         }
 

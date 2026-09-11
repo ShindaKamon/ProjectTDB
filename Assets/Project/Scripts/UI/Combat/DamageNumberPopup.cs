@@ -191,7 +191,7 @@ public class DamageNumberPopup : MonoBehaviour
         Camera mainCamera = Camera.main;
         if (mainCamera == null)
         {
-            Debug.LogWarning("DamageNumberPopup: Camera.main est null");
+            GameLog.LogWarning("DamageNumberPopup: Camera.main est null");
             return;
         }
 
@@ -209,7 +209,7 @@ public class DamageNumberPopup : MonoBehaviour
         Canvas canvas = GetComponentInParent<Canvas>();
         if (canvas == null)
         {
-            Debug.LogWarning("DamageNumberPopup: Pas de Canvas parent trouvé");
+            GameLog.LogWarning("DamageNumberPopup: Pas de Canvas parent trouvé");
             return;
         }
 

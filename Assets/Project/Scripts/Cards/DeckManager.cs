@@ -29,7 +29,7 @@ public class DeckManager : MonoBehaviour
         ShuffleDeck();
         OnDeckChanged?.Invoke(_deck.Count);
         OnDiscardChanged?.Invoke(_discardPile.Count);
-        Debug.Log("Deck initialisé et mélangé avec " + _deck.Count + " cartes.");
+        GameLog.Log("Deck initialisé et mélangé avec " + _deck.Count + " cartes.");
         DrawCards(_maxHandSize); // Piocher la main de départ après l'initialisation
     }
 
@@ -43,7 +43,7 @@ public class DeckManager : MonoBehaviour
     {
         System.Random rng = new System.Random();
         _deck = _deck.OrderBy(a => rng.Next()).ToList();
-        Debug.Log("Deck mélangé.");
+        GameLog.Log("Deck mélangé.");
     }
 
     public List<CardData> GetHand()
@@ -71,14 +71,14 @@ public class DeckManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("Impossible de piocher : deck et défausse vides.");
+                GameLog.LogWarning("Impossible de piocher : deck et défausse vides.");
                 return null;
             }
         }
 
         if (_hand.Count >= _maxHandSize)
         {
-            Debug.LogWarning("Main pleine. Impossible de piocher une nouvelle carte.");
+            GameLog.LogWarning("Main pleine. Impossible de piocher une nouvelle carte.");
             return null; // La main est pleine, ne pioche pas
         }
 
@@ -87,7 +87,7 @@ public class DeckManager : MonoBehaviour
         _hand.Add(drawnCard);
         OnHandChanged?.Invoke();
         OnDeckChanged?.Invoke(_deck.Count);
-        Debug.Log("Carte piochée : " + drawnCard.cardName + ". Cartes restantes dans le deck : " + _deck.Count);
+        GameLog.Log("Carte piochée : " + drawnCard.cardName + ". Cartes restantes dans le deck : " + _deck.Count);
         return drawnCard;
     }
 
@@ -107,17 +107,17 @@ public class DeckManager : MonoBehaviour
             _discardPile.Add(cardToPlay);
             OnHandChanged?.Invoke();
             OnDiscardChanged?.Invoke(_discardPile.Count);
-            Debug.Log("Carte jouée : " + cardToPlay.cardName + ". " + _hand.Count + " cartes restantes en main.");
+            GameLog.Log("Carte jouée : " + cardToPlay.cardName + ". " + _hand.Count + " cartes restantes en main.");
         }
         else
         {
-            Debug.LogWarning("La carte " + cardToPlay.cardName + " n'est pas dans la main.");
+            GameLog.LogWarning("La carte " + cardToPlay.cardName + " n'est pas dans la main.");
         }
     }
 
     private void ReshuffleDiscardIntoDeck()
     {
-        Debug.Log("Défausse mélangée dans le deck.");
+        GameLog.Log("Défausse mélangée dans le deck.");
         _deck.AddRange(_discardPile);
         _discardPile.Clear();
         ShuffleDeck();
@@ -127,7 +127,7 @@ public class DeckManager : MonoBehaviour
 
     public void DiscardHand()
     {
-        Debug.Log("Main défaussée.");
+        GameLog.Log("Main défaussée.");
         _discardPile.AddRange(_hand);
         _hand.Clear();
         OnHandChanged?.Invoke();
@@ -143,7 +143,7 @@ public class DeckManager : MonoBehaviour
         {
             _deck.Add(card);
             OnDeckChanged?.Invoke(_deck.Count);
-            Debug.Log($"Carte {card.cardName} ajoutée au deck.");
+            GameLog.Log($"Carte {card.cardName} ajoutée au deck.");
         }
     }
 
@@ -159,21 +159,21 @@ public class DeckManager : MonoBehaviour
             {
                 _deck.Remove(card);
                 OnDeckChanged?.Invoke(_deck.Count);
-                Debug.Log($"Carte {card.cardName} retirée du deck.");
+                GameLog.Log($"Carte {card.cardName} retirée du deck.");
             }
             // Cherche dans la main
             else if (_hand.Contains(card))
             {
                 _hand.Remove(card);
                 OnHandChanged?.Invoke();
-                Debug.Log($"Carte {card.cardName} retirée de la main.");
+                GameLog.Log($"Carte {card.cardName} retirée de la main.");
             }
             // Cherche dans la défausse
             else if (_discardPile.Contains(card))
             {
                 _discardPile.Remove(card);
                 OnDiscardChanged?.Invoke(_discardPile.Count);
-                Debug.Log($"Carte {card.cardName} retirée de la défausse.");
+                GameLog.Log($"Carte {card.cardName} retirée de la défausse.");
             }
         }
     }
@@ -186,7 +186,7 @@ public class DeckManager : MonoBehaviour
         // On autorise le dépassement de la taille de main pour les cartes ajoutées directement (Rage, Fetch, etc.)
         _hand.Add(cardToAdd);
         OnHandChanged?.Invoke();
-        Debug.Log($"DeckManager: Carte spéciale {cardToAdd.cardName} ajoutée à la main.");
+        GameLog.Log($"DeckManager: Carte spéciale {cardToAdd.cardName} ajoutée à la main.");
     }
 
     /// <summary>
@@ -211,7 +211,7 @@ public class DeckManager : MonoBehaviour
         
         if (foundCount > 0)
         {
-            Debug.Log($"DeckManager: {foundCount} cartes récupérées du deck.");
+            GameLog.Log($"DeckManager: {foundCount} cartes récupérées du deck.");
             OnDeckChanged?.Invoke(_deck.Count);
             ShuffleDeck();
         }

@@ -44,12 +44,12 @@ public class ActionPointsComponent : IActionPointsUser
         {
             _currentActionPoints -= amount;
             OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
-            Debug.Log($"{_unitName}: PA dépensés ({amount}). Restant: {_currentActionPoints}/{_maxActionPoints}");
+            GameLog.Log($"{_unitName}: PA dépensés ({amount}). Restant: {_currentActionPoints}/{_maxActionPoints}");
             return true;
         }
         else
         {
-            Debug.LogWarning($"{_unitName}: PA insuffisants ! Requis: {amount}, Disponible: {_currentActionPoints}");
+            GameLog.LogWarning($"{_unitName}: PA insuffisants ! Requis: {amount}, Disponible: {_currentActionPoints}");
             return false;
         }
     }
@@ -58,7 +58,7 @@ public class ActionPointsComponent : IActionPointsUser
     {
         _currentActionPoints = _maxActionPoints;
         OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
-        Debug.Log($"{_unitName}: PA rafraîchis à {_currentActionPoints}/{_maxActionPoints}");
+        GameLog.Log($"{_unitName}: PA rafraîchis à {_currentActionPoints}/{_maxActionPoints}");
     }
 
     public void SetMaxPA(int value)
@@ -67,7 +67,7 @@ public class ActionPointsComponent : IActionPointsUser
         // S'assurer que les PA courants ne dépassent pas le nouveau max
         _currentActionPoints = Mathf.Clamp(_currentActionPoints, 0, _maxActionPoints);
         OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
-        Debug.Log($"{_unitName}: PA maximum changés à {_maxActionPoints}");
+        GameLog.Log($"{_unitName}: PA maximum changés à {_maxActionPoints}");
     }
 
     // ========== MÉTHODES UTILITAIRES ==========
@@ -101,7 +101,7 @@ public class ActionPointsComponent : IActionPointsUser
 
         _currentActionPoints = Mathf.Max(0, _currentActionPoints - amount);
         OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
-        Debug.Log($"{_unitName}: PA réduits de {amount} (debuff). Restant: {_currentActionPoints}/{_maxActionPoints}");
+        GameLog.Log($"{_unitName}: PA réduits de {amount} (debuff). Restant: {_currentActionPoints}/{_maxActionPoints}");
     }
 
     /// <summary>
@@ -114,6 +114,6 @@ public class ActionPointsComponent : IActionPointsUser
 
         _currentActionPoints = Mathf.Min(_maxActionPoints, _currentActionPoints + amount);
         OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
-        Debug.Log($"{_unitName}: PA ajoutés ({amount}). Total: {_currentActionPoints}/{_maxActionPoints}");
+        GameLog.Log($"{_unitName}: PA ajoutés ({amount}). Total: {_currentActionPoints}/{_maxActionPoints}");
     }
 }

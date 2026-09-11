@@ -14,7 +14,7 @@ public class UnderBed : Enemy
     {
         base.Start(); // Important : Appelle la méthode Start de la classe parente Enemy.
                       // Cela initialise les statistiques à partir de EnemyData assigné.
-        Debug.Log($"{name} (UnderBed) est prêt ! HP: {GetHealth()}/{GetMaxHealth()}, PA: {GetCurrentPA()}/{GetMaxPA()}");
+        GameLog.Log($"{name} (UnderBed) est prêt ! HP: {GetHealth()}/{GetMaxHealth()}, PA: {GetCurrentPA()}/{GetMaxPA()}");
     }
 
     // Vous pouvez surcharger d'autres méthodes de Enemy ici si UnderBed a un comportement différent.

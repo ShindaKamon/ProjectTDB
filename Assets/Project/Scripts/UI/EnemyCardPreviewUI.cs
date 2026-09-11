@@ -19,17 +19,17 @@ public class EnemyCardPreviewUI : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("EnemyCardPreviewUI: Start() appelé");
+        GameLog.Log("EnemyCardPreviewUI: Start() appelé");
 
         // Cache le preview au démarrage
         if (_previewContainer != null)
         {
             _previewContainer.SetActive(false);
-            Debug.Log("EnemyCardPreviewUI: Container caché au démarrage");
+            GameLog.Log("EnemyCardPreviewUI: Container caché au démarrage");
         }
         else
         {
-            Debug.LogWarning("EnemyCardPreviewUI: _previewContainer est null! Assigne-le dans l'Inspector.");
+            GameLog.LogWarning("EnemyCardPreviewUI: _previewContainer est null! Assigne-le dans l'Inspector.");
         }
     }
 
@@ -121,7 +121,7 @@ public class EnemyCardPreviewUI : MonoBehaviour
             _cardIllustrationImage.enabled = false;
         }
 
-        Debug.Log($"EnemyCardPreviewUI: Affiche prochaine carte - {nextCard.cardName}");
+        GameLog.Log($"EnemyCardPreviewUI: Affiche prochaine carte - {nextCard.cardName}");
     }
 
     /// <summary>

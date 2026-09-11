@@ -41,7 +41,7 @@ public class DeckDiscardUI : MonoBehaviour
                     UpdateDiscardUI(_currentDeckManager.GetDiscardCount());
                     
                     _isInitialized = true;
-                    Debug.Log("DeckDiscardUI: Initialisé avec succès.");
+                    GameLog.Log("DeckDiscardUI: Initialisé avec succès.");
                 }
             }
         }

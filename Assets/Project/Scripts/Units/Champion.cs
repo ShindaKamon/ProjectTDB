@@ -126,6 +126,6 @@ public abstract class Champion : Unit, IActionPointsUser
         // Initialise les aspects communs (Position, Faction, State) via Unit
         base.Initialize(initialGridPos);
 
-        Debug.Log($"{name} (Champion): Stats initialisées - HP: {GetHealth()}/{GetMaxHealth()}, PA: {GetCurrentPA()}/{GetMaxPA()}, PM: {GetMaxMovementPoints()}");
+        GameLog.Log($"{name} (Champion): Stats initialisées - HP: {GetHealth()}/{GetMaxHealth()}, PA: {GetCurrentPA()}/{GetMaxPA()}, PM: {GetMaxMovementPoints()}");
     }
 }

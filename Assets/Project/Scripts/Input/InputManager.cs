@@ -68,7 +68,7 @@ public class InputManager : MonoBehaviour
             else if (_previousSelectedCard != null)
             {
                 // Si on vient de désélectionner une carte, réafficher la portée de mouvement
-                Debug.Log("InputManager: Carte désélectionnée, réaffichage de la portée de mouvement");
+                GameLog.Log("InputManager: Carte désélectionnée, réaffichage de la portée de mouvement");
                 // OPTIMISATION Phase 3.2: EventBus
                 EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
             }
@@ -191,7 +191,7 @@ public class InputManager : MonoBehaviour
         {
             if (_handUIController != null && _handUIController.SelectedCard != null)
             {
-                Debug.Log("Clic droit détecté : désélection de la carte.");
+                GameLog.Log("Clic droit détecté : désélection de la carte.");
                 _handUIController.DeselectCard();
                 return; // Consomme le clic droit et bloque toute autre interaction
             }
@@ -208,12 +208,12 @@ public class InputManager : MonoBehaviour
                 {
                     if (hoveredUI == null || hoveredUI.GetComponentInParent<HandUIController>() == null)
                     {
-                        Debug.Log("Clic gauche vers le monde, carte sélectionnée : tentative de jeu");
+                        GameLog.Log("Clic gauche vers le monde, carte sélectionnée : tentative de jeu");
                         // on continue vers HandleCardPlay
                     }
                     else
                     {
-                        Debug.Log("Clic gauche sur la main UI consommé.");
+                        GameLog.Log("Clic gauche sur la main UI consommé.");
                         return;
                     }
                 }
@@ -230,13 +230,13 @@ public class InputManager : MonoBehaviour
                 // Si une carte est sélectionnée, tenter de la jouer sur l'objet monde
                 if (_handUIController != null && _handUIController.SelectedCard != null)
                 {
-                    Debug.Log($"Clic gauche sur monde avec carte sélectionnée : {clickedObject.name}");
+                    GameLog.Log($"Clic gauche sur monde avec carte sélectionnée : {clickedObject.name}");
                     HandleCardPlay(clickedObject, activeUnit);
                 }
                 else
                 {
                     // Sinon (pas de carte sélectionnée), gérer l'interaction normale avec l'unité
-                    Debug.Log($"Clic gauche sur monde sans carte sélectionnée : {clickedObject.name}");
+                    GameLog.Log($"Clic gauche sur monde sans carte sélectionnée : {clickedObject.name}");
                     HandleUnitInteraction(clickedObject, activeUnit);
                 }
             }
@@ -245,7 +245,7 @@ public class InputManager : MonoBehaviour
                 // Clic sur le vide (pas d'UI, pas de monde)
                 if (_handUIController != null && _handUIController.SelectedCard != null)
                 {
-                    Debug.Log("Clic sur le vide avec carte sélectionnée. Désélection de la carte.");
+                    GameLog.Log("Clic sur le vide avec carte sélectionnée. Désélection de la carte.");
                     _handUIController.DeselectCard();
                 }
             }
@@ -375,7 +375,7 @@ public class InputManager : MonoBehaviour
             Tile enemyTile = Services.Grid.GetTileAtPosition(enemyPos);
             if (!selectedCard.IsValidChargeTarget(enemyTile, activeUnit))
             {
-                Debug.Log($"Charge invalide : {targetUnit.name} n'est pas en ligne droite");
+                GameLog.Log($"Charge invalide : {targetUnit.name} n'est pas en ligne droite");
                 _handUIController.DeselectCard();
                 return;
             }
@@ -384,12 +384,12 @@ public class InputManager : MonoBehaviour
             int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(enemyPos.x - sourcePos.x) + Mathf.Abs(enemyPos.y - sourcePos.y));
             if (manhattanDistance > selectedCard.targetRange)
             {
-                Debug.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {manhattanDistance}, portée: {selectedCard.targetRange})");
+                GameLog.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {manhattanDistance}, portée: {selectedCard.targetRange})");
                 _handUIController.DeselectCard();
                 return;
             }
 
-            Debug.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {manhattanDistance}");
+            GameLog.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {manhattanDistance}");
             // Joue la carte avec la position de l'ennemi comme cible
             StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, enemyPos));
             return;
@@ -472,14 +472,14 @@ public class InputManager : MonoBehaviour
         // Les attaques se font uniquement via les cartes, plus d'attaque de base
         if (clickedUnit == activeUnit)
         {
-            Debug.Log("Clic sur l'unité active.");
+            GameLog.Log("Clic sur l'unité active.");
         }
         else if (TryGetGridPosition(clickedObject, out Vector2Int targetGridPos))
         {
             // DÉPLACEMENT - Vérifie si l'unité a encore des points de mouvement
             if (availablePoints <= 0)
             {
-                Debug.LogWarning($"{activeUnit.name} n'a plus de PM ! (PM: {availablePoints})");
+                GameLog.LogWarning($"{activeUnit.name} n'a plus de PM ! (PM: {availablePoints})");
                 return;
             }
 
@@ -494,7 +494,7 @@ public class InputManager : MonoBehaviour
 
             if (targetTile == null || !reachableTilesWithCost.ContainsKey(targetTile))
             {
-                Debug.LogWarning($"La tuile {targetGridPos} n'est pas atteignable.");
+                GameLog.LogWarning($"La tuile {targetGridPos} n'est pas atteignable.");
                 return;
             }
 
@@ -508,23 +508,23 @@ public class InputManager : MonoBehaviour
 
             if (pathToTarget == null || pathToTarget.Count == 0)
             {
-                Debug.LogWarning($"Aucun chemin valide vers {targetGridPos}");
+                GameLog.LogWarning($"Aucun chemin valide vers {targetGridPos}");
                 return;
             }
 
             int movementCost = pathToTarget.Count;
             if (availablePoints < movementCost)
             {
-                Debug.LogWarning($"{activeUnit.name} n'a pas assez de points ({availablePoints}) pour {targetGridPos} (coût {movementCost})");
+                GameLog.LogWarning($"{activeUnit.name} n'a pas assez de points ({availablePoints}) pour {targetGridPos} (coût {movementCost})");
                 return;
             }
 
             // Exécute le déplacement
-            Debug.Log($"{activeUnit.name} se déplace vers {targetGridPos} (coût: {movementCost})");
+            GameLog.Log($"{activeUnit.name} se déplace vers {targetGridPos} (coût: {movementCost})");
             EventBus.Publish(new ResetTileColorsEvent());
             activeUnit.MoveToTile(pathToTarget);
             activeUnit.SpendMovement(movementCost);
-            Debug.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
+            GameLog.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
             Services.Grid.UpdateUnitUI();
             StartCoroutine(RefreshRangeAfterMovement(activeUnit));
         }
@@ -542,13 +542,13 @@ public class InputManager : MonoBehaviour
         {
             // OPTIMISATION Phase 3.2: EventBus
             EventBus.Publish(new ShowMovementRangeEvent(unit));
-            Debug.Log($"Portée rafraîchie : {remainingPM} PM restants");
+            GameLog.Log($"Portée rafraîchie : {remainingPM} PM restants");
         }
         else if (unit != null)
         {
             // Plus de points de mouvement, on réinitialise juste l'affichage (OPTIMISATION Phase 3.2: EventBus)
             EventBus.Publish(new ResetTileColorsEvent());
-            Debug.Log($"{unit.name} n'a plus de PM.");
+            GameLog.Log($"{unit.name} n'a plus de PM.");
         }
     }
 

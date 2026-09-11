@@ -62,7 +62,7 @@ public class UnitState
     {
         if (_currentState == UnitStateType.Dead)
         {
-            Debug.LogWarning($"{_unit.name}: Cannot set idle - unit is dead");
+            GameLog.LogWarning($"{_unit.name}: Cannot set idle - unit is dead");
             return;
         }
 
@@ -76,13 +76,13 @@ public class UnitState
     {
         if (_currentState == UnitStateType.Dead)
         {
-            Debug.LogWarning($"{_unit.name}: Cannot activate - unit is dead");
+            GameLog.LogWarning($"{_unit.name}: Cannot activate - unit is dead");
             return;
         }
 
         if (_currentState == UnitStateType.Stunned)
         {
-            Debug.Log($"{_unit.name}: Cannot activate - unit is stunned");
+            GameLog.Log($"{_unit.name}: Cannot activate - unit is stunned");
             TransitionTo(UnitStateType.Idle); // Skip turn
             return;
         }
@@ -97,7 +97,7 @@ public class UnitState
     {
         if (!CanMove())
         {
-            Debug.LogWarning($"{_unit.name}: Cannot move from state {_currentState}");
+            GameLog.LogWarning($"{_unit.name}: Cannot move from state {_currentState}");
             return;
         }
 
@@ -111,7 +111,7 @@ public class UnitState
     {
         if (_currentState != UnitStateType.Moving)
         {
-            Debug.LogWarning($"{_unit.name}: Not currently moving");
+            GameLog.LogWarning($"{_unit.name}: Not currently moving");
             return;
         }
 
@@ -125,7 +125,7 @@ public class UnitState
     {
         if (!CanAct())
         {
-            Debug.LogWarning($"{_unit.name}: Cannot act from state {_currentState}");
+            GameLog.LogWarning($"{_unit.name}: Cannot act from state {_currentState}");
             return;
         }
 
@@ -139,7 +139,7 @@ public class UnitState
     {
         if (_currentState != UnitStateType.Acting)
         {
-            Debug.LogWarning($"{_unit.name}: Not currently acting");
+            GameLog.LogWarning($"{_unit.name}: Not currently acting");
             return;
         }
 
@@ -161,7 +161,7 @@ public class UnitState
     {
         if (_currentState == UnitStateType.Dead)
         {
-            Debug.LogWarning($"{_unit.name}: Cannot stun - unit is dead");
+            GameLog.LogWarning($"{_unit.name}: Cannot stun - unit is dead");
             return;
         }
 
@@ -230,7 +230,7 @@ public class UnitState
         UnitStateType oldState = _currentState;
         _currentState = newState;
 
-        Debug.Log($"{_unit.name}: State {oldState} → {newState}");
+        GameLog.Log($"{_unit.name}: State {oldState} → {newState}");
 
         // Notifie les abonnés
         OnStateChanged?.Invoke(oldState, newState);

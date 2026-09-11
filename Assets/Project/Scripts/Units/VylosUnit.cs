@@ -45,7 +45,7 @@ public class VylosUnit : Champion, IActionPointsUser
     {
         base.Initialize(data, initialGridPos);
 
-        Debug.Log($"{name} (Vylos) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, ATK: {GetAttack()}");
+        GameLog.Log($"{name} (Vylos) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, ATK: {GetAttack()}");
     }
 
     protected override void Start()
@@ -99,7 +99,7 @@ public class VylosUnit : Champion, IActionPointsUser
             {
                 _hasLostHPThisTurn = true;
                 _shouldGainPAOnNextTurn = true;
-                Debug.Log($"[Vylos Passif 2] {name} a perdu des PV pour la première fois ce tour - gagnera 1 PA au prochain tour");
+                GameLog.Log($"[Vylos Passif 2] {name} a perdu des PV pour la première fois ce tour - gagnera 1 PA au prochain tour");
             }
             
             // Passif 1 : Partage les dégâts vers les ennemis avec Stigmate (dégâts bruts)
@@ -124,7 +124,7 @@ public class VylosUnit : Champion, IActionPointsUser
             return; // Aucun ennemi marqué, rien à faire
         }
 
-        Debug.Log($"[Vylos Passif 1] {name} subit {damageAmount} dégâts → Partage vers {markedEnemies.Count} ennemi(s) avec Stigmate");
+        GameLog.Log($"[Vylos Passif 1] {name} subit {damageAmount} dégâts → Partage vers {markedEnemies.Count} ennemi(s) avec Stigmate");
 
         // Active le flag pour éviter les boucles infinies
         _isSharingDamageToStigmates = true;
@@ -135,7 +135,7 @@ public class VylosUnit : Champion, IActionPointsUser
             if (markedEnemy != null && !markedEnemy.GetUnitState().IsDead())
             {
                 markedEnemy.TakeRawDamage(damageAmount);
-                Debug.Log($"[Vylos Passif 1] → {markedEnemy.name} prend {damageAmount} dégâts bruts (Stigmate)");
+                GameLog.Log($"[Vylos Passif 1] → {markedEnemy.name} prend {damageAmount} dégâts bruts (Stigmate)");
             }
         }
         
@@ -155,7 +155,7 @@ public class VylosUnit : Champion, IActionPointsUser
         {
             // Utilise la méthode AddPA pour gagner 1 PA (ne peut pas dépasser le maximum)
             AddPA(1);
-            Debug.Log($"[Vylos Passif 2] {name} gagne 1 PA (première perte de PV du tour précédent). PA: {GetCurrentPA()}/{GetMaxPA()}");
+            GameLog.Log($"[Vylos Passif 2] {name} gagne 1 PA (première perte de PV du tour précédent). PA: {GetCurrentPA()}/{GetMaxPA()}");
             
             _shouldGainPAOnNextTurn = false;
         }

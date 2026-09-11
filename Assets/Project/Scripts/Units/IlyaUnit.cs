@@ -50,7 +50,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
         // Initialise la défense depuis ChampionData
         _defense = data.defense;
 
-        Debug.Log($"{name} (Ilya) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, DEF: {_defense}, ATK: {GetAttack()}");
+        GameLog.Log($"{name} (Ilya) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, DEF: {_defense}, ATK: {GetAttack()}");
     }
 
     protected override void Start()
@@ -86,7 +86,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
         base.TakeDamage(actualDamage);
 
         int damageTaken = hpBefore - _health;
-        Debug.Log($"{name} prend {damageTaken} dégâts réels (Calculé: {actualDamage}, Brut: {rawDamage}, DEF: {_defense})");
+        GameLog.Log($"{name} prend {damageTaken} dégâts réels (Calculé: {actualDamage}, Brut: {rawDamage}, DEF: {_defense})");
 
         // Mécanique de Rage : Génération de carte sur dégâts
         TryGenerateRage(damageTaken);
@@ -131,7 +131,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
     {
         _defense = value;
         NotifyStatsModified();
-        Debug.Log($"{name}: Défense changée à {_defense}");
+        GameLog.Log($"{name}: Défense changée à {_defense}");
     }
 
     private void AddRageCards(int count)
@@ -144,7 +144,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
                 deckManager.AddCardToHand(_rageCard);
             }
 
-            Debug.Log($"😡 RAGE ! {name} gagne {count} carte(s) {_rageCard.cardName} ajoutées à la main suite aux dégâts subis.");
+            GameLog.Log($"😡 RAGE ! {name} gagne {count} carte(s) {_rageCard.cardName} ajoutées à la main suite aux dégâts subis.");
         }
     }
 
@@ -157,7 +157,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
         if (def != 0)
         {
             _defense += def;
-            Debug.Log($"{name}: DEF modifiée de {def} (Total: {_defense})");
+            GameLog.Log($"{name}: DEF modifiée de {def} (Total: {_defense})");
         }
 
         // Appelle la classe de base (gère ATK, buffs temporaires et déclenche OnStatsModified)
@@ -178,7 +178,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
             {
                 // Le buff va expirer, retire la DEF
                 _defense -= buff.defModifier;
-                Debug.Log($"{name}: Buff DEF expiré - DEF restaurée de {buff.defModifier} (Total: {_defense})");
+                GameLog.Log($"{name}: Buff DEF expiré - DEF restaurée de {buff.defModifier} (Total: {_defense})");
             }
         }
 
@@ -193,7 +193,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
     {
         _rageStock += amount;
         OnRageStockChanged?.Invoke(_rageStock);
-        Debug.Log($"{name} stocke {amount} Rage. Total: {_rageStock}");
+        GameLog.Log($"{name} stocke {amount} Rage. Total: {_rageStock}");
     }
 
     /// <summary>
@@ -205,7 +205,7 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
 
         _rageStock -= amount;
         OnRageStockChanged?.Invoke(_rageStock);
-        Debug.Log($"{name} consomme {amount} Rage. Restant: {_rageStock}");
+        GameLog.Log($"{name} consomme {amount} Rage. Restant: {_rageStock}");
         return true;
     }
 }

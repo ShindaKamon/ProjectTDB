@@ -213,18 +213,18 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
             TurnStateMachine turnMachine = Services.Grid?.GetTurnStateMachine();
             if (turnMachine != null && !turnMachine.CanPlayerAct())
             {
-                Debug.LogWarning("Ce n'est pas votre tour !");
+                GameLog.LogWarning("Ce n'est pas votre tour !");
                 return;
             }
 
             // Ne pas permettre de cliquer si la carte n'est pas jouable
             if (!_isAffordable)
             {
-                Debug.LogWarning($"Pas assez de PA pour jouer {_cardData.cardName}");
+                GameLog.LogWarning($"Pas assez de PA pour jouer {_cardData.cardName}");
                 return;
             }
 
-            Debug.Log($"Carte cliquée : {_cardData.cardName}");
+            GameLog.Log($"Carte cliquée : {_cardData.cardName}");
             OnCardClicked?.Invoke(_cardData); // Déclencher l'événement avec les données de la carte
         }
     }

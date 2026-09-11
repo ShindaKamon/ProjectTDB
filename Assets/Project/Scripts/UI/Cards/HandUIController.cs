@@ -46,7 +46,7 @@ public class HandUIController : MonoBehaviour
     {
         if (_selectedCard != null)
         {
-            Debug.Log($"Carte {_selectedCard.cardName} désélectionnée via appel externe.");
+            GameLog.Log($"Carte {_selectedCard.cardName} désélectionnée via appel externe.");
             _selectedCard = null;
             ResetSelectedCardUIPosition();
             ResetCardHighlights();
@@ -98,11 +98,11 @@ public class HandUIController : MonoBehaviour
             {
                 _playerDeckManager.OnHandChanged += UpdateHandUI; // S'abonner à l'événement de changement de main
                 UpdateHandUI(); // Mettre à jour l'UI immédiatement après l'abonnement
-                Debug.Log("HandUIController: Initialisé avec succès!");
+                GameLog.Log("HandUIController: Initialisé avec succès!");
             }
             else
             {
-                Debug.LogWarning("DeckManager introuvable sur l'unité active du joueur.");
+                GameLog.LogWarning("DeckManager introuvable sur l'unité active du joueur.");
                 return;
             }
 
@@ -287,7 +287,7 @@ public class HandUIController : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"Le préfab de carte UI '{_cardUIPrefab.name}' ne contient pas de composant CardUIElement.");
+                    GameLog.LogWarning($"Le préfab de carte UI '{_cardUIPrefab.name}' ne contient pas de composant CardUIElement.");
                 }
             }
         }
@@ -416,7 +416,7 @@ public class HandUIController : MonoBehaviour
 
     private void HandleCardClicked(CardData clickedCard)
     {
-        Debug.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
+        GameLog.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
 
         // Réinitialiser la position de la carte précédemment sélectionnée si elle suivait la souris
         ResetSelectedCardUIPosition();
@@ -439,7 +439,7 @@ public class HandUIController : MonoBehaviour
                 // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
                 EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
             }
-            Debug.Log("Carte désélectionnée.");
+            GameLog.Log("Carte désélectionnée.");
         }
         else
         {
@@ -460,7 +460,7 @@ public class HandUIController : MonoBehaviour
                 EventBus.Publish(new ShowCardTargetsEvent(_selectedCard, activeUnit));
             }
 
-            Debug.Log($"Carte sélectionnée : {_selectedCard.cardName}");
+            GameLog.Log($"Carte sélectionnée : {_selectedCard.cardName}");
 
             // Trouver le GameObject UI correspondant à la carte sélectionnée pour le faire suivre la souris
             foreach (GameObject cardUIObject in _instantiatedCardUIs)
@@ -522,7 +522,7 @@ public class HandUIController : MonoBehaviour
         // Validation des préconditions
         if (_selectedCard == null)
         {
-            Debug.LogWarning("Aucune carte sélectionnée.");
+            GameLog.LogWarning("Aucune carte sélectionnée.");
             return;
         }
 
@@ -543,7 +543,7 @@ public class HandUIController : MonoBehaviour
         ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
         if (!canPlayResult.IsValid)
         {
-            Debug.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
+            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
             return;
         }
 
@@ -556,7 +556,7 @@ public class HandUIController : MonoBehaviour
             ValidationResult chargeResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, chargeTargetPos);
             if (!chargeResult.IsValid)
             {
-                Debug.LogWarning($"❌ Ciblage de charge invalide : {chargeResult.ErrorMessage}");
+                GameLog.LogWarning($"❌ Ciblage de charge invalide : {chargeResult.ErrorMessage}");
                 return;
             }
         }
@@ -567,7 +567,7 @@ public class HandUIController : MonoBehaviour
                 ValidationResult targetResult = GameActionValidator.CanTargetUnit(_selectedCard, activeUnit, targetUnit);
                 if (!targetResult.IsValid)
                 {
-                    Debug.LogWarning($"❌ Ciblage invalide : {targetResult.ErrorMessage}");
+                    GameLog.LogWarning($"❌ Ciblage invalide : {targetResult.ErrorMessage}");
                     return;
                 }
             }
@@ -577,7 +577,7 @@ public class HandUIController : MonoBehaviour
                 ValidationResult tileResult = GameActionValidator.CanTargetTile(_selectedCard, activeUnit, targetTile);
                 if (!tileResult.IsValid)
                 {
-                    Debug.LogWarning($"❌ Ciblage de tuile invalide : {tileResult.ErrorMessage}");
+                    GameLog.LogWarning($"❌ Ciblage de tuile invalide : {tileResult.ErrorMessage}");
                     return;
                 }
             }
@@ -618,7 +618,7 @@ public class HandUIController : MonoBehaviour
         EventBus.Publish(new ResetTileColorsEvent());
         EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
 
-        Debug.Log($"✅ Carte jouée avec succès");
+        GameLog.Log($"✅ Carte jouée avec succès");
     }
 
     // Méthode pour surligner visuellement la carte sélectionnée

@@ -27,7 +27,7 @@ public class SimpleChampionSelector : MonoBehaviour
 
         if (_autoStart)
         {
-            Debug.Log($"Démarrage automatique avec {_defaultChampion.championName} dans {_autoStartDelay}s...");
+            GameLog.Log($"Démarrage automatique avec {_defaultChampion.championName} dans {_autoStartDelay}s...");
             Invoke(nameof(LoadCombatScene), _autoStartDelay);
         }
     }
@@ -50,7 +50,7 @@ public class SimpleChampionSelector : MonoBehaviour
         if (property != null)
         {
             property.SetValue(null, champion);
-            Debug.Log($"Champion sélectionné: {champion.championName}");
+            GameLog.Log($"Champion sélectionné: {champion.championName}");
         }
     }
 
@@ -58,7 +58,7 @@ public class SimpleChampionSelector : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(_combatSceneName))
         {
-            Debug.Log($"Chargement de {_combatSceneName}...");
+            GameLog.Log($"Chargement de {_combatSceneName}...");
             SceneManager.LoadScene(_combatSceneName);
         }
         else

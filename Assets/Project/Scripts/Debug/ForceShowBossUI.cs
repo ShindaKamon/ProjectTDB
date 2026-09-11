@@ -25,7 +25,7 @@ public class ForceShowBossUI : MonoBehaviour
 
     void ForceConnect()
     {
-        Debug.Log("=== FORCE CONNEXION UI ===");
+        GameLog.Log("=== FORCE CONNEXION UI ===");
 
         // Trouve le BattleUIManager
         if (!Services.IsBattleUIServiceAvailable())
@@ -37,25 +37,25 @@ public class ForceShowBossUI : MonoBehaviour
 
         // Trouve tous les ennemis
         Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
-        Debug.Log($"Ennemis trouvés: {enemies.Length}");
+        GameLog.Log($"Ennemis trouvés: {enemies.Length}");
 
         foreach (Enemy enemy in enemies)
         {
-            Debug.Log($"Ennemi: {enemy.name}");
-            Debug.Log($"  - Is Boss: {enemy.IsBoss()}");
-            Debug.Log($"  - EnemyData: {enemy.GetEnemyData()?.enemyName}");
-            Debug.Log($"  - HP: {enemy.GetHealth()}/{enemy.GetMaxHealth()}");
+            GameLog.Log($"Ennemi: {enemy.name}");
+            GameLog.Log($"  - Is Boss: {enemy.IsBoss()}");
+            GameLog.Log($"  - EnemyData: {enemy.GetEnemyData()?.enemyName}");
+            GameLog.Log($"  - HP: {enemy.GetHealth()}/{enemy.GetMaxHealth()}");
 
             if (enemy.GetEnemyData() != null)
             {
-                Debug.Log($"  - Is Boss (Data): {enemy.GetEnemyData().isBoss}");
+                GameLog.Log($"  - Is Boss (Data): {enemy.GetEnemyData().isBoss}");
             }
 
             // Force la connexion
-            Debug.Log($"Force la connexion de {enemy.name}...");
+            GameLog.Log($"Force la connexion de {enemy.name}...");
             manager.OnEnemySpawned(enemy);
         }
 
-        Debug.Log("=== FIN FORCE CONNEXION ===");
+        GameLog.Log("=== FIN FORCE CONNEXION ===");
     }
 }

@@ -17,7 +17,7 @@ public static class EventBus
         _subscribers.Clear();
         _totalEventsPublished = 0;
         _enableLogging = false;
-        Debug.Log("[EventBus] Initialisé au chargement du runtime.");
+        GameLog.Log("[EventBus] Initialisé au chargement du runtime.");
     }
 
     public static void SetLogging(bool enabled)
@@ -33,14 +33,14 @@ public static class EventBus
 
         if (_subscribers[eventType].Contains(handler))
         {
-            Debug.LogWarning($"[EventBus] Double souscription ignorée pour {eventType.Name}.");
+            GameLog.LogWarning($"[EventBus] Double souscription ignorée pour {eventType.Name}.");
             return;
         }
 
         _subscribers[eventType].Add(handler);
 
         if (_enableLogging)
-            Debug.Log($"[EventBus] Abonné à {eventType.Name} ({_subscribers[eventType].Count}).");
+            GameLog.Log($"[EventBus] Abonné à {eventType.Name} ({_subscribers[eventType].Count}).");
     }
 
     public static void Unsubscribe<T>(Action<T> handler) where T : GameEvent
@@ -86,7 +86,7 @@ public static class EventBus
         _subscribers.Clear();
         _totalEventsPublished = 0;
         if (_enableLogging)
-            Debug.Log("[EventBus] Nettoyage complet.");
+            GameLog.Log("[EventBus] Nettoyage complet.");
     }
 
     public static int GetSubscriberCount<T>() where T : GameEvent
@@ -96,12 +96,12 @@ public static class EventBus
 
     public static void DebugPrintSubscribers()
     {
-        Debug.Log("=== EventBus Subscribers ===");
+        GameLog.Log("=== EventBus Subscribers ===");
         foreach (var kvp in _subscribers)
         {
-            Debug.Log($"  {kvp.Key.Name}: {kvp.Value.Count}");
+            GameLog.Log($"  {kvp.Key.Name}: {kvp.Value.Count}");
             foreach (var handler in kvp.Value)
-                Debug.Log($"    - {handler.Target?.GetType().Name ?? "Static"}.{handler.Method.Name}");
+                GameLog.Log($"    - {handler.Target?.GetType().Name ?? "Static"}.{handler.Method.Name}");
         }
     }
 }

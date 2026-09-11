@@ -29,7 +29,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             return;
         }
         ServiceLocator.Instance.Register<IBattleUIService>(this);
-        Debug.Log("BattleUIManager: Enregistré dans ServiceLocator comme IBattleUIService");
+        GameLog.Log("BattleUIManager: Enregistré dans ServiceLocator comme IBattleUIService");
 
         if (_playerHealthOrb == null)
         {
@@ -68,7 +68,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             if (orbImage != null)
             {
                 _defaultOrbColor = orbImage.color;
-                Debug.Log($"BattleUIManager: Couleur initiale de l'orbe détectée sur '{orbImage.name}': {_defaultOrbColor}");
+                GameLog.Log($"BattleUIManager: Couleur initiale de l'orbe détectée sur '{orbImage.name}': {_defaultOrbColor}");
             }
         }
 
@@ -79,11 +79,11 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             _bossHealthBar = ComponentLocator.FindSingleObjectOfType<BossHealthBarUI>("BattleUIManager setup");
             if (_bossHealthBar != null)
             {
-                Debug.Log("BattleUIManager: BossHealthBarUI trouvée automatiquement");
+                GameLog.Log("BattleUIManager: BossHealthBarUI trouvée automatiquement");
             }
             else
             {
-                Debug.LogWarning("BattleUIManager: BossHealthBarUI introuvable dans la scène!");
+                GameLog.LogWarning("BattleUIManager: BossHealthBarUI introuvable dans la scène!");
             }
         }
         if (_enemyCardPreview == null)
@@ -92,11 +92,11 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             _enemyCardPreview = ComponentLocator.FindSingleObjectOfType<EnemyCardPreviewUI>("BattleUIManager setup");
             if (_enemyCardPreview != null)
             {
-                Debug.Log("BattleUIManager: EnemyCardPreviewUI trouvée automatiquement");
+                GameLog.Log("BattleUIManager: EnemyCardPreviewUI trouvée automatiquement");
             }
             else
             {
-                Debug.LogWarning("BattleUIManager: EnemyCardPreviewUI introuvable dans la scène!");
+                GameLog.LogWarning("BattleUIManager: EnemyCardPreviewUI introuvable dans la scène!");
             }
         }
 
@@ -106,7 +106,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             _rageStackUI = ComponentLocator.FindSingleObjectOfType<RageStackUI>("BattleUIManager setup");
             if (_rageStackUI != null)
             {
-                Debug.Log("BattleUIManager: RageStackUI trouvée automatiquement");
+                GameLog.Log("BattleUIManager: RageStackUI trouvée automatiquement");
             }
         }
     }
@@ -128,11 +128,11 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         if (_bossHealthBar != null)
         {
             _bossHealthBar.SetBoss(boss);
-            Debug.Log($"BattleUIManager: Boss {boss.name} connecté à la barre de vie");
+            GameLog.Log($"BattleUIManager: Boss {boss.name} connecté à la barre de vie");
         }
         else
         {
-            Debug.LogWarning("BattleUIManager: BossHealthBarUI non trouvée!");
+            GameLog.LogWarning("BattleUIManager: BossHealthBarUI non trouvée!");
         }
     }
 
@@ -149,11 +149,11 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         if (_enemyCardPreview != null)
         {
             _enemyCardPreview.SetTrackedEnemy(enemy);
-            Debug.Log($"BattleUIManager: Preview de cartes trackant {enemy.name}");
+            GameLog.Log($"BattleUIManager: Preview de cartes trackant {enemy.name}");
         }
         else
         {
-            Debug.LogWarning("BattleUIManager: EnemyCardPreviewUI non trouvée!");
+            GameLog.LogWarning("BattleUIManager: EnemyCardPreviewUI non trouvée!");
         }
     }
 
@@ -171,39 +171,39 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     /// </summary>
     public void OnEnemySpawned(Enemy enemy)
     {
-        Debug.Log($"BattleUIManager.OnEnemySpawned() appelé pour {enemy?.name}");
+        GameLog.Log($"BattleUIManager.OnEnemySpawned() appelé pour {enemy?.name}");
 
         if (enemy == null)
         {
-            Debug.LogWarning("BattleUIManager.OnEnemySpawned: enemy est null!");
+            GameLog.LogWarning("BattleUIManager.OnEnemySpawned: enemy est null!");
             return;
         }
 
-        Debug.Log($"  - enemy.IsBoss(): {enemy.IsBoss()}");
-        Debug.Log($"  - _bossHealthBar existe: {_bossHealthBar != null}");
-        Debug.Log($"  - _enemyCardPreview existe: {_enemyCardPreview != null}");
-        Debug.Log($"  - _currentTrackedEnemy: {_currentTrackedEnemy?.name ?? "null"}");
+        GameLog.Log($"  - enemy.IsBoss(): {enemy.IsBoss()}");
+        GameLog.Log($"  - _bossHealthBar existe: {_bossHealthBar != null}");
+        GameLog.Log($"  - _enemyCardPreview existe: {_enemyCardPreview != null}");
+        GameLog.Log($"  - _currentTrackedEnemy: {_currentTrackedEnemy?.name ?? "null"}");
 
         // Si c'est un boss, connecte la barre de vie
         if (enemy.IsBoss())
         {
-            Debug.Log($"  -> C'est un boss, appel de RegisterBoss()");
+            GameLog.Log($"  -> C'est un boss, appel de RegisterBoss()");
             RegisterBoss(enemy);
         }
         else
         {
-            Debug.Log($"  -> Ce n'est PAS un boss");
+            GameLog.Log($"  -> Ce n'est PAS un boss");
         }
 
         // Si aucun ennemi n'est tracké pour la preview, track celui-ci
         if (_currentTrackedEnemy == null)
         {
-            Debug.Log($"  -> Aucun ennemi tracké, appel de TrackEnemyCards()");
+            GameLog.Log($"  -> Aucun ennemi tracké, appel de TrackEnemyCards()");
             TrackEnemyCards(enemy);
         }
         else
         {
-            Debug.Log($"  -> Un ennemi est déjà tracké: {_currentTrackedEnemy.name}");
+            GameLog.Log($"  -> Un ennemi est déjà tracké: {_currentTrackedEnemy.name}");
         }
     }
 
@@ -272,18 +272,18 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         if (_rageStackUI != null && player is IlyaUnit ilyaPlayer)
         {
             _rageStackUI.SetPlayer(ilyaPlayer);
-            Debug.Log($"BattleUIManager: RageStackUI connecté à {ilyaPlayer.name}");
+            GameLog.Log($"BattleUIManager: RageStackUI connecté à {ilyaPlayer.name}");
         }
         else if (_rageStackUI != null)
         {
             // Cache le RageStackUI si ce n'est pas Ilya (Vylos n'a pas de système de Rage)
             _rageStackUI.gameObject.SetActive(false);
-            Debug.Log($"BattleUIManager: RageStackUI désactivé (joueur n'est pas Ilya)");
+            GameLog.Log($"BattleUIManager: RageStackUI désactivé (joueur n'est pas Ilya)");
         }
 
         // Mise à jour initiale
         UpdatePlayerOrbUI();
-        Debug.Log($"BattleUIManager: Joueur {player.name} connecté à l'Orbe de vie");
+        GameLog.Log($"BattleUIManager: Joueur {player.name} connecté à l'Orbe de vie");
     }
 
     private void OnPlayerHealthChanged(int current, int max) => UpdatePlayerOrbUI();

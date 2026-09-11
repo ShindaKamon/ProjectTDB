@@ -63,7 +63,7 @@ public class GridRepository
         _width = width;
         _height = height;
 
-        Debug.Log($"GridRepository initialisé : {_tiles.Count} tuiles, {_units.Count} unités");
+        GameLog.Log($"GridRepository initialisé : {_tiles.Count} tuiles, {_units.Count} unités");
     }
 
     // ========== QUERIES DE TUILES ==========
@@ -209,7 +209,7 @@ public class GridRepository
         if (!_units.Contains(unit))
         {
             _units.Add(unit);
-            Debug.Log($"GridRepository: Unité ajoutée - {unit.name}");
+            GameLog.Log($"GridRepository: Unité ajoutée - {unit.name}");
         }
     }
 
@@ -220,7 +220,7 @@ public class GridRepository
     {
         if (_units.Remove(unit))
         {
-            Debug.Log($"GridRepository: Unité retirée - {unit.name}");
+            GameLog.Log($"GridRepository: Unité retirée - {unit.name}");
         }
     }
 

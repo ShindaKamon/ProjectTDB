@@ -29,7 +29,7 @@ public class EnemyAI : MonoBehaviour
 
     private IEnumerator TakeTurnCoroutine()
     {
-        Debug.Log($"=== {_enemyUnit.name} (Ennemi) prend son tour ===");
+        GameLog.Log($"=== {_enemyUnit.name} (Ennemi) prend son tour ===");
 
         // PHASE 0: Rafraîchit les PA au début du tour
         if (_enemy != null)
@@ -42,7 +42,7 @@ public class EnemyAI : MonoBehaviour
 
         if (playerUnits == null || playerUnits.Count == 0)
         {
-            Debug.LogWarning($"{_enemyUnit.name}: Aucune unité joueur trouvée. Passe son tour.");
+            GameLog.LogWarning($"{_enemyUnit.name}: Aucune unité joueur trouvée. Passe son tour.");
             EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
             yield break;
         }
@@ -51,12 +51,12 @@ public class EnemyAI : MonoBehaviour
 
         if (closestPlayerUnit == null)
         {
-            Debug.LogWarning($"{_enemyUnit.name}: Aucun joueur valide trouvé.");
+            GameLog.LogWarning($"{_enemyUnit.name}: Aucun joueur valide trouvé.");
             EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
             yield break;
         }
 
-        Debug.Log($"{_enemyUnit.name} cible {closestPlayerUnit.name}");
+        GameLog.Log($"{_enemyUnit.name} cible {closestPlayerUnit.name}");
 
         // 2. DÉPLACEMENT (seulement si la prochaine carte nécessite de cibler un ennemi)
         bool needsToMoveCloser = false;
@@ -77,16 +77,16 @@ public class EnemyAI : MonoBehaviour
                 if (currentDistance > maxCardRange || !isAligned)
                 {
                     needsToMoveCloser = true;
-                    Debug.Log($"{_enemyUnit.name} doit se rapprocher (distance: {currentDistance}, portée: {maxCardRange}, aligné: {isAligned})");
+                    GameLog.Log($"{_enemyUnit.name} doit se rapprocher (distance: {currentDistance}, portée: {maxCardRange}, aligné: {isAligned})");
                 }
                 else
                 {
-                    Debug.Log($"{_enemyUnit.name} est déjà à portée et aligné ({currentDistance} <= {maxCardRange}), pas de déplacement");
+                    GameLog.Log($"{_enemyUnit.name} est déjà à portée et aligné ({currentDistance} <= {maxCardRange}), pas de déplacement");
                 }
             }
             else if (nextCard != null)
             {
-                Debug.Log($"{_enemyUnit.name} a une carte {nextCard.targetType}, pas besoin de se rapprocher");
+                GameLog.Log($"{_enemyUnit.name} a une carte {nextCard.targetType}, pas besoin de se rapprocher");
             }
         }
         else
@@ -103,7 +103,7 @@ public class EnemyAI : MonoBehaviour
             if (fullPath != null && fullPath.Count > 0)
             {
                 int movementCost = fullPath.Count;
-                Debug.Log($"{_enemyUnit.name} se déplace de {movementCost} cases vers {closestPlayerUnit.name}");
+                GameLog.Log($"{_enemyUnit.name} se déplace de {movementCost} cases vers {closestPlayerUnit.name}");
 
                 // Déplace l'unité le long du chemin (fluide, comme le joueur)
                 _enemyUnit.MoveToTile(fullPath);
@@ -114,7 +114,7 @@ public class EnemyAI : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"{_enemyUnit.name}: Aucun chemin valide trouvé.");
+                GameLog.LogWarning($"{_enemyUnit.name}: Aucun chemin valide trouvé.");
             }
         }
 
@@ -124,14 +124,14 @@ public class EnemyAI : MonoBehaviour
             CardData nextCard = _enemy.GetNextCard();
             if (nextCard != null && _enemy.GetCurrentPA() >= nextCard.costPA)
             {
-                Debug.Log($"{_enemy.name} veut jouer la carte: {nextCard.cardName}");
+                GameLog.Log($"{_enemy.name} veut jouer la carte: {nextCard.cardName}");
 
                 // Vérifie si la carte peut être jouée (cible valide, portée, etc.)
                 bool canPlayCard = CanPlayCard(nextCard);
 
                 if (canPlayCard)
                 {
-                    Debug.Log($"{_enemy.name} PEUT jouer {nextCard.cardName}, pioche la carte");
+                    GameLog.Log($"{_enemy.name} PEUT jouer {nextCard.cardName}, pioche la carte");
 
                     // MAINTENANT on pioche la carte (avance l'index)
                     CardData playedCard = _enemy.DrawAndPlayNextCard();
@@ -146,12 +146,12 @@ public class EnemyAI : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log($"{_enemy.name}: Ne PEUT PAS jouer {nextCard.cardName} (pas de cible/hors portée), garde la carte pour le prochain tour");
+                    GameLog.Log($"{_enemy.name}: Ne PEUT PAS jouer {nextCard.cardName} (pas de cible/hors portée), garde la carte pour le prochain tour");
                 }
             }
             else if (nextCard != null)
             {
-                Debug.Log($"{_enemy.name}: Pas assez de PA pour jouer {nextCard.cardName}");
+                GameLog.Log($"{_enemy.name}: Pas assez de PA pour jouer {nextCard.cardName}");
             }
         }
 
@@ -183,7 +183,7 @@ public class EnemyAI : MonoBehaviour
                 bool isAligned = Mathf.Approximately(currentPos.x, targetPos.x) || Mathf.Approximately(currentPos.y, targetPos.y);
                 if (manhattanDistance <= maxCardRange && isAligned)
                 {
-                    Debug.Log($"À portée de carte ({maxCardRange}) après {i} mouvements, distance Manhattan: {manhattanDistance}");
+                    GameLog.Log($"À portée de carte ({maxCardRange}) après {i} mouvements, distance Manhattan: {manhattanDistance}");
                     break; // On est assez proche pour jouer une carte
                 }
             }
@@ -193,7 +193,7 @@ public class EnemyAI : MonoBehaviour
 
             if (nextMove == Vector2Int.zero)
             {
-                Debug.Log($"Bloqué après {i} mouvements");
+                GameLog.Log($"Bloqué après {i} mouvements");
                 break; // Bloqué, on ne peut plus avancer
             }
 
@@ -323,7 +323,7 @@ public class EnemyAI : MonoBehaviour
         List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
         if (playerUnits == null || playerUnits.Count == 0)
         {
-            Debug.LogWarning($"{_enemy.name}: Aucun joueur pour cibler {card.cardName}");
+            GameLog.LogWarning($"{_enemy.name}: Aucun joueur pour cibler {card.cardName}");
             return false; // Pas de cible disponible
         }
 
@@ -344,7 +344,7 @@ public class EnemyAI : MonoBehaviour
 
             if (distance > card.targetRange || !isAligned)
             {
-                Debug.Log($"{_enemy.name}: {card.cardName} hors de portée ou pas aligné (distance: {distance}, portée: {card.targetRange}, aligné: {isAligned})");
+                GameLog.Log($"{_enemy.name}: {card.cardName} hors de portée ou pas aligné (distance: {distance}, portée: {card.targetRange}, aligné: {isAligned})");
                 return false; // Hors de portée ou pas aligné
             }
         }
@@ -358,7 +358,7 @@ public class EnemyAI : MonoBehaviour
     /// </summary>
     private IEnumerator ExecuteEnemyCard(CardData card)
     {
-        Debug.Log($"{_enemy.name} exécute la carte: {card.cardName}");
+        GameLog.Log($"{_enemy.name} exécute la carte: {card.cardName}");
 
         // Détermine la cible en fonction du type de carte
         Unit targetUnit = null;
@@ -387,7 +387,7 @@ public class EnemyAI : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning($"{_enemy.name}: Cible hors de portée ou pas aligné pour {card.cardName}");
+                        GameLog.LogWarning($"{_enemy.name}: Cible hors de portée ou pas aligné pour {card.cardName}");
                     }
                 }
                 // Carte de soin sur soi-même

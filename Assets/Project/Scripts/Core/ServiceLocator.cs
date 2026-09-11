@@ -46,13 +46,13 @@ public class ServiceLocator
 
         if (_services.ContainsKey(serviceType))
         {
-            Debug.LogWarning($"ServiceLocator: Service {serviceType.Name} déjà enregistré. Remplacement.");
+            GameLog.LogWarning($"ServiceLocator: Service {serviceType.Name} déjà enregistré. Remplacement.");
             _services[serviceType] = service;
         }
         else
         {
             _services.Add(serviceType, service);
-            Debug.Log($"ServiceLocator: Service {serviceType.Name} enregistré");
+            GameLog.Log($"ServiceLocator: Service {serviceType.Name} enregistré");
         }
     }
 
@@ -66,7 +66,7 @@ public class ServiceLocator
         if (_services.ContainsKey(serviceType))
         {
             _services.Remove(serviceType);
-            Debug.Log($"ServiceLocator: Service {serviceType.Name} désenregistré");
+            GameLog.Log($"ServiceLocator: Service {serviceType.Name} désenregistré");
         }
     }
 
@@ -120,7 +120,7 @@ public class ServiceLocator
     /// </summary>
     public void ClearAll()
     {
-        Debug.Log("ServiceLocator: Tous les services effacés");
+        GameLog.Log("ServiceLocator: Tous les services effacés");
         _services.Clear();
     }
 
@@ -149,7 +149,7 @@ public class ServiceLocator
         if (_instance == null)
         {
             _instance = new ServiceLocator();
-            Debug.Log("ServiceLocator: Initialisé au chargement du jeu");
+            GameLog.Log("ServiceLocator: Initialisé au chargement du jeu");
         }
     }
 }

@@ -10,27 +10,8 @@ using System.Collections;
 /// - Déclencher effets visuels (shake, flash, etc.)
 /// - Gérer le prefab de DamageNumberPopup
 /// </summary>
-public class CombatFeedbackManager : MonoBehaviour
+public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
 {
-    // ========== SINGLETON ==========
-
-    private static CombatFeedbackManager _instance;
-    public static CombatFeedbackManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindFirstObjectByType<CombatFeedbackManager>();
-                if (_instance == null)
-                {
-                    Debug.LogWarning("CombatFeedbackManager: Instance non trouvée dans la scène!");
-                }
-            }
-            return _instance;
-        }
-    }
-
     // ========== CONFIGURATION ==========
 
     [Header("Prefabs")]
@@ -60,16 +41,12 @@ public class CombatFeedbackManager : MonoBehaviour
 
     void Awake()
     {
-        // Singleton pattern
-        if (_instance == null)
-        {
-            _instance = this;
-        }
-        else if (_instance != this)
+        if (ServiceLocator.Instance.IsRegistered<ICombatFeedbackService>())
         {
             Destroy(gameObject);
             return;
         }
+        ServiceLocator.Instance.Register<ICombatFeedbackService>(this);
 
         // Trouve le canvas automatiquement si non assigné
         if (_damageNumberCanvas == null)
@@ -108,6 +85,11 @@ public class CombatFeedbackManager : MonoBehaviour
         EventBus.Unsubscribe<UnitDamagedEvent>(OnUnitDamaged);
         EventBus.Unsubscribe<UnitHealedEvent>(OnUnitHealed);
         EventBus.Unsubscribe<UnitDiedEvent>(OnUnitDied);
+    }
+
+    void OnDestroy()
+    {
+        ServiceLocator.Instance.Unregister<ICombatFeedbackService>();
     }
 
     // ========== EVENT HANDLERS ==========
@@ -331,16 +313,5 @@ public class CombatFeedbackManager : MonoBehaviour
         float shakeIntensity = intensity > 0 ? intensity : _damageShakeIntensity;
 
         StartCoroutine(ShakeUnit(target, shakeDuration, shakeIntensity));
-    }
-
-    // ========== INITIALISATION AUTOMATIQUE ==========
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void InitializeOnLoad()
-    {
-        _instance = FindFirstObjectByType<CombatFeedbackManager>();
-        if (_instance != null)
-        {
-            Debug.Log("CombatFeedbackManager: Initialisé au chargement du jeu");
-        }
     }
 }

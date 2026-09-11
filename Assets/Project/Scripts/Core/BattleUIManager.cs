@@ -6,10 +6,8 @@ using UnityEngine.UI;
 /// Gère la connexion automatique des UI de combat (Boss Health Bar, Enemy Card Preview)
 /// aux ennemis présents dans la scène.
 /// </summary>
-public class BattleUIManager : MonoBehaviour
+public class BattleUIManager : MonoBehaviour, IBattleUIService
 {
-    public static BattleUIManager Instance { get; private set; }
-
     [Header("UI References")]
     [SerializeField] private BossHealthBarUI _bossHealthBar;
     [SerializeField] private EnemyCardPreviewUI _enemyCardPreview;
@@ -25,16 +23,13 @@ public class BattleUIManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            Debug.Log("BattleUIManager: Instance créée");
-        }
-        else
+        if (ServiceLocator.Instance.IsRegistered<IBattleUIService>())
         {
             Destroy(gameObject);
             return;
         }
+        ServiceLocator.Instance.Register<IBattleUIService>(this);
+        Debug.Log("BattleUIManager: Enregistré dans ServiceLocator comme IBattleUIService");
 
         if (_playerHealthOrb == null)
         {
@@ -114,6 +109,11 @@ public class BattleUIManager : MonoBehaviour
                 Debug.Log("BattleUIManager: RageStackUI trouvée automatiquement");
             }
         }
+    }
+
+    void OnDestroy()
+    {
+        ServiceLocator.Instance.Unregister<IBattleUIService>();
     }
 
     /// <summary>

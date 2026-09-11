@@ -12,9 +12,6 @@ using UnityEngine.UI;
 /// </summary>
 public class GridManager : MonoBehaviour, IGridService
 {
-    // NOTE: Instance gardé pour compatibilité (sera progressivement éliminé)
-    public static GridManager Instance { get; private set; }
-
     [Header("=== Configuration Grille ===")]
     [SerializeField] private int _width = 10;
     [SerializeField] private int _height = 10;
@@ -52,14 +49,11 @@ public class GridManager : MonoBehaviour, IGridService
 
     private void Awake()
     {
-        // Singleton
-        if (Instance != null && Instance != this)
+        // Empêche les doublons : un seul GridManager peut être enregistré comme IGridService
+        if (ServiceLocator.Instance.IsRegistered<IGridService>())
         {
             Destroy(gameObject);
-        }
-        else
-        {
-            Instance = this;
+            return;
         }
 
         _tiles = new Dictionary<Vector2, Tile>();
@@ -261,18 +255,18 @@ public class GridManager : MonoBehaviour, IGridService
 
                     // Notifie le BattleUIManager pour connecter les UI
                     Debug.Log($"GridManager: Tentative de connexion UI pour {enemy.name}...");
-                    Debug.Log($"  - BattleUIManager.Instance existe: {BattleUIManager.Instance != null}");
+                    Debug.Log($"  - IBattleUIService disponible: {Services.IsBattleUIServiceAvailable()}");
                     Debug.Log($"  - enemy.IsBoss(): {enemy.IsBoss()}");
                     Debug.Log($"  - enemy.GetEnemyData(): {enemy.GetEnemyData()?.enemyName}");
 
-                    if (BattleUIManager.Instance != null)
+                    if (Services.IsBattleUIServiceAvailable())
                     {
                         Debug.Log($"GridManager: Appel de OnEnemySpawned pour {enemy.name}");
-                        BattleUIManager.Instance.OnEnemySpawned(enemy);
+                        Services.BattleUI.OnEnemySpawned(enemy);
                     }
                     else
                     {
-                        Debug.LogError("GridManager: BattleUIManager.Instance est NULL!");
+                        Debug.LogError("GridManager: IBattleUIService non enregistré!");
                     }
                 }
                 // Sinon, c'est une autre unité (un champion placé dans la scène)

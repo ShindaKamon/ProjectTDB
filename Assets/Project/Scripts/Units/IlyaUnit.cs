@@ -61,9 +61,9 @@ public class IlyaUnit : Champion, IActionPointsUser, IRageUser
         // CreateHealthBar();
 
         // Connecte l'unité à l'Orbe de vie via le BattleUIManager
-        if (BattleUIManager.Instance != null)
+        if (Services.IsBattleUIServiceAvailable())
         {
-            BattleUIManager.Instance.RegisterPlayer(this);
+            Services.BattleUI.RegisterPlayer(this);
         }
     }
 

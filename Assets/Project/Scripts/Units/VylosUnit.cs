@@ -56,9 +56,9 @@ public class VylosUnit : Champion, IActionPointsUser
         // CreateHealthBar();
 
         // Connecte l'unité à l'Orbe de vie via le BattleUIManager
-        if (BattleUIManager.Instance != null)
+        if (Services.IsBattleUIServiceAvailable())
         {
-            BattleUIManager.Instance.RegisterPlayer(this);
+            Services.BattleUI.RegisterPlayer(this);
         }
         
         // Initialise les PV précédents

@@ -155,7 +155,7 @@ public class Unit : MonoBehaviour, IMarkable
             healthBar = null;
         }
 
-        if (HealthBarManager.Instance == null)
+        if (!Services.IsHealthBarServiceAvailable())
         {
             return;
         }
@@ -166,7 +166,7 @@ public class Unit : MonoBehaviour, IMarkable
             return;
         }
 
-        healthBar = HealthBarManager.Instance.CreateHealthBar(
+        healthBar = Services.HealthBar.CreateHealthBar(
             transform,
             offset,
             color,

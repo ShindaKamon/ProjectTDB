@@ -253,9 +253,9 @@ public class Enemy : Unit, IActionPointsUser
     void OnDestroy()
     {
         // Notifie le BattleUIManager pour nettoyer les UI
-        if (BattleUIManager.Instance != null)
+        if (Services.IsBattleUIServiceAvailable())
         {
-            BattleUIManager.Instance.OnEnemyDied(this);
+            Services.BattleUI.OnEnemyDied(this);
         }
     }
 }

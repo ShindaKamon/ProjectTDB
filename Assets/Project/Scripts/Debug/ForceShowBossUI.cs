@@ -28,12 +28,12 @@ public class ForceShowBossUI : MonoBehaviour
         Debug.Log("=== FORCE CONNEXION UI ===");
 
         // Trouve le BattleUIManager
-        BattleUIManager manager = BattleUIManager.Instance;
-        if (manager == null)
+        if (!Services.IsBattleUIServiceAvailable())
         {
-            Debug.LogError("BattleUIManager introuvable!");
+            Debug.LogError("IBattleUIService non enregistré!");
             return;
         }
+        IBattleUIService manager = Services.BattleUI;
 
         // Trouve tous les ennemis
         Enemy[] enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);

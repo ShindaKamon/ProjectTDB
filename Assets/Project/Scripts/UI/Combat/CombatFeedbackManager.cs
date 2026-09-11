@@ -33,6 +33,9 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
     [Header("Offset")]
     [SerializeField] private Vector3 _damageNumberOffset = new Vector3(0, 2f, 0); // Offset au-dessus de l'unité
 
+    [Header("Critical Hit")]
+    [SerializeField] private int _criticalDamageThreshold = 15; // TODO: Implémenter système de critiques
+
     // ========== ÉTAT ==========
 
     private Transform _damageNumberParent;
@@ -102,7 +105,7 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
         if (evt.Target == null) return;
 
         // Détermine si c'est un coup critique (pour l'instant, détection simple)
-        bool isCritical = evt.Damage > 15; // TODO: Implémenter système de critiques
+        bool isCritical = evt.Damage > _criticalDamageThreshold;
 
         // 1. Affiche le nombre de dégâts
         ShowDamageNumber(

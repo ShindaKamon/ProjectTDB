@@ -10,52 +10,52 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: HurlementStrident
+  m_Name: TrouDeVer
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Hurlement Strident
-  description: Repousse les ennemis de 2 cases en zone.
-  familyType: 5
-  classeType: 0
-  elementType: 0
+  cardName: Trou de Ver
+  description: "Echange de position avec une unit\xE9."
   artwork: {fileID: 0}
-  isRageCard: 0
-  costPA: 3
+  emotionType: 4
+  elementType: 0
+  costPA: 2
   costHP: 0
   costOther: 0
-  targetType: 1
-  targetRange: 0
-  areaEffect: 4
-  aoeRadius: 2
-  affectedTarget: 2
+  targetType: 6
+  targetRange: 5
+  areaEffect: 0
+  aoeRadius: 0
+  affectedTarget: 0
   damageAmount: 0
-  movementAmount: 0
-  healAmount: 0
-  defenseAmount: 0
   damageSelf: 0
+  healAmount: 0
   lifestealFixedAmount: 0
   atkIncreased: 0
-  statBoostDuration: 0
-  effectType: 3
-  knockbackDistance: 2
-  damageSharePercent: 50
-  damagePerDebuff: 0
-  isChargeCard: 0
-  drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
+  defenseAmount: 0
+  movementAmount: 0
+  effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  resourceDebuffDuration: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
+  effectType: 0
+  isChargeCard: 0
+  knockbackDistance: 1
+  damageSharePercent: 50
   markToApply: 0
   markStacks: 1
   markDuration: 0
   markBonusValue: 0
   consumeMarks: 0
   markToConsume: 0
+  consumeMarkTarget: 0
   damagePerMarkStack: 0
+  healSelfPerMarkOnTarget: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0
+  isRageCard: 0
+  rageMode: 0
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 0
+  damagePerDebuff: 0

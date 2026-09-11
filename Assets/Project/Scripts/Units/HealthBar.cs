@@ -1,21 +1,22 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 public class HealthBar : MonoBehaviour
 {
     [Header("References")]
-    public Slider healthSlider;
-    public Transform followTarget;  // Le personnage à suivre
+    [FormerlySerializedAs("healthSlider")] [SerializeField] private Slider _healthSlider;
+    [FormerlySerializedAs("followTarget")] [SerializeField] private Transform _followTarget;  // Le personnage à suivre
 
     [Header("Optional Text")]
-    public TextMeshProUGUI healthText;  // Support pour TextMeshPro
-    
+    [FormerlySerializedAs("healthText")] [SerializeField] private TextMeshProUGUI _healthText;  // Support pour TextMeshPro
+
     [Header("Settings")]
-    public Vector3 offset = new Vector3(0, 2f, 0);  // Offset au-dessus de la tête
-    public bool smoothFollow = true;
-    public float followSpeed = 10f;
-    
+    [FormerlySerializedAs("offset")] [SerializeField] private Vector3 _offset = new Vector3(0, 2f, 0);  // Offset au-dessus de la tête
+    [FormerlySerializedAs("smoothFollow")] [SerializeField] private bool _smoothFollow = true;
+    [FormerlySerializedAs("followSpeed")] [SerializeField] private float _followSpeed = 10f;
+
     private Camera mainCamera;
     private Canvas canvas;
     private RectTransform rectTransform;
@@ -28,22 +29,31 @@ public class HealthBar : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
 
         // Configure le slider
-        if (healthSlider != null)
+        if (_healthSlider != null)
         {
-            healthSlider.minValue = 0;
-            healthSlider.maxValue = 1;
-            healthSlider.direction = Slider.Direction.LeftToRight;
-            healthSlider.transition = Selectable.Transition.None;
-            healthSlider.interactable = false;
+            _healthSlider.minValue = 0;
+            _healthSlider.maxValue = 1;
+            _healthSlider.direction = Slider.Direction.LeftToRight;
+            _healthSlider.transition = Selectable.Transition.None;
+            _healthSlider.interactable = false;
         }
     }
-    
+
+    /// <summary>
+    /// Assigne la cible à suivre et son offset (appelé par HealthBarManager après instanciation).
+    /// </summary>
+    public void SetFollowTarget(Transform target, Vector3 offset)
+    {
+        _followTarget = target;
+        _offset = offset;
+    }
+
     void LateUpdate()
     {
-        if (followTarget == null || mainCamera == null) return;
+        if (_followTarget == null || mainCamera == null) return;
 
         // Position world du target + offset
-        Vector3 worldPos = followTarget.position + offset;
+        Vector3 worldPos = _followTarget.position + _offset;
 
         // Convertit en screen space
         Vector3 screenPos = mainCamera.WorldToScreenPoint(worldPos);
@@ -68,12 +78,12 @@ public class HealthBar : MonoBehaviour
                 rectTransform.position = screenPos;
                 _hasInitializedPosition = true;
             }
-            else if (smoothFollow)
+            else if (_smoothFollow)
             {
                 rectTransform.position = Vector3.Lerp(
                     rectTransform.position,
                     screenPos,
-                    Time.deltaTime * followSpeed
+                    Time.deltaTime * _followSpeed
                 );
             }
             else
@@ -88,26 +98,26 @@ public class HealthBar : MonoBehaviour
     /// </summary>
     public void UpdateHealth(float currentHP, float maxHP)
     {
-        if (healthSlider != null)
+        if (_healthSlider != null)
         {
-            healthSlider.value = Mathf.Clamp01(currentHP / maxHP);
+            _healthSlider.value = Mathf.Clamp01(currentHP / maxHP);
         }
 
         // Met à jour le texte (optionnel)
-        if (healthText != null)
+        if (_healthText != null)
         {
-            healthText.text = $"{(int)currentHP}/{(int)maxHP}";
+            _healthText.text = $"{(int)currentHP}/{(int)maxHP}";
         }
     }
-    
+
     /// <summary>
     /// Change la couleur de la barre
     /// </summary>
     public void SetColor(Color color)
     {
-        if (healthSlider != null)
+        if (_healthSlider != null)
         {
-            Image fillImage = healthSlider.fillRect.GetComponent<Image>();
+            Image fillImage = _healthSlider.fillRect.GetComponent<Image>();
             if (fillImage != null)
             {
                 fillImage.color = color;

@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Infection
+  m_Name: PoidsDuRegret
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Infection
-  description: "L'ennemi cibl\xE9 subit 15 d\xE9g\xE2ts par malus."
+  cardName: Poids du Regret
+  description: "Inflige 10 d\xE9g\xE2ts \xE0 un ennemi. La cible perd 2 PM pendant
+    1 tour."
   artwork: {fileID: 0}
-  familyType: 2
-  classeType: 0
+  emotionType: 3
   elementType: 0
-  costPA: 1
+  costPA: 2
   costHP: 0
   costOther: 0
   targetType: 2
@@ -26,7 +26,7 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
-  damageAmount: 0
+  damageAmount: 10
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
@@ -35,7 +35,7 @@ MonoBehaviour:
   movementAmount: 0
   effectDuration: 0
   paReduction: 0
-  pmReduction: 0
+  pmReduction: 2
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 1
@@ -59,4 +59,4 @@ MonoBehaviour:
   rageCost: 0
   rageScaling: 0
   rageBonus: 0
-  damagePerDebuff: 15
+  damagePerDebuff: 0

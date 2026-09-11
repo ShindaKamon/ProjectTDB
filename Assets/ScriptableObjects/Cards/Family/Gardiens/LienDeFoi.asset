@@ -10,53 +10,53 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: EclatDeRire
+  m_Name: LienDeFoi
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Eclat de Rire
-  description: "Soigne de 20 PV la cible. Si elle \xE0 100% de ses PV, inflige 10
-    d\xE9g\xE2ts \xE0 l'ennemi le plus proche de la cible."
-  familyType: 7
-  classeType: 0
-  elementType: 0
+  cardName: Lien de Foi
+  description: "l'alli\xE9 cibl\xE9 gagne 10 Armure. Tant qu'il a de l'armure, le
+    lanceur gagne +10 D\xE9g\xE2ts."
   artwork: {fileID: 0}
-  isRageCard: 0
-  costPA: 2
+  emotionType: 6
+  elementType: 0
+  costPA: 1
   costHP: 0
   costOther: 0
-  targetType: 6
-  targetRange: 5
+  targetType: 3
+  targetRange: 4
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
-  damageAmount: 0
-  movementAmount: 0
-  healAmount: 20
-  defenseAmount: 0
+  damageAmount: 10
   damageSelf: 0
+  healAmount: 0
   lifestealFixedAmount: 0
   atkIncreased: 0
-  statBoostDuration: 0
-  effectType: 0
-  knockbackDistance: 1
-  damageSharePercent: 50
-  damagePerDebuff: 0
-  isChargeCard: 0
-  drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
+  defenseAmount: 0
+  movementAmount: 0
+  effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  resourceDebuffDuration: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
+  effectType: 0
+  isChargeCard: 0
+  knockbackDistance: 1
+  damageSharePercent: 50
   markToApply: 0
   markStacks: 1
   markDuration: 0
   markBonusValue: 0
   consumeMarks: 0
   markToConsume: 0
+  consumeMarkTarget: 0
   damagePerMarkStack: 0
+  healSelfPerMarkOnTarget: 0
+  drawAmount: 0
+  cardToFetch: {fileID: 0}
+  fetchAmount: 0
+  cardToAddToDeck: {fileID: 0}
+  cardsToAddCount: 0
+  isRageCard: 0
+  rageMode: 0
+  rageCost: 0
+  rageScaling: 0
+  rageBonus: 0
+  damagePerDebuff: 0

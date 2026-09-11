@@ -1241,9 +1241,9 @@ MonoBehaviour:
   _startButton: {fileID: 1723816815}
   _combatSceneName: CombatScene
   _allChampions:
-  - {fileID: 11400000, guid: 69814cc10eca8dd44a973e4c449f15fd, type: 2}
-  - {fileID: 11400000, guid: 9f7c2a5837339be44896a4853d0562fa, type: 2}
-  - {fileID: 11400000, guid: 01ef1f7ae6ae55a4c987c77d2958fa6a, type: 2}
+  - {fileID: 11400000, guid: c11befcf30483e042a9507a3c3c90e26, type: 2}
+  - {fileID: 11400000, guid: d174dce2ba30a3c4994a68bb64a79176, type: 2}
+  - {fileID: 11400000, guid: da96a074e88a56a4a9cef20aa023f665, type: 2}
   _selectedButtonColor: {r: 0.8, g: 0.2, b: 0.2, a: 1}
   _normalButtonColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &472746932
@@ -5962,7 +5962,7 @@ MonoBehaviour:
   _saveButton: {fileID: 1734623782}
   _cancelButton: {fileID: 1593193226}
   _resetButton: {fileID: 503593880}
-  _deckSize: 10
+  _deckSize: 18
 --- !u!1 &1924069559
 GameObject:
   m_ObjectHideFlags: 0

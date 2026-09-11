@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
+  m_Name: Soren
+  m_EditorClassIdentifier: ProjectTDB::ChampionData
+  championName: Soren
+  title: Le Frere
+  description: A perdu sa soeur jumelle, Lyse, dont la presence n'a jamais vraiment
+    disparu.
+  portrait: {fileID: 0}
+  prefab: {fileID: 0}
+  emotionType: 0
+  maxHealth: 100
+  movementRange: 4
+  maxActionPoints: 5
+  attackDamage: 15
+  defense: 10
+  startingDeck:
+  - {fileID: 11400000, guid: 199b005d500d0c64a82792ff9a622c9c, type: 2}
+  - {fileID: 11400000, guid: 00fb335e554dfcb45b08f74b4e3c7908, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: 00812ce6755a37043b02d06d8764a6ed, type: 2}
+  - {fileID: 11400000, guid: 07510badea6a55641831c0eed57eadff, type: 2}
+  - {fileID: 11400000, guid: 5665e9041dbf1c34bab9e65a95492d9b, type: 2}
+  - {fileID: 11400000, guid: 0f67984a06cd832459036e7ca3ffddf2, type: 2}
+  - {fileID: 11400000, guid: 275baaf2b5730a346bf572eee92f1f98, type: 2}
+  - {fileID: 11400000, guid: dc1de8a2cf5756547826a2e51d12f5ec, type: 2}
+  - {fileID: 11400000, guid: e2cc9cc55a6e3e44999c1a1b3f87b43b, type: 2}
+  - {fileID: 11400000, guid: a8c1f37ed5f03a9439355721a944bdc1, type: 2}
+  - {fileID: 11400000, guid: e48fbb5d3b0399a44ba9eb91993da7c3, type: 2}
+  - {fileID: 11400000, guid: 7a344206ba93edb41829af6cdcde2843, type: 2}
+  - {fileID: 11400000, guid: aaaf3c2e8480a50419fbc9df2912fb6f, type: 2}
+  - {fileID: 11400000, guid: a04deb15e7205e043aef61a08ef78f42, type: 2}
+  - {fileID: 11400000, guid: 7ea9d088757b3d940aad5e70d033f918, type: 2}
+  - {fileID: 11400000, guid: 0547e88119a644845ae799927021ff90, type: 2}
+  - {fileID: 11400000, guid: c08f6e551cb61234e857ec277c13ffca, type: 2}

@@ -43,7 +43,9 @@ public class DeckEditorUI : MonoBehaviour
     [SerializeField] private Button _resetButton;
 
     [Header("Configuration")]
-    [SerializeField] private int _deckSize = 10;
+    // Total de slots affichés = 2 Signature + 16 Standard (voir DeckData.TOTAL_SLOTS).
+    // Les limites par catégorie sont appliquées dans OnPoolCardClicked.
+    [SerializeField] private int _deckSize = DeckData.TOTAL_SLOTS;
 
     private ChampionData _currentChampion;
     private int _currentDeckIndex;
@@ -440,9 +442,26 @@ public class DeckEditorUI : MonoBehaviour
 
     private void OnPoolCardClicked(CardData card)
     {
-        if (_currentDeckCards.Count >= _deckSize)
+        if (card == null) return;
+
+        // Limite par catégorie (2 Signature + 16 Standard ; Éveil différé, 0 slot pour l'instant)
+        int categoryLimit = card.category switch
         {
-            Debug.Log("Le deck est plein!");
+            CardCategory.Signature => DeckData.SIGNATURE_SLOTS,
+            CardCategory.Standard => DeckData.STANDARD_SLOTS,
+            _ => 0,
+        };
+
+        int categoryCount = 0;
+        foreach (var c in _currentDeckCards)
+        {
+            if (c != null && c.category == card.category)
+                categoryCount++;
+        }
+
+        if (categoryCount >= categoryLimit)
+        {
+            Debug.Log($"Limite atteinte pour la catégorie {card.category} ({categoryLimit}).");
             return;
         }
 
@@ -477,6 +496,10 @@ public class DeckEditorUI : MonoBehaviour
         foreach (var card in _cardCollection.AllCards)
         {
             if (card == null) continue;
+
+            // Cartes Signature : uniquement celles du champion actif (pool partagé sinon)
+            if (card.category == CardCategory.Signature && card.signatureOwner != _currentChampion)
+                continue;
 
             // Filtre par émotions du deck
             if (_currentDeckData != null && !_currentDeckData.CardMatchesDeckEmotions(card))

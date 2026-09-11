@@ -8,6 +8,12 @@ using UnityEngine;
 [Serializable]
 public class DeckData
 {
+    // Structure de deck cible : 2 Signature + 16 Standard (les 6 slots Éveil sont
+    // différés tant que le système de seuil d'émotion n'existe pas).
+    public const int SIGNATURE_SLOTS = 2;
+    public const int STANDARD_SLOTS = 16;
+    public const int TOTAL_SLOTS = SIGNATURE_SLOTS + STANDARD_SLOTS;
+
     public string deckName;
     public string emotionType1; // Première émotion (nom du EmotionType)
     public string emotionType2; // Deuxième émotion (nom du EmotionType)
@@ -82,11 +88,15 @@ public class DeckData
     }
 
     /// <summary>
-    /// Vérifie si une carte appartient à l'une des émotions du deck
+    /// Vérifie si une carte appartient à l'une des émotions du deck.
+    /// Les cartes Signature (liées à un champion, pas à une émotion) matchent toujours.
     /// </summary>
     public bool CardMatchesDeckEmotions(CardData card)
     {
         if (card == null) return false;
+
+        if (card.category == CardCategory.Signature)
+            return true;
 
         // Si le deck n'a pas d'émotion définie, toutes les cartes sont acceptées
         if (Emotion1 == EmotionType.None && Emotion2 == EmotionType.None)
@@ -94,6 +104,24 @@ public class DeckData
 
         // Vérifie si la carte appartient à l'une des deux émotions
         return card.emotionType == Emotion1 || card.emotionType == Emotion2;
+    }
+
+    /// <summary>
+    /// Compte les cartes du deck appartenant à une catégorie donnée (nécessite la collection
+    /// pour résoudre les noms en CardData).
+    /// </summary>
+    public int CountByCategory(CardCategory category, CardCollection collection)
+    {
+        if (cardNames == null || collection == null) return 0;
+
+        int count = 0;
+        foreach (var name in cardNames)
+        {
+            var card = collection.GetCardByName(name);
+            if (card != null && card.category == category)
+                count++;
+        }
+        return count;
     }
 
     /// <summary>

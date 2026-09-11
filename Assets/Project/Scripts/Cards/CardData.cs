@@ -223,6 +223,16 @@ public enum RageScalingType
     Percent         // Bonus en pourcentage par Rage (ex: +25% dégâts par Rage)
 }
 
+/// <summary>
+/// Catégorie de slot dans un deck (structure 2 Signature + 6 Éveil + 16 Standard).
+/// </summary>
+public enum CardCategory
+{
+    Standard,   // Pioché dans le pool partagé, filtré par les émotions du deck
+    Eveil,      // Nécessite un seuil d'émotion (système pas encore implémenté)
+    Signature   // Fixe, liée à un champion précis (voir signatureOwner)
+}
+
 [CreateAssetMenu(fileName = "NewCardData", menuName = "Card/Card Data")]
 public class CardData : ScriptableObject
 {
@@ -244,6 +254,12 @@ public class CardData : ScriptableObject
     [Space(5)]
     [Tooltip("Type d'émotion (Couleur)")]
     public EmotionType emotionType = EmotionType.None;
+
+    [Tooltip("Catégorie de slot dans le deck (Standard/Éveil/Signature)")]
+    public CardCategory category = CardCategory.Standard;
+
+    [Tooltip("Champion propriétaire (uniquement pour category = Signature)")]
+    public ChampionData signatureOwner;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                              2. COÛTS                                      ║

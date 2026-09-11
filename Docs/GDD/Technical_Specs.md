@@ -116,7 +116,7 @@
 | CardEffectExecutor.cs | ExÃ©cution des effets de cartes |
 
 **ResponsabilitÃ©s:**
-- DÃ©finition des cartes (8 Familles Ã— 5 Classes Ã— 4 Ã‰lÃ©ments)
+- DÃ©finition des cartes (8 Émotions × 4 Éléments)
 - Gestion du deck (pioche sÃ©quentielle ou mÃ©langÃ©e)
 - Application des effets (dÃ©gÃ¢ts, soins, mouvement)
 - Validation des cibles

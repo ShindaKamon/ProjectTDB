@@ -121,23 +121,21 @@ Tu es mon co-architecte pour la conception et le dÃ©veloppement de mon jeu vid
 - **Engine** : Unity + C# (Visual Studio)
 - **Format** : Donjons PvE (style Waven), Coop prÃ©vu pour V2+
 - **MonÃ©tisation** : Gacha de personnages (commercial, France)
-
-### Familles Ã©motionnelles (3 familles)
-1. **Rouge - Incarnats** : ColÃ¨re â†” Amour
-2. **Bleu - SÃ©rÃ©nites** : Tristesse â†” Calme  
-3. **Jaune - ExaltÃ©s** : AnxiÃ©tÃ© â†” Optimisme
-
-### ArchÃ©types (5 archÃ©types)
-1. **Ancre** (Tank) : ProtÃ¨ge, absorbe, stabilise
-2. **Tisseur** (Mage) : AltÃ¨re, contrÃ´le, manipule
-3. **Ombrelame** (Voleur) : Draine, esquive, affaiblit
-4. **Veilleur** (RÃ´deur) : Distance, vision, mobilitÃ©
-5. **Harmoniste** (PrÃªtre) : Soigne, Ã©quilibre, purifie
+ 
+### Émotions (8 couleurs)
+Le jeu est basé sur 8 émotions primaires, chacune associée à une couleur. Un champion peut construire un deck en utilisant 1 à 2 couleurs.
+1.  **Colère** (Rouge)
+2.  **Dégoût** (Violet)
+3.  **Tristesse** (Bleu foncé)
+4.  **Surprise** (Bleu clair)
+5.  **Peur** (Vert foncé)
+6.  **Confiance** (Vert clair)
+7.  **Joie** (Jaune)
+8.  **Anticipation** (Orange)
 
 ### Structure des cartes
 - **Personnage** : Uniques Ã  chaque personnage
-- **Famille** : PartagÃ©es dans la famille (Rouge/Bleu/Jaune)
-- **ArchÃ©type** : PartagÃ©es dans l'archÃ©type (Ancre/Tisseur/etc.)
+- **Émotion** : Chaque carte (sauf neutre) est associée à une émotion/couleur.
 - **Neutre** : Universelles, accessibles Ã  tous
 
 ### SystÃ¨me de Rage (unique Ã  certains personnages)
@@ -152,8 +150,7 @@ Tu es mon co-architecte pour la conception et le dÃ©veloppement de mon jeu vid
 
 ### IdentitÃ©
 - **Nom** : Ilya (surnom)
-- **Famille** : Rouge (Incarnat)
-- **ArchÃ©type** : Ancre (Tank)
+- **Émotion de base** : Colère (Rouge)
 - **Concept** : "Le DÃ©vouÃ© qui se sacrifie par amour, mais enchaÃ®ne sa colÃ¨re"
 
 ### ThÃ©matique
@@ -180,22 +177,21 @@ Ilya protÃ¨ge ses alliÃ©s grÃ¢ce Ã  l'amour et au dÃ©vouement. Il ench
 ### Deck Ilya (12 cartes)
 **Cartes Personnage (4)** :
 1. DÃ©votion - 2 PA : Taunt 2 tours, +20 DEF
-2. Frappe EnchaÃ®nÃ©e - 2 PA : Attaque mÃªlÃ©e, si touchÃ© avant â†’ +50% dÃ©gÃ¢ts
+2. Frappe Enchaînée - 2 PA : Attaque mêlée, si touché avant → +50% dégâts
 3. ChaÃ®nes BrisÃ©es - 5 Rages : Transformation
 4. Canaliser ColÃ¨re - 1 PA : Pioche 2 Rages du deck
-
-5. Brasier IntÃ©rieur - 2 PA : +30% ATK 2 tours
-6. Lame Ardente - 3 PA : 30 dmg + BrÃ»lure (5 dmg/tour x2)
-7. Passion Sacrificielle - 2 PA : Heal alliÃ© 30 PV, Ilya perd 15 PV
-
-**Cartes ArchÃ©type Ancre (3)** :
-8. Garde InÃ©branlable - 1 PA : Mouvement + +50 DEF jusqu'au prochain tour
-9. Riposte - 2 PA : Attaque faible, contre-attaque si touchÃ© ce tour
+ 
+**Cartes Émotion Colère (Rouge) (5)** :
+5. Brasier Intérieur - 2 PA : +30% ATK 2 tours
+6. Lame Ardente - 3 PA : 30 dmg + Brûlure (5 dmg/tour x2)
+7. Passion Sacrificielle - 2 PA : Heal allié 30 PV, Ilya perd 15 PV
+8. Garde Inébranlable - 1 PA : Mouvement + +50 DEF jusqu'au prochain tour
+9. Riposte - 2 PA : Attaque faible, contre-attaque si touché ce tour
+ 
+**Cartes Neutres (3)** :
 10. Mur Vivant - 2 PA : Taunt sur 3 hex autour d'Ilya
-
-**Cartes Neutres (2)** :
 11. Sprint - 1 PA : +2 Mouvement ce tour
-12. Frappe Basique - 1 PA : 20 dmg, portÃ©e 1
+12. Frappe Basique - 1 PA : 20 dmg, portée 1
 
 ---
 

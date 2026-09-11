@@ -7,18 +7,18 @@
 
 ## Vue d'Ensemble
 
-Les **Champions** de Project TDB appartiennent à l'une des **8 Familles**, chacune avec son propre système d'émotions et style de jeu unique. Les champions utilisent des decks personnalisés de cartes et peuvent se transformer au cours du combat selon leur état émotionnel.
+Les **Champions** de Project TDB sont des coquilles vides qui peuvent utiliser 1 à 2 **Émotions** (couleurs) pour construire leurs decks. Chaque champion peut avoir une affinité pour une émotion de base, mais le système de deckbuilding est flexible.
 
 
 ## Structure d'un Champion (ChampionData)
 
 ### Données de Base
 
-| Attribut    | Type            | Description                      |
-|-------------|-----------------|----------------------------------|
-| **Nom**     | Text            | Nom du champion                  |
-| **Prefab**  | GameObject      | Modèle 3D/2D du champion         |
-| **Famille** | CardFamillyType | Une des 8 familles               |
+| Attribut    | Type        | Description                                             |
+|-------------|-------------|---------------------------------------------------------|
+| **Nom**     | Text        | Nom du champion                                         |
+| **Prefab**  | GameObject  | Modèle 3D/2D du champion                                |
+| **Émotion** | EmotionType | L'émotion de base du champion (pour le deck par défaut) |
 
 
 ### Statistiques de Combat

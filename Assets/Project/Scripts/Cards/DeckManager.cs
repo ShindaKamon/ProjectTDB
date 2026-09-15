@@ -111,6 +111,9 @@ public class DeckManager : MonoBehaviour
         {
             _hand.Remove(cardToPlay);
             _discardPile.Add(cardToPlay);
+            // La carte quitte la main : son éventuel override de coût (ex: Il triche) ne doit
+            // pas persister sur ce ScriptableObject partagé au-delà de cette copie jouée.
+            ClearCostOverride(cardToPlay);
             OnHandChanged?.Invoke();
             OnDiscardChanged?.Invoke(_discardPile.Count);
             GameLog.Log("Carte jouée : " + cardToPlay.cardName + ". " + _hand.Count + " cartes restantes en main.");

@@ -123,13 +123,16 @@ public class DeckManager : MonoBehaviour
 
     /// <summary>
     /// Coût effectif d'une carte, après application d'un éventuel override (ex: Il triche).
-    /// Toujours au moins 1 PA.
+    /// Le plancher de 1 PA ne s'applique que si un override est actif : une carte à coût de
+    /// base 0 PA (ex: carte Rage) sans override reste gratuite (bug corrigé : le plancher
+    /// s'appliquait auparavant même sans override, rendant les cartes à 0 PA injouables dès
+    /// qu'un DeckManager était présent).
     /// </summary>
     public int GetEffectiveCost(CardData card)
     {
         if (card == null) return 0;
         int delta = _costOverrides.TryGetValue(card, out int d) ? d : 0;
-        return Mathf.Max(1, card.costPA + delta);
+        return delta != 0 ? Mathf.Max(1, card.costPA + delta) : card.costPA;
     }
 
     /// <summary>

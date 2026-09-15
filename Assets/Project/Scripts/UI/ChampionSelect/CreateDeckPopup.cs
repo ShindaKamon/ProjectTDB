@@ -127,7 +127,11 @@ public class CreateDeckPopup : MonoBehaviour
     {
         if (_createButton != null)
         {
-            bool isValid = !string.IsNullOrWhiteSpace(_nameInput?.text) && _selectedEmotions.Count == MAX_EMOTIONS;
+            // Un deck peut être créé avec 1 OU 2 émotions (voir DeckData.HasEmotions /
+            // CardMatchesDeckEmotions qui supportent les deux cas) : exiger exactement
+            // MAX_EMOTIONS empêchait à tort la création d'un deck mono-émotion.
+            bool isValid = !string.IsNullOrWhiteSpace(_nameInput?.text) &&
+                           _selectedEmotions.Count >= 1 && _selectedEmotions.Count <= MAX_EMOTIONS;
             _createButton.interactable = isValid;
         }
     }
@@ -182,10 +186,12 @@ public class CreateDeckPopup : MonoBehaviour
 
     private void OnCreatePressed()
     {
-        if (string.IsNullOrWhiteSpace(_nameInput?.text) || _selectedEmotions.Count != MAX_EMOTIONS)
+        if (string.IsNullOrWhiteSpace(_nameInput?.text) ||
+            _selectedEmotions.Count < 1 || _selectedEmotions.Count > MAX_EMOTIONS)
             return;
 
-        OnDeckCreated?.Invoke(_nameInput.text.Trim(), _selectedEmotions[0], _selectedEmotions[1]);
+        EmotionType emotion2 = _selectedEmotions.Count > 1 ? _selectedEmotions[1] : EmotionType.None;
+        OnDeckCreated?.Invoke(_nameInput.text.Trim(), _selectedEmotions[0], emotion2);
         Hide();
     }
 }

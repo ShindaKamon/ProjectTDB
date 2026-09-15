@@ -22,11 +22,15 @@ public class ChampionSelectManager : MonoBehaviour
 
     [Header("Boutons")]
     [SerializeField] private Button _startButton;
+    [SerializeField] private Button _chooseChampionButton;
+
+    [Header("Navigation")]
+    [SerializeField] private ChampionSelectFlowController _flowController;
 
     [Header("Configuration")]
     [SerializeField] private string _combatSceneName = "CombatScene";
     [SerializeField] private List<ChampionData> _allChampions;
-    [SerializeField] private Color _selectedButtonColor = new Color(0.8f, 0.2f, 0.2f); // Rouge
+    [SerializeField] private Color _selectedButtonColor = new Color(0.95f, 0.85f, 0.55f); // Doré/bronze, cohérent avec la palette parchemin
     [SerializeField] private Color _normalButtonColor = Color.white;
 
     private ChampionData _currentSelectedChampion;
@@ -52,6 +56,12 @@ public class ChampionSelectManager : MonoBehaviour
         {
             _startButton.onClick.AddListener(StartGame);
             _startButton.interactable = false;
+        }
+
+        if (_chooseChampionButton != null)
+        {
+            _chooseChampionButton.onClick.AddListener(ConfirmChampionSelection);
+            _chooseChampionButton.interactable = false;
         }
 
         // Cacher le panel deck au départ
@@ -118,28 +128,48 @@ public class ChampionSelectManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Surligne un champion dans la grille et met à jour son aperçu (écran Sélection Champion).
+    /// Ne fait pas encore avancer le flux vers l'écran Liste des Decks : voir ConfirmChampionSelection.
+    /// </summary>
     private void SelectChampion(ChampionData champion, Button clickedButton)
     {
         _currentSelectedChampion = champion;
-        SelectedChampion = champion;
 
         // Mettre à jour la sélection visuelle des boutons
         UpdateChampionButtonsVisual(clickedButton);
 
         UpdateChampionDisplay();
 
+        if (_chooseChampionButton != null)
+            _chooseChampionButton.interactable = true;
+    }
+
+    /// <summary>
+    /// Appelé par le bouton "Choisir ce champion" : valide le champion surligné,
+    /// charge ses decks et fait avancer le flux vers l'écran Liste des Decks.
+    /// </summary>
+    private void ConfirmChampionSelection()
+    {
+        if (_currentSelectedChampion == null) return;
+
+        SelectedChampion = _currentSelectedChampion;
+
         // Afficher le panel deck et charger les decks du champion
         if (_deckPanelObject != null)
             _deckPanelObject.SetActive(true);
 
         if (_deckListUI != null)
-            _deckListUI.ShowDecksForChampion(champion);
+            _deckListUI.ShowDecksForChampion(_currentSelectedChampion);
 
         // Mettre à jour le deck sélectionné
         UpdateSelectedDeck();
 
         if (_startButton != null)
             _startButton.interactable = true;
+
+        if (_flowController != null)
+            _flowController.ShowScreen(ChampionSelectFlowController.Screen.DeckList);
     }
 
     private void UpdateChampionButtonsVisual(Button selectedButton)
@@ -154,7 +184,7 @@ public class ChampionSelectManager : MonoBehaviour
             button.colors = colors;
         }
 
-        // Mettre le bouton sélectionné en rouge
+        // Mettre le bouton sélectionné en doré/bronze
         if (selectedButton != null)
         {
             _selectedChampionButton = selectedButton;

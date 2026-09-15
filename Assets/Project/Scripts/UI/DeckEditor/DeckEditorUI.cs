@@ -65,6 +65,12 @@ public class DeckEditorUI : MonoBehaviour
 
     public System.Action<int, List<CardData>> OnDeckSaved;
 
+    /// <summary>Émis quand l'édition s'ouvre (Open), pour piloter la navigation plein écran.</summary>
+    public System.Action OnOpened;
+
+    /// <summary>Émis quand l'édition se ferme (Close, via Sauvegarder ou Annuler).</summary>
+    public System.Action OnClosed;
+
     void Awake()
     {
         if (_saveButton != null)
@@ -127,6 +133,7 @@ public class DeckEditorUI : MonoBehaviour
         UpdateDeckDisplay();
         UpdateSaveButtonState();
         SetEditMode(true);
+        OnOpened?.Invoke();
     }
 
     public void SetEditMode(bool editMode)
@@ -147,6 +154,7 @@ public class DeckEditorUI : MonoBehaviour
         ClearDeckSlots();
         ClearEmotionFilterButtons();
         RefreshViewMode();
+        OnClosed?.Invoke();
     }
 
     private void UpdateHeader()

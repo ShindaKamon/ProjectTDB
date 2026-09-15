@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Invocation_de_Lyse
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Invocation de Lyse
-  description: "Signature Soren - invoque Lyse, capte le passif Miroir fraternel
-    (m\xE9canique d'invocation = Phase 3, pas encore active)."
+  description: "Signature Soren - invoque Lyse si elle n'est pas d\xE9j\xE0 active
+    sur le terrain, sinon la soigne de 15 PV au lieu de la r\xE9invoquer. Capte le
+    passif Miroir fraternel (m\xE9canique d'invocation = Phase 3, pas encore active)."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
@@ -27,9 +28,11 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
-  healAmount: 0
+  healAmount: 15
   lifestealFixedAmount: 0
   atkIncreased: 0
   defenseAmount: 0
@@ -40,6 +43,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -64,3 +68,5 @@ MonoBehaviour:
   isSummonCard: 1
   summonPrefab: {fileID: 6726855022100611391, guid: 1dc6c5e2b46bad34487c7fc86ab1fe94, type: 3}
   isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

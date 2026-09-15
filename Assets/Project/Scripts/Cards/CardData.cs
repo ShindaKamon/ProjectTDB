@@ -897,11 +897,24 @@ public class CardData : ScriptableObject
         {
             if (isSummonCard && summonPrefab != null)
             {
-                Vector2Int spawnPos = targetsTile ? targetTile : source.GetCurrentGridPos();
-                var summon = Services.Grid.SpawnSummon(summonPrefab, spawnPos, source, source.GetHealth() / 2);
-                if (summon != null && source is ISummonOwner summonOwner)
+                // Si l'invocation du lanceur est déjà active et vivante (ex: Lyse pour Soren),
+                // on ne réinvoque pas une deuxième copie : on la soigne à la place (décision produit).
+                SummonUnit existingSummon = (source is ISummonOwner existingSummonOwner) ? existingSummonOwner.ActiveSummon : null;
+                UnitState existingSummonState = existingSummon != null ? existingSummon.GetUnitState() : null;
+
+                if (existingSummon != null && (existingSummonState == null || !existingSummonState.IsDead()))
                 {
-                    summonOwner.RegisterSummon(summon);
+                    existingSummon.Heal(healAmount);
+                    GameLog.Log($"{cardName} : {existingSummon.name} est déjà invoquée, elle est soignée de {healAmount} PV au lieu d'être réinvoquée.");
+                }
+                else
+                {
+                    Vector2Int spawnPos = targetsTile ? targetTile : source.GetCurrentGridPos();
+                    var summon = Services.Grid.SpawnSummon(summonPrefab, spawnPos, source, source.GetHealth() / 2);
+                    if (summon != null && source is ISummonOwner summonOwner)
+                    {
+                        summonOwner.RegisterSummon(summon);
+                    }
                 }
             }
             else if (isRepositionSummonCard && targetsTile && source is ISummonOwner repositionOwner)

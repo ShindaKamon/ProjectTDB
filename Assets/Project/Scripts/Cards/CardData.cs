@@ -712,14 +712,14 @@ public class CardData : ScriptableObject
     /// <summary>
     /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active et que cette
     /// invocation a un ennemi à portée (même portée que la carte jouée, mesurée depuis sa
-    /// propre position), inflige un écho à 40% des dégâts de base sur l'ennemi le plus proche
-    /// de l'invocation. Choix de cible (le plus proche) et déclenchement automatique (plutôt
+    /// propre position), inflige un écho à 40% des dégâts réellement infligés (après réduction/
+    /// boucliers) sur l'ennemi le plus proche de l'invocation. Choix de cible (le plus proche) et déclenchement automatique (plutôt
     /// qu'un choix du joueur) sont des simplifications de première passe, à retravailler en
     /// playtest si besoin (cf. notes de design du classeur source).
     /// </summary>
-    private void TryTriggerSummonEcho(Unit source, int baseDamage)
+    private void TryTriggerSummonEcho(Unit source, int appliedDamage)
     {
-        if (baseDamage <= 0) return;
+        if (appliedDamage <= 0) return;
         if (!(source is ISummonOwner summonOwner)) return;
 
         SummonUnit summon = summonOwner.ActiveSummon;
@@ -746,9 +746,9 @@ public class CardData : ScriptableObject
 
         if (echoTarget == null) return;
 
-        int echoDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * 0.4f));
+        int echoDamage = Mathf.Max(1, Mathf.RoundToInt(appliedDamage * 0.4f));
         echoTarget.TakeDamage(echoDamage);
-        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {baseDamage}) sur {echoTarget.name}");
+        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
     }
 
     // Méthode pour exécuter l'effet de la carte
@@ -925,6 +925,11 @@ public class CardData : ScriptableObject
             effectEpicenter = source.GetCurrentGridPos();
         }
 
+        // Cumul des dégâts réellement appliqués (après réduction/boucliers) sur les cibles,
+        // utilisé par le passif "Miroir fraternel" (cf. TryTriggerSummonEcho) pour ne se
+        // déclencher que si - et en fonction de ce que - la carte a réellement infligé.
+        int actualDamageDealt = 0;
+
         // Applique l'effet AOE si activé
         if (isAOE && aoeRadius > 0)
         {
@@ -947,7 +952,9 @@ public class CardData : ScriptableObject
                         unit.TakeRawDamage(totalUnitDamage); // Paire (Ace) : ignore les boucliers en %
                     else
                         unit.TakeDamage(totalUnitDamage);
-                    if (unit.GetHealth() < hpBefore) damageDealt = true;
+                    int hpAfter = unit.GetHealth();
+                    if (hpAfter < hpBefore) damageDealt = true;
+                    actualDamageDealt += hpBefore - hpAfter;
                     GameLog.Log($"  → {unit.name} prend {totalUnitDamage} dégâts AOE");
                 }
                 if (finalHeal > 0)
@@ -991,7 +998,9 @@ public class CardData : ScriptableObject
                         targetUnit.TakeRawDamage(totalTargetDamage); // Paire (Ace) : ignore les boucliers en %
                     else
                         targetUnit.TakeDamage(totalTargetDamage);
-                    if (targetUnit.GetHealth() < hpBefore) damageDealt = true;
+                    int hpAfter = targetUnit.GetHealth();
+                    if (hpAfter < hpBefore) damageDealt = true;
+                    actualDamageDealt += hpBefore - hpAfter;
                     GameLog.Log($"{source.name} inflige {totalTargetDamage} dégâts à {targetUnit.name} avec {cardName}.");
                 }
                 if (finalHeal > 0)
@@ -1023,11 +1032,14 @@ public class CardData : ScriptableObject
         }
 
         // Passif "Miroir fraternel" (Soren) : écho à 40% de puissance sur une cible à portée
-        // de l'invocation active, si la carte jouée inflige des dégâts.
+        // de l'invocation active, si la carte jouée inflige réellement des dégâts.
+        // Basé sur les dégâts réellement appliqués (après réduction/boucliers), pas sur
+        // finalDamage (théorique, avant résolution) - sinon l'écho se déclenchait même quand
+        // la cible était entièrement protégée.
         // Une seule fois par carte jouée (pas une fois par cible).
         if (!isAdditionalMultiTargetHit)
         {
-            TryTriggerSummonEcho(source, finalDamage);
+            TryTriggerSummonEcho(source, actualDamageDealt);
         }
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)

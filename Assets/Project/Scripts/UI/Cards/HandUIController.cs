@@ -422,6 +422,17 @@ public class HandUIController : MonoBehaviour
 
         // Arranger les cartes en arc
         ArrangeCardsInArc();
+
+        // BUGFIX: si une carte ciblant une unité/tuile était sélectionnée (détachée du
+        // HandContainer et attachée au Canvas avec un sorting order élevé) au moment du
+        // rafraîchissement, son GameObject UI a été détruit et réinstancié ci-dessus : il a donc
+        // perdu ce détachement et s'est retrouvé reparenté dans le HandContainer par
+        // ArrangeCardsInArc(). On réapplique le détachement pour que la carte sélectionnée reste
+        // visible au-dessus de tout pendant le ciblage.
+        if (_selectedCard != null && _selectedCardUIObject != null)
+        {
+            AttachSelectedCardUIToCanvas();
+        }
     }
 
     /// <summary>
@@ -603,35 +614,7 @@ public class HandUIController : MonoBehaviour
                 if (cardUIObject.TryGetComponentSafe(out CardUIElement cardUIElement) && cardUIElement.CardData == _selectedCard)
                 {
                     _selectedCardUIObject = cardUIObject;
-
-                    // Détacher du HandContainer et attacher directement au Canvas
-                    _selectedCardUIObject.transform.SetParent(_canvasRectTransform);
-
-                    // Mettre la carte au-dessus de tout (dernier dans la hiérarchie = rendu en dernier = au-dessus)
-                    _selectedCardUIObject.transform.SetAsLastSibling();
-
-                    // Ajouter un Canvas sur la carte pour contrôler le sorting order
-                    Canvas cardCanvas = _selectedCardUIObject.GetComponent<Canvas>();
-                    if (cardCanvas == null)
-                    {
-                        cardCanvas = _selectedCardUIObject.AddComponent<Canvas>();
-                    }
-                    cardCanvas.overrideSorting = true;
-                    cardCanvas.sortingOrder = 1000; // Très haut pour être au-dessus de tout
-
-                    // Ajouter GraphicRaycaster si nécessaire pour que la carte reste cliquable
-                    if (_selectedCardUIObject.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
-                    {
-                        _selectedCardUIObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-                    }
-
-                    // Désactive le raycast sur cette carte pour qu'elle ne bloque pas les clics sur le monde
-                    // OPTIMISATION Phase 3.3: ComponentLocator
-                    if (!_selectedCardUIObject.TryGetComponentSafe(out CanvasGroup canvasGroup))
-                    {
-                        canvasGroup = _selectedCardUIObject.AddComponent<CanvasGroup>();
-                    }
-                    canvasGroup.blocksRaycasts = false;
+                    AttachSelectedCardUIToCanvas();
 
                     break;
                 }
@@ -806,6 +789,49 @@ public class HandUIController : MonoBehaviour
         EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
 
         GameLog.Log($"✅ Carte jouée avec succès");
+    }
+
+    /// <summary>
+    /// Détache le GameObject UI de la carte actuellement sélectionnée (_selectedCardUIObject) du
+    /// HandContainer pour l'attacher directement au Canvas, au-dessus de tout (sorting order élevé),
+    /// en mode ciblage (carte qui suit la souris / preview à gauche de l'écran). Ne fait rien si
+    /// aucune carte UI n'est assignée.
+    /// Doit être réappliqué après toute réinstanciation des éléments de carte (ex: UpdateHandUI
+    /// suite à un tirage pendant le ciblage) : le nouveau GameObject est recréé dans le
+    /// HandContainer et perd ce détachement/z-order tant qu'on ne le réapplique pas.
+    /// </summary>
+    private void AttachSelectedCardUIToCanvas()
+    {
+        if (_selectedCardUIObject == null) return;
+
+        // Détacher du HandContainer et attacher directement au Canvas
+        _selectedCardUIObject.transform.SetParent(_canvasRectTransform);
+
+        // Mettre la carte au-dessus de tout (dernier dans la hiérarchie = rendu en dernier = au-dessus)
+        _selectedCardUIObject.transform.SetAsLastSibling();
+
+        // Ajouter un Canvas sur la carte pour contrôler le sorting order
+        Canvas cardCanvas = _selectedCardUIObject.GetComponent<Canvas>();
+        if (cardCanvas == null)
+        {
+            cardCanvas = _selectedCardUIObject.AddComponent<Canvas>();
+        }
+        cardCanvas.overrideSorting = true;
+        cardCanvas.sortingOrder = 1000; // Très haut pour être au-dessus de tout
+
+        // Ajouter GraphicRaycaster si nécessaire pour que la carte reste cliquable
+        if (_selectedCardUIObject.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+        {
+            _selectedCardUIObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+
+        // Désactive le raycast sur cette carte pour qu'elle ne bloque pas les clics sur le monde
+        // OPTIMISATION Phase 3.3: ComponentLocator
+        if (!_selectedCardUIObject.TryGetComponentSafe(out CanvasGroup canvasGroup))
+        {
+            canvasGroup = _selectedCardUIObject.AddComponent<CanvasGroup>();
+        }
+        canvasGroup.blocksRaycasts = false;
     }
 
     // Méthode pour surligner visuellement la carte sélectionnée

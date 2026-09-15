@@ -77,6 +77,15 @@ namespace ProjectTDB.Tests
             return enemy;
         }
 
+        /// <summary>
+        /// Ajoute un DeckManager sur le GameObject de l'unité (TryGetComponentSafe cherche sur
+        /// le même GameObject, cf. ComponentLocator.TryGetComponentSafe).
+        /// </summary>
+        private DeckManager AddDeckManager(Unit unit)
+        {
+            return unit.gameObject.AddComponent<DeckManager>();
+        }
+
         private static void SetField(object target, string fieldName, object value)
         {
             var type = target.GetType();
@@ -199,6 +208,106 @@ namespace ProjectTDB.Tests
             card.costHP = 10;
 
             var result = GameActionValidator.CanPlayCard(unit, card);
+
+            Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        }
+
+        // ==================== CanPlayCard - DeckManager (coût effectif) ====================
+
+        [Test]
+        public void CanPlayCard_DeckManagerWithReducedCostOverride_UsesEffectiveCost()
+        {
+            // Sans override, le coût brut (2 PA) dépasserait le PA disponible (1) et échouerait.
+            // Avec l'override actif (-1), le coût effectif (1) doit être utilisé à la place.
+            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
+            var deckManager = AddDeckManager(enemy);
+            var card = NewCard();
+            card.costPA = 2;
+            deckManager.ModifyCardCost(card, -1); // coût effectif : 1
+
+            var result = GameActionValidator.CanPlayCard(enemy, card);
+
+            Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanPlayCard_DeckManagerWithIncreasedCostOverride_UsesEffectiveCost()
+        {
+            // Sans override, le coût brut (1 PA) serait jouable avec 1 PA disponible.
+            // Avec l'override actif (+1), le coût effectif (2) doit bloquer l'action.
+            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
+            var deckManager = AddDeckManager(enemy);
+            var card = NewCard();
+            card.costPA = 1;
+            deckManager.ModifyCardCost(card, 1); // coût effectif : 2
+
+            var result = GameActionValidator.CanPlayCard(enemy, card);
+
+            Assert.IsFalse(result.IsValid);
+            StringAssert.Contains("PA insuffisants", result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanPlayCard_DeckManagerWithoutActiveOverride_BehavesLikeBaseCost()
+        {
+            // DeckManager présent mais aucun override actif : le comportement doit être
+            // identique à celui d'avant l'introduction de la surcouche de coût.
+            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
+            AddDeckManager(enemy);
+            var card = NewCard();
+            card.costPA = 2;
+
+            var result = GameActionValidator.CanPlayCard(enemy, card);
+
+            Assert.IsFalse(result.IsValid);
+            StringAssert.Contains("PA insuffisants", result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanPlayCard_DeckManagerZeroCostCardWithoutOverride_StaysFreeEvenWithNoPA()
+        {
+            // Régression du bug corrigé dans DeckManager.GetEffectiveCost : le plancher de
+            // 1 PA s'appliquait auparavant même sans override actif, rendant les cartes à
+            // coût 0 (ex: Rage) injouables gratuitement dès qu'un DeckManager était présent.
+            var enemy = NewEnemyWithPA(currentPA: 0, maxPA: 3);
+            AddDeckManager(enemy);
+            var card = NewCard();
+            card.costPA = 0;
+
+            var result = GameActionValidator.CanPlayCard(enemy, card);
+
+            Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        }
+
+        // ==================== CanPlayCard - Stock de Rage plein ====================
+
+        [Test]
+        public void CanPlayCard_RageCard_StockFull_Fails()
+        {
+            var ilya = NewUnit<IlyaUnit>();
+            SetField(ilya, "_rageStock", 5);
+            SetField(ilya, "_maxRageStock", 5);
+            var card = NewCard();
+            card.isRageCard = true;
+            card.costPA = 0;
+
+            var result = GameActionValidator.CanPlayCard(ilya, card);
+
+            Assert.IsFalse(result.IsValid);
+            StringAssert.Contains("Stock de Rage plein", result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanPlayCard_RageCard_StockNotFull_Succeeds()
+        {
+            var ilya = NewUnit<IlyaUnit>();
+            SetField(ilya, "_rageStock", 2);
+            SetField(ilya, "_maxRageStock", 5);
+            var card = NewCard();
+            card.isRageCard = true;
+            card.costPA = 0;
+
+            var result = GameActionValidator.CanPlayCard(ilya, card);
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }

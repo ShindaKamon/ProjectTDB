@@ -695,5 +695,47 @@ namespace ProjectTDB.Tests
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }
+
+        [Test]
+        public void ValidateCardData_ZeroTargetCount_Fails()
+        {
+            var card = NewCard();
+            card.targetCount = 0;
+
+            var result = GameActionValidator.ValidateCardData(card);
+
+            Assert.IsFalse(result.IsValid);
+            StringAssert.Contains("targetCount", result.ErrorMessage);
+        }
+
+        [Test]
+        public void IsMultiTarget_TargetCountOne_False()
+        {
+            var card = NewCard();
+            card.targetType = CardTargetType.Enemy;
+            card.targetCount = 1;
+
+            Assert.IsFalse(card.isMultiTarget);
+        }
+
+        [Test]
+        public void IsMultiTarget_TargetCountTwoAndTargetsUnit_True()
+        {
+            var card = NewCard();
+            card.targetType = CardTargetType.Enemy;
+            card.targetCount = 2;
+
+            Assert.IsTrue(card.isMultiTarget);
+        }
+
+        [Test]
+        public void IsMultiTarget_TargetCountTwoButTargetsTile_False()
+        {
+            var card = NewCard();
+            card.targetType = CardTargetType.AnyTile;
+            card.targetCount = 2;
+
+            Assert.IsFalse(card.isMultiTarget);
+        }
     }
 }

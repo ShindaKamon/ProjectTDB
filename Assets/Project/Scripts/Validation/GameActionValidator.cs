@@ -329,6 +329,9 @@ public static class GameActionValidator
         if (card.targetRange < 0)
             return ValidationResult.Fail($"CardData '{card.cardName}' : targetRange doit être >= 0");
 
+        if (card.targetCount < 1)
+            return ValidationResult.Fail($"CardData '{card.cardName}' : targetCount doit être >= 1");
+
         return ValidationResult.Success();
     }
 }

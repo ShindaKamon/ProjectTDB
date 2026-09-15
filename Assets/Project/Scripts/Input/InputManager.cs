@@ -191,8 +191,8 @@ public class InputManager : MonoBehaviour
         {
             if (_handUIController != null && _handUIController.SelectedCard != null)
             {
-                GameLog.Log("Clic droit détecté : désélection de la carte.");
-                _handUIController.DeselectCard();
+                GameLog.Log("Clic droit détecté : annulation d'une étape de ciblage.");
+                _handUIController.CancelTargetingStep();
                 return; // Consomme le clic droit et bloque toute autre interaction
             }
         }
@@ -340,6 +340,19 @@ public class InputManager : MonoBehaviour
             {
                 targetUnit = Services.Grid.GetUnitAtGridPos(targetTilePos);
             }
+        }
+
+        // Cas spécial : carte à cibles multiples (ex: Frappe rapide) - accumule les cibles une par
+        // une au lieu d'exécuter au premier clic ; HandUIController valide chaque cible et déclenche
+        // l'exécution automatiquement une fois le nombre requis atteint (ou plus de cible valide).
+        if (selectedCard.isMultiTarget)
+        {
+            if (targetUnit != null)
+            {
+                _handUIController.AddMultiTarget(targetUnit);
+            }
+            // Clic invalide (pas d'unité cliquée) : ignoré sans désélectionner, le joueur peut recliquer.
+            return;
         }
 
         // Cas spécial : Carte Self (doit cliquer sur le joueur lui-même)

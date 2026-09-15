@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Cauchemar_collectif
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Cauchemar collectif
-  description: "Pluie de cauchemars, frappe 3 cibles s\xE9par\xE9es (approxim\xE9:
-    cible unique)."
+  description: "Pluie de cauchemars, frappe 3 cibles s\xE9par\xE9es."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0
@@ -27,6 +26,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 3
   damageAmount: 36
   damageSelf: 0
   healAmount: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -61,3 +63,8 @@ MonoBehaviour:
   rageScaling: 0
   rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

@@ -300,9 +300,19 @@ public class CardData : ScriptableObject
     [Tooltip("Si true, cette carte cible une autre carte de la main du lanceur (ex: Il triche) au lieu d'une unité/tuile de la grille")]
     public bool targetsHandCard = false;
 
+    [Space(5)]
+    [Tooltip("Nombre de cibles distinctes à sélectionner manuellement avant exécution (1 = ciblage classique à une cible). Uniquement pour les cartes ciblant des unités.")]
+    public int targetCount = 1;
+
     // Propriétés dérivées pour compatibilité
     public bool targetsUnit => targetType == CardTargetType.Self || targetType == CardTargetType.Enemy || targetType == CardTargetType.Ally || targetType == CardTargetType.AllyOrSelf || targetType == CardTargetType.AllyorEnemy || targetType == CardTargetType.AnyUnit;
     public bool targetsTile => targetType == CardTargetType.EmptyTile || targetType == CardTargetType.AnyTile || targetType == CardTargetType.EnemyOrTile;
+
+    /// <summary>
+    /// True si la carte nécessite une sélection manuelle de plusieurs cibles distinctes
+    /// (ex: Frappe rapide) au lieu du ciblage classique une-cible-un-clic.
+    /// </summary>
+    public bool isMultiTarget => targetCount > 1 && targetsUnit;
     public bool isAOE => areaEffect != CardAreaEffect.None && aoeRadius > 0;
     public bool affectsSelf => affectedTarget == CardAffectedTarget.Self || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AnyUnit;
     public bool affectsAllies => affectedTarget == CardAffectedTarget.Ally || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;

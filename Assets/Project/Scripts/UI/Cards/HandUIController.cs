@@ -31,6 +31,7 @@ public class HandUIController : MonoBehaviour
     private DeckManager _playerDeckManager;
     private List<GameObject> _instantiatedCardUIs = new List<GameObject>();
     private CardData _selectedCard = null; // La carte actuellement sélectionnée par le joueur
+    private List<Unit> _pendingMultiTargets = new List<Unit>(); // Cibles déjà choisies pour une carte à cibles multiples (ex: Frappe rapide)
     private GameObject _selectedCardUIObject = null; // Le GameObject UI de la carte sélectionnée
     private RectTransform _selectedCardRect = null; // Cache du RectTransform pour performance
     private GameObject _hoveredCard = null; // La carte actuellement survolée
@@ -48,6 +49,7 @@ public class HandUIController : MonoBehaviour
         {
             GameLog.Log($"Carte {_selectedCard.cardName} désélectionnée via appel externe.");
             _selectedCard = null;
+            _pendingMultiTargets.Clear();
             ResetSelectedCardUIPosition();
             ResetCardHighlights();
 
@@ -63,6 +65,119 @@ public class HandUIController : MonoBehaviour
             // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
             EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
         }
+    }
+
+    /// <summary>
+    /// Annule une étape de ciblage : retire la dernière cible choisie pour une carte à cibles
+    /// multiples en cours de sélection, ou désélectionne complètement la carte s'il n'y a
+    /// aucune cible en attente (comportement classique).
+    /// </summary>
+    public void CancelTargetingStep()
+    {
+        if (_pendingMultiTargets.Count > 0)
+        {
+            Unit removed = _pendingMultiTargets[_pendingMultiTargets.Count - 1];
+            _pendingMultiTargets.RemoveAt(_pendingMultiTargets.Count - 1);
+            GameLog.Log($"Cible {removed.name} retirée de la sélection multi-cibles ({_pendingMultiTargets.Count}/{_selectedCard.targetCount}).");
+        }
+        else
+        {
+            DeselectCard();
+        }
+    }
+
+    /// <summary>
+    /// Ajoute une cible à la sélection en cours pour une carte à cibles multiples (ex: Frappe rapide).
+    /// Exécute automatiquement la carte dès que le nombre de cibles requis est atteint, ou dès
+    /// qu'il n'y a plus aucune cible valide restante sur le terrain (carte jouée avec moins de
+    /// cibles que prévu si le terrain n'en offre pas assez).
+    /// </summary>
+    public void AddMultiTarget(Unit target)
+    {
+        if (_selectedCard == null || !_selectedCard.isMultiTarget || target == null) return;
+
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        if (activeUnit == null) return;
+
+        if (_pendingMultiTargets.Contains(target))
+        {
+            GameLog.Log($"{target.name} est déjà sélectionné pour {_selectedCard.cardName}.");
+            return;
+        }
+
+        ValidationResult targetResult = GameActionValidator.CanTargetUnit(_selectedCard, activeUnit, target);
+        if (!targetResult.IsValid)
+        {
+            GameLog.LogWarning($"❌ Ciblage invalide : {targetResult.ErrorMessage}");
+            return;
+        }
+
+        _pendingMultiTargets.Add(target);
+        GameLog.Log($"🎯 Cible {target.name} ajoutée pour {_selectedCard.cardName} ({_pendingMultiTargets.Count}/{_selectedCard.targetCount}).");
+
+        if (_pendingMultiTargets.Count >= _selectedCard.targetCount || !HasRemainingValidMultiTarget(activeUnit))
+        {
+            ExecutePendingMultiTargetCard(activeUnit);
+        }
+    }
+
+    /// <summary>
+    /// Vérifie s'il reste, sur le terrain, au moins une unité valide pour la carte en cours
+    /// qui n'a pas déjà été choisie comme cible.
+    /// </summary>
+    private bool HasRemainingValidMultiTarget(Unit activeUnit)
+    {
+        foreach (Unit candidate in Services.Grid.GetAllUnits())
+        {
+            if (_pendingMultiTargets.Contains(candidate)) continue;
+            if (GameActionValidator.CanTargetUnit(_selectedCard, activeUnit, candidate).IsValid)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Exécute la carte à cibles multiples sur toutes les cibles accumulées, puis paie le coût
+    /// une seule fois (pas par cible) et nettoie l'UI, à l'identique de PlaySelectedCard.
+    /// </summary>
+    private void ExecutePendingMultiTargetCard(Unit activeUnit)
+    {
+        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
+        if (!canPlayResult.IsValid)
+        {
+            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
+            DeselectCard();
+            return;
+        }
+
+        foreach (Unit target in _pendingMultiTargets)
+        {
+            _selectedCard.ExecuteEffect(activeUnit, target, default);
+        }
+
+        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
+        _playerDeckManager.PlayCard(_selectedCard);
+
+        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
+        {
+            paUser.SpendPA(effectiveCostPA);
+        }
+
+        if (_selectedCard.costHP > 0)
+        {
+            activeUnit.PayHealth(_selectedCard.costHP);
+        }
+
+        Services.Grid.UpdateUnitUI();
+        _pendingMultiTargets.Clear();
+        _selectedCard = null;
+        ResetSelectedCardUIPosition();
+        ResetCardHighlights();
+        EventBus.Publish(new ResetTileColorsEvent());
+        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+
+        GameLog.Log($"✅ Carte à cibles multiples jouée avec succès");
     }
 
     void OnEnable()

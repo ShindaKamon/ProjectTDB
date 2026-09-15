@@ -100,7 +100,7 @@ public class ChampionSelectManager : MonoBehaviour
         {
             if (champion == null)
             {
-                Debug.LogWarning("ChampionSelectManager: Un ChampionData null trouvé dans la liste!");
+                GameLog.LogWarning("ChampionSelectManager: Un ChampionData null trouvé dans la liste!");
                 continue;
             }
 
@@ -193,7 +193,7 @@ public class ChampionSelectManager : MonoBehaviour
     private void OnDeckSelected(List<CardData> deckCards)
     {
         SelectedDeck = deckCards;
-        Debug.Log($"Deck sélectionné avec {deckCards.Count} cartes.");
+        GameLog.Log($"Deck sélectionné avec {deckCards.Count} cartes.");
     }
 
     private void UpdateSelectedDeck()
@@ -213,7 +213,7 @@ public class ChampionSelectManager : MonoBehaviour
     {
         if (SelectedChampion == null)
         {
-            Debug.LogWarning("Aucun champion sélectionné pour commencer le jeu.");
+            GameLog.LogWarning("Aucun champion sélectionné pour commencer le jeu.");
             return;
         }
 
@@ -223,7 +223,7 @@ public class ChampionSelectManager : MonoBehaviour
             UpdateSelectedDeck();
         }
 
-        Debug.Log($"Lancement du jeu avec {SelectedChampion.championName} et un deck de {SelectedDeck?.Count ?? 0} cartes.");
+        GameLog.Log($"Lancement du jeu avec {SelectedChampion.championName} et un deck de {SelectedDeck?.Count ?? 0} cartes.");
         SceneManager.LoadScene(_combatSceneName);
     }
 }

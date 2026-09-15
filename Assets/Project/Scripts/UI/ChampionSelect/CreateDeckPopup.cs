@@ -134,7 +134,7 @@ public class CreateDeckPopup : MonoBehaviour
 
     public void Show()
     {
-        Debug.Log($"CreateDeckPopup.Show() appelé. GameObject actuel: {gameObject.name}");
+        GameLog.Log($"CreateDeckPopup.Show() appelé. GameObject actuel: {gameObject.name}");
 
         // Vérifier si un parent est désactivé
         Transform parent = transform.parent;
@@ -149,7 +149,7 @@ public class CreateDeckPopup : MonoBehaviour
         }
 
         gameObject.SetActive(true);
-        Debug.Log($"CreateDeckPopup activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}");
+        GameLog.Log($"CreateDeckPopup activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}");
 
         // Réinitialiser
         if (_nameInput != null)

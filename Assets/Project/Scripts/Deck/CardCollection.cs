@@ -82,7 +82,7 @@ public class CardCollection : ScriptableObject
         }
 
         UnityEditor.EditorUtility.SetDirty(this);
-        Debug.Log($"CardCollection: {_allCards.Count} cartes collectées.");
+        GameLog.Log($"CardCollection: {_allCards.Count} cartes collectées.");
     }
 #endif
 }

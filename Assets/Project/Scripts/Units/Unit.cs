@@ -401,6 +401,30 @@ public class Unit : MonoBehaviour, IMarkable
     }
 
     /// <summary>
+    /// Force la mort immédiate de l'unité sans passer par des dégâts (ex: une invocation dont
+    /// l'invocateur vient de mourir). Passe par le même Die() que TakeDamage/TakeRawDamage pour
+    /// que tout le nettoyage habituel (UnitState, EventBus, GridManager, UI) se déclenche.
+    /// </summary>
+    public void Kill()
+    {
+        // Phase 3.4: Évite une double mort
+        if (_unitState != null && !_unitState.CanTakeDamage())
+        {
+            return;
+        }
+
+        _health = 0;
+        OnHealthChanged?.Invoke(_health, _maxHealth);
+
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealth(_health, _maxHealth);
+        }
+
+        Die();
+    }
+
+    /// <summary>
     /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus comme la Rage)
     /// </summary>
     public void PayHealth(int amount)

@@ -67,6 +67,27 @@ public class SorenUnit : Champion, IActionPointsUser, ISummonOwner
         }
     }
 
+    /// <summary>
+    /// Si Soren meurt, son invocation active (Lyse) doit mourir immédiatement avec lui plutôt
+    /// que de rester orpheline sur le terrain (décision produit). On capture la référence avant
+    /// base.Die() (qui ne touche pas _activeSummon) puis on tue la summon via son propre Die(),
+    /// pour que le nettoyage habituel (GridManager.HandleUnitDied, EventBus, UI) s'applique
+    /// aussi à elle. Pas de risque de boucle : la mort de la summon ne redéclenche pas celle
+    /// de Soren (HandleSummonDied se contente de nettoyer la référence).
+    /// </summary>
+    protected override void Die()
+    {
+        SummonUnit summonToKill = _activeSummon;
+
+        base.Die();
+
+        if (summonToKill != null)
+        {
+            GameLog.Log($"{name}: mort de l'invocateur -> {summonToKill.name} meurt aussi.");
+            summonToKill.Kill();
+        }
+    }
+
     void OnDestroy()
     {
         if (_activeSummon != null)

@@ -30,6 +30,15 @@ public class ChampionSelectFlowController : MonoBehaviour
     [Header("Bouton Retour (écran Liste des Decks -> écran Sélection Champion)")]
     [SerializeField] private Button _backToChampionSelectButton;
 
+    [Header("Panneau Deck partagé (aperçu écran 2 / édition plein écran écran 3)")]
+    [Tooltip("RectTransform du panneau hébergeant DeckEditorUI (BottomRightPanel). " +
+             "Un seul objet, reparenté selon l'écran actif plutôt que dupliqué, pour réutiliser " +
+             "exactement la même logique ViewModePanel/EditModePanel.")]
+    [SerializeField] private RectTransform _deckEditorContainer;
+
+    [Tooltip("Emplacement (dans l'écran Liste des Decks) où placer l'aperçu en lecture seule du deck.")]
+    [SerializeField] private RectTransform _deckPreviewSlot;
+
     public Screen CurrentScreen { get; private set; } = Screen.ChampionSelect;
 
     void Awake()
@@ -73,6 +82,41 @@ public class ChampionSelectFlowController : MonoBehaviour
 
         if (_screenDeckBuilderRoot != null)
             _screenDeckBuilderRoot.SetActive(screen == Screen.DeckBuilder);
+
+        RepositionDeckEditorContainer(screen);
+    }
+
+    /// <summary>
+    /// BottomRightPanel (DeckEditorUI) est visible à la fois en aperçu (écran Liste des Decks,
+    /// ViewModePanel) et en édition (écran Construction du Deck, EditModePanel) : plutôt que de
+    /// dupliquer son contenu, on le reparente vers l'emplacement correspondant à l'écran actif,
+    /// en le laissant occuper tout le rectangle de son nouveau parent (RectTransform en stretch).
+    /// </summary>
+    private void RepositionDeckEditorContainer(Screen screen)
+    {
+        if (_deckEditorContainer == null) return;
+
+        Transform target = screen switch
+        {
+            Screen.DeckBuilder when _screenDeckBuilderRoot != null => _screenDeckBuilderRoot.transform,
+            Screen.DeckList when _deckPreviewSlot != null => _deckPreviewSlot,
+            _ => null
+        };
+
+        if (target == null)
+        {
+            _deckEditorContainer.gameObject.SetActive(false);
+            return;
+        }
+
+        if (_deckEditorContainer.parent != target)
+            _deckEditorContainer.SetParent(target, false);
+
+        _deckEditorContainer.anchorMin = Vector2.zero;
+        _deckEditorContainer.anchorMax = Vector2.one;
+        _deckEditorContainer.offsetMin = Vector2.zero;
+        _deckEditorContainer.offsetMax = Vector2.zero;
+        _deckEditorContainer.gameObject.SetActive(true);
     }
 
     // Méthodes sans paramètre pour un branchement direct depuis Button.onClick (Inspector).

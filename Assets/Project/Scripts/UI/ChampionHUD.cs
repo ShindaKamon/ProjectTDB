@@ -10,7 +10,8 @@ using TMPro;
 public class ChampionHUD : MonoBehaviour
 {
     [Header("Textes Stats")]
-    [SerializeField] private TextMeshProUGUI _hpText;
+    // Note: le HP n'est plus affiché en texte ici — l'orbe de vie (HealthOrbController)
+    // fait déjà foi visuellement pour le HP, afficher les deux créait un doublon (cf. audit UI).
     [SerializeField] private TextMeshProUGUI _paText;
     [SerializeField] private TextMeshProUGUI _pmText;
     [SerializeField] private TextMeshProUGUI _atkText;
@@ -141,11 +142,7 @@ public class ChampionHUD : MonoBehaviour
 
     private void UpdateHP(int current, int max)
     {
-        if (_hpText != null)
-        {
-            _hpText.text = $"HP: {current}/{max}";
-        }
-
+        // Le HP n'est plus affiché en texte (voir orbe de vie) — seule la barre optionnelle reste ici.
         if (_hpBar != null)
         {
             _hpBar.maxValue = max;

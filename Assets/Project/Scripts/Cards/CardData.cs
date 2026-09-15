@@ -653,10 +653,15 @@ public class CardData : ScriptableObject
 
             case CardAreaEffect.Line:
             {
-                Vector2Int dir = GetSnappedDirection(source.GetCurrentGridPos(), epicenter);
+                Vector2Int lineSourcePos = source.GetCurrentGridPos();
+                // La case du lanceur (origine de la ligne) est considérée "dans la forme" ;
+                // c'est affectsSelf (géré par l'appelant) qui décide si elle est réellement affectée.
+                if (tilePos == lineSourcePos) return true;
+
+                Vector2Int dir = GetSnappedDirection(lineSourcePos, epicenter);
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
-                Vector2Int cur = source.GetCurrentGridPos();
+                Vector2Int cur = lineSourcePos;
                 for (int i = 1; i <= aoeRadius; i++)
                 {
                     cur += dir;
@@ -668,12 +673,14 @@ public class CardData : ScriptableObject
             case CardAreaEffect.Cone:
             {
                 Vector2Int sourcePos = source.GetCurrentGridPos();
+                // La case du lanceur (origine du cône) est considérée "dans la forme" ;
+                // c'est affectsSelf (géré par l'appelant) qui décide si elle est réellement affectée.
+                if (tilePos == sourcePos) return true;
+
                 Vector2Int dir = GetSnappedDirection(sourcePos, epicenter);
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
                 Vector2Int toTile = tilePos - sourcePos;
-                if (toTile == Vector2Int.zero) return false; // le lanceur lui-même : géré via affectsSelf ailleurs
-
                 float distance = toTile.magnitude;
                 if (distance > aoeRadius) return false;
 

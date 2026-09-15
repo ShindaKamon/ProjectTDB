@@ -1338,6 +1338,11 @@ public class CardData : ScriptableObject
     /// </summary>
     private System.Collections.IEnumerator ExecuteChargeEffectCoroutine(Unit source, Vector2Int targetTilePos, System.Action onComplete)
     {
+        // Passif "Main gagnante" (Ace) / système de combo : mêmes hooks que ExecuteEffect,
+        // pour que les cartes de charge (ex: L'Alpiniste) participent au combo.
+        IComboTracker comboTracker = source as IComboTracker;
+        comboTracker?.OnCardAboutToExecute(this);
+
         Vector2Int sourcePos = source.GetCurrentGridPos();
 
         // Utilise le helper pour calculer le chemin de charge
@@ -1346,6 +1351,7 @@ public class CardData : ScriptableObject
         if (!pathInfo.IsValid)
         {
             GameLog.LogWarning($"Charge invalide : la cible n'est pas en ligne droite!");
+            comboTracker?.OnCardResolved(this);
             onComplete?.Invoke();
             yield break;
         }
@@ -1371,16 +1377,32 @@ public class CardData : ScriptableObject
             landingReactor.OnChargeLanded();
         }
 
+        // --- MODIFICATEUR DE DÉGÂTS SORTANTS GÉNÉRIQUE (ex: Réflexe du grimpeur) ---
+        // Même traitement que dans ExecuteEffect, pour que les cartes de charge bénéficient
+        // aussi des modificateurs de dégâts sortants (et les consomment).
+        int finalChargeDamage = damageAmount;
+        if (finalChargeDamage > 0 && source is IOutgoingDamageModifier dmgMod)
+        {
+            float multiplier = dmgMod.GetDamageMultiplier();
+            if (multiplier != 1f)
+            {
+                int before = finalChargeDamage;
+                finalChargeDamage = Mathf.RoundToInt(finalChargeDamage * multiplier);
+                dmgMod.ConsumeDamageModifier();
+                GameLog.Log($"[CardData] {cardName}: dégâts de charge modifiés par {source.name} : {before} -> {finalChargeDamage} (x{multiplier:F2})");
+            }
+        }
+
         // Si un ennemi a été touché, applique le knockback et les dégâts
         if (pathInfo.EnemyHit != null)
         {
-            GameLog.Log($"🏃 CHARGE ! Ennemi touché: {pathInfo.EnemyHit.name}, knockback: {knockbackDistance}, dégâts: {damageAmount}");
+            GameLog.Log($"🏃 CHARGE ! Ennemi touché: {pathInfo.EnemyHit.name}, knockback: {knockbackDistance}, dégâts: {finalChargeDamage}");
 
             // Applique les dégâts de la charge
-            if (damageAmount > 0)
+            if (finalChargeDamage > 0)
             {
-                pathInfo.EnemyHit.TakeDamage(damageAmount);
-                GameLog.Log($"🏃 CHARGE ! {source.name} inflige {damageAmount} dégâts à {pathInfo.EnemyHit.name}");
+                pathInfo.EnemyHit.TakeDamage(finalChargeDamage);
+                GameLog.Log($"🏃 CHARGE ! {source.name} inflige {finalChargeDamage} dégâts à {pathInfo.EnemyHit.name}");
             }
 
             // Applique le knockback APRÈS les dégâts et APRÈS le mouvement
@@ -1403,6 +1425,9 @@ public class CardData : ScriptableObject
 
         // Rafraîchit l'affichage de la portée de mouvement après la charge et le knockback
         EventBus.Publish(new ShowMovementRangeEvent(source));
+
+        // Met à jour l'historique de combo (Main gagnante) pour la prochaine carte jouée
+        comboTracker?.OnCardResolved(this);
 
         onComplete?.Invoke();
     }

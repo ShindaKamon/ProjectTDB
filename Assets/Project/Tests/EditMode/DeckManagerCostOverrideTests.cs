@@ -87,5 +87,46 @@ namespace ProjectTDB.Tests
 
             Assert.AreEqual(1, deckManager.GetEffectiveCost(card));
         }
+
+        [Test]
+        public void ClearCostOverride_RemovesOverride_RevertsToBaseCost()
+        {
+            var deckManager = NewDeckManager();
+            var card = NewCard(costPA: 2);
+            deckManager.ModifyCardCost(card, -1);
+
+            deckManager.ClearCostOverride(card);
+
+            Assert.AreEqual(2, deckManager.GetEffectiveCost(card));
+        }
+
+        [Test]
+        public void PlayCard_ClearsCostOverrideOnPlayedCard()
+        {
+            // Régression : ClearCostOverride était documenté comme devant s'appliquer "à la
+            // défausse" mais n'était jamais appelé, laissant l'override permanent.
+            var deckManager = NewDeckManager();
+            var card = NewCard(costPA: 2);
+            deckManager.InitializeDeck(new List<CardData> { card });
+            deckManager.ModifyCardCost(card, -1);
+            Assert.AreEqual(1, deckManager.GetEffectiveCost(card));
+
+            deckManager.PlayCard(card);
+
+            Assert.AreEqual(2, deckManager.GetEffectiveCost(card));
+        }
+
+        [Test]
+        public void DiscardHand_ClearsCostOverridesOnDiscardedCards()
+        {
+            var deckManager = NewDeckManager();
+            var card = NewCard(costPA: 2);
+            deckManager.InitializeDeck(new List<CardData> { card });
+            deckManager.ModifyCardCost(card, -1);
+
+            deckManager.DiscardHand();
+
+            Assert.AreEqual(2, deckManager.GetEffectiveCost(card));
+        }
     }
 }

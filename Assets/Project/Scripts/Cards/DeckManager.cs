@@ -111,6 +111,10 @@ public class DeckManager : MonoBehaviour
         {
             _hand.Remove(cardToPlay);
             _discardPile.Add(cardToPlay);
+            // Un override de coût (ex: Il triche) ne vaut que tant que la carte reste en main ;
+            // on le retire à la défausse (voir doc de ClearCostOverride) pour éviter qu'il ne
+            // persiste indéfiniment si la carte est rebattue et repiochée plus tard.
+            ClearCostOverride(cardToPlay);
             OnHandChanged?.Invoke();
             OnDiscardChanged?.Invoke(_discardPile.Count);
             GameLog.Log("Carte jouée : " + cardToPlay.cardName + ". " + _hand.Count + " cartes restantes en main.");
@@ -168,6 +172,11 @@ public class DeckManager : MonoBehaviour
     public void DiscardHand()
     {
         GameLog.Log("Main défaussée.");
+        // Retire tout override de coût sur les cartes défaussées (voir doc de ClearCostOverride).
+        foreach (CardData card in _hand)
+        {
+            ClearCostOverride(card);
+        }
         _discardPile.AddRange(_hand);
         _hand.Clear();
         OnHandChanged?.Invoke();

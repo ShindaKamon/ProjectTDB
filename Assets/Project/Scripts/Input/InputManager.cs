@@ -355,6 +355,17 @@ public class InputManager : MonoBehaviour
             return;
         }
 
+        // BUGFIX: carte ciblant une carte de la main (ex: Il triche, targetsHandCard = true,
+        // targetsUnit = targetsTile = false). Le ciblage se fait EXCLUSIVEMENT en cliquant une
+        // autre carte de la main (HandUIController.HandleCardClicked / PlayHandCardTargetingCard).
+        // Sans ce garde-fou, un clic sur le monde tombait dans le cas "carte sans cible" ci-dessous
+        // et jouait la carte immédiatement sans cible choisie (effet perdu, PA dépensés pour rien).
+        if (selectedCard.targetsHandCard)
+        {
+            GameLog.Log("Clic sur le monde ignoré : cette carte doit cibler une carte de la main.");
+            return;
+        }
+
         // Cas spécial : Carte Self (doit cliquer sur le joueur lui-même)
         if (selectedCard.targetType == CardTargetType.Self)
         {

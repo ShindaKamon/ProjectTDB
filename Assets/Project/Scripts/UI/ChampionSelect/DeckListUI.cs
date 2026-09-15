@@ -247,11 +247,11 @@ public class DeckListUI : MonoBehaviour
 
     private void OnAddDeckClicked()
     {
-        Debug.Log("OnAddDeckClicked appelé");
+        GameLog.Log("OnAddDeckClicked appelé");
 
         if (_createDeckPopup != null)
         {
-            Debug.Log("CreateDeckPopup trouvé, appel de Show()");
+            GameLog.Log("CreateDeckPopup trouvé, appel de Show()");
             _createDeckPopup.Show();
         }
         else
@@ -279,7 +279,7 @@ public class DeckListUI : MonoBehaviour
         var deck = _currentDecksData.decks[_clickedDeckIndex];
         if (deck.isDefault)
         {
-            Debug.LogWarning("Impossible de supprimer le deck de base.");
+            GameLog.LogWarning("Impossible de supprimer le deck de base.");
             return;
         }
 

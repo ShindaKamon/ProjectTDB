@@ -59,7 +59,7 @@ public static class DeckSaveManager
         {
             string json = JsonUtility.ToJson(_cachedData, true);
             File.WriteAllText(SaveFilePath, json);
-            Debug.Log($"Decks sauvegardés dans: {SaveFilePath}");
+            GameLog.Log($"Decks sauvegardés dans: {SaveFilePath}");
         }
         catch (System.Exception e)
         {
@@ -128,7 +128,7 @@ public static class DeckSaveManager
         {
             baseDeck.cardNames = newCardNames;
             needsSave = true;
-            Debug.Log($"Cartes du deck de base synchronisées pour {champion.championName}");
+            GameLog.Log($"Cartes du deck de base synchronisées pour {champion.championName}");
         }
 
         // Synchroniser aussi l'émotion avec celle du champion
@@ -137,7 +137,7 @@ public static class DeckSaveManager
             baseDeck.Emotion1 = champion.emotionType;
             baseDeck.Emotion2 = champion.emotionType;
             needsSave = true;
-            Debug.Log($"Emotion du deck de base synchronisée pour {champion.championName}");
+            GameLog.Log($"Emotion du deck de base synchronisée pour {champion.championName}");
         }
 
         if (needsSave)
@@ -191,7 +191,7 @@ public static class DeckSaveManager
 
         if (!championDecks.CanAddCustomDeck())
         {
-            Debug.LogWarning("Nombre maximum de decks custom atteint.");
+            GameLog.LogWarning("Nombre maximum de decks custom atteint.");
             return null;
         }
 
@@ -217,7 +217,7 @@ public static class DeckSaveManager
 
         if (championDecks.decks[deckIndex].isDefault)
         {
-            Debug.LogWarning("Impossible de supprimer le deck de base.");
+            GameLog.LogWarning("Impossible de supprimer le deck de base.");
             return false;
         }
 
@@ -243,7 +243,7 @@ public static class DeckSaveManager
 
         if (!championDecks.CanAddCustomDeck())
         {
-            Debug.LogWarning("Nombre maximum de decks custom atteint.");
+            GameLog.LogWarning("Nombre maximum de decks custom atteint.");
             return null;
         }
 
@@ -325,7 +325,7 @@ public static class DeckSaveManager
             if (card != null)
                 cards.Add(card);
             else
-                Debug.LogWarning($"Carte non trouvée dans la collection: '{name}'");
+                GameLog.LogWarning($"Carte non trouvée dans la collection: '{name}'");
         }
         return cards;
     }
@@ -360,7 +360,7 @@ public static class DeckSaveManager
         if (File.Exists(SaveFilePath))
         {
             File.Delete(SaveFilePath);
-            Debug.Log($"Fichier de sauvegarde supprimé: {SaveFilePath}");
+            GameLog.Log($"Fichier de sauvegarde supprimé: {SaveFilePath}");
         }
         InvalidateCache();
     }
@@ -386,7 +386,7 @@ public static class DeckSaveManager
         allDecks.SetChampionDecks(newData);
         SaveAllDecks();
 
-        Debug.Log($"Decks réinitialisés pour {champion.championName}");
+        GameLog.Log($"Decks réinitialisés pour {champion.championName}");
     }
 
     /// <summary>

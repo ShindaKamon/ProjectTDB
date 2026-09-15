@@ -177,13 +177,13 @@ public class DeckEditorUI : MonoBehaviour
 
         if (_cardGridItemPrefab == null)
         {
-            Debug.LogWarning("DeckEditorUI: _cardGridItemPrefab n'est pas assigné!");
+            GameLog.LogWarning("DeckEditorUI: _cardGridItemPrefab n'est pas assigné!");
             return;
         }
 
         if (_currentDeckCards == null || _currentDeckCards.Count == 0)
         {
-            Debug.Log("DeckEditorUI: Aucune carte dans le deck actuel");
+            GameLog.Log("DeckEditorUI: Aucune carte dans le deck actuel");
             return;
         }
 
@@ -240,7 +240,7 @@ public class DeckEditorUI : MonoBehaviour
             }
         }
 
-        Debug.Log($"DeckEditorUI: Affichage de {sortedCards.Count} cartes uniques ({_currentDeckCards.Count} total)");
+        GameLog.Log($"DeckEditorUI: Affichage de {sortedCards.Count} cartes uniques ({_currentDeckCards.Count} total)");
     }
 
     #endregion
@@ -461,7 +461,7 @@ public class DeckEditorUI : MonoBehaviour
 
         if (categoryCount >= categoryLimit)
         {
-            Debug.Log($"Limite atteinte pour la catégorie {card.category} ({categoryLimit}).");
+            GameLog.Log($"Limite atteinte pour la catégorie {card.category} ({categoryLimit}).");
             return;
         }
 

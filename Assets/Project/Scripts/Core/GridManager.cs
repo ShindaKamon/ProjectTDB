@@ -364,11 +364,28 @@ public class GridManager : MonoBehaviour, IGridService
     
     public void NextTurn()
     {
+        if (_units.Count == 0)
+        {
+            GameLog.LogWarning("GridManager.NextTurn: plus aucune unité sur le terrain, arrêt de la rotation des tours.");
+            return;
+        }
+
         // Phase 3.4: Commence la transition entre tours
         _turnStateMachine.BeginTurnTransition();
 
         int currentIndex = _units.IndexOf(_activeUnit);
         int nextIndex = (currentIndex + 1) % _units.Count;
+
+        // Les invocations (SummonUnit, ex: Lyse) ne jouent pas de tour propre (PA/PM = 0,
+        // aucun DeckManager) : elles sont enregistrées dans _units pour les requêtes de grille
+        // mais doivent être sautées dans la rotation des tours, sous peine de bloquer le joueur
+        // sur un tour vide qu'il ne peut que passer.
+        int skipGuard = 0;
+        while (_units[nextIndex] is SummonUnit && skipGuard < _units.Count)
+        {
+            nextIndex = (nextIndex + 1) % _units.Count;
+            skipGuard++;
+        }
 
         Unit previousUnit = _activeUnit;
 

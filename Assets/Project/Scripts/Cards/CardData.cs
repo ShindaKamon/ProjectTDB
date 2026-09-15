@@ -745,14 +745,27 @@ public class CardData : ScriptableObject
     }
 
     // Méthode pour exécuter l'effet de la carte
-    public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default)
+    /// <param name="isAdditionalMultiTargetHit">
+    /// True quand cet appel correspond à une cible supplémentaire d'une MÊME carte à cibles
+    /// multiples déjà résolue pour une cible précédente (voir HandUIController.ExecutePendingMultiTargetCard,
+    /// qui appelle ExecuteEffect une fois par cible). Dans ce cas, les effets qui doivent se
+    /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés : Rage,
+    /// combo tracker (Main gagnante d'Ace), invocation/repositionnement, dégâts sur soi, pioche,
+    /// fetch, ajout de cartes au deck, écho de Miroir fraternel.
+    /// </param>
+    public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default, bool isAdditionalMultiTargetHit = false)
     {
         GameLog.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
         // Passif "Main gagnante" (Ace) : détecte un motif avec la carte précédente AVANT de
         // résoudre les effets, pour que le bonus s'applique à CETTE carte (ex: Paire).
+        // Ne s'exécute qu'une fois par carte jouée, pas une fois par cible (sinon la carte se
+        // comparerait à elle-même sur la 2e cible d'une carte à cibles multiples).
         IComboTracker comboTracker = source as IComboTracker;
-        comboTracker?.OnCardAboutToExecute(this);
+        if (!isAdditionalMultiTargetHit)
+        {
+            comboTracker?.OnCardAboutToExecute(this);
+        }
 
         // Pour EnemyOrTile, si aucune unité n'est ciblée explicitement, on regarde sur la case cible
         if (targetType == CardTargetType.EnemyOrTile && targetUnit == null)
@@ -765,7 +778,8 @@ public class CardData : ScriptableObject
 
         // --- NOUVEAU : STOCKAGE DE RAGE ---
         // Si c'est une carte Rage, on l'ajoute au stock du lanceur (si c'est Ilya)
-        if (isRageCard)
+        // Une seule fois par carte jouée, pas une fois par cible.
+        if (isRageCard && !isAdditionalMultiTargetHit)
         {
             if (source is IRageUser rageUser)
             {
@@ -871,18 +885,22 @@ public class CardData : ScriptableObject
         }
 
         // --- INVOCATION / REPOSITIONNEMENT (ex: Invocation de Lyse, Écho de Lyse) ---
-        if (isSummonCard && summonPrefab != null)
+        // Une seule fois par carte jouée (pas une fois par cible d'une carte à cibles multiples).
+        if (!isAdditionalMultiTargetHit)
         {
-            Vector2Int spawnPos = targetsTile ? targetTile : source.GetCurrentGridPos();
-            var summon = Services.Grid.SpawnSummon(summonPrefab, spawnPos, source, source.GetHealth() / 2);
-            if (summon != null && source is ISummonOwner summonOwner)
+            if (isSummonCard && summonPrefab != null)
             {
-                summonOwner.RegisterSummon(summon);
+                Vector2Int spawnPos = targetsTile ? targetTile : source.GetCurrentGridPos();
+                var summon = Services.Grid.SpawnSummon(summonPrefab, spawnPos, source, source.GetHealth() / 2);
+                if (summon != null && source is ISummonOwner summonOwner)
+                {
+                    summonOwner.RegisterSummon(summon);
+                }
             }
-        }
-        else if (isRepositionSummonCard && targetsTile && source is ISummonOwner repositionOwner)
-        {
-            repositionOwner.RepositionSummon(targetTile);
+            else if (isRepositionSummonCard && targetsTile && source is ISummonOwner repositionOwner)
+            {
+                repositionOwner.RepositionSummon(targetTile);
+            }
         }
 
         // Détermine l'épicentre de l'effet
@@ -999,10 +1017,15 @@ public class CardData : ScriptableObject
 
         // Passif "Miroir fraternel" (Soren) : écho à 40% de puissance sur une cible à portée
         // de l'invocation active, si la carte jouée inflige des dégâts.
-        TryTriggerSummonEcho(source, finalDamage);
+        // Une seule fois par carte jouée (pas une fois par cible).
+        if (!isAdditionalMultiTargetHit)
+        {
+            TryTriggerSummonEcho(source, finalDamage);
+        }
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)
-        if (damageSelf > 0)
+        // Une seule fois par carte jouée (pas une fois par cible).
+        if (damageSelf > 0 && !isAdditionalMultiTargetHit)
         {
             source.TakeDamage(damageSelf);
             GameLog.Log($"{source.name} subit {damageSelf} dégâts de contrecoup avec {cardName}.");
@@ -1017,8 +1040,8 @@ public class CardData : ScriptableObject
 
         // --- NOUVELLES CAPACITÉS ---
 
-        // 1. Pioche de cartes
-        if (finalDraw > 0)
+        // 1. Pioche de cartes (une seule fois par carte jouée, pas une fois par cible)
+        if (finalDraw > 0 && !isAdditionalMultiTargetHit)
         {
             if (source.TryGetComponentSafe(out DeckManager deckManager))
             {
@@ -1026,8 +1049,8 @@ public class CardData : ScriptableObject
             }
         }
 
-        // 2. Aller chercher une carte spécifique (Fetch)
-        if (cardToFetch != null && finalFetch > 0)
+        // 2. Aller chercher une carte spécifique (Fetch) - idem, une seule fois par carte jouée
+        if (cardToFetch != null && finalFetch > 0 && !isAdditionalMultiTargetHit)
         {
             if (source.TryGetComponentSafe(out DeckManager deckManager))
             {
@@ -1046,7 +1069,8 @@ public class CardData : ScriptableObject
         }
 
         // 5. Ajout de cartes au deck (Génération de Rage ou autre)
-        if (cardToAddToDeck != null && cardsToAddCount > 0)
+        // Une seule fois par carte jouée (pas une fois par cible).
+        if (cardToAddToDeck != null && cardsToAddCount > 0 && !isAdditionalMultiTargetHit)
         {
             if (source.TryGetComponentSafe(out DeckManager deckManager))
             {
@@ -1263,7 +1287,12 @@ public class CardData : ScriptableObject
         }
 
         // Met à jour l'historique de combo (Main gagnante) pour la prochaine carte jouée
-        comboTracker?.OnCardResolved(this);
+        // Une seule fois par carte jouée (pas une fois par cible, sinon la carte se comparerait
+        // à elle-même et gonflerait PASpentThisTurn d'un coût supplémentaire par cible).
+        if (!isAdditionalMultiTargetHit)
+        {
+            comboTracker?.OnCardResolved(this);
+        }
     }
 
     /// <summary>

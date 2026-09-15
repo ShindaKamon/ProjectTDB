@@ -150,9 +150,14 @@ public class HandUIController : MonoBehaviour
             return;
         }
 
+        bool isFirstTarget = true;
         foreach (Unit target in _pendingMultiTargets)
         {
-            _selectedCard.ExecuteEffect(activeUnit, target, default);
+            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (Rage, combo
+            // tracker, invocation, dégâts sur soi, pioche, fetch, ajout au deck, écho de Lyse) —
+            // voir CardData.ExecuteEffect(isAdditionalMultiTargetHit).
+            _selectedCard.ExecuteEffect(activeUnit, target, default, !isFirstTarget);
+            isFirstTarget = false;
         }
 
         // Coût effectif (tient compte d'un éventuel override, ex: Il triche)

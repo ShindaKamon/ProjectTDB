@@ -546,6 +546,12 @@ public class HandUIController : MonoBehaviour
         // Désélectionner visuellement toutes les cartes d'abord
         ResetCardHighlights();
 
+        // BUGFIX: la sélection change (désélection ou nouvelle carte) : on doit nettoyer les cibles
+        // multi-cibles en attente de la carte PRÉCÉDEMMENT sélectionnée. Sans ça, des cibles restaient
+        // accrochées (stuck) et pouvaient être réutilisées à tort pour une autre carte multi-cibles
+        // sélectionnée juste après (cf. DeselectCard/CancelTargetingStep qui le font déjà).
+        _pendingMultiTargets.Clear();
+
         if (_selectedCard == clickedCard)
         {
             // Si la même carte est cliquée à nouveau, la désélectionner

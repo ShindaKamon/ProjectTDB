@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Coordonne la navigation plein écran de ChampionSelectScene entre ses 3 étapes :
-/// sélection du champion, liste des decks du champion, construction/édition d'un deck.
-/// Un seul écran (root) est actif à la fois ; les popups (CreateDeckPopup, RenameDeckPopup,
+/// Coordonne la navigation plein écran de ChampionSelectScene entre ses 2 étapes :
+/// sélection du champion, et écran unifié de gestion des decks (loadout + pool + deck +
+/// courbe PA, façon MTG Arena). Les popups (CreateDeckPopup, RenameDeckPopup,
 /// ConfirmDeletePopup) restent des overlays indépendants au-dessus de l'écran courant.
 /// </summary>
 public class ChampionSelectFlowController : MonoBehaviour
@@ -12,54 +12,31 @@ public class ChampionSelectFlowController : MonoBehaviour
     public enum Screen
     {
         ChampionSelect,
-        DeckList,
-        DeckBuilder
+        DeckManager
     }
 
     [Header("Écrans plein écran (un seul actif à la fois)")]
     [SerializeField] private GameObject _screenChampionSelectRoot;
-    [SerializeField] private GameObject _screenDeckListRoot;
-    [SerializeField] private GameObject _screenDeckBuilderRoot;
+    [SerializeField] private GameObject _screenDeckManagerRoot;
 
-    [Header("Références")]
-    [Tooltip("Utilisé pour basculer automatiquement vers l'écran Construction du Deck " +
-             "quand l'édition s'ouvre, et revenir à l'écran Liste des Decks à la fermeture " +
-             "(Sauvegarder/Annuler), sans court-circuiter la logique existante de revert.")]
-    [SerializeField] private DeckEditorUI _deckEditor;
-
-    [Header("Bouton Retour (écran Liste des Decks -> écran Sélection Champion)")]
+    [Header("Bouton Retour (écran Gestion des Decks -> écran Sélection Champion)")]
     [SerializeField] private Button _backToChampionSelectButton;
 
-    [Header("Panneau Deck partagé (aperçu écran 2 / édition plein écran écran 3)")]
-    [Tooltip("RectTransform du panneau hébergeant DeckEditorUI (BottomRightPanel). " +
-             "Un seul objet, reparenté selon l'écran actif plutôt que dupliqué, pour réutiliser " +
-             "exactement la même logique ViewModePanel/EditModePanel.")]
-    [SerializeField] private RectTransform _deckEditorContainer;
+    [Header("Illustration Personnage")]
+    [Tooltip("Image plein écran de l'écran Sélection Champion, alimentée par ChampionData.fullBodyArt.")]
+    [SerializeField] private Image _characterArtChampionSelect;
+    [Tooltip("Image de la bande personnage dédiée (écran Gestion des Decks, colonne exclusive " +
+             "jamais recouverte par le pool/deck), même sprite que ci-dessus.")]
+    [SerializeField] private Image _characterArtDeckManager;
 
-    [Tooltip("Emplacement (dans l'écran Liste des Decks) où placer l'aperçu en lecture seule du deck.")]
-    [SerializeField] private RectTransform _deckPreviewSlot;
+    private ChampionData _currentArtChampion;
 
     public Screen CurrentScreen { get; private set; } = Screen.ChampionSelect;
 
     void Awake()
     {
-        if (_deckEditor != null)
-        {
-            _deckEditor.OnOpened += HandleDeckEditorOpened;
-            _deckEditor.OnClosed += HandleDeckEditorClosed;
-        }
-
         if (_backToChampionSelectButton != null)
             _backToChampionSelectButton.onClick.AddListener(GoToChampionSelect);
-    }
-
-    void OnDestroy()
-    {
-        if (_deckEditor != null)
-        {
-            _deckEditor.OnOpened -= HandleDeckEditorOpened;
-            _deckEditor.OnClosed -= HandleDeckEditorClosed;
-        }
     }
 
     void Start()
@@ -68,7 +45,7 @@ public class ChampionSelectFlowController : MonoBehaviour
     }
 
     /// <summary>
-    /// Active l'écran demandé et désactive les deux autres.
+    /// Active l'écran demandé et désactive l'autre.
     /// </summary>
     public void ShowScreen(Screen screen)
     {
@@ -77,60 +54,33 @@ public class ChampionSelectFlowController : MonoBehaviour
         if (_screenChampionSelectRoot != null)
             _screenChampionSelectRoot.SetActive(screen == Screen.ChampionSelect);
 
-        if (_screenDeckListRoot != null)
-            _screenDeckListRoot.SetActive(screen == Screen.DeckList);
-
-        if (_screenDeckBuilderRoot != null)
-            _screenDeckBuilderRoot.SetActive(screen == Screen.DeckBuilder);
-
-        RepositionDeckEditorContainer(screen);
+        if (_screenDeckManagerRoot != null)
+            _screenDeckManagerRoot.SetActive(screen == Screen.DeckManager);
     }
 
     /// <summary>
-    /// BottomRightPanel (DeckEditorUI) est visible à la fois en aperçu (écran Liste des Decks,
-    /// ViewModePanel) et en édition (écran Construction du Deck, EditModePanel) : plutôt que de
-    /// dupliquer son contenu, on le reparente vers l'emplacement correspondant à l'écran actif,
-    /// en le laissant occuper tout le rectangle de son nouveau parent (RectTransform en stretch).
+    /// Met à jour l'illustration du champion sélectionné sur les 2 emplacements (plein écran
+    /// Sélection Champion, bande dédiée Gestion des Decks). Appelé par ChampionSelectManager à
+    /// chaque changement de sélection.
     /// </summary>
-    private void RepositionDeckEditorContainer(Screen screen)
+    public void UpdateCharacterArt(ChampionData champion)
     {
-        if (_deckEditorContainer == null) return;
+        _currentArtChampion = champion;
 
-        Transform target = screen switch
-        {
-            Screen.DeckBuilder when _screenDeckBuilderRoot != null => _screenDeckBuilderRoot.transform,
-            Screen.DeckList when _deckPreviewSlot != null => _deckPreviewSlot,
-            _ => null
-        };
+        Sprite fullBody = champion != null ? champion.fullBodyArt : null;
 
-        if (target == null)
-        {
-            _deckEditorContainer.gameObject.SetActive(false);
-            return;
-        }
+        ApplySprite(_characterArtChampionSelect, fullBody);
+        ApplySprite(_characterArtDeckManager, fullBody);
+    }
 
-        if (_deckEditorContainer.parent != target)
-            _deckEditorContainer.SetParent(target, false);
-
-        _deckEditorContainer.anchorMin = Vector2.zero;
-        _deckEditorContainer.anchorMax = Vector2.one;
-        _deckEditorContainer.offsetMin = Vector2.zero;
-        _deckEditorContainer.offsetMax = Vector2.zero;
-        _deckEditorContainer.gameObject.SetActive(true);
+    private static void ApplySprite(Image image, Sprite sprite)
+    {
+        if (image == null) return;
+        image.sprite = sprite;
+        image.enabled = sprite != null;
     }
 
     // Méthodes sans paramètre pour un branchement direct depuis Button.onClick (Inspector).
     public void GoToChampionSelect() => ShowScreen(Screen.ChampionSelect);
-    public void GoToDeckList() => ShowScreen(Screen.DeckList);
-    public void GoToDeckBuilder() => ShowScreen(Screen.DeckBuilder);
-
-    private void HandleDeckEditorOpened() => ShowScreen(Screen.DeckBuilder);
-
-    private void HandleDeckEditorClosed()
-    {
-        // Ne revenir à l'écran Liste des Decks que si on s'y trouvait déjà avant l'édition
-        // (évite un retour surprenant si l'état courant a changé entre-temps).
-        if (CurrentScreen == Screen.DeckBuilder)
-            ShowScreen(Screen.DeckList);
-    }
+    public void GoToDeckManager() => ShowScreen(Screen.DeckManager);
 }

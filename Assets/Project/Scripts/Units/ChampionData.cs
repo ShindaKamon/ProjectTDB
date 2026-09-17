@@ -10,6 +10,9 @@ public class ChampionData : ScriptableObject
     [TextArea(2, 4)]
     public string description = "";            // Description du champion
     public Sprite portrait;                    // Portrait pour l'UI de selection
+    [Tooltip("Illustration du champion en pied, plein cadre (1000x1600, pieds ancres a 90% de la hauteur). " +
+             "Utilisee en fond plein ecran dans l'ecran de selection de champion. Distincte de 'portrait'.")]
+    public Sprite fullBodyArt;                 // Illustration plein ecran pour la selection de champion
 
     [Space(5)]
     public GameObject prefab;                  // Reference au prefab du champion

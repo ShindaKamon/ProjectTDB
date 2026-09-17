@@ -4,8 +4,9 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 /// <summary>
-/// Composant UI pour un slot de deck visuel moderne
-/// Affiche une carte colorée avec effets visuels
+/// Onglet compact de la barre de loadout (façon MTG Arena) représentant un deck.
+/// Affiche nom + compteur de cartes + couleur(s) d'émotion ; expose un bouton "..." affiché
+/// uniquement quand l'onglet est actif, pour ouvrir le menu contextuel Renommer/Supprimer.
 /// </summary>
 public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
@@ -19,6 +20,9 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     [SerializeField] private TextMeshProUGUI _deckNameText;
     [SerializeField] private TextMeshProUGUI _cardCountText;
 
+    [Header("Menu contextuel (onglet actif uniquement)")]
+    [SerializeField] private Button _contextMenuButton;
+
     [Header("Couleurs")]
     [SerializeField] private Color _selectedBorderColor = new Color(1f, 0.84f, 0f);    // Or
     [SerializeField] private Color _normalBorderColor = new Color(0.3f, 0.3f, 0.3f);
@@ -29,8 +33,8 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     [SerializeField] private float _animDuration = 0.1f;
 
     [Header("Taille")]
-    [SerializeField] private float _preferredWidth = 120f;
-    [SerializeField] private float _preferredHeight = 80f;
+    [SerializeField] private float _preferredWidth = 140f;
+    [SerializeField] private float _preferredHeight = 44f;
 
     private DeckData _deckData;
     private int _deckIndex;
@@ -40,6 +44,7 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     private RectTransform _rectTransform;
 
     public System.Action<DeckSlotUI, int> OnSlotClicked;
+    public System.Action<DeckSlotUI, int> OnContextMenuClicked;
 
     public DeckData DeckData => _deckData;
     public int DeckIndex => _deckIndex;
@@ -53,6 +58,9 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
         // Assurer une taille minimale via LayoutElement
         EnsureLayoutElement();
+
+        if (_contextMenuButton != null)
+            _contextMenuButton.onClick.AddListener(() => OnContextMenuClicked?.Invoke(this, _deckIndex));
     }
 
     /// <summary>
@@ -127,6 +135,9 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     {
         _isSelected = selected;
         UpdateSelectionVisual();
+
+        if (_contextMenuButton != null)
+            _contextMenuButton.gameObject.SetActive(selected);
     }
 
     private void UpdateSelectionVisual()

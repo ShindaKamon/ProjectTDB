@@ -17,12 +17,18 @@ public class ChampionSelectManager : MonoBehaviour
     [SerializeField] private ChampionStatsUI _championStatsUI;  // Nouveau composant moderne (optionnel)
 
     [Header("Références UI - Zone Deck (Droite)")]
-    [SerializeField] private DeckListUI _deckListUI;
+    [SerializeField] private LoadoutTabsUI _deckListUI;
     [SerializeField] private GameObject _deckPanelObject; // Panel contenant la zone deck (caché si aucun champion)
 
     [Header("Boutons")]
     [SerializeField] private Button _startButton;
     [SerializeField] private Button _chooseChampionButton;
+
+    [Header("Avertissement deck incomplet")]
+    [Tooltip("Liseré affiché sur le bouton Lancer le combat quand le deck actif a moins de " +
+             "DeckData.TOTAL_SLOTS cartes. Le combat reste lançable : ceci est un simple avertissement.")]
+    [SerializeField] private Outline _startButtonWarningOutline;
+    [SerializeField] private Color _startButtonWarningColor = new Color(1f, 0.55f, 0f); // Orange
 
     [Header("Navigation")]
     [SerializeField] private ChampionSelectFlowController _flowController;
@@ -71,6 +77,13 @@ public class ChampionSelectManager : MonoBehaviour
         // S'abonner aux événements du DeckEditorUI
         if (_deckListUI != null)
             _deckListUI.OnDeckSelected += OnDeckSelected;
+
+        if (_startButtonWarningOutline != null)
+        {
+            _startButtonWarningOutline.effectColor = _startButtonWarningColor;
+            _startButtonWarningOutline.effectDistance = new Vector2(3, 3);
+            _startButtonWarningOutline.enabled = false;
+        }
     }
 
     void Start()
@@ -117,6 +130,20 @@ public class ChampionSelectManager : MonoBehaviour
             GameObject buttonGO = Instantiate(_championButtonPrefab, _championButtonParent);
             TextMeshProUGUI buttonText = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null) buttonText.text = champion.championName;
+
+            // Avatar du bouton : portrait dédié si assigné, sinon repli sur l'illustration plein
+            // corps (compromis MVP le temps que des portraits carrés soient produits).
+            Transform avatarTransform = buttonGO.transform.Find("Avatar");
+            if (avatarTransform != null)
+            {
+                Image avatarImage = avatarTransform.GetComponent<Image>();
+                Sprite avatarSprite = champion.portrait != null ? champion.portrait : champion.fullBodyArt;
+                if (avatarImage != null)
+                {
+                    avatarImage.sprite = avatarSprite;
+                    avatarImage.enabled = avatarSprite != null;
+                }
+            }
 
             Button button = buttonGO.GetComponent<Button>();
             if (button != null)
@@ -169,7 +196,7 @@ public class ChampionSelectManager : MonoBehaviour
             _startButton.interactable = true;
 
         if (_flowController != null)
-            _flowController.ShowScreen(ChampionSelectFlowController.Screen.DeckList);
+            _flowController.ShowScreen(ChampionSelectFlowController.Screen.DeckManager);
     }
 
     private void UpdateChampionButtonsVisual(Button selectedButton)
@@ -205,6 +232,10 @@ public class ChampionSelectManager : MonoBehaviour
             _championStatsUI.ShowChampion(_currentSelectedChampion);
         }
 
+        // Illustration en pied (fond plein écran / bandeau / badge selon l'écran actif)
+        if (_flowController != null)
+            _flowController.UpdateCharacterArt(_currentSelectedChampion);
+
         // Ancien systeme (fallback): textes simples
         if (_selectedChampionNameText != null)
             _selectedChampionNameText.text = _currentSelectedChampion.championName;
@@ -223,6 +254,7 @@ public class ChampionSelectManager : MonoBehaviour
     private void OnDeckSelected(List<CardData> deckCards)
     {
         SelectedDeck = deckCards;
+        UpdateStartButtonWarning(deckCards?.Count ?? 0);
         GameLog.Log($"Deck sélectionné avec {deckCards.Count} cartes.");
     }
 
@@ -237,6 +269,18 @@ public class ChampionSelectManager : MonoBehaviour
             // Fallback: utiliser le startingDeck du champion
             SelectedDeck = new List<CardData>(_currentSelectedChampion.startingDeck);
         }
+
+        UpdateStartButtonWarning(SelectedDeck?.Count ?? 0);
+    }
+
+    /// <summary>
+    /// Decision design : un deck incomplet (moins de DeckData.TOTAL_SLOTS cartes) reste
+    /// lançable, on affiche seulement un avertissement visuel sur le bouton de lancement.
+    /// </summary>
+    private void UpdateStartButtonWarning(int cardCount)
+    {
+        if (_startButtonWarningOutline == null) return;
+        _startButtonWarningOutline.enabled = cardCount < DeckData.TOTAL_SLOTS;
     }
 
     private void StartGame()

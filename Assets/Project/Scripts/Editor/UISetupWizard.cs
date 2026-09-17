@@ -495,40 +495,37 @@ public class UISetupWizard : EditorWindow
     /// </summary>
     public static void SetupCurrentScene()
     {
-        // Trouver DeckEditorUI
+        // Trouver DeckEditorUI (zone Pool + Deck + Courbe PA de l'écran unifié)
         DeckEditorUI deckEditor = FindFirstObjectByType<DeckEditorUI>();
         if (deckEditor != null)
         {
             SerializedObject so = new SerializedObject(deckEditor);
 
             // Charger les prefabs
-            GameObject cardGridItem = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/CardGridItem.prefab");
+            GameObject deckGridItem = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/CardGridItem.prefab");
             GameObject cardPoolItem = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/CardPoolItem.prefab");
-            GameObject deckCardSlot = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/DeckCardSlot.prefab");
 
-            if (cardGridItem != null)
-                so.FindProperty("_cardGridItemPrefab").objectReferenceValue = cardGridItem;
+            if (deckGridItem != null)
+                so.FindProperty("_deckGridItemPrefab").objectReferenceValue = deckGridItem;
             if (cardPoolItem != null)
                 so.FindProperty("_cardPoolItemPrefab").objectReferenceValue = cardPoolItem;
-            if (deckCardSlot != null)
-                so.FindProperty("_deckCardSlotPrefab").objectReferenceValue = deckCardSlot;
 
             so.ApplyModifiedProperties();
             Debug.Log("DeckEditorUI configure!");
         }
 
-        // Trouver DeckListUI
-        DeckListUI deckList = FindFirstObjectByType<DeckListUI>();
-        if (deckList != null)
+        // Trouver LoadoutTabsUI (barre d'onglets de loadout, ex-DeckListUI)
+        LoadoutTabsUI loadoutTabs = FindFirstObjectByType<LoadoutTabsUI>();
+        if (loadoutTabs != null)
         {
-            SerializedObject so = new SerializedObject(deckList);
+            SerializedObject so = new SerializedObject(loadoutTabs);
 
             GameObject deckSlot = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/DeckSlot.prefab");
             if (deckSlot != null)
-                so.FindProperty("_deckSlotPrefab").objectReferenceValue = deckSlot;
+                so.FindProperty("_tabPrefab").objectReferenceValue = deckSlot;
 
             so.ApplyModifiedProperties();
-            Debug.Log("DeckListUI configure!");
+            Debug.Log("LoadoutTabsUI configure!");
         }
 
         Debug.Log("Configuration de la scene terminee!");

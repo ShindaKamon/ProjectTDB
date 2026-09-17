@@ -17,6 +17,7 @@ MonoBehaviour:
   description: A perdu sa soeur jumelle, Lyse, dont la presence n'a jamais vraiment
     disparu.
   portrait: {fileID: 0}
+  fullBodyArt: {fileID: 21300000, guid: 52182fb0aa09a43468adf6d344b0dc45, type: 3}
   prefab: {fileID: 545175965259311260, guid: c05e030ecd6eb1645a8613c759d83c57, type: 3}
   emotionType: 0
   maxHealth: 100

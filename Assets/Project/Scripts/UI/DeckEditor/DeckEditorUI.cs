@@ -1,51 +1,56 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Zone bas droite: affiche le contenu du deck
-/// Bascule entre mode visualisation et mode édition
+/// Zone Pool + Deck + Courbe PA de l'écran unifié de gestion des decks (façon MTG Arena).
+/// Toujours en édition : plus de bascule ViewMode/EditMode, plus de boutons
+/// Enregistrer/Annuler — chaque modification déclenche un autosave debouncé
+/// (DeckSaveManager.UpdateDeckCards) et une notification immédiate via OnDeckChanged.
+/// Le deck de base (isDefault) est en lecture seule : pool grisé/non cliquable, retrait de
+/// carte désactivé, seul le bouton "Dupliquer en deck personnalisé" reste actif.
 /// </summary>
 public class DeckEditorUI : MonoBehaviour
 {
     [Header("Header")]
     [SerializeField] private TextMeshProUGUI _deckNameText;
+    [SerializeField] private TextMeshProUGUI _deckCompositionText; // "Signature 2/2 · Standard 14/16"
 
-    [Header("Mode Visualisation")]
-    [SerializeField] private GameObject _viewModePanel;
-    [SerializeField] private Transform _cardGridParent;      // Grille de cartes visuelles
-    [SerializeField] private GameObject _cardGridItemPrefab; // Prefab avec image de carte
-
-    [Header("Mode Édition")]
-    [SerializeField] private GameObject _editModePanel;
+    [Header("Zone Pool")]
+    [SerializeField] private CanvasGroup _poolInteractionGroup; // grisé/non cliquable si deck de base
     [SerializeField] private TMP_InputField _searchInput;
     [SerializeField] private Transform _cardPoolParent;
     [SerializeField] private GameObject _cardPoolItemPrefab;
-    [SerializeField] private Transform _editDeckCardsParent;
-    [SerializeField] private GameObject _deckCardSlotPrefab;
-    [SerializeField] private TextMeshProUGUI _cardCountText;
 
     [Header("Filtres par Émotion")]
-    [SerializeField] private Transform _emotionFiltersParent; // Parent des boutons de filtre
-    [SerializeField] private GameObject _emotionFilterButtonPrefab; // Prefab du bouton de filtre
-    [SerializeField] private Button _showAllButton; // Bouton "Toutes"
+    [SerializeField] private Transform _emotionFiltersParent;
+    [SerializeField] private GameObject _emotionFilterButtonPrefab;
+    [SerializeField] private Button _showAllButton;
 
     [Header("Pagination")]
     [SerializeField] private Button _prevPageButton;
     [SerializeField] private Button _nextPageButton;
     [SerializeField] private TextMeshProUGUI _pageIndicatorText;
-    [SerializeField] private int _cardsPerPage = 8; // Nombre de cartes par page
+    [SerializeField] private int _cardsPerPage = 8;
 
-    [Header("Boutons d'édition")]
-    [SerializeField] private Button _saveButton;
-    [SerializeField] private Button _cancelButton;
-    [SerializeField] private Button _resetButton;
+    [Header("Zone Deck (liste groupée triée par coût)")]
+    [SerializeField] private Transform _deckGridParent;
+    [SerializeField] private GameObject _deckGridItemPrefab; // DeckGridCardUI
+
+    [Header("Courbe de coût PA")]
+    [SerializeField] private PACurveUI _paCurve;
+
+    [Header("Boutons")]
+    [SerializeField] private Button _resetButton;     // caché en lecture seule (deck de base)
+    [SerializeField] private Button _duplicateButton; // toujours visible
 
     [Header("Configuration")]
     // Total de slots affichés = 2 Signature + 16 Standard (voir DeckData.TOTAL_SLOTS).
     // Les limites par catégorie sont appliquées dans OnPoolCardClicked.
     [SerializeField] private int _deckSize = DeckData.TOTAL_SLOTS;
+    [SerializeField] private float _autosaveDebounceSeconds = 0.4f;
 
     private ChampionData _currentChampion;
     private int _currentDeckIndex;
@@ -53,34 +58,31 @@ public class DeckEditorUI : MonoBehaviour
     private CardCollection _cardCollection;
 
     private List<CardPoolItemUI> _poolItems = new List<CardPoolItemUI>();
-    private List<DeckCardSlotUI> _deckSlots = new List<DeckCardSlotUI>();
+    private List<DeckGridCardUI> _deckGridItems = new List<DeckGridCardUI>();
     private List<CardData> _currentDeckCards = new List<CardData>();
-    private List<CardData> _originalDeckCards = new List<CardData>();
     private List<CardData> _filteredCards = new List<CardData>(); // Cartes filtrées pour la pagination
 
     private List<Button> _emotionFilterButtons = new List<Button>();
     private EmotionType? _activeEmotionFilter = null;
     private int _currentPage = 0;
-    private bool _isEditMode = false;
+    private Coroutine _autosaveRoutine;
 
+    /// <summary>Émis après persistance effective (autosave debouncé) du deck.</summary>
     public System.Action<int, List<CardData>> OnDeckSaved;
 
-    /// <summary>Émis quand l'édition s'ouvre (Open), pour piloter la navigation plein écran.</summary>
-    public System.Action OnOpened;
+    /// <summary>Émis à chaque changement du contenu du deck (avant la persistance débouncée).</summary>
+    public System.Action<List<CardData>> OnDeckChanged;
 
-    /// <summary>Émis quand l'édition se ferme (Close, via Sauvegarder ou Annuler).</summary>
-    public System.Action OnClosed;
+    /// <summary>Émis quand un deck est dupliqué en deck personnalisé (index du nouveau deck).</summary>
+    public System.Action<int> OnDeckDuplicated;
 
     void Awake()
     {
-        if (_saveButton != null)
-            _saveButton.onClick.AddListener(OnSavePressed);
-
-        if (_cancelButton != null)
-            _cancelButton.onClick.AddListener(OnCancelPressed);
-
         if (_resetButton != null)
             _resetButton.onClick.AddListener(OnResetPressed);
+
+        if (_duplicateButton != null)
+            _duplicateButton.onClick.AddListener(OnDuplicatePressed);
 
         if (_searchInput != null)
             _searchInput.onValueChanged.AddListener(OnSearchChanged);
@@ -93,105 +95,93 @@ public class DeckEditorUI : MonoBehaviour
 
         if (_nextPageButton != null)
             _nextPageButton.onClick.AddListener(OnNextPageClicked);
+    }
 
-        SetEditMode(false);
+    void OnDestroy()
+    {
+        FlushPendingAutosave();
     }
 
     /// <summary>
-    /// Affiche le deck en mode visualisation
+    /// Affiche et rend éditable le deck spécifié (base ou custom). Point d'entrée unique,
+    /// appelé à chaque changement d'onglet de loadout par LoadoutTabsUI.
     /// </summary>
     public void ShowDeck(ChampionData champion, int deckIndex, DeckData deckData, List<CardData> cards, CardCollection collection)
     {
+        FlushPendingAutosave();
+
         _currentChampion = champion;
         _currentDeckIndex = deckIndex;
         _currentDeckData = deckData;
         _cardCollection = collection;
         _currentDeckCards = new List<CardData>(cards);
 
-        UpdateHeader();
-        RefreshViewMode();
-        SetEditMode(false);
-    }
-
-    /// <summary>
-    /// Ouvre en mode édition
-    /// </summary>
-    public void Open(ChampionData champion, int deckIndex, DeckData deckData, List<CardData> currentCards, CardCollection collection)
-    {
-        _currentChampion = champion;
-        _currentDeckIndex = deckIndex;
-        _currentDeckData = deckData;
-        _cardCollection = collection;
-
-        _currentDeckCards = new List<CardData>(currentCards);
-        _originalDeckCards = new List<CardData>(currentCards);
-
-        UpdateHeader();
         SetupEmotionFilter();
         CreatePoolItems();
-        CreateDeckSlots();
         UpdateDeckDisplay();
-        UpdateSaveButtonState();
-        SetEditMode(true);
-        OnOpened?.Invoke();
+        ApplyReadOnlyState();
     }
 
-    public void SetEditMode(bool editMode)
-    {
-        _isEditMode = editMode;
-
-        if (_viewModePanel != null)
-            _viewModePanel.SetActive(!editMode);
-
-        if (_editModePanel != null)
-            _editModePanel.SetActive(editMode);
-    }
-
-    public void Close()
-    {
-        SetEditMode(false);
-        ClearPoolItems();
-        ClearDeckSlots();
-        ClearEmotionFilterButtons();
-        RefreshViewMode();
-        OnClosed?.Invoke();
-    }
+    /// <summary>Rafraîchit uniquement le nom affiché (après un renommage externe).</summary>
+    public void NotifyDeckMetadataChanged() => UpdateHeader();
 
     private void UpdateHeader()
     {
         if (_deckNameText != null && _currentDeckData != null)
             _deckNameText.text = _currentDeckData.deckName;
 
-        if (_cardCountText != null)
-            _cardCountText.text = $"{_currentDeckCards.Count} / {_deckSize}";
-    }
-
-    #region Mode Visualisation
-
-    private void RefreshViewMode()
-    {
-        RefreshCardGrid();
-    }
-
-    private void RefreshCardGrid()
-    {
-        if (_cardGridParent == null) return;
-
-        // Nettoyer les enfants existants
-        foreach (Transform child in _cardGridParent)
+        if (_deckCompositionText != null)
         {
+            int signatureCount = 0;
+            int standardCount = 0;
+            foreach (var card in _currentDeckCards)
+            {
+                if (card == null) continue;
+                if (card.category == CardCategory.Signature) signatureCount++;
+                else if (card.category == CardCategory.Standard) standardCount++;
+            }
+
+            _deckCompositionText.text =
+                $"Signature {signatureCount}/{DeckData.SIGNATURE_SLOTS} · Standard {standardCount}/{DeckData.STANDARD_SLOTS}";
+        }
+    }
+
+    private void ApplyReadOnlyState()
+    {
+        bool isReadOnly = _currentDeckData != null && _currentDeckData.isDefault;
+
+        if (_poolInteractionGroup != null)
+        {
+            _poolInteractionGroup.interactable = !isReadOnly;
+            _poolInteractionGroup.blocksRaycasts = !isReadOnly;
+            _poolInteractionGroup.alpha = isReadOnly ? 0.5f : 1f;
+        }
+
+        // Le deck de base ne peut pas être réinitialisé (rien à modifier) : seule l'action
+        // "Dupliquer en deck personnalisé" reste proposée.
+        if (_resetButton != null)
+            _resetButton.gameObject.SetActive(!isReadOnly);
+
+        foreach (var item in _deckGridItems)
+        {
+            if (item != null)
+                item.SetInteractable(!isReadOnly);
+        }
+    }
+
+    #region Zone Deck (liste groupée)
+
+    private void RefreshDeckGrid()
+    {
+        if (_deckGridParent == null) return;
+
+        foreach (Transform child in _deckGridParent)
             Destroy(child.gameObject);
-        }
+        _deckGridItems.Clear();
 
-        if (_cardGridItemPrefab == null)
+        if (_deckGridItemPrefab == null)
         {
-            GameLog.LogWarning("DeckEditorUI: _cardGridItemPrefab n'est pas assigné!");
-            return;
-        }
-
-        if (_currentDeckCards == null || _currentDeckCards.Count == 0)
-        {
-            GameLog.Log("DeckEditorUI: Aucune carte dans le deck actuel");
+            GameLog.LogWarning("DeckEditorUI: _deckGridItemPrefab n'est pas assigné!");
             return;
         }
 
@@ -201,15 +191,10 @@ public class DeckEditorUI : MonoBehaviour
         {
             if (card == null) continue;
 
-            if (cardCounts.ContainsKey(card.cardName))
-            {
-                var existing = cardCounts[card.cardName];
+            if (cardCounts.TryGetValue(card.cardName, out var existing))
                 cardCounts[card.cardName] = (existing.card, existing.count + 1);
-            }
             else
-            {
                 cardCounts[card.cardName] = (card, 1);
-            }
         }
 
         // Trier par coût puis par nom
@@ -221,39 +206,40 @@ public class DeckEditorUI : MonoBehaviour
             return a.card.cardName.CompareTo(b.card.cardName);
         });
 
-        // Créer un item pour chaque carte unique avec sa quantité
+        bool isReadOnly = _currentDeckData != null && _currentDeckData.isDefault;
+
         foreach (var entry in sortedCards)
         {
-            var card = entry.card;
-            var count = entry.count;
-
-            var itemGO = Instantiate(_cardGridItemPrefab, _cardGridParent);
-
-            // Priorité: utiliser DeckGridCardUI si présent
+            var itemGO = Instantiate(_deckGridItemPrefab, _deckGridParent);
             var gridCardUI = itemGO.GetComponent<DeckGridCardUI>();
+
             if (gridCardUI != null)
             {
-                gridCardUI.Setup(card, count);
-            }
-            else
-            {
-                // Fallback: configuration manuelle basique
-                var image = itemGO.GetComponentInChildren<Image>();
-                if (image != null && card.artwork != null)
-                    image.sprite = card.artwork;
-
-                var countText = itemGO.GetComponentInChildren<TextMeshProUGUI>();
-                if (countText != null)
-                    countText.text = $"x{count}";
+                gridCardUI.Setup(entry.card, entry.count);
+                gridCardUI.SetInteractable(!isReadOnly);
+                gridCardUI.OnCardClicked += OnDeckCardGroupClicked;
+                _deckGridItems.Add(gridCardUI);
             }
         }
 
-        GameLog.Log($"DeckEditorUI: Affichage de {sortedCards.Count} cartes uniques ({_currentDeckCards.Count} total)");
+        _paCurve?.SetCards(_currentDeckCards);
+    }
+
+    private void OnDeckCardGroupClicked(CardData card)
+    {
+        if (card == null) return;
+        if (_currentDeckData != null && _currentDeckData.isDefault) return; // lecture seule
+
+        int indexToRemove = _currentDeckCards.FindLastIndex(c => c != null && c.cardName == card.cardName);
+        if (indexToRemove < 0) return;
+
+        _currentDeckCards.RemoveAt(indexToRemove);
+        NotifyDeckContentChanged();
     }
 
     #endregion
 
-    #region Mode Édition
+    #region Pool
 
     private void SetupEmotionFilter()
     {
@@ -261,7 +247,6 @@ public class DeckEditorUI : MonoBehaviour
 
         if (_emotionFiltersParent == null) return;
 
-        // Si le deck n'a pas d'émotions définies, pas de filtres
         if (_currentDeckData == null || !_currentDeckData.HasEmotions)
         {
             if (_showAllButton != null)
@@ -269,14 +254,12 @@ public class DeckEditorUI : MonoBehaviour
             return;
         }
 
-        // Afficher le bouton "Toutes"
         if (_showAllButton != null)
         {
             _showAllButton.gameObject.SetActive(true);
             UpdateShowAllButtonState();
         }
 
-        // Créer un bouton pour chaque émotion du deck
         CreateEmotionFilterButton(_currentDeckData.Emotion1);
 
         if (_currentDeckData.Emotion2 != EmotionType.None && _currentDeckData.Emotion2 != _currentDeckData.Emotion1)
@@ -284,7 +267,6 @@ public class DeckEditorUI : MonoBehaviour
             CreateEmotionFilterButton(_currentDeckData.Emotion2);
         }
 
-        // Par défaut, afficher toutes les cartes
         _activeEmotionFilter = null;
     }
 
@@ -298,21 +280,17 @@ public class DeckEditorUI : MonoBehaviour
 
         if (button != null)
         {
-            // Appliquer la couleur de l'émotion
             var buttonImage = button.GetComponent<Image>();
             if (buttonImage != null)
                 buttonImage.color = CardVisualHelper.GetEmotionColor(emotion);
 
-            // Stocker l'émotion dans le nom pour la récupérer au clic
             buttonGO.name = emotion.ToString();
 
-            // Ajouter un label si présent
             var label = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
                 label.text = CardVisualHelper.GetEmotionName(emotion);
 
-            // Ajouter le listener
-            EmotionType capturedEmotion = emotion; // Capture pour le lambda
+            EmotionType capturedEmotion = emotion;
             button.onClick.AddListener(() => OnEmotionFilterClicked(capturedEmotion));
 
             _emotionFilterButtons.Add(button);
@@ -353,11 +331,9 @@ public class DeckEditorUI : MonoBehaviour
         {
             if (button == null) continue;
 
-            // Vérifier si ce bouton correspond à l'émotion active
             bool isActive = _activeEmotionFilter.HasValue &&
                            button.gameObject.name == _activeEmotionFilter.Value.ToString();
 
-            // Effet visuel de sélection (scale ou alpha)
             button.transform.localScale = isActive ? Vector3.one * 1.15f : Vector3.one;
 
             var colors = button.colors;
@@ -380,7 +356,6 @@ public class DeckEditorUI : MonoBehaviour
 
         if (_cardCollection == null || _cardPoolItemPrefab == null || _cardPoolParent == null) return;
 
-        // Initialiser les filtres et afficher la première page
         _currentPage = 0;
         _activeEmotionFilter = null;
         ApplyFiltersAndRefreshPool();
@@ -396,61 +371,28 @@ public class DeckEditorUI : MonoBehaviour
         _poolItems.Clear();
     }
 
-    private void CreateDeckSlots()
-    {
-        ClearDeckSlots();
-
-        if (_deckCardSlotPrefab == null || _editDeckCardsParent == null) return;
-
-        for (int i = 0; i < _deckSize; i++)
-        {
-            var slotGO = Instantiate(_deckCardSlotPrefab, _editDeckCardsParent);
-            var slot = slotGO.GetComponent<DeckCardSlotUI>();
-
-            if (slot != null)
-            {
-                slot.SetSlotIndex(i);
-                slot.OnRemoveClicked += OnDeckSlotRemoveClicked;
-                _deckSlots.Add(slot);
-            }
-        }
-    }
-
-    private void ClearDeckSlots()
-    {
-        foreach (var slot in _deckSlots)
-        {
-            if (slot != null)
-                Destroy(slot.gameObject);
-        }
-        _deckSlots.Clear();
-    }
-
     private void UpdateDeckDisplay()
     {
-        for (int i = 0; i < _deckSlots.Count; i++)
-        {
-            if (i < _currentDeckCards.Count)
-                _deckSlots[i].SetCard(_currentDeckCards[i]);
-            else
-                _deckSlots[i].Clear();
-        }
-
+        RefreshDeckGrid();
         UpdateHeader();
-        UpdateSaveButtonState();
     }
 
-    private void UpdateSaveButtonState()
+    /// <summary>
+    /// Point d'entrée commun pour toute modification du contenu du deck (ajout/retrait) :
+    /// rafraîchit l'affichage immédiatement, notifie les abonnés (OnDeckChanged) puis planifie
+    /// l'autosave débouncé. Pas d'appel pour un deck en lecture seule (interdit en amont).
+    /// </summary>
+    private void NotifyDeckContentChanged()
     {
-        // Permettre de sauvegarder meme si le deck n'est pas complet
-        // On peut sauvegarder a tout moment (deck vide inclus pour les customs)
-        if (_saveButton != null)
-            _saveButton.interactable = true;
+        UpdateDeckDisplay();
+        OnDeckChanged?.Invoke(new List<CardData>(_currentDeckCards));
+        ScheduleAutosave();
     }
 
     private void OnPoolCardClicked(CardData card)
     {
         if (card == null) return;
+        if (_currentDeckData != null && _currentDeckData.isDefault) return; // deck de base : lecture seule
 
         // Limite par catégorie (2 Signature + 16 Standard ; Éveil différé, 0 slot pour l'instant)
         int categoryLimit = card.category switch
@@ -474,16 +416,7 @@ public class DeckEditorUI : MonoBehaviour
         }
 
         _currentDeckCards.Add(card);
-        UpdateDeckDisplay();
-    }
-
-    private void OnDeckSlotRemoveClicked(int slotIndex)
-    {
-        if (slotIndex >= 0 && slotIndex < _currentDeckCards.Count)
-        {
-            _currentDeckCards.RemoveAt(slotIndex);
-            UpdateDeckDisplay();
-        }
+        NotifyDeckContentChanged();
     }
 
     private void OnSearchChanged(string searchText)
@@ -496,7 +429,6 @@ public class DeckEditorUI : MonoBehaviour
     {
         string searchText = _searchInput?.text?.ToLower() ?? "";
 
-        // Filtrer les cartes
         _filteredCards.Clear();
 
         if (_cardCollection == null) return;
@@ -509,15 +441,12 @@ public class DeckEditorUI : MonoBehaviour
             if (card.category == CardCategory.Signature && card.signatureOwner != _currentChampion)
                 continue;
 
-            // Filtre par émotions du deck
             if (_currentDeckData != null && !_currentDeckData.CardMatchesDeckEmotions(card))
                 continue;
 
-            // Filtre par émotion sélectionnée
             if (_activeEmotionFilter.HasValue && card.emotionType != _activeEmotionFilter.Value)
                 continue;
 
-            // Filtre par recherche
             if (!string.IsNullOrEmpty(searchText))
             {
                 bool matchesSearch = card.cardName.ToLower().Contains(searchText) ||
@@ -528,7 +457,6 @@ public class DeckEditorUI : MonoBehaviour
             _filteredCards.Add(card);
         }
 
-        // Trier par coût puis par nom
         _filteredCards.Sort((a, b) =>
         {
             int costCompare = a.costPA.CompareTo(b.costPA);
@@ -542,24 +470,20 @@ public class DeckEditorUI : MonoBehaviour
 
     private void RefreshPoolDisplay()
     {
-        // Cacher tous les items existants
         foreach (var item in _poolItems)
         {
             if (item != null)
                 item.gameObject.SetActive(false);
         }
 
-        // Calculer les indices de la page actuelle
         int startIndex = _currentPage * _cardsPerPage;
         int endIndex = Mathf.Min(startIndex + _cardsPerPage, _filteredCards.Count);
 
-        // Afficher les cartes de la page actuelle
         for (int i = startIndex; i < endIndex; i++)
         {
             var card = _filteredCards[i];
             int poolIndex = i - startIndex;
 
-            // Réutiliser un item existant ou en créer un nouveau
             CardPoolItemUI item;
             if (poolIndex < _poolItems.Count)
             {
@@ -629,23 +553,90 @@ public class DeckEditorUI : MonoBehaviour
 
     #endregion
 
-    private void OnSavePressed()
+    #endregion
+
+    #region Autosave & actions
+
+    /// <summary>
+    /// Planifie l'écriture différée (debounce) du deck courant : évite d'écrire sur disque à
+    /// chaque clic si plusieurs modifications rapprochées surviennent. Aucun effet pour le
+    /// deck de base (jamais persisté : SyncBaseDeck reste seul maître de son contenu).
+    /// </summary>
+    private void ScheduleAutosave()
     {
-        // Sauvegarder le deck meme s'il n'est pas complet
+        if (_currentDeckData != null && _currentDeckData.isDefault) return;
+
+        if (_autosaveRoutine != null)
+            StopCoroutine(_autosaveRoutine);
+
+        _autosaveRoutine = StartCoroutine(AutosaveAfterDelay());
+    }
+
+    private IEnumerator AutosaveAfterDelay()
+    {
+        yield return new WaitForSeconds(_autosaveDebounceSeconds);
+        PersistDeckCards();
+        _autosaveRoutine = null;
+    }
+
+    /// <summary>Écrit immédiatement toute autosave en attente (changement d'onglet, fermeture).</summary>
+    private void FlushPendingAutosave()
+    {
+        if (_autosaveRoutine == null) return;
+
+        StopCoroutine(_autosaveRoutine);
+        _autosaveRoutine = null;
+        PersistDeckCards();
+    }
+
+    private void PersistDeckCards()
+    {
+        if (_currentChampion == null || _currentDeckData == null || _currentDeckData.isDefault) return;
+
+        var cardNames = new List<string>();
+        foreach (var card in _currentDeckCards)
+        {
+            if (card != null)
+                cardNames.Add(card.cardName);
+        }
+
+        DeckSaveManager.UpdateDeckCards(_currentChampion, _currentDeckIndex, cardNames);
         OnDeckSaved?.Invoke(_currentDeckIndex, new List<CardData>(_currentDeckCards));
-        Close();
     }
 
-    private void OnCancelPressed()
-    {
-        _currentDeckCards = new List<CardData>(_originalDeckCards);
-        Close();
-    }
-
+    /// <summary>
+    /// Revert vers le dernier état sauvegardé (relit depuis DeckSaveManager), pas vers une
+    /// copie de session : toute autosave en attente non encore écrite est simplement annulée.
+    /// </summary>
     private void OnResetPressed()
     {
-        _currentDeckCards = new List<CardData>(_originalDeckCards);
+        if (_currentChampion == null || _currentDeckData == null) return;
+
+        if (_autosaveRoutine != null)
+        {
+            StopCoroutine(_autosaveRoutine);
+            _autosaveRoutine = null;
+        }
+
+        _currentDeckCards = DeckSaveManager.GetDeckCards(_currentChampion, _currentDeckIndex, _cardCollection);
         UpdateDeckDisplay();
+        OnDeckChanged?.Invoke(new List<CardData>(_currentDeckCards));
+    }
+
+    private void OnDuplicatePressed()
+    {
+        if (_currentChampion == null) return;
+
+        var newDeck = DeckSaveManager.DuplicateDeck(_currentChampion, _currentDeckIndex);
+        if (newDeck == null)
+        {
+            GameLog.LogWarning("Impossible de dupliquer : nombre maximum de decks personnalisés atteint.");
+            return;
+        }
+
+        var championDecks = DeckSaveManager.GetDecksForChampion(_currentChampion);
+        int newIndex = championDecks.decks.Count - 1;
+        OnDeckDuplicated?.Invoke(newIndex);
     }
 
     #endregion

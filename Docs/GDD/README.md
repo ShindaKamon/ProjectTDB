@@ -14,7 +14,7 @@
 |----------|---------|
 | [GDD_Main.md](GDD_Main.md) | Vision, lore, roster, décisions, questions ouvertes |
 | [MVP_Excel_Snapshot.md](MVP_Excel_Snapshot.md) | Budget des cartes, bibliothèque, progression, barème monstres, roadmap |
-| [claude_md_coarchitect.md](claude_md_coarchitect.md) | Contrat de collaboration avec Claude (importé par `CLAUDE.md`) |
+| [claude_md_coarchitect.md](claude_md_coarchitect.md) | Contrat de collaboration avec Claude : rôle et façon de travailler (importé par `CLAUDE.md`) |
 | [SYSTEME_EMOTIONS.md](SYSTEME_EMOTIONS.md) | 8 émotions, 3 de lancement (Colère, Peur, Joie), Éveil |
 | [CHAMPIONS_CONCEPTS.md](CHAMPIONS_CONCEPTS.md) | Evan, Crux, Raze + concepts hors MVP |
 | [Card_System.md](Card_System.md) | Types de cartes, deck de 24, budget de puissance, ciblage |

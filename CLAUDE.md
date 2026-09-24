@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @Docs/GDD/claude_md_coarchitect.md
 
-Le fichier importé ci-dessus définit le rôle (co-architecte) et résume le jeu. Pour le reste :
+Le fichier importé ci-dessus définit le rôle (co-architecte) et la façon de travailler ensemble ; il ne décrit pas le jeu. Pour l'état du jeu :
 - **Design visé (MVP)** : `Docs/GDD/GDD_Main.md` (décisions, questions ouvertes, tableau « source unique de vérité ») et `Docs/GDD/MVP_Excel_Snapshot.md` (chiffres : budget des cartes, bibliothèque, progression, barème monstres).
 - **Ce qui est réellement implémenté** : `Docs/GDD/Technical_Specs.md`, section « État du code » — fait foi en cas de conflit entre le code et le design.
 - Quand une décision de design change ou que le code diverge, mettre à jour le document de référence concerné (voir `Docs/GDD/README.md`).

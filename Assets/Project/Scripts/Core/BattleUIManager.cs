@@ -38,29 +38,14 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         // Récupère la couleur initiale de l'orbe pour ne pas l'écraser avec du blanc/rouge par défaut
         if (_playerHealthOrb != null)
         {
+            // La couleur est celle de la jauge (l'image « Filled » de l'orbe)
             Image orbImage = null;
-            var allImages = _playerHealthOrb.GetComponentsInChildren<Image>(true);
-            
-            // 1. Cherche spécifiquement "Liquid_Texture" qui contient la couleur (demande spécifique)
-            foreach (var img in allImages)
+            foreach (var img in _playerHealthOrb.GetComponentsInChildren<Image>(true))
             {
-                if (img.name == "Liquid_Texture")
+                if (img.type == Image.Type.Filled)
                 {
                     orbImage = img;
                     break;
-                }
-            }
-
-            // 2. Fallback : Cherche l'image "Filled" (la jauge) si Liquid_Texture n'est pas trouvé
-            if (orbImage == null)
-            {
-                foreach (var img in allImages)
-                {
-                    if (img.type == Image.Type.Filled)
-                    {
-                        orbImage = img;
-                        break;
-                    }
                 }
             }
 

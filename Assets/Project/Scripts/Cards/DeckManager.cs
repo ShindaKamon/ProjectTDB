@@ -128,7 +128,7 @@ public class DeckManager : MonoBehaviour
     /// <summary>
     /// Coût effectif d'une carte, après application d'un éventuel override (ex: Il triche).
     /// Le plancher de 1 PA ne s'applique que si un override est actif : une carte à coût de
-    /// base 0 PA (ex: carte Rage) sans override reste gratuite (bug corrigé : le plancher
+    /// base 0 PA sans override reste gratuite (bug corrigé : le plancher
     /// s'appliquait auparavant même sans override, rendant les cartes à 0 PA injouables dès
     /// qu'un DeckManager était présent).
     /// </summary>
@@ -227,12 +227,12 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    // Ajoute une carte spécifique directement à la main (ex: carte Rage)
+    // Ajoute une carte spécifique directement à la main
     public void AddCardToHand(CardData cardToAdd)
     {
         if (cardToAdd == null) return;
 
-        // On autorise le dépassement de la taille de main pour les cartes ajoutées directement (Rage, Fetch, etc.)
+        // On autorise le dépassement de la taille de main pour les cartes ajoutées directement (Fetch, etc.)
         _hand.Add(cardToAdd);
         OnHandChanged?.Invoke();
         GameLog.Log($"DeckManager: Carte spéciale {cardToAdd.cardName} ajoutée à la main.");
@@ -267,7 +267,7 @@ public class DeckManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Défausse des cartes correspondant à un critère (ex: Cartes Rage)
+    /// Défausse des cartes correspondant à un critère (ex: cartes générées)
     /// Retourne true si le nombre requis a été défaussé
     /// </summary>
     public bool DiscardCards(System.Predicate<CardData> match, int count)

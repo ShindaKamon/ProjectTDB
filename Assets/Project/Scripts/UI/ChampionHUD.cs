@@ -5,7 +5,7 @@ using TMPro;
 /// <summary>
 /// HUD affichant les stats du champion à l'écran.
 /// Se met à jour automatiquement en s'abonnant aux événements de l'unité.
-/// Compatible avec tous les champions (Ilya, Vylos, etc.)
+/// Compatible avec tous les champions (Soren, l'Alpiniste, Ace)
 /// </summary>
 public class ChampionHUD : MonoBehaviour
 {
@@ -196,18 +196,8 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_defText != null && _champion != null)
         {
-            // Vérifie si le champion a une défense active (IlyaUnit a GetDefense() qui peut changer)
-            if (_champion is IlyaUnit ilyaUnit)
-            {
-                // Utilise la défense active (peut être modifiée par des buffs)
-                _defText.text = $"DEF: {ilyaUnit.GetDefense()}";
-            }
-            else
-            {
-                // Affiche la défense de base depuis ChampionData (pour l'affichage statique)
-                int baseDefense = _champion.GetBaseDefense();
-                _defText.text = $"DEF: {baseDefense}";
-            }
+            // Défense de base depuis ChampionData (aucun champion MVP n'a de défense active)
+            _defText.text = $"DEF: {_champion.GetBaseDefense()}";
         }
     }
 }

@@ -31,6 +31,18 @@ Pas de build CLI dédié : la compilation se fait via l'éditeur Unity. Lancer l
 #   ajouter  -testFilter "GameActionValidatorTests"   (nom de classe, ou Classe.Methode)
 ```
 
+Équivalent PowerShell : `& "C:\Program Files\Unity\Hub\Editor\6000.4.0f1\Editor\Unity.exe" -batchmode -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml -logFile -`. Code de sortie ≠ 0 si un test échoue ; le détail est dans `TestResults.xml`.
+
+**Éditeur ouvert** : passer par la Unity CLI (`unity`, package `com.unity.pipeline` installé), qui pilote l'éditeur en cours sans le fermer :
+
+```bash
+unity status                                   # éditeur connecté, état "ready"
+unity command recompile                        # prend en compte les nouveaux fichiers .cs (crée les .meta)
+unity command recompile_status                 # attendre "completed", vérifier "errors"
+unity command run_tests --mode EditMode [--filter CardPoolQueryTests] --timeout 300 --json
+unity command console --level error            # erreurs de la console
+```
+
 Sinon : Window > General > Test Runner dans l'éditeur.
 
 ## Architecture
@@ -47,11 +59,13 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 
 ### Combat
 - `TurnStateMachine` (classe C# pure, pas MonoBehaviour) porte l'état du tour ; `GridManager` orchestre la grille (**carrée** 10×10, positions `Vector2Int`, distance de Manhattan), le spawn et la rotation des tours (un tour par unité dans l'ordre de `_units`, invocations sautées), avec `GridRepository` pour les données de grille.
-- Unités : `Unit` (base MonoBehaviour, PV, buffs, marques via `IMarkable`) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion (`AceUnit`, `AlpinisteUnit`, `SorenUnit`, `IlyaUnit`, …) qui porte ses passifs. Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IRageUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
-- Ennemis : `Enemy` + `EnemyAI`, qui joue aussi des `CardData`.
+- Unités : `Unit` (base MonoBehaviour, PV, buffs, marques via `IMarkable`) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion (`AceUnit`, `AlpinisteUnit`, `SorenUnit`) qui porte ses passifs. Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
+- Ennemis : `Enemy` + `EnemyAI` (un monstre = un `EnemyData` + un prefab, ex. `UnderBed`), qui joue aussi des `CardData`.
+- Invocations : `SummonUnit : Unit` (pas de tour propre, PA/PM = 0, pilotée par les cartes de l'invocateur `ISummonOwner`) ; `LyseUnit` en dérive, avec des PV recalculés en continu depuis ceux de Soren.
+- États transverses gérés par des classes statiques plutôt que par les unités : `ResourceDebuffManager` (retraits de PA/PM appliqués au début du tour suivant). Les marques (`MarkType` : Poison, AllMarks) sont portées par l'unité (`IMarkable`) ; les valeurs de `MarkType` sont sérialisées dans les cartes, ne pas les renuméroter.
 
 ### Cartes
-- `CardData` (ScriptableObject, `Cards/CardData.cs`, gros fichier) est **data-driven** : dégâts, ciblage (`CardTargetType`, `CardAreaEffect`), effets (`CardEffectType`), marques, Rage (`RageConsumeMode`, `RageScalingType`), charge, catégorie de slot (`CardCategory` : Signature / Standard / Eveil). La résolution passe par `CardData.ExecuteEffect(source, target, tile, isAdditionalMultiTargetHit)`, appelée par `HandUIController` (joueur) et `EnemyAI`. Une nouvelle carte = en général un nouvel asset, pas une nouvelle classe ; ajouter un champ/enum seulement si l'effet n'est pas exprimable.
+- `CardData` (ScriptableObject, `Cards/CardData.cs`, gros fichier) est **data-driven** : dégâts, ciblage (`CardTargetType`, `CardAreaEffect`), effets (`CardEffectType`), marques, charge, catégorie de slot (`CardCategory` : Signature / Standard / Eveil). La résolution passe par `CardData.ExecuteEffect(source, target, tile, isAdditionalMultiTargetHit)`, appelée par `HandUIController` (joueur) et `EnemyAI`. Une nouvelle carte = en général un nouvel asset, pas une nouvelle classe ; ajouter un champ/enum seulement si l'effet n'est pas exprimable.
 - `DeckManager` (sur l'unité) gère pioche/main/défausse et les coûts effectifs (`GetEffectiveCost`, overrides de coût).
 - `GameActionValidator` (statique, retourne `ValidationResult`) centralise la validation « peut-on jouer cette carte / se déplacer / cibler » — y ajouter les nouvelles règles plutôt que de disperser les checks dans l'UI. C'est aussi la partie la plus couverte par les tests.
 
@@ -62,7 +76,7 @@ ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, 
 Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build via `[Conditional]`) au lieu de `Debug.Log`. `Debug.LogError` reste direct.
 
 ### Outils éditeur
-`Scripts/Editor/UISetupWizard.cs` (génération de hiérarchies UI), `DeckDebugMenu.cs` (reset/inspection des sauvegardes de decks) ; helpers de debug runtime dans `Scripts/Debug/`.
+`Scripts/Editor/UISetupWizard.cs` (génération de hiérarchies UI), `DeckDebugMenu.cs` (reset/inspection des sauvegardes de decks).
 
 ## Documentation
 `Docs/GDD/` : GDD découpé par système (index : `Docs/GDD/README.md`) — à consulter avant de concevoir une mécanique. Émotions de lancement : Colère, Peur, Joie ; roster MVP : Ace, l'Alpiniste, Soren ; deck cible 24 cartes (2 Signature + 6 Éveil + 16 Standard, le code en gère 18 pour l'instant).

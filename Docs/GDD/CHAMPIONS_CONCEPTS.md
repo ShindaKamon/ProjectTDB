@@ -87,7 +87,7 @@ Deux concepts concurrents :
 ---
 
 ### VYLOS et CALYX
-Présents dans le code (`VylosUnit` avec les cartes Flagellation, Lien Vital, Stigmate ; fiche `Calyx`) mais **sans document de design**. À documenter ici ou à archiver.
+Existaient dans le code (`VylosUnit` avec les cartes Flagellation, Lien Vital et la marque Stigmate ; fiche `Calyx`) **sans document de design** ; retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`). À documenter ici ou à archiver s'ils reviennent.
 
 ---
 

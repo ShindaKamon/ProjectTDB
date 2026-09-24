@@ -49,7 +49,7 @@ namespace ProjectTDB.Tests
         public void GetEffectiveCost_ZeroCostCardWithoutOverride_StaysFree()
         {
             // Régression : le plancher "1 PA minimum" s'appliquait auparavant même sans
-            // override actif, rendant les cartes à coût 0 (ex: Rage) injouables gratuitement
+            // override actif, rendant les cartes à coût 0 injouables gratuitement
             // dès qu'un DeckManager était présent.
             var deckManager = NewDeckManager();
             var card = NewCard(costPA: 0);

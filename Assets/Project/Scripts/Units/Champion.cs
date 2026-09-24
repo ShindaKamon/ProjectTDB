@@ -95,7 +95,7 @@ public abstract class Champion : Unit, IActionPointsUser
 
     /// <summary>
     /// Retourne la défense de base depuis ChampionData (pour l'affichage UI)
-    /// Note: Cette valeur peut ne pas être utilisée par tous les champions (ex: Vylos n'a pas de système de défense actif)
+    /// Note: Cette valeur peut ne pas être utilisée par tous les champions (aucun champion MVP n'a de défense active)
     /// </summary>
     public int GetBaseDefense()
     {

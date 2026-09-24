@@ -153,7 +153,7 @@ public class HandUIController : MonoBehaviour
         bool isFirstTarget = true;
         foreach (Unit target in _pendingMultiTargets)
         {
-            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (Rage, combo
+            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (combo
             // tracker, invocation, dégâts sur soi, pioche, fetch, ajout au deck, écho de Lyse) —
             // voir CardData.ExecuteEffect(isAdditionalMultiTargetHit).
             _selectedCard.ExecuteEffect(activeUnit, target, default, !isFirstTarget);
@@ -232,12 +232,6 @@ public class HandUIController : MonoBehaviour
             {
                 champion.OnActionPointsChanged += HandlePAChanged;
             }
-            
-            // S'abonner aux changements de Rage si c'est IlyaUnit (seul champion avec Rage pour l'instant)
-            if (champion is IlyaUnit ilyaUnit)
-            {
-                ilyaUnit.OnRageStockChanged += HandleRageStockChanged;
-            }
 
             _isInitialized = true;
         }
@@ -255,7 +249,7 @@ public class HandUIController : MonoBehaviour
             _playerDeckManager.OnHandChanged -= UpdateHandUI; // Se désabonner pour éviter les fuites de mémoire
         }
 
-        // Se désabonner des changements de PA et de Rage
+        // Se désabonner des changements de PA
         // Vérifie que le service est disponible avant d'y accéder (évite erreurs lors de la destruction de scène)
         if (Services.IsGridServiceAvailable())
         {
@@ -267,12 +261,6 @@ public class HandUIController : MonoBehaviour
                 {
                     champion.OnActionPointsChanged -= HandlePAChanged;
                 }
-                
-                // Désabonnement Rage (seulement IlyaUnit)
-                if (activeUnit is IlyaUnit ilyaUnit)
-                {
-                    ilyaUnit.OnRageStockChanged -= HandleRageStockChanged;
-                }
             }
         }
     }
@@ -281,14 +269,6 @@ public class HandUIController : MonoBehaviour
     /// Appelé quand les PA changent pour mettre à jour l'état des cartes
     /// </summary>
     private void HandlePAChanged(int current, int max)
-    {
-        RefreshCardAffordability();
-    }
-
-    /// <summary>
-    /// Appelé quand le stock de Rage change pour mettre à jour l'état des cartes Rage
-    /// </summary>
-    private void HandleRageStockChanged(int rageStock)
     {
         RefreshCardAffordability();
     }
@@ -872,7 +852,7 @@ public class HandUIController : MonoBehaviour
             }
             else
             {
-                canAfford = false; // Les unités non-Ilya ne peuvent pas jouer de cartes avec coût PA
+                canAfford = false; // Unité sans PA : ne peut pas jouer de carte à coût PA
             }
         }
 
@@ -882,15 +862,6 @@ public class HandUIController : MonoBehaviour
             if (activeUnit.GetHealth() < card.costHP)
             {
                 canAfford = false;
-            }
-        }
-
-        // Vérification du stock de Rage pour les cartes Rage
-        if (canAfford && card.isRageCard && activeUnit is IRageUser rageUser)
-        {
-            if (rageUser.IsRageStockFull())
-            {
-                canAfford = false; // Stock de Rage plein (5/5)
             }
         }
 

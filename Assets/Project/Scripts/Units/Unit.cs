@@ -67,7 +67,7 @@ public class Unit : MonoBehaviour, IMarkable
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
     protected int _health;
-    protected int _attackDamage; // NOTE: Utilisé uniquement par IlyaUnit pour le système de transformation
+    protected int _attackDamage;
     protected int _maxMovementPoints; // PM (Points de Mouvement) maximum
 
     // PM (Points de Mouvement) restants pour le tour actuel.
@@ -425,7 +425,7 @@ public class Unit : MonoBehaviour, IMarkable
     }
 
     /// <summary>
-    /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus comme la Rage)
+    /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus)
     /// </summary>
     public void PayHealth(int amount)
     {
@@ -526,12 +526,6 @@ public class Unit : MonoBehaviour, IMarkable
         }
     }
 
-    // NOTE: Utilisé uniquement par IlyaUnit pour modifier l'ATK lors des transformations
-    protected void SetAttackDamage(int value)
-    {
-        _attackDamage = value;
-    }
-
     /// <summary>
     /// Retourne la UnitState (Phase 3.4)
     /// </summary>
@@ -563,12 +557,6 @@ public class Unit : MonoBehaviour, IMarkable
         return _health;
     }
 
-    // NOTE: Utilisé uniquement par IlyaUnit pour le système de lifesteal en forme Déchaînée
-    public int GetAttackDamage()
-    {
-        return _attackDamage;
-    }
-
     /// <summary>
     /// Gère la mort de l'unité
     /// </summary>
@@ -579,18 +567,8 @@ public class Unit : MonoBehaviour, IMarkable
         // Phase 3.4: Marque comme mort
         _unitState?.SetDead();
 
-        // Nettoie les marques Stigmate
-        // 1. Si c'est un champion, retire tous les Stigmates qu'il a appliqués sur les ennemis
-        if (GetFaction() == UnitFaction.Player)
-        {
-            StigmateManager.RemoveAllStigmatesFromSource(this);
-        }
-
-        // 2. Retire toutes les marques sur cette unité (y compris Stigmate)
+        // Retire toutes les marques sur cette unité
         ClearAllMarks();
-
-        // 3. Nettoie les effets de PA en attente
-        StigmateManager.ClearPendingPALoss(this);
 
         OnUnitDied?.Invoke(this);
 
@@ -691,7 +669,7 @@ public class Unit : MonoBehaviour, IMarkable
             {
                 // Retire les effets du buff
                 _attackDamage -= buff.atkModifier;
-                // Note: DEF est géré par les classes dérivées (IlyaUnit, Enemy)
+                // Note: DEF est géré par les classes dérivées (Enemy)
 
                 GameLog.Log($"{name}: Buff expiré - ATK restaurée de {buff.atkModifier}");
                 _activeBuffs.RemoveAt(i);
@@ -1102,12 +1080,6 @@ public class Unit : MonoBehaviour, IMarkable
             {
                 count++;
             }
-        }
-
-        // 3. Perte de PA (via StigmateManager)
-        if (StigmateManager.HasPendingPALoss(this))
-        {
-            count++;
         }
 
         return count;

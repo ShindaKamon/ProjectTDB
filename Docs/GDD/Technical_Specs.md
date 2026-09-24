@@ -7,6 +7,7 @@
 - v2.1 (10/09/2026) : retrait des mentions Classes et Éléments.
 - v2.2 (23/09/2026) : section Système d'Émotions mise à jour (la jauge universelle -100/+100 existe dans le code mais n'est pas utilisée par le design pour l'instant ; les mécaniques signatures comme la Rage d'Ilya sont la cible) ; plateforme mobile signalée comme question ouverte.
 - v2.3 (23/09/2026) : écarts entre le code et l'Excel MVP listés (section « Adaptations à prévoir »).
+- v2.4 (24/09/2026) : nettoyage hors MVP — code d'Ilya (Rage) et de Vylos (Stigmate) retiré, assets morts supprimés, prefabs champions sortis des dossiers de familles ; pool de l'éditeur de deck façon SpamDex.
 
 ---
 
@@ -42,9 +43,9 @@
 | **Assets/Project/Scripts/Cards/** | `CardData` (ScriptableObject data-driven), `DeckManager`, `DeckDiscardUI` |
 | **Assets/Project/Scripts/Core/** | `ServiceLocator`/`Services`, `EventBus`/`GameEvent`, `TurnStateMachine`, `GridManager`, `GridRepository`, `BattleUIManager`, `HealthBarManager`, `ChampionSelectManager`, `GameLog` |
 | **Assets/Project/Scripts/Grid/** | `Tile` |
-| **Assets/Project/Scripts/Units/** | `Unit` → `Champion` → `AceUnit`, `AlpinisteUnit`, `SorenUnit`, `IlyaUnit`, `VylosUnit` ; `SummonUnit`/`LyseUnit` ; `Enemy`, `EnemyAI`, `UnderBedUnit` ; interfaces `IRageUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner` ; `ChampionData`, `EnemyData` |
+| **Assets/Project/Scripts/Units/** | `Unit` → `Champion` → `AceUnit`, `AlpinisteUnit`, `SorenUnit` ; `SummonUnit`/`LyseUnit` ; `Enemy`, `EnemyAI` ; interfaces `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner` ; `ChampionData`, `EnemyData` |
 | **Assets/Project/Scripts/Deck/** | `DeckData`, `DeckSaveManager`, `ChampionDecksData`, `AllDecksData`, `CardCollection` |
-| **Assets/Project/Scripts/Marks/** | Marques (`IMarkable`, `UnitMark`, `StigmateManager`) |
+| **Assets/Project/Scripts/Marks/** | Marques (`IMarkable`, `UnitMark`, `MarkType` : Poison, AllMarks) |
 | **Assets/Project/Scripts/Debuffs/** | `ResourceDebuffManager` (retraits de PA/PM) |
 | **Assets/Project/Scripts/Validation/** | `GameActionValidator`, `ValidationResult` |
 | **Assets/Project/Scripts/Input/** | `InputManager` |
@@ -105,7 +106,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 ### 2. Cartes et decks
 
-- `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, effets `CardEffectType`, marques, Rage, charge, émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
+- `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, effets `CardEffectType`, marques, charge, émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
 - `DeckManager` (sur l'unité) : pioche, main, défausse, coûts effectifs (`GetEffectiveCost`, overrides de coût pour Ace).
 - `DeckData` : 2 slots Signature + 16 Standard (les 6 slots Éveil ne sont pas encore ajoutés) ; `DeckSaveManager` : sauvegarde JSON, 1 deck de base + 3 decks perso par champion. Les decks référencent les cartes **par nom**.
 
@@ -122,7 +123,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 ### 5. Émotions
 
-> ⚠️ Il **n'y a pas** de `EmotionSystem` dans le code (contrairement aux anciennes versions de ce document). Les émotions existent comme **identité des cartes** (`EmotionType` sur `CardData`) et filtrent le pool Standard des decks (1 à 2 émotions par deck). La **jauge d'Éveil** (une jauge par émotion, paliers de 2 points) est **à implémenter**. La Rage d'Ilya (`IlyaUnit`, `IRageUser`) est une mécanique à part.
+> ⚠️ Il **n'y a pas** de `EmotionSystem` dans le code (contrairement aux anciennes versions de ce document). Les émotions existent comme **identité des cartes** (`EmotionType` sur `CardData`) et filtrent le pool Standard des decks (1 à 2 émotions par deck). La **jauge d'Éveil** (une jauge par émotion, paliers de 2 points) est **à implémenter**.
 
 ---
 
@@ -130,13 +131,11 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_md_coarchitect.md` et fait foi pour décrire ce qui existe **dans le code**.
 
-**Roster jouable :** Ace (« Le Tricheur »), l'Alpiniste (« Le Grimpeur »), Soren (« Le Frère », + invocation Lyse), référencés dans `ChampionSelectManager._allChampions`. Ilya, Vylos et Calyx existent en fiche (`Assets/ScriptableObjects/Characters/Champion/`) mais ne sont pas dans la sélection. Les 3 champions MVP ont 100 PV, 5 PA, 4 PM.
+**Roster jouable :** Ace (« Le Tricheur »), l'Alpiniste (« Le Grimpeur »), Soren (« Le Frère », + invocation Lyse), référencés dans `ChampionSelectManager._allChampions`. Seuls ces 3 champions existent (fiches dans `Assets/ScriptableObjects/Characters/Champion/`, prefabs dans `Assets/Project/Prefabs/Champions/`). Les 3 champions MVP ont 100 PV, 5 PA, 4 PM.
 
-**Ilya (hors MVP)** : l'implémentation diffère de `ilya_deck_simple.md` — carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, etc.).
+**Ilya, Vylos, Calyx (hors MVP) : retirés du code le 24/09/2026.** Ilya y avait une version différente de `ilya_deck_simple.md` (carte Rage ajoutée à la main tous les 10 dégâts subis, stock max 5) ; Vylos portait la marque Stigmate. Le code reste consultable dans l'historique git (commit `00afe5d`, dernier état avant le nettoyage) si Ilya revient, sa Rage étant à réadapter à l'Éveil.
 
-**Vylos, Calyx** : champions présents dans le code (Vylos : Flagellation, Lien Vital, Stigmate) mais absents des docs de design — à documenter ou à archiver.
-
-**Cartes :** 49 cartes Standard (17 Colère, 17 Peur, 15 Joie), mêmes noms que la bibliothèque de l'Excel ; Signatures des 3 champions ; 16 assets « Family » (Dechaines, Reprouves…) hérités de l'ancien système.
+**Cartes :** 49 cartes Standard (17 Colère, 17 Peur, 15 Joie), mêmes noms que la bibliothèque de l'Excel ; Signatures des 3 champions (les anciens assets « Family » ont été supprimés).
 
 **Deck :** 18 cartes (2 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) ; 1 à 2 émotions par deck.
 
@@ -149,7 +148,8 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **À savoir :**
 - `ChampionData.portrait` (buste) existe mais n'est assigné à aucun champion.
-- Filtres par émotion et pagination du pool de cartes : codés mais pas câblés dans la scène (à activer ou nettoyer).
+- Pool de cartes façon SpamDex : filtre et tri dans `CardPoolQuery` (C# pur, `Scripts/Deck/`, testé en EditMode), piloté par le panneau `PoolFilterBarUI` (ligne `FiltersRow` de la zone pool) : recherche nom/effet insensible aux accents, pastilles `FilterChipUI` d'émotion (seulement celles du deck, masquées si une seule) et de catégorie en multi-sélection, coût PA 0/1/2/3/4+ (un à la fois), tri au clic coût → nom → émotion avec ordre réversible, bouton « Réinitialiser » visible si un filtre est actif, message si aucun résultat. Le panneau reste utilisable sur le deck de base (lecture seule). Tout le pool est affiché dans la zone de défilement ; la pagination reste optionnelle (active seulement si les boutons de page sont câblés). À venir : zoom de la grille, fiche détaillée de carte.
+- Connu : le prefab `CardPoolItem` (cellule 150×60) affiche mal les noms longs (texte qui se chevauche), et la grille du deck déborde à gauche de sa zone.
 - L'écran de sélection affiche encore ATK et DEF, alors que le design ne définit que PV / PA / PM.
 
 ---
@@ -166,7 +166,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 | IA ennemie | Deck pattern | + Attaque de base anti-lock, cycle de boss Zone/Basique/Heal |
 | Champions | Sous-classes `AceUnit`, `AlpinisteUnit`, `SorenUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
 | Main | Départ 5, max 5, pioche 1/tour | À trancher (playtest : 3 + repioche à 3) |
-| Stats | `attackDamage` et `defense` dans `ChampionData` (ATK seulement utilisé par Ilya) | Pas de stats au-delà de PV/PA/PM (à trancher) |
+| Stats | `attackDamage` et `defense` dans `ChampionData` (ATK non utilisé par les champions MVP) | Pas de stats au-delà de PV/PA/PM (à trancher) |
 | Grille | Carrée 10×10, Manhattan (4 directions) | Carrée 8 directions (cercles de 9 / 25 cases) — à aligner |
 
 ---

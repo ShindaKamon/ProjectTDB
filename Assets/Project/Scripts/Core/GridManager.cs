@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// <summary>
 /// GridManager adapté pour Émotions Tactics
 /// Gère la grille carrée, les unités, le système de tours, et l'UI
-/// Compatible avec Unit de base ET IlyaUnit
+/// Compatible avec Unit de base ET Champion
 /// Phase 3.5: Implémente IGridService pour injection de dépendances
 /// </summary>
 public class GridManager : MonoBehaviour, IGridService
@@ -184,7 +184,7 @@ public class GridManager : MonoBehaviour, IGridService
             GameObject playerUnitGO = Instantiate(ChampionSelectManager.SelectedChampion.prefab);
             
             // On récupère le composant Champion pour appeler son initialisation.
-            // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (comme IlyaUnit, VylosUnit, etc.)
+            // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (SorenUnit, AlpinisteUnit, AceUnit)
             Champion instantiatedChampion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
             instantiatedPlayerUnit = instantiatedChampion;
 
@@ -272,7 +272,7 @@ public class GridManager : MonoBehaviour, IGridService
                 // Sinon, c'est une autre unité (un champion placé dans la scène)
                 else if (!unit.IsInitialized())
                 {
-                    // Tente d'initialiser comme un champion (IlyaUnit, VylosUnit, etc.)
+                    // Tente d'initialiser comme un champion
                     Champion championInScene = unit as Champion;
                     if (championInScene != null && championInScene.championData != null)
                     {
@@ -465,10 +465,6 @@ public class GridManager : MonoBehaviour, IGridService
         
         // Traite les marques au début du tour (dégâts de poison, etc.)
         unit.ProcessMarksOnTurnStart();
-        
-        // Applique les pertes de PA en attente (effets Stigmate, etc.)
-        // Doit être appelé APRÈS RefreshActiveUnitTurn() pour que la perte soit appliquée sur les PA rafraîchis
-        StigmateManager.ProcessPendingPALoss(unit);
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {

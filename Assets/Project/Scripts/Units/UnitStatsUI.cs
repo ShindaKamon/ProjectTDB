@@ -4,7 +4,7 @@ using TMPro;
 
 /// <summary>
 /// Gère l'affichage UI des stats d'une unité
-/// Compatible avec Unit de base ET Champion (Ilya, Vylos, etc.)
+/// Compatible avec Unit de base ET Champion
 /// </summary>
 public class UnitStatsUI : MonoBehaviour
 {
@@ -124,18 +124,8 @@ public class UnitStatsUI : MonoBehaviour
     {
         if (_defenseText != null && _champion != null)
         {
-            // Vérifie si le champion a une défense active (IlyaUnit a GetDefense() qui peut changer)
-            if (_champion is IlyaUnit ilyaUnit)
-            {
-                // Utilise la défense active (peut être modifiée par des buffs)
-                _defenseText.text = $"DEF: {ilyaUnit.GetDefense()}";
-            }
-            else
-            {
-                // Affiche la défense de base depuis ChampionData (pour l'affichage statique)
-                int baseDefense = _champion.GetBaseDefense();
-                _defenseText.text = $"DEF: {baseDefense}";
-            }
+            // Défense de base depuis ChampionData (aucun champion MVP n'a de défense active)
+            _defenseText.text = $"DEF: {_champion.GetBaseDefense()}";
         }
     }
 }

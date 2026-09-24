@@ -9,7 +9,7 @@
 > - deck de 12 cartes Personnage/Famille/Neutre → format **24 cartes** (2 Signature + 6 Éveil + 16 Standard) ;
 > - dégâts des cartes à recalculer avec le budget (ex : 1 PA = 12 dégâts de base, pas 20).
 >
-> ⚠️ **Le code implémente une autre version d'Ilya** (`IlyaUnit`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). À réconcilier s'il revient.
+> ⚠️ **Une autre version d'Ilya a existé dans le code** (`IlyaUnit`, retiré le 24/09/2026, récupérable via le commit `00afe5d`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). À réconcilier avec ce document s'il revient.
 
 **Famille** : 🔴 Déchaînés — Colère *(appelée « Rouge (Incarnat) » dans les tout premiers brouillons — même personnage)*
 **Concept** : « Le Dévoué qui se sacrifie par amour, mais enchaîne sa colère »

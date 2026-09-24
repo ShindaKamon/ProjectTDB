@@ -268,46 +268,13 @@ namespace ProjectTDB.Tests
         {
             // Régression du bug corrigé dans DeckManager.GetEffectiveCost : le plancher de
             // 1 PA s'appliquait auparavant même sans override actif, rendant les cartes à
-            // coût 0 (ex: Rage) injouables gratuitement dès qu'un DeckManager était présent.
+            // coût 0 injouables gratuitement dès qu'un DeckManager était présent.
             var enemy = NewEnemyWithPA(currentPA: 0, maxPA: 3);
             AddDeckManager(enemy);
             var card = NewCard();
             card.costPA = 0;
 
             var result = GameActionValidator.CanPlayCard(enemy, card);
-
-            Assert.IsTrue(result.IsValid, result.ErrorMessage);
-        }
-
-        // ==================== CanPlayCard - Stock de Rage plein ====================
-
-        [Test]
-        public void CanPlayCard_RageCard_StockFull_Fails()
-        {
-            var ilya = NewUnit<IlyaUnit>();
-            SetField(ilya, "_rageStock", 5);
-            SetField(ilya, "_maxRageStock", 5);
-            var card = NewCard();
-            card.isRageCard = true;
-            card.costPA = 0;
-
-            var result = GameActionValidator.CanPlayCard(ilya, card);
-
-            Assert.IsFalse(result.IsValid);
-            StringAssert.Contains("Stock de Rage plein", result.ErrorMessage);
-        }
-
-        [Test]
-        public void CanPlayCard_RageCard_StockNotFull_Succeeds()
-        {
-            var ilya = NewUnit<IlyaUnit>();
-            SetField(ilya, "_rageStock", 2);
-            SetField(ilya, "_maxRageStock", 5);
-            var card = NewCard();
-            card.isRageCard = true;
-            card.costPA = 0;
-
-            var result = GameActionValidator.CanPlayCard(ilya, card);
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }

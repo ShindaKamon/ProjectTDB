@@ -26,26 +26,8 @@ public static class ChargeHelper
     /// <returns>La direction normalisée ou Vector2.zero si pas en ligne droite</returns>
     public static bool TryGetChargeDirection(Vector2Int sourcePos, Vector2Int targetPos, out Vector2Int direction, out int distance)
     {
-        Vector2Int diff = targetPos - sourcePos;
-
-        if (Mathf.Abs(diff.x) > 0 && diff.y == 0)
-        {
-            // Mouvement horizontal
-            direction = new Vector2Int((int)Mathf.Sign(diff.x), 0);
-            distance = Mathf.Abs(diff.x);
-            return true;
-        }
-        else if (Mathf.Abs(diff.y) > 0 && diff.x == 0)
-        {
-            // Mouvement vertical
-            direction = new Vector2Int(0, (int)Mathf.Sign(diff.y));
-            distance = Mathf.Abs(diff.y);
-            return true;
-        }
-
-        direction = Vector2Int.zero;
-        distance = 0;
-        return false;
+        // Ligne, colonne ou diagonale (grille en 8 directions)
+        return GridGeometry.TryGetLine(sourcePos, targetPos, out direction, out distance);
     }
 
     /// <summary>
@@ -600,7 +582,8 @@ public class CardData : ScriptableObject
                 return tilePos == epicenter;
 
             case CardAreaEffect.Circle:
-                return Vector2.Distance(epicenter, tilePos) <= aoeRadius;
+                // 8 directions : un « cercle » de rayon r est un carré de (2r+1) cases de côté
+                return GridGeometry.Distance(epicenter, tilePos) <= aoeRadius;
 
             case CardAreaEffect.Cross:
             {
@@ -640,8 +623,7 @@ public class CardData : ScriptableObject
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
                 Vector2Int toTile = tilePos - sourcePos;
-                float distance = toTile.magnitude;
-                if (distance > aoeRadius) return false;
+                if (GridGeometry.Distance(sourcePos, tilePos) > aoeRadius) return false;
 
                 float angle = Vector2.Angle(dir, toTile);
                 return angle <= 45f; // ouverture totale de 90°
@@ -658,15 +640,8 @@ public class CardData : ScriptableObject
     /// <summary>
     /// Direction (8 cases possibles, diagonales incluses) la plus proche entre deux positions.
     /// </summary>
-    private static Vector2Int GetSnappedDirection(Vector2Int from, Vector2Int to)
-    {
-        Vector2Int diff = to - from;
-        if (diff == Vector2Int.zero) return Vector2Int.zero;
-
-        int dx = diff.x == 0 ? 0 : (diff.x > 0 ? 1 : -1);
-        int dy = diff.y == 0 ? 0 : (diff.y > 0 ? 1 : -1);
-        return new Vector2Int(dx, dy);
-    }
+    private static Vector2Int GetSnappedDirection(Vector2Int from, Vector2Int to) =>
+        GridGeometry.SnapDirection(from, to);
 
     /// <summary>
     /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active avec un ennemi à
@@ -690,7 +665,7 @@ public class CardData : ScriptableObject
         bool IsValidEchoTarget(Unit unit) =>
             unit != null && unit != source && unit != summon && !IsDead(unit)
             && unit.GetFaction() != summon.GetFaction() // uniquement les ennemis de l'invocation
-            && SummonEchoDistance(summonPos, unit.GetCurrentGridPos()) <= targetRange;
+            && GridGeometry.Distance(summonPos, unit.GetCurrentGridPos()) <= targetRange;
 
         Unit echoTarget = IsValidEchoTarget(sourceTarget) ? sourceTarget : null;
 
@@ -701,7 +676,7 @@ public class CardData : ScriptableObject
             {
                 if (!IsValidEchoTarget(unit)) continue;
 
-                int dist = SummonEchoDistance(summonPos, unit.GetCurrentGridPos());
+                int dist = GridGeometry.Distance(summonPos, unit.GetCurrentGridPos());
                 if (dist < bestDist)
                 {
                     bestDist = dist;
@@ -716,13 +691,6 @@ public class CardData : ScriptableObject
         echoTarget.TakeDamageFrom(echoDamage, summon);
         GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
     }
-
-    /// <summary>
-    /// Distance de portée de l'écho : 8 directions, une diagonale vaut 1 case (distance de
-    /// Tchebychev). Propre au Miroir fraternel, le reste de la grille reste en 4 directions.
-    /// </summary>
-    public static int SummonEchoDistance(Vector2Int a, Vector2Int b) =>
-        Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
 
     private static bool IsDead(Unit unit)
     {

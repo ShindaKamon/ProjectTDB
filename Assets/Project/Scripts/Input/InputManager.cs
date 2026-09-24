@@ -103,15 +103,15 @@ public class InputManager : MonoBehaviour
                     Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
                     Vector2Int targetPos = hoveredUnit.GetCurrentGridPos();
 
-                    // Pour les cartes de charge, vérifie la ligne droite et la portée Manhattan
+                    // Pour les cartes de charge, vérifie la ligne droite (8 directions) et la portée
                     if (currentSelectedCard.isChargeCard)
                     {
                         Tile unitTile = Services.Grid.GetTileAtPosition(targetPos);
-                        int manhattanDist = Mathf.RoundToInt(Mathf.Abs(targetPos.x - sourcePos.x) + Mathf.Abs(targetPos.y - sourcePos.y));
+                        int lineDist = GridGeometry.Distance(sourcePos, targetPos);
 
                         // Valide si en ligne droite, dans la portée, et c'est un ennemi
                         if (currentSelectedCard.IsValidChargeTarget(unitTile, activeUnit) &&
-                            manhattanDist <= currentSelectedCard.targetRange &&
+                            lineDist <= currentSelectedCard.targetRange &&
                             hoveredUnit.GetFaction() != activeUnit.GetFaction())
                         {
                             hoveredPos = targetPos;
@@ -472,16 +472,16 @@ public class InputManager : MonoBehaviour
                 return;
             }
 
-            // Vérifie la portée en distance Manhattan (pour les cartes en ligne)
-            int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(enemyPos.x - sourcePos.x) + Mathf.Abs(enemyPos.y - sourcePos.y));
-            if (manhattanDistance > selectedCard.targetRange)
+            // Vérifie la portée (8 directions, voir GridGeometry)
+            int lineDistance = GridGeometry.Distance(sourcePos, enemyPos);
+            if (lineDistance > selectedCard.targetRange)
             {
-                GameLog.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {manhattanDistance}, portée: {selectedCard.targetRange})");
+                GameLog.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {lineDistance}, portée: {selectedCard.targetRange})");
                 _handUIController.DeselectCard();
                 return;
             }
 
-            GameLog.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {manhattanDistance}");
+            GameLog.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {lineDistance}");
             // Joue la carte avec la position de l'ennemi comme cible
             StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, enemyPos));
             return;
@@ -492,25 +492,12 @@ public class InputManager : MonoBehaviour
         {
             Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
 
-            // Pour les cartes de charge sur tuile vide, utilise la distance Manhattan
-            if (selectedCard.isChargeCard)
+            // Portée en 8 directions (voir GridGeometry), charge comprise
+            if (GridGeometry.Distance(sourcePos, targetTilePos) > selectedCard.targetRange)
             {
-                int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(targetTilePos.x - sourcePos.x) + Mathf.Abs(targetTilePos.y - sourcePos.y));
-                if (manhattanDistance > selectedCard.targetRange)
-                {
-                    _handUIController.DeselectCard();
-                    return;
-                }
-            }
-            else
-            {
-                float distance = Vector2.Distance(sourcePos, targetTilePos);
-                if (distance > selectedCard.targetRange)
-                {
-                    // Hors de portée, désélectionne la carte
-                    _handUIController.DeselectCard();
-                    return;
-                }
+                // Hors de portée, désélectionne la carte
+                _handUIController.DeselectCard();
+                return;
             }
         }
 

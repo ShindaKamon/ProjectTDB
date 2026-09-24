@@ -80,11 +80,11 @@ public static class GameActionValidator
         if (target == null)
             return ValidationResult.Fail($"{card.cardName} nécessite une cible");
 
-        // Validation de la portée
-        float distance = Vector2.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
+        // Validation de la portée (8 directions, voir GridGeometry)
+        int distance = GridGeometry.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
         if (distance > card.targetRange)
         {
-            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance:F1}/{card.targetRange}");
+            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");
         }
 
         // Validation du type de cible (allié/ennemi)
@@ -155,31 +155,17 @@ public static class GameActionValidator
 
         Vector2Int sourcePos = source.GetCurrentGridPos();
 
-        // Pour les cartes de charge, utilise la distance Manhattan et vérifie la ligne droite
-        if (card.isChargeCard)
+        // Charge : ligne droite uniquement (ligne, colonne ou diagonale)
+        if (card.isChargeCard && !GridGeometry.TryGetLine(sourcePos, targetTilePos, out _, out _))
         {
-            // Vérifie que la cible est en ligne droite
-            bool isInLine = (sourcePos.x == targetTilePos.x || sourcePos.y == targetTilePos.y);
-            if (!isInLine)
-            {
-                return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
-            }
-
-            // Distance Manhattan pour les cartes en ligne
-            int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(targetTilePos.x - sourcePos.x) + Mathf.Abs(targetTilePos.y - sourcePos.y));
-            if (manhattanDistance > card.targetRange)
-            {
-                return ValidationResult.Fail($"{card.cardName} hors de portée : {manhattanDistance}/{card.targetRange}");
-            }
+            return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
         }
-        else
+
+        // Portée en 8 directions (voir GridGeometry)
+        int distance = GridGeometry.Distance(sourcePos, targetTilePos);
+        if (distance > card.targetRange)
         {
-            // Validation de la portée classique (distance euclidienne)
-            float distance = Vector2.Distance(sourcePos, targetTilePos);
-            if (distance > card.targetRange)
-            {
-                return ValidationResult.Fail($"{card.cardName} hors de portée : {distance:F1}/{card.targetRange}");
-            }
+            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");
         }
 
         return ValidationResult.Success();
@@ -214,8 +200,8 @@ public static class GameActionValidator
     }
 
     /// <summary>
-    /// Étape 2 : la case d'arrivée est-elle valide ? Distance en cases (4 directions, comme les
-    /// déplacements) entre 1 et la portée de la carte, mesurée depuis l'invocation. L'existence et
+    /// Étape 2 : la case d'arrivée est-elle valide ? Distance en cases (8 directions, comme toute
+    /// la grille) entre 1 et la portée de la carte, mesurée depuis l'invocation. L'existence et
     /// la disponibilité de la case sont fournies par l'appelant (la grille), pour garder la règle testable.
     /// </summary>
     public static ValidationResult CanMoveSummonTo(CardData card, SummonUnit summon, Vector2Int destination, bool destinationIsFree)
@@ -224,7 +210,7 @@ public static class GameActionValidator
             return ValidationResult.Fail("Carte ou invocation manquante");
 
         Vector2Int from = summon.GetCurrentGridPos();
-        int distance = Mathf.Abs(destination.x - from.x) + Mathf.Abs(destination.y - from.y);
+        int distance = GridGeometry.Distance(from, destination);
 
         if (distance < 1)
             return ValidationResult.Fail($"{summon.name} est déjà sur cette case");

@@ -44,24 +44,20 @@ public class AlpinisteUnit : Champion, IActionPointsUser, IChargeLandingReactor,
 
     /// <summary>
     /// Appelé par CardData juste après la fin d'un déplacement de charge (Piolet d'ascension).
-    /// Vérifie les 4 cases adjacentes (cardinales) pour déterminer tank ou assassin.
+    /// Vérifie les 8 cases adjacentes (diagonales incluses) pour déterminer tank ou assassin.
     /// </summary>
     public void OnChargeLanded()
     {
         if (!Services.IsGridServiceAvailable()) return;
 
         Vector2Int pos = GetCurrentGridPos();
-        Vector2Int[] neighbors =
-        {
-            pos + Vector2Int.up, pos + Vector2Int.down, pos + Vector2Int.left, pos + Vector2Int.right
-        };
 
         bool adjacentAlly = false;
         bool adjacentEnemy = false;
 
-        foreach (var n in neighbors)
+        foreach (var offset in GridGeometry.Directions8)
         {
-            Unit unit = Services.Grid.GetUnitAtGridPos(n);
+            Unit unit = Services.Grid.GetUnitAtGridPos(pos + offset);
             if (unit == null || unit == this) continue;
 
             if (unit.GetFaction() == GetFaction())

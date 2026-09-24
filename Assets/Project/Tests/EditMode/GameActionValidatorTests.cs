@@ -471,10 +471,37 @@ namespace ProjectTDB.Tests
             card.isChargeCard = true;
             var source = NewUnit<Unit>(gridPos: Vector2Int.zero);
 
-            var result = GameActionValidator.CanTargetTile(card, source, new Vector2Int(2, 2));
+            // (2,1) : ni ligne, ni colonne, ni diagonale
+            var result = GameActionValidator.CanTargetTile(card, source, new Vector2Int(2, 1));
 
             Assert.IsFalse(result.IsValid);
             StringAssert.Contains("ligne droite", result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanTargetTile_ChargeCard_Diagonal_Succeeds()
+        {
+            var card = NewCard();
+            card.targetType = CardTargetType.AnyTile;
+            card.targetRange = 3;
+            card.isChargeCard = true;
+            var source = NewUnit<Unit>(gridPos: Vector2Int.zero);
+
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, source, new Vector2Int(3, 3)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(4, 4)).IsValid);
+        }
+
+        [Test]
+        public void CanTargetTile_DiagonalCountsAsOneTile()
+        {
+            var card = NewCard();
+            card.targetType = CardTargetType.AnyTile;
+            card.targetRange = 2;
+            var source = NewUnit<Unit>(gridPos: Vector2Int.zero);
+
+            // (2,2) : 2 cases en 8 directions (c'était 4 en Manhattan, 2,8 en euclidien)
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, source, new Vector2Int(2, 2)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(3, 1)).IsValid);
         }
 
         [Test]
@@ -894,12 +921,12 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void CanMoveSummonTo_DiagonalCountsAsTwo()
+        public void CanMoveSummonTo_DiagonalCountsAsOne()
         {
             var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
 
-            Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(2), summon, new Vector2Int(6, 6), true).IsValid);
-            Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(1), summon, new Vector2Int(6, 6), true).IsValid);
+            Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(1), summon, new Vector2Int(6, 6), true).IsValid);
+            Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(1), summon, new Vector2Int(7, 6), true).IsValid);
         }
 
         [Test]

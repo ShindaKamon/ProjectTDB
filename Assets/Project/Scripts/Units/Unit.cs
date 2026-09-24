@@ -242,14 +242,12 @@ public class Unit : MonoBehaviour, IMarkable
             direction.y = 0; // On ignore la hauteur pour la rotation
 
             // Applique la rotation seulement si on a une direction horizontale significative.
-            // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp,
-            // donc pas de passage transitoire par un angle en diagonale pendant les virages.
+            // Snap immédiat sur la plus proche des 8 directions de la grille : pas de Slerp, donc pas
+            // d'angle transitoire pendant les virages (les pas en diagonale font face à la diagonale).
             if (direction.sqrMagnitude > 0.001f)
             {
-                Vector3 cardinalDirection = Mathf.Abs(direction.x) > Mathf.Abs(direction.z)
-                    ? new Vector3(Mathf.Sign(direction.x), 0, 0)
-                    : new Vector3(0, 0, Mathf.Sign(direction.z));
-                transform.rotation = Quaternion.LookRotation(cardinalDirection);
+                Vector2Int snapped = GridGeometry.SnapDirection(new Vector2(direction.x, direction.z));
+                transform.rotation = Quaternion.LookRotation(new Vector3(snapped.x, 0, snapped.y));
             }
 
             transform.position = Vector3.MoveTowards(transform.position, _targetWorldPosition, _moveSpeed * Time.deltaTime);
@@ -750,20 +748,9 @@ public class Unit : MonoBehaviour, IMarkable
         Vector2Int currentPos = GetCurrentGridPos();
         Vector2Int finalPos = currentPos;
 
-        // Normalise la direction en mouvement de grille (1 case à la fois)
-        Vector2Int stepDirection = new Vector2Int(
-            Mathf.RoundToInt(direction.x),
-            Mathf.RoundToInt(direction.y)
-        );
-
-        // Si la direction est diagonale, on prend la composante la plus forte
-        if (stepDirection.x != 0 && stepDirection.y != 0)
-        {
-            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
-                stepDirection.y = 0;
-            else
-                stepDirection.x = 0;
-        }
+        // Direction de grille la plus proche (8 directions, diagonales incluses), 1 case à la fois
+        Vector2Int stepDirection = GridGeometry.SnapDirection(direction);
+        if (stepDirection == Vector2Int.zero) return currentPos;
 
         // Repousse case par case
         for (int i = 0; i < distance; i++)

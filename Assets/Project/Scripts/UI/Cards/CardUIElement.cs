@@ -11,6 +11,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     [SerializeField] private TextMeshProUGUI _cardNameText;
     [SerializeField] private TextMeshProUGUI _cardDescriptionText;
     [SerializeField] private TextMeshProUGUI _cardCostText;
+    [SerializeField] private Image _costDisk; // Pastille du coût, couleur de l'émotion (Signature : blanc)
     [SerializeField] private Image _cardIllustrationImage; // Optionnel
     [SerializeField] private GameObject _selectionHighlight; // Surlignage visuel pour la sélection
     [SerializeField] private CanvasGroup _canvasGroup; // Pour griser la carte
@@ -41,6 +42,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     private bool _isSelected = false;
 
     private Color _originalCostTextColor = Color.black;
+    private Color _costDiskColor = Color.white;
     private Vector3 _targetScale;
     private Quaternion _targetRotation;
     private Color _targetTint;
@@ -112,10 +114,14 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
             if (_cardNameText != null) _cardNameText.text = _cardData.cardName;
             if (_cardDescriptionText != null) _cardDescriptionText.text = _cardData.description;
 
-            // Afficher le coût en PA
+            // Afficher le coût en PA, sur une pastille à la couleur de l'émotion (comme l'écran de deck)
+            _costDiskColor = CodexCardVisual.CostColor(_cardData);
+            if (_costDisk != null) _costDisk.color = _costDiskColor;
             if (_cardCostText != null)
             {
                 _cardCostText.text = _cardData.costPA.ToString();
+                _originalCostTextColor = CodexCardVisual.ReadableTextOn(_costDiskColor);
+                _cardCostText.color = _originalCostTextColor;
             }
 
             // Afficher le background (A MODIFIER ENSUITE)
@@ -209,10 +215,11 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
             _canvasGroup.interactable = affordable; // Non cliquable si pas assez de PA
         }
 
-        // Change la couleur du texte de coût pour indiquer qu'on ne peut pas jouer la carte
-        if (_cardCostText != null)
+        // Pastille du coût ternie si on ne peut pas jouer la carte (un texte rouge serait illisible
+        // sur la pastille rouge de la Colère)
+        if (_costDisk != null)
         {
-            _cardCostText.color = affordable ? _originalCostTextColor : Color.red;
+            _costDisk.color = affordable ? _costDiskColor : Color.Lerp(_costDiskColor, Color.gray, 0.7f);
         }
     }
 

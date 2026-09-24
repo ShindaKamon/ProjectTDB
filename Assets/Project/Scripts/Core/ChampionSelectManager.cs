@@ -174,7 +174,7 @@ public class ChampionSelectManager : MonoBehaviour
 
     /// <summary>
     /// Appelé par le bouton "Choisir ce champion" : valide le champion surligné,
-    /// charge ses decks et fait avancer le flux vers l'écran Liste des Decks.
+    /// charge ses decks et fait avancer le flux vers l'écran Choix du deck.
     /// </summary>
     private void ConfirmChampionSelection()
     {
@@ -196,7 +196,7 @@ public class ChampionSelectManager : MonoBehaviour
             _startButton.interactable = true;
 
         if (_flowController != null)
-            _flowController.ShowScreen(ChampionSelectFlowController.Screen.DeckManager);
+            _flowController.ShowScreen(ChampionSelectFlowController.Screen.DeckSelect);
     }
 
     private void UpdateChampionButtonsVisual(Button selectedButton)

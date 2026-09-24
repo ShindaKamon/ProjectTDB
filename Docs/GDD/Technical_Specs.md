@@ -123,7 +123,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 ### 5. Émotions
 
-> ⚠️ Il **n'y a pas** de `EmotionSystem` dans le code (contrairement aux anciennes versions de ce document). Les émotions existent comme **identité des cartes** (`EmotionType` sur `CardData`) et filtrent le pool Standard des decks (1 à 2 émotions par deck). La **jauge d'Éveil** (une jauge par émotion, paliers de 2 points) est **à implémenter**.
+> ⚠️ Il **n'y a pas** de `EmotionSystem` dans le code (contrairement aux anciennes versions de ce document). Les émotions existent comme **identité des cartes** (`EmotionType` sur `CardData`) ; chaque deck a 1 ou 2 couleurs (choisies à sa création) qui filtrent le pool du gestionnaire (`DeckRules.DeckColors`). La **jauge d'Éveil** (une jauge par émotion, paliers de 2 points) est **à implémenter**.
 
 ---
 
@@ -137,13 +137,14 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **Cartes :** 49 cartes Standard (17 Colère, 17 Peur, 15 Joie), mêmes noms que la bibliothèque de l'Excel ; Signatures des 3 champions (les anciens assets « Family » ont été supprimés).
 
-**Deck :** 18 cartes (2 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) ; 1 à 2 émotions par deck.
+**Deck :** 18 cartes (2 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) . Règles (`DeckRules`) : cartes des couleurs du deck uniquement (1 ou 2, choisies à sa création ; le deck de base prend celles de ses cartes), 4 exemplaires max par carte, les 2 Signatures du champion obligatoires (1 exemplaire chacune) ; les Signatures des autres champions sont interdites ; un deck existant non conforme est corrigé à son chargement (cartes hors couleurs et exemplaires en trop retirés, Signatures ajoutées).
 
 **Combat :** grille carrée 10×10, distance de Manhattan ; un tour par unité ; main de départ 5, max 5, 1 carte piochée par tour ; 1 ennemi (UnderBed, 500 PV, cartes « Attaque Range » et « Heal Self »).
 
 **Écrans construits :**
-- Sélection de champion (`Screen_ChampionSelect`) : illustration plein écran (`ChampionData.fullBodyArt`, art provisoire), rail de champions, carte de stats en overlay.
-- Écran deck unifié (`Screen_DeckManager`, style MTG Arena) : onglets de loadout, pool filtrable (~73 % de la largeur) dont les cartes reprennent le design du codex émotionnel (`CardPoolItemUI` + `CodexCardVisual` : rond de coût à la couleur de l'émotion, schéma de portée 9×9, pastilles d'effets avec les icônes du codex dans `Textures/UI/CodexIcons`, description ; exemple et valeurs Excel non repris), liste du deck en colonne façon MTG Arena (une ligne par carte : couleur de l'émotion, coût PA, nom, ×N ; clic = retirer un exemplaire ; prefab `DeckListRow` généré par `UISetupWizard`), courbe de coût en PA, pas d'illustration du personnage, bouton « Lancer le combat » (tolère un deck incomplet), sauvegarde automatique. Variante mobile (onglets Pool/Deck) : pas encore faite.
+- Sélection de champion (`Screen_ChampionSelect`) : roster à gauche, illustration au centre (`ChampionData.fullBodyArt`, art provisoire), panneau de droite (`ChampionStatsUI`) avec nom, titre, histoire (`ChampionData.description`, reprise du trauma de `CHAMPIONS_CONCEPTS.md`), statistiques et bouton « Choisir ce champion ».
+- Page Choix du deck (`Screen_DeckSelect`) : tuiles des decks du champion (`LoadoutTabsUI` + `DeckSlotUI` : bande et noms des couleurs du deck, nombre de cartes), clic = sélectionner, re-clic ou « Modifier » = ouvrir, « Renommer » / « Supprimer » (indisponibles pour le deck de base), « + » = nouveau deck ; « Commencer » lance le combat avec le deck sélectionné ; Retour vers la sélection du champion.
+- Gestionnaire de deck (`Screen_DeckManager`, style MTG Arena) : plus d'onglets (le choix du deck se fait sur la page précédente), sert uniquement à modifier le deck : Retour en bas à gauche vers le choix du deck (la dernière modification est sauvegardée en quittant l'écran), pas de bouton Commencer, pool filtrable (~73 % de la largeur) dont les cartes reprennent le design du codex émotionnel (`CardPoolItemUI` + `CodexCardVisual` : rond de coût à la couleur de l'émotion, schéma de portée 9×9, pastilles d'effets avec les icônes du codex dans `Textures/UI/CodexIcons`, description ; exemple et valeurs Excel non repris), liste du deck en colonne façon MTG Arena (une ligne par carte : couleur de l'émotion, coût PA, nom, ×N ; clic = retirer un exemplaire ; prefab `DeckListRow` généré par `UISetupWizard`), courbe de coût en PA, pas d'illustration du personnage, sauvegarde automatique. Le combat se lance depuis la page Choix du deck (tolère un deck incomplet). Variante mobile (onglets Pool/Deck) : pas encore faite.
 - HUD de combat (`CombatScene`) : stats du personnage en haut à gauche sous l'indicateur de tour, carte ennemie en haut à droite.
 
 **À savoir :**

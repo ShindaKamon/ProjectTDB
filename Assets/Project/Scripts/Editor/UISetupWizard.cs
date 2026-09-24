@@ -84,8 +84,8 @@ public class UISetupWizard : EditorWindow
     }
 
     /// <summary>
-    /// Cree le prefab DeckListRow : une ligne de la liste du deck (facon MTG Arena) avec bande
-    /// de couleur de l'emotion, cout PA, nom et quantite.
+    /// Cree le prefab DeckListRow : une ligne de la liste du deck (facon MTG Arena) avec cout PA
+    /// dans un rond a la couleur de l'emotion (blanc pour une Signature), nom et quantite.
     /// </summary>
     [MenuItem("Tools/UI/Prefabs/DeckListRow")]
     public static void CreateDeckListRowPrefab()
@@ -107,23 +107,17 @@ public class UISetupWizard : EditorWindow
         CanvasGroup canvasGroup = root.AddComponent<CanvasGroup>();
         DeckListRowUI rowUI = root.AddComponent<DeckListRowUI>();
 
-        // Bande de couleur de l'emotion (bord gauche)
-        GameObject strip = CreateChild(root, "EmotionStrip");
-        Image stripImg = strip.AddComponent<Image>();
-        stripImg.color = Color.red;
-        stripImg.raycastTarget = false;
-        SetAnchors(strip, new Vector2(0, 0), new Vector2(0, 1), Vector2.zero, new Vector2(6, 0));
-
-        // Badge de cout PA
+        // Rond de cout PA (couleur de l'emotion, appliquee par DeckListRowUI)
         GameObject costBadge = CreateChild(root, "CostBadge");
         Image costBadgeImg = costBadge.AddComponent<Image>();
+        costBadgeImg.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
         costBadgeImg.color = new Color(0.9f, 0.7f, 0.2f);
         costBadgeImg.raycastTarget = false;
         RectTransform costRT = costBadge.GetComponent<RectTransform>();
         costRT.anchorMin = new Vector2(0, 0.5f);
         costRT.anchorMax = new Vector2(0, 0.5f);
         costRT.pivot = new Vector2(0, 0.5f);
-        costRT.anchoredPosition = new Vector2(12, 0);
+        costRT.anchoredPosition = new Vector2(8, 0);
         costRT.sizeDelta = new Vector2(24, 24);
 
         GameObject costText = CreateChild(costBadge, "CostText");
@@ -146,7 +140,7 @@ public class UISetupWizard : EditorWindow
         nameTMP.textWrappingMode = TextWrappingModes.NoWrap;
         nameTMP.overflowMode = TextOverflowModes.Ellipsis;
         nameTMP.raycastTarget = false;
-        SetAnchors(nameText, Vector2.zero, Vector2.one, new Vector2(44, 0), new Vector2(-44, 0));
+        SetAnchors(nameText, Vector2.zero, Vector2.one, new Vector2(40, 0), new Vector2(-44, 0));
 
         // Quantite (bord droit)
         GameObject countText = CreateChild(root, "CountText");
@@ -162,7 +156,6 @@ public class UISetupWizard : EditorWindow
         // Assigner les references au script
         SerializedObject so = new SerializedObject(rowUI);
         so.FindProperty("_background").objectReferenceValue = rootImage;
-        so.FindProperty("_emotionStrip").objectReferenceValue = stripImg;
         so.FindProperty("_costBadge").objectReferenceValue = costBadgeImg;
         so.FindProperty("_costText").objectReferenceValue = costTMP;
         so.FindProperty("_nameText").objectReferenceValue = nameTMP;
@@ -179,81 +172,61 @@ public class UISetupWizard : EditorWindow
     }
 
     /// <summary>
-    /// Cree le prefab DeckSlot pour la liste des decks
+    /// Cree le prefab DeckSlot : tuile d'un deck sur la page Choix du deck (palette du codex) avec
+    /// bande aux couleurs du deck, nom, couleurs ecrites dans leur teinte et nombre de cartes.
     /// </summary>
     [MenuItem("Tools/UI/Prefabs/DeckSlot")]
     public static void CreateDeckSlotPrefab()
     {
         EnsureFolderExists(PrefabPath);
 
-        // Root
+        // Root : fond et cadre (couleur du cadre geree par DeckSlotUI : normal / survol / selection)
         GameObject root = new GameObject("DeckSlot");
         RectTransform rootRT = root.AddComponent<RectTransform>();
-        rootRT.sizeDelta = new Vector2(120, 80);
+        rootRT.sizeDelta = new Vector2(260, 120);
 
-        Image rootImage = root.AddComponent<Image>();
-        rootImage.color = new Color(0.8f, 0.2f, 0.2f);
+        Image bg = root.AddComponent<Image>();
+        bg.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        bg.type = Image.Type.Sliced;
+        bg.color = CodexCardVisual.CardBackground;
+
+        Outline border = root.AddComponent<Outline>();
+        border.effectColor = CodexCardVisual.CardBorder;
+        border.effectDistance = new Vector2(1.5f, -1.5f);
 
         DeckSlotUI slotUI = root.AddComponent<DeckSlotUI>();
 
-        // Background 2 (gradient/seconde couleur)
-        GameObject bg2 = CreateChild(root, "Background2");
-        Image bg2Img = bg2.AddComponent<Image>();
-        bg2Img.color = new Color(0.6f, 0.15f, 0.15f);
-        SetAnchors(bg2, new Vector2(0.5f, 0), new Vector2(1, 1), Vector2.zero, Vector2.zero);
+        // Bande du haut : un segment par couleur du deck (crees par DeckSlotUI)
+        GameObject strip = CreateChild(root, "ColorStrip");
+        SetAnchors(strip, new Vector2(0, 1), new Vector2(1, 1), new Vector2(4, -12), new Vector2(-4, -4));
+        HorizontalLayoutGroup stripLayout = strip.AddComponent<HorizontalLayoutGroup>();
+        stripLayout.spacing = 2;
+        stripLayout.childControlWidth = stripLayout.childControlHeight = true;
+        stripLayout.childForceExpandWidth = stripLayout.childForceExpandHeight = true;
 
-        // Selection Border
-        GameObject border = CreateChild(root, "SelectionBorder");
-        Image borderImg = border.AddComponent<Image>();
-        borderImg.color = new Color(0.3f, 0.3f, 0.3f);
-        borderImg.type = Image.Type.Sliced;
-        SetAnchors(border, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        Outline borderOutline = border.AddComponent<Outline>();
-        borderOutline.effectColor = new Color(0.3f, 0.3f, 0.3f);
-        borderOutline.effectDistance = new Vector2(3, -3);
+        TextMeshProUGUI nameTMP = AddText(root, "DeckNameText", "Nom du deck", 22, FontStyles.Bold, TextAlignmentOptions.Left, CodexCardVisual.Ink);
+        nameTMP.overflowMode = TextOverflowModes.Ellipsis;
+        nameTMP.textWrappingMode = TextWrappingModes.NoWrap;
+        SetAnchors(nameTMP.gameObject, new Vector2(0, 1), new Vector2(1, 1), new Vector2(16, -50), new Vector2(-16, -18));
 
-        // Default Icon (pour le deck de base)
-        GameObject icon = CreateChild(root, "DefaultIcon");
-        Image iconImg = icon.AddComponent<Image>();
-        iconImg.color = new Color(1f, 0.84f, 0f); // Or
-        RectTransform iconRT = icon.GetComponent<RectTransform>();
-        iconRT.anchorMin = new Vector2(1, 1);
-        iconRT.anchorMax = new Vector2(1, 1);
-        iconRT.pivot = new Vector2(1, 1);
-        iconRT.anchoredPosition = new Vector2(-5, -5);
-        iconRT.sizeDelta = new Vector2(16, 16);
-        icon.SetActive(false);
+        TextMeshProUGUI colorsTMP = AddText(root, "ColorsText", "Colère  ·  Joie", 16, FontStyles.Bold, TextAlignmentOptions.Left, CodexCardVisual.Ink);
+        colorsTMP.textWrappingMode = TextWrappingModes.NoWrap;
+        SetAnchors(colorsTMP.gameObject, new Vector2(0, 1), new Vector2(1, 1), new Vector2(16, -78), new Vector2(-16, -52));
 
-        // Deck Name Text
-        GameObject nameText = CreateChild(root, "DeckNameText");
-        TextMeshProUGUI nameTMP = nameText.AddComponent<TextMeshProUGUI>();
-        nameTMP.text = "Nom du Deck";
-        nameTMP.fontSize = 14;
-        nameTMP.fontStyle = FontStyles.Bold;
-        nameTMP.alignment = TextAlignmentOptions.Center;
-        nameTMP.color = Color.white;
-        SetAnchors(nameText, new Vector2(0.05f, 0.4f), new Vector2(0.95f, 0.9f), Vector2.zero, Vector2.zero);
+        TextMeshProUGUI countTMP = AddText(root, "CardCountText", "18 cartes", 14, FontStyles.Normal, TextAlignmentOptions.Left, CodexCardVisual.InkDim);
+        SetAnchors(countTMP.gameObject, new Vector2(0, 0), new Vector2(1, 0), new Vector2(16, 10), new Vector2(-16, 34));
 
-        // Card Count Text
-        GameObject countText = CreateChild(root, "CardCountText");
-        TextMeshProUGUI countTMP = countText.AddComponent<TextMeshProUGUI>();
-        countTMP.text = "10 cartes";
-        countTMP.fontSize = 11;
-        countTMP.alignment = TextAlignmentOptions.Center;
-        countTMP.color = new Color(0.8f, 0.8f, 0.8f);
-        SetAnchors(countText, new Vector2(0.05f, 0.1f), new Vector2(0.95f, 0.4f), Vector2.zero, Vector2.zero);
-
-        // Assigner les references
+        // Assigner les references au script
         SerializedObject so = new SerializedObject(slotUI);
-        so.FindProperty("_backgroundImage").objectReferenceValue = rootImage;
-        so.FindProperty("_backgroundImage2").objectReferenceValue = bg2Img;
-        so.FindProperty("_selectionBorder").objectReferenceValue = borderImg;
-        so.FindProperty("_defaultIcon").objectReferenceValue = iconImg;
+        so.FindProperty("_background").objectReferenceValue = bg;
+        so.FindProperty("_border").objectReferenceValue = border;
+        so.FindProperty("_colorStrip").objectReferenceValue = strip.transform;
         so.FindProperty("_deckNameText").objectReferenceValue = nameTMP;
+        so.FindProperty("_colorsText").objectReferenceValue = colorsTMP;
         so.FindProperty("_cardCountText").objectReferenceValue = countTMP;
         so.ApplyModifiedProperties();
 
-        // Sauvegarder
+        // Sauvegarder le prefab (meme chemin : les references de la scene sont conservees)
         string path = $"{PrefabPath}/DeckSlot.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         DestroyImmediate(root);

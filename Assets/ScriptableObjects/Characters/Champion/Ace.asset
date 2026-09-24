@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectTDB::ChampionData
   championName: Raze
   title: Le Tricheur
-  description: A tout perdu sur une main legendaire ; il ne laisse plus jamais le
-    hasard decider.
+  description: "Il a tout mis\xE9 sur une main l\xE9gendaire et tout perdu en un
+    instant : fortune, r\xE9putation, confiance de ses proches. Depuis, il ne laisse
+    plus jamais le hasard d\xE9cider : il triche, compte les cartes, calcule chaque
+    probabilit\xE9."
   portrait: {fileID: 0}
   fullBodyArt: {fileID: 21300000, guid: 71ea68e8b3c638148b818d9a40848ae6, type: 3}
   prefab: {fileID: 5440214431298301374, guid: 557eea8d6f65ac94bac218fef4e68914, type: 3}

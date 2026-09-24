@@ -17,10 +17,10 @@ public class LoadoutTabsUI : MonoBehaviour
     [SerializeField] private GameObject _tabPrefab;
     [SerializeField] private Button _addTabButton;
 
-    [Header("Menu contextuel (onglet actif)")]
-    [SerializeField] private GameObject _contextMenu;
-    [SerializeField] private Button _contextMenuRenameButton;
-    [SerializeField] private Button _contextMenuDeleteButton;
+    [Header("Actions sur le deck sélectionné (boutons sous la liste)")]
+    [SerializeField] private Button _openDeckButton;      // « Modifier » : ouvre le gestionnaire de deck
+    [SerializeField] private Button _renameDeckButton;
+    [SerializeField] private Button _deleteDeckButton;    // indisponible pour le deck de base
 
     [Header("Popups")]
     [SerializeField] private CreateDeckPopup _createDeckPopup;
@@ -41,20 +41,28 @@ public class LoadoutTabsUI : MonoBehaviour
     /// <summary>Émis à chaque changement de deck actif ou de contenu du deck actif.</summary>
     public System.Action<List<CardData>> OnDeckSelected;
 
+    /// <summary>
+    /// Émis quand le joueur ouvre un deck (clic sur un deck, ou deck tout juste créé) : l'écran
+    /// de choix du deck passe alors au gestionnaire de deck.
+    /// </summary>
+    public System.Action OnDeckOpened;
+
     void Awake()
     {
         if (_addTabButton != null)
             _addTabButton.onClick.AddListener(OnAddTabClicked);
 
-        if (_contextMenuRenameButton != null)
-            _contextMenuRenameButton.onClick.AddListener(OnContextRenameClicked);
+        if (_openDeckButton != null)
+            _openDeckButton.onClick.AddListener(OpenSelectedDeck);
 
-        if (_contextMenuDeleteButton != null)
-            _contextMenuDeleteButton.onClick.AddListener(OnContextDeleteClicked);
+        if (_renameDeckButton != null)
+            _renameDeckButton.onClick.AddListener(RenameSelectedDeck);
+
+        if (_deleteDeckButton != null)
+            _deleteDeckButton.onClick.AddListener(DeleteSelectedDeck);
 
         SetupPopupCallbacks();
         ConfigureLayoutGroup();
-        HideContextMenu();
     }
 
     /// <summary>
@@ -72,8 +80,8 @@ public class LoadoutTabsUI : MonoBehaviour
         horizontalLayout.childControlHeight = true;
         horizontalLayout.childForceExpandWidth = false;
         horizontalLayout.childForceExpandHeight = false;
-        horizontalLayout.spacing = 8f;
-        horizontalLayout.childAlignment = TextAnchor.MiddleLeft;
+        horizontalLayout.spacing = 20f;
+        horizontalLayout.childAlignment = TextAnchor.MiddleCenter; // decks centrés sur la page Choix du deck
 
         ConfigureAddTabButton();
     }
@@ -89,10 +97,10 @@ public class LoadoutTabsUI : MonoBehaviour
         if (layoutElement == null)
             layoutElement = _addTabButton.gameObject.AddComponent<LayoutElement>();
 
-        layoutElement.minWidth = 44f;
-        layoutElement.minHeight = 44f;
-        layoutElement.preferredWidth = 44f;
-        layoutElement.preferredHeight = 44f;
+        layoutElement.minWidth = 120f;
+        layoutElement.minHeight = 120f;
+        layoutElement.preferredWidth = 120f;
+        layoutElement.preferredHeight = 120f;
 
         _addTabButton.transform.SetAsLastSibling();
     }
@@ -128,7 +136,7 @@ public class LoadoutTabsUI : MonoBehaviour
         RefreshTabs();
         LoadActiveDeckIntoEditor();
         UpdateAddTabButtonState();
-        HideContextMenu();
+        UpdateActionButtons();
     }
 
     private void RefreshTabs()
@@ -152,10 +160,9 @@ public class LoadoutTabsUI : MonoBehaviour
             {
                 tabGO.transform.SetSiblingIndex(i);
 
-                tab.Setup(deckData, i);
+                tab.Setup(deckData, i, DeckColorsOf(deckData));
                 tab.SetSelected(i == _activeDeckIndex);
                 tab.OnSlotClicked += OnTabClicked;
-                tab.OnContextMenuClicked += OnTabContextMenuClicked;
                 _tabs.Add(tab);
             }
         }
@@ -180,14 +187,35 @@ public class LoadoutTabsUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Couleurs d'un deck pour sa tuile : celles choisies à sa création ; pour le deck de base (sans
+    /// couleur choisie), celles de ses cartes de départ.
+    /// </summary>
+    private List<EmotionType> DeckColorsOf(DeckData deck)
+    {
+        if (deck.HasEmotions) return DeckRules.DeckColors(deck, null);
+
+        IEnumerable<CardData> cards = deck.isDefault && _currentChampion != null && _currentChampion.startingDeck != null
+            ? _currentChampion.startingDeck
+            : DeckSaveManager.GetCardsFromNames(deck.cardNames, _cardCollection);
+        return DeckRules.DeckColors(deck, cards);
+    }
+
     private void UpdateAddTabButtonState()
     {
         if (_addTabButton == null || _currentDecksData == null) return;
         _addTabButton.interactable = _currentDecksData.CanAddCustomDeck();
     }
 
+    // 1er clic : sélectionne le deck ; clic sur le deck déjà sélectionné : l'ouvre (comme « Modifier »)
     private void OnTabClicked(DeckSlotUI slot, int index)
     {
+        if (index == _activeDeckIndex)
+        {
+            OpenSelectedDeck();
+            return;
+        }
+
         SelectTab(index);
     }
 
@@ -202,7 +230,7 @@ public class LoadoutTabsUI : MonoBehaviour
         LoadActiveDeckIntoEditor();
         NotifyDeckSelected();
         UpdateAddTabButtonState();
-        HideContextMenu();
+        UpdateActionButtons();
     }
 
     private void OnAddTabClicked()
@@ -223,6 +251,7 @@ public class LoadoutTabsUI : MonoBehaviour
 
         RefreshTabs();
         SelectTab(newIndex);
+        OnDeckOpened?.Invoke(); // un deck tout juste créé s'ouvre directement pour être rempli
     }
 
     private void HandleDeckRenamed(int index, string newName)
@@ -287,59 +316,36 @@ public class LoadoutTabsUI : MonoBehaviour
         return DeckSaveManager.GetDeckCards(_currentChampion, _currentDecksData.selectedDeckIndex, _cardCollection);
     }
 
-    #region Menu contextuel (onglet actif)
+    #region Actions sur le deck sélectionné (boutons sous la liste)
 
-    private void OnTabContextMenuClicked(DeckSlotUI slot, int index)
+    private bool HasSelectedDeck =>
+        _currentDecksData != null && _activeDeckIndex >= 0 && _activeDeckIndex < _currentDecksData.decks.Count;
+
+    /// <summary>Renommer et supprimer ne concernent pas le deck de base.</summary>
+    private void UpdateActionButtons()
     {
-        _activeDeckIndex = index;
-        ShowContextMenu(slot);
+        bool isCustom = HasSelectedDeck && !_currentDecksData.decks[_activeDeckIndex].isDefault;
+
+        if (_openDeckButton != null) _openDeckButton.interactable = HasSelectedDeck;
+        if (_renameDeckButton != null) _renameDeckButton.interactable = isCustom;
+        if (_deleteDeckButton != null) _deleteDeckButton.interactable = isCustom;
     }
 
-    private void ShowContextMenu(DeckSlotUI slot)
+    private void OpenSelectedDeck()
     {
-        if (_contextMenu == null) return;
-
-        _contextMenu.SetActive(true);
-
-        var menuRT = _contextMenu.GetComponent<RectTransform>();
-        var slotRT = slot != null ? slot.GetComponent<RectTransform>() : null;
-        if (menuRT != null && slotRT != null)
-        {
-            Vector3 pos = slotRT.position;
-            pos.y -= slotRT.rect.height * slotRT.lossyScale.y;
-            menuRT.position = pos;
-        }
-
-        bool canDelete = _currentDecksData != null && _activeDeckIndex >= 0 &&
-                         _activeDeckIndex < _currentDecksData.decks.Count &&
-                         !_currentDecksData.decks[_activeDeckIndex].isDefault;
-
-        if (_contextMenuDeleteButton != null)
-            _contextMenuDeleteButton.interactable = canDelete;
+        if (HasSelectedDeck)
+            OnDeckOpened?.Invoke();
     }
 
-    private void HideContextMenu()
+    private void RenameSelectedDeck()
     {
-        if (_contextMenu != null)
-            _contextMenu.SetActive(false);
-    }
-
-    private void OnContextRenameClicked()
-    {
-        HideContextMenu();
-
-        if (_currentDecksData == null || _activeDeckIndex < 0 || _activeDeckIndex >= _currentDecksData.decks.Count)
-            return;
-
+        if (!HasSelectedDeck || _currentDecksData.decks[_activeDeckIndex].isDefault) return;
         _renameDeckPopup?.Show(_activeDeckIndex, _currentDecksData.decks[_activeDeckIndex].deckName);
     }
 
-    private void OnContextDeleteClicked()
+    private void DeleteSelectedDeck()
     {
-        HideContextMenu();
-
-        if (_currentDecksData == null || _activeDeckIndex < 0 || _activeDeckIndex >= _currentDecksData.decks.Count)
-            return;
+        if (!HasSelectedDeck) return;
 
         var deck = _currentDecksData.decks[_activeDeckIndex];
         if (deck.isDefault)

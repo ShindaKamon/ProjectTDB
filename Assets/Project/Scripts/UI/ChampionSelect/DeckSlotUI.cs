@@ -1,50 +1,48 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
 /// <summary>
-/// Onglet compact de la barre de loadout (façon MTG Arena) représentant un deck.
-/// Affiche nom + compteur de cartes + couleur(s) d'émotion ; expose un bouton "..." affiché
-/// uniquement quand l'onglet est actif, pour ouvrir le menu contextuel Renommer/Supprimer.
+/// Tuile d'un deck sur la page Choix du deck (palette du codex émotionnel) : bande aux couleurs
+/// du deck, nom, couleurs écrites dans leur teinte (« Colère · Joie »), nombre de cartes.
+/// Cadre gris, plus clair au survol, doré quand le deck est sélectionné.
 /// </summary>
 public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Structure")]
-    [SerializeField] private Image _backgroundImage;
-    [SerializeField] private Image _backgroundImage2;    // Deuxième couleur (gradient)
-    [SerializeField] private Image _selectionBorder;
-    [SerializeField] private Image _defaultIcon;         // Icone pour le deck de base
+    [SerializeField] private Image _background;
+    [SerializeField] private Outline _border;
+    [SerializeField] private Transform _colorStrip;      // un segment par couleur du deck (créés au Setup)
 
     [Header("Textes")]
     [SerializeField] private TextMeshProUGUI _deckNameText;
+    [SerializeField] private TextMeshProUGUI _colorsText;
     [SerializeField] private TextMeshProUGUI _cardCountText;
 
-    [Header("Menu contextuel (onglet actif uniquement)")]
-    [SerializeField] private Button _contextMenuButton;
-
-    [Header("Couleurs")]
+    [Header("Cadre")]
     [SerializeField] private Color _selectedBorderColor = new Color(1f, 0.84f, 0f);    // Or
-    [SerializeField] private Color _normalBorderColor = new Color(0.3f, 0.3f, 0.3f);
-    [SerializeField] private Color _hoverBorderColor = new Color(0.6f, 0.6f, 0.6f);
+    [SerializeField] private Color _normalBorderColor = CodexCardVisual.CardBorder;
+    [SerializeField] private Color _hoverBorderColor = CodexCardVisual.InkDim;
 
     [Header("Animation")]
     [SerializeField] private float _hoverScale = 1.03f;
     [SerializeField] private float _animDuration = 0.1f;
 
     [Header("Taille")]
-    [SerializeField] private float _preferredWidth = 140f;
-    [SerializeField] private float _preferredHeight = 44f;
+    [SerializeField] private float _preferredWidth = 260f;
+    [SerializeField] private float _preferredHeight = 120f;
 
     private DeckData _deckData;
     private int _deckIndex;
+    private readonly List<EmotionType> _colors = new List<EmotionType>();
     private bool _isSelected;
     private bool _isHovered;
-    private Vector3 _originalScale;
+    private Vector3 _originalScale = Vector3.one;
     private RectTransform _rectTransform;
 
     public System.Action<DeckSlotUI, int> OnSlotClicked;
-    public System.Action<DeckSlotUI, int> OnContextMenuClicked;
 
     public DeckData DeckData => _deckData;
     public int DeckIndex => _deckIndex;
@@ -56,103 +54,93 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         if (_rectTransform != null)
             _originalScale = _rectTransform.localScale;
 
-        // Assurer une taille minimale via LayoutElement
         EnsureLayoutElement();
-
-        if (_contextMenuButton != null)
-            _contextMenuButton.onClick.AddListener(() => OnContextMenuClicked?.Invoke(this, _deckIndex));
     }
 
-    /// <summary>
-    /// Configure le LayoutElement pour forcer une taille minimale
-    /// </summary>
+    /// <summary>Taille de la tuile dans la rangée de decks.</summary>
     private void EnsureLayoutElement()
     {
         var layoutElement = GetComponent<LayoutElement>();
         if (layoutElement == null)
             layoutElement = gameObject.AddComponent<LayoutElement>();
 
-        layoutElement.minWidth = _preferredWidth;
-        layoutElement.minHeight = _preferredHeight;
-        layoutElement.preferredWidth = _preferredWidth;
-        layoutElement.preferredHeight = _preferredHeight;
+        layoutElement.minWidth = layoutElement.preferredWidth = _preferredWidth;
+        layoutElement.minHeight = layoutElement.preferredHeight = _preferredHeight;
     }
 
-    /// <summary>
-    /// Initialise le slot avec les données du deck
-    /// </summary>
-    public void Setup(DeckData deckData, int index)
+    /// <summary>Initialise la tuile avec le deck et ses couleurs (voir DeckRules.DeckColors).</summary>
+    public void Setup(DeckData deckData, int index, IEnumerable<EmotionType> colors)
     {
         _deckData = deckData;
         _deckIndex = index;
+        _colors.Clear();
+        if (colors != null) _colors.AddRange(colors);
         UpdateDisplay();
     }
 
-    /// <summary>
-    /// Met à jour l'affichage du slot
-    /// </summary>
     public void UpdateDisplay()
     {
         if (_deckData == null) return;
 
-        // Nom du deck
+        if (_background != null)
+            _background.color = CodexCardVisual.CardBackground;
+
         if (_deckNameText != null)
             _deckNameText.text = _deckData.deckName;
 
-        // Nombre de cartes
         if (_cardCountText != null)
         {
             int count = _deckData.cardNames.Count;
             _cardCountText.text = $"{count} carte{(count > 1 ? "s" : "")}";
         }
 
-        // Icone du deck de base - désactivé (non nécessaire)
-        if (_defaultIcon != null)
-            _defaultIcon.gameObject.SetActive(false);
-
-        // Couleur de fond principale (basée sur la première émotion)
-        if (_backgroundImage != null)
+        if (_colorsText != null)
         {
-            _backgroundImage.color = _deckData.GetPrimaryColor();
+            var names = new List<string>();
+            foreach (var emotion in _colors)
+            {
+                string hex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.EmotionColor(emotion));
+                names.Add($"<color=#{hex}>{CardVisualHelper.GetEmotionName(emotion)}</color>");
+            }
+            _colorsText.text = names.Count > 0 ? string.Join("  ·  ", names) : "Toutes les couleurs";
         }
 
-        // Couleur de fond secondaire (basée sur la deuxième émotion)
-        if (_backgroundImage2 != null)
-        {
-            Color secondaryColor = _deckData.GetSecondaryColor();
-            _backgroundImage2.color = secondaryColor;
-            // Afficher la deuxième couleur si différente de la première
-            _backgroundImage2.gameObject.SetActive(_deckData.Emotion1 != _deckData.Emotion2);
-        }
-
+        BuildColorStrip();
         UpdateSelectionVisual();
     }
 
-    /// <summary>
-    /// Définit l'état de sélection du slot
-    /// </summary>
+    /// <summary>Bande du haut : un segment par couleur du deck, de largeur égale.</summary>
+    private void BuildColorStrip()
+    {
+        if (_colorStrip == null) return;
+
+        for (int i = _colorStrip.childCount - 1; i >= 0; i--)
+            Destroy(_colorStrip.GetChild(i).gameObject);
+
+        var colors = _colors.Count > 0 ? _colors : new List<EmotionType> { EmotionType.None };
+        foreach (var emotion in colors)
+        {
+            var segment = new GameObject("Couleur_" + emotion, typeof(RectTransform));
+            segment.transform.SetParent(_colorStrip, false);
+            var image = segment.AddComponent<Image>();
+            image.color = CodexCardVisual.EmotionColor(emotion);
+            image.raycastTarget = false;
+            segment.AddComponent<LayoutElement>().flexibleWidth = 1;
+        }
+    }
+
     public void SetSelected(bool selected)
     {
         _isSelected = selected;
         UpdateSelectionVisual();
-
-        if (_contextMenuButton != null)
-            _contextMenuButton.gameObject.SetActive(selected);
     }
 
     private void UpdateSelectionVisual()
     {
-        if (_selectionBorder != null)
-        {
-            if (_isSelected)
-                _selectionBorder.color = _selectedBorderColor;
-            else if (_isHovered)
-                _selectionBorder.color = _hoverBorderColor;
-            else
-                _selectionBorder.color = _normalBorderColor;
+        if (_border == null) return;
 
-            _selectionBorder.gameObject.SetActive(true);
-        }
+        _border.effectColor = _isSelected ? _selectedBorderColor : _isHovered ? _hoverBorderColor : _normalBorderColor;
+        _border.effectDistance = _isSelected ? new Vector2(3f, -3f) : new Vector2(1.5f, -1.5f);
     }
 
     public void OnPointerClick(PointerEventData eventData)

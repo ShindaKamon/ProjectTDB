@@ -44,7 +44,7 @@ L'expérience utilisateur d'**Émotions Tactics** doit :
 **2. Nouvelle Partie → Sélection de Personnage (30 secondes)**
 
 > Roster MVP : Evan, Crux, Raze (Excel). Les donjons se jouent en **équipe de 3** : à terme cet écran sert à composer l'équipe (et à choisir un champion pour l'aventure solo). Coop ou un seul joueur qui contrôle les 3 : question ouverte (`GDD_Main.md`).
-> **Code actuel** : on choisit **un seul** champion (`Screen_ChampionSelect`, illustration plein écran + rail de champions), puis son deck dans l'écran deck unifié (`Screen_DeckManager`, style MTG Arena) — voir `Technical_Specs.md` § « État du code ».
+> **Code actuel** : on choisit **un seul** champion (`Screen_ChampionSelect` : roster à gauche, illustration du champion au centre, histoire et statistiques à droite avec le bouton « Choisir ce champion »), puis son deck sur la page Choix du deck (`Screen_DeckSelect` : sélectionner un deck, puis Modifier / Renommer / Supprimer, + pour en créer un, Commencer pour lancer le combat) ; Modifier ouvre le gestionnaire de deck (`Screen_DeckManager`, style MTG Arena), dont on revient avec Retour — voir `Technical_Specs.md` § « État du code ».
 
 ```
 ╔══════════════════════════════════════════════╗

@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectTDB::ChampionData
   championName: Crux
   title: Le Grimpeur
-  description: Un accident d'escalade filme l'a brise ; il verifie et securise tout
-    deux fois plutot qu'une.
+  description: "Lors d'une ascension film\xE9e et sponsoris\xE9e, un mousqueton a
+    c\xE9d\xE9 : toute son \xE9quipe est rest\xE9e suspendue deux jours avant les
+    secours. Personne n'est mort, mais l'humiliation publique et la perte de confiance
+    en son jugement l'ont bris\xE9. Depuis, il s\xE9curise tout deux fois et ne supporte
+    plus de laisser quelqu'un hors de sa port\xE9e."
   portrait: {fileID: 0}
   fullBodyArt: {fileID: 21300000, guid: 4944a782646e6554a86f82b6cabe54b2, type: 3}
   prefab: {fileID: 8911284436020867190, guid: ece5be0747ba1a348841f328d1f0f102, type: 3}

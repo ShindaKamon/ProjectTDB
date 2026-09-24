@@ -242,11 +242,11 @@ public class ChampionSelectManager : MonoBehaviour
 
         if (_selectedChampionStatsText != null)
         {
-            string stats = $"HP: {_currentSelectedChampion.maxHealth}\n";
-            stats += $"PM: {_currentSelectedChampion.movementRange}\n";
-            stats += $"PA: {_currentSelectedChampion.maxActionPoints}\n";
-            stats += $"ATK: {_currentSelectedChampion.attackDamage}\n";
-            stats += $"DEF: {_currentSelectedChampion.defense}";
+            string stats = $"PV : {_currentSelectedChampion.maxHealth}\n";
+            stats += $"PM : {_currentSelectedChampion.movementRange}\n";
+            stats += $"PA : {_currentSelectedChampion.maxActionPoints}\n";
+            stats += $"ATQ : {_currentSelectedChampion.attackDamage}\n";
+            stats += $"DEF : {_currentSelectedChampion.defense}";
             _selectedChampionStatsText.text = stats;
         }
     }

@@ -11,7 +11,8 @@ public enum FilterChipKind
 }
 
 /// <summary>
-/// Pastille cliquable du panneau de filtres du pool (émotion, catégorie ou coût PA).
+/// Pastille cliquable du panneau de filtres du pool : rond de couleur pour une émotion, texte pour
+/// une catégorie ou un coût PA.
 /// Porte sa valeur en données : PoolFilterBarUI retrouve toutes les pastilles de ses enfants,
 /// donc ajouter un filtre = dupliquer une pastille dans la scène et changer sa valeur.
 /// </summary>
@@ -44,14 +45,15 @@ public class FilterChipUI : MonoBehaviour
         RefreshLabel();
     }
 
-    /// <summary>Nom lisible déduit de la valeur (évite de le saisir à la main dans la scène).</summary>
+    /// <summary>Nom lisible déduit de la valeur (évite de le saisir à la main dans la scène).
+    /// Une pastille d'émotion n'a pas de texte : sa couleur suffit.</summary>
     public void RefreshLabel()
     {
         if (_label == null) return;
 
         _label.text = _kind switch
         {
-            FilterChipKind.Emotion => CodexCardVisual.EmotionName(_emotion),
+            FilterChipKind.Emotion => "",
             FilterChipKind.Category => _category == CardCategory.Eveil ? "Éveil" : _category.ToString(),
             _ => _orMore ? $"{_cost}+" : _cost.ToString(),
         };
@@ -59,20 +61,21 @@ public class FilterChipUI : MonoBehaviour
 
     public void SetActive(bool active)
     {
-        // Émotion : couleur de l'émotion quand active, pour que le filtre se lise d'un coup d'œil
-        Color on = _kind == FilterChipKind.Emotion ? CodexCardVisual.EmotionColor(_emotion) : _activeColor;
+        if (_kind == FilterChipKind.Emotion)
+        {
+            // Pastille de couleur : ternie quand inactive, pleine et cerclée de clair quand active
+            Color color = CodexCardVisual.EmotionColor(_emotion);
+            if (_background != null)
+                _background.color = active ? color : Color.Lerp(color, CodexCardVisual.CardBackground, 0.65f);
+            var ring = GetComponent<Outline>();
+            if (ring != null) ring.enabled = active;
+            return;
+        }
 
         if (_background != null)
-            _background.color = active ? on : _inactiveColor;
+            _background.color = active ? _activeColor : _inactiveColor;
 
         if (_label != null)
-            _label.color = active ? ReadableTextOn(on) : new Color(0.85f, 0.85f, 0.85f);
-    }
-
-    /// <summary>Texte noir sur fond clair (Joie, or), blanc sur fond sombre.</summary>
-    private static Color ReadableTextOn(Color background)
-    {
-        float luminance = 0.299f * background.r + 0.587f * background.g + 0.114f * background.b;
-        return luminance > 0.6f ? Color.black : Color.white;
+            _label.color = active ? CodexCardVisual.ReadableTextOn(_activeColor) : new Color(0.85f, 0.85f, 0.85f);
     }
 }

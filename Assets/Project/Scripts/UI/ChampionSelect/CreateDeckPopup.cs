@@ -45,11 +45,9 @@ public class CreateDeckPopup : MonoBehaviour
     {
         if (_colorButtonsParent == null || _colorButtonPrefab == null) return;
 
-        // Créer un bouton pour chaque émotion (sauf None)
-        foreach (EmotionType emotion in System.Enum.GetValues(typeof(EmotionType)))
+        // Un bouton par émotion disponible (les 3 du lancement pour l'instant, voir DeckRules)
+        foreach (EmotionType emotion in DeckRules.AvailableEmotions)
         {
-            if (emotion == EmotionType.None) continue;
-
             var buttonGO = Instantiate(_colorButtonPrefab, _colorButtonsParent);
             var button = buttonGO.GetComponent<Button>();
             var image = buttonGO.GetComponent<Image>();

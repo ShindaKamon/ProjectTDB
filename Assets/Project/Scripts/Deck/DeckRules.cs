@@ -15,6 +15,15 @@ public static class DeckRules
     public const int MAX_SIGNATURE_COPIES = 1;
 
     /// <summary>
+    /// Émotions qu'on peut choisir comme couleurs d'un deck : celles du lancement (MVP). Les 5 autres
+    /// de la roue de Plutchik viendront plus tard : il suffira de les ajouter ici.
+    /// </summary>
+    public static readonly IReadOnlyList<EmotionType> AvailableEmotions = new[]
+    {
+        EmotionType.Colere, EmotionType.Peur, EmotionType.Joie
+    };
+
+    /// <summary>
     /// Couleurs d'un deck : celles choisies à sa création ; à défaut (deck de base, qui n'en a pas),
     /// les émotions présentes dans ses cartes. Liste vide = aucune restriction de couleur.
     /// </summary>

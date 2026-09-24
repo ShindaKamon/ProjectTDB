@@ -178,5 +178,12 @@ namespace ProjectTDB.Tests
             Assert.AreEqual(1, missing.Count);
             Assert.AreSame(sig2, missing[0]);
         }
+
+        [Test]
+        public void AvailableEmotions_AreTheThreeLaunchEmotions()
+        {
+            CollectionAssert.AreEqual(new[] { EmotionType.Colere, EmotionType.Peur, EmotionType.Joie },
+                DeckRules.AvailableEmotions);
+        }
     }
 }

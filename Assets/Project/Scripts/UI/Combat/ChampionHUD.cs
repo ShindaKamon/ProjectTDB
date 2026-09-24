@@ -172,7 +172,7 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_paText != null)
         {
-            _paText.text = $"PA: {current}/{max}";
+            _paText.text = $"PA : {current}/{max}";
         }
     }
 
@@ -180,7 +180,7 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_pmText != null)
         {
-            _pmText.text = $"PM: {current}/{max}";
+            _pmText.text = $"PM : {current}/{max}";
         }
     }
 
@@ -188,7 +188,7 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_atkText != null && _champion != null)
         {
-            _atkText.text = $"ATK: {_champion.GetAttack()}";
+            _atkText.text = $"ATQ : {_champion.GetAttack()}";
         }
     }
 
@@ -197,7 +197,7 @@ public class ChampionHUD : MonoBehaviour
         if (_defText != null && _champion != null)
         {
             // Défense de base depuis ChampionData (aucun champion MVP n'a de défense active)
-            _defText.text = $"DEF: {_champion.GetBaseDefense()}";
+            _defText.text = $"DEF : {_champion.GetBaseDefense()}";
         }
     }
 }

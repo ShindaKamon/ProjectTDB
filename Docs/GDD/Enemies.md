@@ -1,12 +1,45 @@
-# Ennemis - Project TDB
+# Ennemis - Émotions Tactics (Project TDB)
 
-**Version:** 2.0
-**Date:** 11 Janvier 2026
+**Version:** 3.0
+**Date:** 23 Septembre 2026
 **Statut:** Reflète la structure actuelle (EnemyData)
+**Changements :** v2.1 (23/09/2026) encodage réparé, ennemis replacés dans le lore. **v3.0 (23/09/2026)** : réalignement sur l'Excel MVP (onglet « Barème monstres ») — monstres de donjon vs d'aventure, PV et dégâts en ratio des PV joueur, XP = 15 % des PV, cycle de boss Zone / Basique / Heal, règle anti-lock. Les anciennes formules de PV (tiers, chapitres) sont archivées.
+
+> **Chiffres de référence : l'Excel.** Ce document explique les règles.
 
 ## Vue d'Ensemble
 
-Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leurs cartes sont jouées dans un ordre fixe et séquentiel (pas de mélange). Ils sont classifiés en ennemis normaux et boss, avec des barres de vie différentes selon leur type.
+Dans le lore, les ennemis sont les **émotions d'une personne devenues manifestations physiques** dans son donjon intérieur (voir `GDD_Main.md`). Chaque donjon a donc des ennemis liés à son émotion dominante.
+
+Côté mécanique, les ennemis utilisent un système de **deck pattern** : leurs cartes sont jouées dans un ordre fixe et séquentiel (pas de mélange), une carte par tour.
+
+### Deux familles de monstres (Excel)
+
+| Type | Pour qui | PV (× PV d'un joueur du même niveau) | Dégâts / tour |
+|------|----------|--------------------------------------|---------------|
+| **Monstre d'aventure** | Solo-friendly | 1× | ≈ 15 % des PV du joueur |
+| **Groupe de donjon léger** | Équipe obligatoire (3) | 3× | ≈ 45 % des PV d'un joueur, cumulés |
+| **Boss de donjon** | Équipe de 3 | 1.33× les PV de l'équipe | Cycle sur 3 tours (voir ci-dessous) |
+| **Superboss** | Équipe de 3 | 3.3× les PV de l'équipe | Cycle sur 3 tours |
+
+- **XP d'un monstre = 15 % de ses PV**
+- Barème complet par niveau (1 à 20) : onglet « Barème monstres » de l'Excel
+- Ratios validés par playtest
+
+### Règle anti-lock
+
+Un monstre dont l'action est bloquée par un contrôle (retrait de PM, etc.) fait quand même son **Attaque de base**, insensible au contrôle. Le contrôle de la Peur ralentit donc les monstres sans jamais les neutraliser complètement.
+
+## Ennemis du MVP — Donjon Orphelinat (Peur)
+
+| Ennemi | Type | Statut |
+|--------|----------------|--------|
+| **Ombres du Placard** | Groupe de donjon | Stats et pattern à designer |
+| **Monstres Sous le Lit** | Groupe de donjon | Stats et pattern à designer |
+| **3ᵉ ennemi** | À définir | Concept à trouver |
+| **Boss** | Boss de donjon | Cycle Zone / Basique / Heal |
+
+Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 
 
 ## Structure d'un Ennemi (EnemyData)
@@ -22,22 +55,23 @@ Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leu
 
 ### Statistiques de Combat
 
-| Stat                  | Plage Typique              | Description                     |
-|-----------------------|----------------------------|---------------------------------|
-| **Max Health**        | Normaux: 30-80, Boss: 200+ | Points de vie maximum           |
-| **Movement Range**    | 2-4                        | Points de mouvement par tour    |
-| **Max Action Points** | 2-4                        | Points d'action par tour        |
-| **Physical Defense**  | 5-20                       | Défense contre dégâts physiques |
-| **Magical Defense**   | 5-20                       | Défense contre dégâts magiques  |
+| Stat                  | Règle                      |
+|-----------------------|----------------------------|
+| **Max Health**        | Selon le barème (ratio × PV joueur du niveau) |
+| **Movement Range**    | 2-4                        |
+| **Max Action Points** | 2-4                        |
+| **Attaque de base**   | Action de repli insensible au contrôle (anti-lock) |
+| **Physical / Magical Defense** | Champs présents dans le code ; **aucune stat de défense n'est définie** dans le design actuel (question ouverte « système de stats ») |
 
+**Faiblesse émotionnelle** (un monstre vulnérable ou résistant à une émotion précise) : à trancher.
 
 ### Deck Pattern (Combat Deck)
 
 | Caractéristique    | Ennemis            | Champions (Comparaison)    |
 |--------------------|--------------------|----------------------------|
 | **Type de Pioche** | Séquentielle       | Aléatoire (mélangé)        |
-| **Ordre**          | Fixe, se répète    | Aléatoire à chaque pioche |
-| **Taille Typique** | 5-10 cartes        | 15-25 cartes               |
+| **Ordre**          | Fixe, se répète    | Aléatoire à chaque pioche  |
+| **Taille Typique** | 3-12 cartes        | 24 cartes                  |
 | **Stratégie**      | Pattern prévisible | Imprévisible               |
 
 
@@ -51,20 +85,14 @@ Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leu
 
 ## Différence Normaux vs Boss
 
-### Ennemis Normaux
+### Ennemis Normaux (aventure et groupes de donjon)
 
 | Caractéristique  | Valeur               |
 |------------------|----------------------|
 | **Is Boss**      | false                |
 | **Barre de Vie** | Au-dessus de la tête |
-| **HP Typiques**  | 30-80                |
-| **PA Typiques**  | 2-3                  |
+| **PV**           | Selon le barème      |
 | **Deck Pattern** | 5-8 cartes           |
-
-**Utilisation:**
-- Ennemis de base dans les rencontres
-- Multiples par combat
-- Patterns simples
 
 
 ### Boss
@@ -73,14 +101,13 @@ Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leu
 |------------------|------------------------------------|
 | **Is Boss**      | true                               |
 | **Barre de Vie** | En haut de l'écran (BossHealthBar) |
-| **HP Typiques**  | 200-500                            |
-| **PA Typiques**  | 3-4                                |
-| **Deck Pattern** | 8-12 cartes                        |
+| **PV**           | 1.33× (boss) ou 3.3× (superboss) les PV de l'équipe |
+| **Pattern**      | **Cycle de 3 tours : Zone / Basique / Heal** |
 
-**Utilisation:**
-- Un seul par combat (typiquement)
-- Fin de niveau, événements spéciaux
-- Patterns complexes avec phases
+**Cycle de boss (ratios validés par playtest) :**
+1. **Zone** : ≈ 25 % des PV d'un joueur (à chaque cible touchée)
+2. **Basique** : ≈ 30 % des PV d'un joueur
+3. **Heal** : le boss récupère ≈ 30 % de ses PV sur le cycle
 
 
 ## Design de Deck Pattern
@@ -89,92 +116,62 @@ Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leu
 
 | Principe                | Description                                            | Exemple                                       |
 |-------------------------|--------------------------------------------------------|-----------------------------------------------|
-| **Prévisibilité**       | Pattern se répète, joueur peut anticiper               | Attaque â†’ Buff â†’ Attaque                  |
+| **Prévisibilité**       | Pattern se répète, joueur peut anticiper               | Attaque → Buff → Attaque                      |
 | **Variété**             | Assez de cartes différentes pour ne pas être répétitif | 6-8 cartes minimum                            |
 | **Montée en Puissance** | Cartes plus fortes en fin de pattern                   | Carte ultime en dernière position             |
-| **Thématique**          | Pattern correspond à l'identité de l'ennemi            | Gobelin archer : majorité d'attaques distance |
+| **Thématique**          | Pattern correspond à l'émotion incarnée par l'ennemi   | Une Ombre du Placard frappe depuis l'obscurité puis se cache |
 
 
 ### Exemples de Patterns
 
-**Pattern Agressif (Guerrier):**
+> ⚠️ Exemples **hérités des premiers brouillons** : noms génériques (Guerrier, Chaman) et dégâts en valeurs absolues qui ne suivent pas le barème de l'Excel (dégâts en % des PV joueur). À refaire pour l'Orphelinat.
+
+**Pattern Agressif (gabarit « Guerrier ») :**
 1. Frappe Rapide (1 PA, 8 dégâts)
 2. Frappe Rapide (1 PA, 8 dégâts)
 3. Frappe Puissante (2 PA, 15 dégâts)
 4. Bouclier (1 PA, +5 bouclier)
 5. Frappe Dévastatrice (3 PA, 25 dégâts)
 
-**Durée du Cycle:** 5 tours, puis recommence
+**Durée du Cycle :** 5 tours, puis recommence
 
 
-**Pattern Support (Chaman):**
-1. Eclair (2 PA, 10 dégâts)
+**Pattern Support (gabarit « Chaman ») :**
+1. Éclair (2 PA, 10 dégâts)
 2. Soins (2 PA, heal 15 HP)
 3. Buff Allié (2 PA, +3 dégâts à tous)
-4. Eclair (2 PA, 10 dégâts)
+4. Éclair (2 PA, 10 dégâts)
 5. Invocation (3 PA, invoque unité)
 
-**Durée du Cycle:** 5 tours, puis recommence
+**Durée du Cycle :** 5 tours, puis recommence
 
 
-**Pattern Boss (Multi-Phase):**
-1. Attaque Basique (2 PA, 12 dégâts)
-2. Attaque Basique (2 PA, 12 dégâts)
-3. Buff Personnel (2 PA, +5 dégâts)
-4. Attaque AoE (3 PA, 15 dégâts rayon 2)
-5. Attaque Basique (2 PA, 12 dégâts)
-6. Attaque Ultime (4 PA, 30 dégâts rayon 3)
-
-**Durée du Cycle:** 6 tours, puis recommence
-
-**Note:** Les patterns complexes peuvent changer selon les HP du boss (phases).
+> Le pattern de boss à 6 cartes des premiers brouillons est remplacé par le **cycle Zone / Basique / Heal** ci-dessus (archivé).
 
 
 ## Catégories d'Ennemis
 
 ### Par Rôle
 
-| Rôle           | HP    | PA  | Style                 | Cartes Typiques               |
+| Rôle           | PV (dans le budget du barème) | PA  | Style                 | Cartes Typiques               |
 |----------------|-------|-----|-----------------------|-------------------------------|
-| **Tank**       | 60-80 | 2-3 | Défensif, provocation | Bouclier, Taunt, Régénération |
-| **DPS**        | 40-50 | 3-4 | Offensif, burst       | Attaques multiples, Finishers |
-| **Support**    | 30-40 | 3-4 | Buff/Heal alliés      | Soins, Buffs, Invocations     |
-| **Contrôleur** | 40-50 | 3-4 | Debuff, zone          | Stun, Slow, AOE               |
+| **Tank**       | Haut | 2-3 | Défensif, provocation | Bouclier, Taunt, Régénération |
+| **DPS**        | Bas | 3-4 | Offensif, burst       | Attaques multiples, Finishers |
+| **Support**    | Bas | 3-4 | Buff/Heal alliés      | Soins, Buffs, Invocations     |
+| **Contrôleur** | Moyen | 3-4 | Debuff, zone          | Stun, Slow, AOE               |
 
 
-## Equilibrage
+## Équilibrage
 
-### Formules de Base
-
-**HP Ennemi Normal:**
-- Formule : 30 + (10 Ã— Tier)
-- Tier 1 : 40 HP
-- Tier 2 : 50 HP
-- Tier 3 : 60 HP
-
-**HP Boss:**
-- Formule : 200 + (50 Ã— Chapter)
-- Chapitre 1 : 250 HP
-- Chapitre 2 : 300 HP
-- Chapitre 3 : 350 HP
+Barème par niveau et ratios : onglet « Barème monstres » de l'Excel. Difficulté : `Combat_System.md`.
 
 
-### Scaling de Difficulté
-
-| Paramètre    | Facile | Normal | Difficile |
-|--------------|--------|--------|-----------|
-| **HP**       | -30%   | 100%   | +50%      |
-| **Dégâts**   | -20%   | 100%   | +30%      |
-| **Défenses** | -20%   | 100%   | +20%      |
-
-
-## Ennemis Ã€ Créer
+## Ennemis À Créer
 
 ### Priorité Haute
-- 5-10 ennemis normaux variés
-- 1-2 boss par acte
-- Un ennemi de chaque élément
-- Représentation de chaque rôle (Tank/DPS/Support)
+- Les monstres de l'Orphelinat (Peur) + boss, selon le barème
+- Des monstres d'aventure (solo-friendly) pour jouer avec un seul champion
+- Au moins une variante par émotion de donjon prévue en Bêta
 
 ### Priorité Moyenne
 - Variantes d'ennemis existants
@@ -187,6 +184,6 @@ Les **Ennemis** de Project TDB utilisent un système de **deck pattern** où leu
 - Ennemis légendaires
 
 
-**Dernière mise à jour:** 11 Janvier 2026
-**Version:** 2.0
-**Responsable:** Design Ennemis Project TDB
+**Dernière mise à jour :** 23 Septembre 2026
+**Version :** 2.1
+**Responsable :** Shinda + Claude

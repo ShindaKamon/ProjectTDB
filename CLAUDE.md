@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @Docs/GDD/claude_md_coarchitect.md
 
-Le fichier importé ci-dessus définit le rôle (co-architecte), la vision du jeu et l'état de l'implémentation (la section « Mise a jour implementation » y fait foi en cas de conflit). Le reste de ce fichier couvre uniquement le côté technique.
+Le fichier importé ci-dessus définit le rôle (co-architecte) et résume le jeu. Pour le reste :
+- **Design visé (MVP)** : `Docs/GDD/GDD_Main.md` (décisions, questions ouvertes, tableau « source unique de vérité ») et `Docs/GDD/MVP_Excel_Snapshot.md` (chiffres : budget des cartes, bibliothèque, progression, barème monstres).
+- **Ce qui est réellement implémenté** : `Docs/GDD/Technical_Specs.md`, section « État du code » — fait foi en cas de conflit entre le code et le design.
+- Quand une décision de design change ou que le code diverge, mettre à jour le document de référence concerné (voir `Docs/GDD/README.md`).
+
+Le reste de ce fichier couvre uniquement le côté technique.
 
 ## Projet Unity
 
@@ -41,7 +46,7 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 - **ComponentLocator** : helpers type `TryGetComponentSafe` pour récupérer des composants sur les unités.
 
 ### Combat
-- `TurnStateMachine` (classe C# pure, pas MonoBehaviour) porte l'état du tour ; `GridManager` orchestre la grille hex, le spawn et l'alternance joueur/ennemi, avec `GridRepository` pour les données de grille.
+- `TurnStateMachine` (classe C# pure, pas MonoBehaviour) porte l'état du tour ; `GridManager` orchestre la grille (**carrée** 10×10, positions `Vector2Int`, distance de Manhattan), le spawn et la rotation des tours (un tour par unité dans l'ordre de `_units`, invocations sautées), avec `GridRepository` pour les données de grille.
 - Unités : `Unit` (base MonoBehaviour, PV, buffs, marques via `IMarkable`) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion (`AceUnit`, `AlpinisteUnit`, `SorenUnit`, `IlyaUnit`, …) qui porte ses passifs. Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IRageUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
 - Ennemis : `Enemy` + `EnemyAI`, qui joue aussi des `CardData`.
 
@@ -60,4 +65,4 @@ Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build
 `Scripts/Editor/UISetupWizard.cs` (génération de hiérarchies UI), `DeckDebugMenu.cs` (reset/inspection des sauvegardes de decks) ; helpers de debug runtime dans `Scripts/Debug/`.
 
 ## Documentation
-`Docs/GDD/` : GDD découpé par système (combat, cartes, grille, émotions, UI/UX…) — à consulter avant de concevoir une mécanique.
+`Docs/GDD/` : GDD découpé par système (index : `Docs/GDD/README.md`) — à consulter avant de concevoir une mécanique. Émotions de lancement : Colère, Peur, Joie ; roster MVP : Ace, l'Alpiniste, Soren ; deck cible 24 cartes (2 Signature + 6 Éveil + 16 Standard, le code en gère 18 pour l'instant).

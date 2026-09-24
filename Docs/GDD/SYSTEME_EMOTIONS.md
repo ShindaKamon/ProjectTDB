@@ -1,19 +1,25 @@
 # 🎭 SYSTÈME D'ÉMOTIONS - Émotions Tactics
 
-**Version :** 3.0  
-**Date :** 17 Janvier 2026
+**Version :** 4.2
+**Date :** 23 Septembre 2026
+**Changements :**
+- v4.0 (10/09/2026) : le système de Classes (5 classes, multiplicateurs, matrice 8×5) a été abandonné — voir `archive/Concepts_Abandonnes.md`.
+- v4.1 (23/09/2026) : l'ancienne jauge -100/+100 (Contrariété / Colère / Rage) est archivée.
+- v4.2 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — 3 émotions de lancement (Colère, Peur, Joie), système d'Éveil, roster Soren / l'Alpiniste / Ace.
 
 ---
 
 ## 📊 VUE D'ENSEMBLE
 
-Le système d'émotions combine **8 Familles** (émotions de Plutchik) avec **5 Classes** (gestion psychologique) pour créer 40 champions uniques.
+Le système d'émotions repose sur **8 émotions** (roue de Plutchik), chacune avec sa **couleur**. Dans le jeu, l'émotion est avant tout une **identité de carte** : un deck se construit autour d'1 ou 2 émotions (mono ou bi-émotion), comme les couleurs dans Magic. Le gameplay propre à chaque champion vient de sa **mécanique signature** (passif + cartes Signature), pas d'une classe.
+
+Ce document est la **référence** pour les noms, émotions et couleurs des familles (les autres documents renvoient ici).
 
 ---
 
 ## 🎨 LES 8 FAMILLES (Émotions)
 
-Basées sur la Roue de Plutchik. Les familles définissent **quelle émotion** le champion utilise.
+Basées sur la Roue de Plutchik.
 
 | # | Famille | Émotion | Couleur | Code Hex | Thème |
 |---|---------|---------|---------|----------|-------|
@@ -26,80 +32,69 @@ Basées sur la Roue de Plutchik. Les familles définissent **quelle émotion** l
 | 7 | **Éveillés** | Joie | Jaune | #FFEB00 | Illuminés joyeux |
 | 8 | **Précurseurs** | Anticipation | Orange | #FF8000 | Pionniers visionnaires |
 
----
+> ⚠️ **Nomenclature (question ouverte, voir `GDD_Main.md`)** : plusieurs noms et thèmes (Insurgents/« révolutionnaires », Dissidents/« rebelles », Réprouvés/« maudits », Exilés/« parias ») évoquent la rébellion contre un pouvoir — un héritage de l'ancien lore « gouvernement dystopique », abandonné le 11/09/2026. Ils ne collent plus au lore actuel (« le monde grisonne ») et sont candidats à un renommage.
 
-## 🎭 LES 5 CLASSES (Gestion Psychologique)
-
-Les classes définissent **comment** le champion gère son émotion.
-
-| # | Classe | Verbe | Multiplicateur | Gameplay |
-|---|--------|-------|----------------|----------|
-| 1 | **Réprimé** | Stocke | ×0.8 | Accumulation lente → Explosion contrôlée |
-| 2 | **Impulsif** | Consomme | ×1.5 | Génération rapide → Dépense immédiate |
-| 3 | **Alchimiste** | Transforme | ×1.0 | Émotion → Mana/Énergie magique |
-| 4 | **Émissaire** | Transfère | ×1.2 | Émotion → Invocations/Entités |
-| 5 | **Évadé** | Fuit | ×1.3 | Émotion → Substances (addiction) |
-
-**Multiplicateur :** Vitesse de génération d'émotion (×0.8 = lent, ×1.5 = rapide)
+**Émotions « composées »** : certains donjons parlent d'émotions qui ne sont pas l'une des 8 (ex : l'**Anxiété** du Bureau Corporatiste). Chez Plutchik, l'anxiété se situe entre Peur et Anticipation — la famille de rattachement reste à choisir.
 
 ---
 
-## 🔢 MATRICE 8×5 (40 Champions Possibles)
+## 🚀 LES 3 ÉMOTIONS DE LANCEMENT (MVP — Excel)
 
-| Famille | Réprimé | Impulsif | Alchimiste | Émissaire | Évadé |
-|---------|---------|----------|------------|-----------|-------|
-| **Déchaînés** | Ilya ✅ | Kael | Pyra | Ragnar | Týr |
-| **Dissidents** | À créer | À créer | À créer | À créer | À créer |
-| **Insurgents** | À créer | À créer | À créer | À créer | À créer |
-| **Exilés** | Alea | Chaos | Kairos | Pandora | Trip |
-| **Réprouvés** | Corvus | Phobos | Umbra | Bane | Syringe |
-| **Gardiens** | À créer | À créer | À créer | À créer | À créer |
-| **Éveillés** | À créer | À créer | À créer | À créer | À créer |
-| **Précurseurs** | À créer | À créer | À créer | À créer | À créer |
+| Émotion | Famille | Couleur | Rôle | Force / Faiblesse (validé en playtest) | Mécaniques typiques |
+|---------|---------|---------|------|-----------------------------------------|---------------------|
+| **Colère** | Déchaînés | Rouge #CC0000 | Agressif | Burst, **sans sustain** | Gros dégâts, zones, contrecoups sur soi, vol de vie |
+| **Peur** | Réprouvés | Vert foncé #006600 | Contrôle | Contrôle / tempo | **Retrait de PM** au prochain tour (-1 / -2 / -3 / total), poussée/tirage, boucliers |
+| **Joie** | Éveillés | Jaune #FFEB00 | Soin / valeur | Survie, mais **lent** | Soins, boucliers, buffs de groupe, soin + dégâts miroir |
+
+- Pool Standard : **49 cartes** dans la bibliothèque de l'Excel et dans le code (17 Colère, 17 Peur, 15 Joie) ; la Roadmap de l'Excel parle de 12 par émotion (36) — à harmoniser.
+- Cartes **Neutres** : les cartes Signature des champions, jouables quelles que soient les émotions du deck.
+- **Oppositions d'émotions** (paires Plutchik, ex. Colère/Peur) : repoussées volontairement, à revisiter en phase 2-3.
 
 ---
 
-## 🎯 ÉTATS ÉMOTIONNELS (3 par Famille)
+## ✨ SYSTÈME D'ÉVEIL (concept acté, mise en œuvre repoussée)
 
-### ✅ Déchaînés (Colère)
+- Chaque émotion a **sa propre jauge d'Éveil** (un deck bi-émotion doit donc remplir deux jauges : c'est le coût caché du bi-émotion).
+- La plupart des cartes Standard **génèrent** de l'Éveil (modificateur -0.1 sur leur budget).
+- Base actée : **2 points par palier d'Éveil**. Les cartes Signature génèrent de la jauge au choix du joueur.
+- Les **cartes d'Éveil** (6 par deck) nécessitent un seuil pour être jouées ; les cartes qui **consomment** 1, 2 ou 3 paliers gagnent +0.3 / +0.5 / +0.7 de budget.
+- L'Éveil ne bloque jamais le jeu normal : on peut toujours jouer ses cartes Standard avec des PA.
+- À enrichir : aller au-delà d'un simple compteur linéaire (interactions entre jauges, lien avec les oppositions, seuils qui débloquent des choix).
 
-| Seuil | État | Type | Description |
-|-------|------|------|-------------|
-| +100 | Contrariété | Tank | Frustration canalisée, défense |
-| 0 | Colère | Neutre | État de base |
-| -100 | Rage | DPS | Fureur destructrice |
+> Ne pas confondre avec l'ancienne jauge universelle -100/+100 (états Tank/DPS), archivée, ni avec la Rage d'Ilya (hors MVP).
 
-### ⏳ Autres Familles (À Définir)
+---
 
-Les 7 autres familles ont leurs états émotionnels à créer.
+## 👥 CHAMPIONS (état au 23/09/2026)
+
+Les champions du MVP n'appartiennent pas à une émotion : leurs cartes Signature sont Neutres et ils peuvent jouer des decks de n'importe quelle émotion.
+
+| Champion | Statut |
+|----------|--------|
+| **Soren** | MVP — complet (Excel) |
+| **L'Alpiniste** | MVP — complet (Excel) |
+| **Ace** | MVP — complet (Excel) |
+| **Ilya** (Colère) | Hors MVP — concept complet, Rage à réadapter à l'Éveil |
+| **Astra & Noctis** | Hors MVP — deux concepts concurrents |
 
 ---
 
 ## 🔧 GÉNÉRATION D'ÉMOTION
 
-### Option Recommandée : Hybride
-
-```
-GÉNÉRATION = (Déclencheurs Famille) × (Multiplicateur Classe) + (Tweak Champion optionnel)
-```
-
-**Exemple Ilya (Déchaînés Réprimé) :**
-1. Famille Déchaînés : 20 dégâts = +1 Colère (déclencheur)
-2. Classe Réprimé : ×0.8 (génère lentement)
-3. Signature Ilya : Génère Cartes Rage (contrôle fin)
+Dans le MVP, l'émotion se génère **en jouant des cartes** (jauge d'Éveil, voir ci-dessus). Les déclencheurs ci-dessous restent des pistes pour de futures mécaniques signatures ou pour les émotions ajoutées après le MVP.
 
 ---
 
-## 📋 DÉCLENCHEURS PAR FAMILLE (Proposés)
+## 📋 DÉCLENCHEURS PAR FAMILLE (pistes, hors MVP)
 
 | Famille | Déclencheurs Émotionnels |
-|---------|--------------------------|
+|---------|---------------------------|
 | **Déchaînés** | Dégâts reçus/infligés, éliminations |
 | **Dissidents** | Debuffs subis, résistances, toxicité |
 | **Insurgents** | Alliés blessés, temps, échecs |
-| **Exilés** | Critiques, événements inattendus, RNG |
+| **Exilés** | Critiques, événements inattendus, hasard |
 | **Réprouvés** | HP bas, ennemis puissants, encerclement |
-| **Gardiens** | Soins, protections, alliés sains |
+| **Gardiens** | Soins, protections, alliés en bonne santé |
 | **Éveillés** | Victoires, buffs, combos |
 | **Précurseurs** | Planification, temps, préparation |
 
@@ -109,30 +104,30 @@ GÉNÉRATION = (Déclencheurs Famille) × (Multiplicateur Classe) + (Tweak Champ
 
 ### Enums
 
+Code actuel (`Cards/CardData.cs`) — les émotions sont nommées par émotion, pas par famille :
+
 ```csharp
-public enum CardFamilyType
+public enum EmotionType
 {
-    Dechaines,   // Colère
-    Dissidents,  // Dégoût
-    Insurgents,  // Tristesse
-    Exiles,      // Surprise
-    Reprouves,   // Peur
-    Gardiens,    // Confiance
-    Eveilles,    // Joie
-    Precurseurs  // Anticipation
+    None,
+    Colere,         // Rouge #CC0000
+    Degout,         // Violet #800080
+    Tristesse,      // Bleu foncé #000080
+    Surprise,       // Bleu clair #80CCFF
+    Peur,           // Vert foncé #006600
+    Confiance,      // Vert clair #80FF80
+    Joie,           // Jaune #FFEB00
+    Anticipation    // Orange #FF8000
 }
 
-public enum CardClassType
-{
-    Reprime,     // Stocke (×0.8)
-    Impulsif,    // Consomme (×1.5)
-    Alchimiste,  // Transforme (×1.0)
-    Emissaire,   // Transfère (×1.2)
-    Evade        // Fuit (×1.3)
-}
+// Pas d'enum CardClassType : le système de classes a été retiré le 10/09/2026.
+// Chaque champion implémente sa mécanique signature directement (passif + cartes Signature).
+// Le type de carte est porté par CardCategory (Standard / Eveil / Signature).
+// Des assets de cartes « Family » (Dechaines, Reprouves…) existent encore dans
+// Assets/ScriptableObjects/Cards/Family/ : reliquat de l'ancien système.
 ```
 
 ---
 
-**Dernière mise à jour :** 17 Janvier 2026  
+**Dernière mise à jour :** 23 Septembre 2026
 **Créé par :** Shinda + Claude

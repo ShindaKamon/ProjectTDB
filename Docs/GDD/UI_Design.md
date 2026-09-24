@@ -1,41 +1,45 @@
-# ðŸŽ¨ Design de l'Interface Utilisateur - Project TDB
+# 🎨 Design de l'Interface Utilisateur - Émotions Tactics (Project TDB)
 
-**Version:** 1.0
-**Date:** 11 Janvier 2026
-
----
-
-## ðŸŽ¯ Philosophie du Design UI
-
-L'interface utilisateur de **Project TDB** doit Ãªtre:
-1. **Claire et Lisible** : Informations essentielles toujours visibles
-2. **Ã‰lÃ©gante et StylisÃ©e** : EsthÃ©tique cohÃ©rente avec le thÃ¨me
-3. **Responsive et Fluide** : Animations smooths, feedbacks immÃ©diats
-4. **Non-Intrusive** : Ne cache pas l'action, s'efface quand nÃ©cessaire
+**Version:** 1.3
+**Date:** 23 Septembre 2026
+**Changements :**
+- v1.1 (11/09/2026) : ajout de la section « Désaturation Narrative des Donjons ».
+- v1.2 (23/09/2026) : barre d'initiative remplacée par un indicateur de phase (ordre des tours par phases) ; « Mana » retiré du HUD (ressource signature propre à chaque champion) ; affichage Rage corrigé (jauge 0→5) ; raccourci Fin de Tour = Espace ; glow de sélection unifié (doré) ; couleur de l'Orphelinat corrigée (Peur = vert foncé) ; table des couleurs de familles renvoyée vers `SYSTEME_EMOTIONS.md`.
+- v1.3 (23/09/2026) : réalignement sur l'Excel MVP — jauges d'Éveil par émotion dans le HUD, invocations (Lyse), exemple de tooltip avec une carte Standard, taille de main à trancher.
 
 ---
 
-## ðŸŽ´ UI de la Main de Cartes
+## 🎯 Philosophie du Design UI
+
+L'interface utilisateur d'**Émotions Tactics** doit être :
+1. **Claire et Lisible** : informations essentielles toujours visibles
+2. **Élégante et Stylisée** : esthétique cohérente avec le thème
+3. **Responsive et Fluide** : animations smooths, feedbacks immédiats
+4. **Non-Intrusive** : ne cache pas l'action, s'efface quand nécessaire
+
+---
+
+## 🔴 UI de la Main de Cartes
 
 ### Layout en Arc (Limbus Company Style)
 
-**ImplÃ©mentation Actuelle:**
-- Cartes disposÃ©es en arc au bas de l'Ã©cran
-- Centre de l'arc: Position centrale en bas
-- Rayon de l'arc: Ajustable (dÃ©faut: 800 pixels)
-- Espacement: CalculÃ© dynamiquement selon le nombre de cartes
+**Implémentation Actuelle :**
+- Cartes disposées en arc au bas de l'écran (taille de main à trancher, voir `Combat_System.md`)
+- Centre de l'arc : position centrale en bas
+- Rayon de l'arc : ajustable (défaut : 800 pixels)
+- Espacement : calculé dynamiquement selon le nombre de cartes
 
-**ParamÃ¨tres:**
+**Paramètres :**
 ```csharp
 [Header("Arc Layout Settings")]
 [SerializeField] private float _arcRadius = 800f;
-[SerializeField] private float _arcAngle = 30f; // Angle total de l'arc en degrÃ©s
+[SerializeField] private float _arcAngle = 30f; // Angle total de l'arc en degrés
 [SerializeField] private Vector2 _arcCenter = new Vector2(0, -400f); // Centre de l'arc
 [SerializeField] private float _cardSpacing = 150f; // Espacement entre cartes
-[SerializeField] private float _hoverOffset = 50f; // Ã‰lÃ©vation au hover
+[SerializeField] private float _hoverOffset = 50f; // Élévation au hover
 ```
 
-**Calcul des Positions:**
+**Calcul des Positions :**
 ```csharp
 void ArrangeCardsInArc()
 {
@@ -61,36 +65,38 @@ Vector2 CalculateArcPosition(float angleDegrees)
 }
 ```
 
-### Ã‰tats Visuels des Cartes
+> ⚠️ Avec une seule carte en main, `cardCount - 1 = 0` → division par zéro dans `angleStep`. Prévoir le cas (angle 0 pour une carte unique).
 
-**1. Ã‰tat Normal:**
-- Ã‰chelle: 1.0
-- Rotation: Selon position dans l'arc
-- OpacitÃ©: 100%
-- Tint: Blanc (Color.white)
+### États Visuels des Cartes
 
-**2. Ã‰tat Hover:**
-- Ã‰chelle: 1.1Ã— (paramÃ©trable)
-- Ã‰lÃ©vation: +50 pixels
-- Rotation: LÃ©gÃ¨re inclinaison (3Â° vers le joueur)
-- Tint: Plus clair (1.2, 1.2, 1.2)
-- Animation: Lerp smooth (10Ã— par seconde)
-- Cartes adjacentes: S'Ã©cartent lÃ©gÃ¨rement
+**1. État Normal :**
+- Échelle : 1.0
+- Rotation : selon position dans l'arc
+- Opacité : 100 %
+- Tint : Blanc (Color.white)
 
-**3. Ã‰tat SÃ©lectionnÃ©:**
-- Ã‰chelle: 1.05Ã—
-- Position: DÃ©placÃ©e vers la gauche de l'Ã©cran
-- Glow: Pulsation verte
-- Tint: Vert clair (0.8, 1.0, 0.8)
-- Courbe de ciblage: ActivÃ©e
+**2. État Hover :**
+- Échelle : 1.1× (paramétrable)
+- Élévation : +50 pixels
+- Rotation : légère inclinaison (3° vers le joueur)
+- Tint : plus clair (1.2, 1.2, 1.2)
+- Animation : Lerp smooth (10× par seconde)
+- Cartes adjacentes : s'écartent légèrement
 
-**4. Ã‰tat Non-Jouable:**
-- OpacitÃ©: 50% (CanvasGroup.alpha = 0.5)
-- Texte de coÃ»t: Rouge
-- Interactions: DÃ©sactivÃ©es
+**3. État Sélectionné :**
+- Échelle : 1.05×
+- Position : déplacée vers la gauche de l'écran
+- Glow : pulsation **dorée** (voir « Effet de Glow » ci-dessous)
+- Tint : vert clair (0.8, 1.0, 0.8)
+- Courbe de ciblage : activée
+
+**4. État Non-Jouable :**
+- Opacité : 50 % (CanvasGroup.alpha = 0.5)
+- Texte de coût : rouge
+- Interactions : désactivées
 - Pas de hover animation
 
-**Code (Extrait de CardUIElement.cs):**
+**Code (Extrait de CardUIElement.cs) :**
 ```csharp
 public void OnPointerEnter(PointerEventData eventData)
 {
@@ -108,15 +114,15 @@ public void OnPointerEnter(PointerEventData eventData)
 }
 ```
 
-### Effet de Glow (SÃ©lection)
+### Effet de Glow (Sélection)
 
-**ImplÃ©mentation:**
-- Image sÃ©parÃ©e derriÃ¨re la carte
-- Couleur: Jaune/Or (1f, 1f, 0.5f, 0.8f)
-- Animation: Pulsation (PingPong entre opacitÃ© 50% et 100%)
-- Vitesse: ParamÃ©trable (dÃ©faut: 2 cycles/seconde)
+**Implémentation :**
+- Image séparée derrière la carte
+- Couleur : Jaune/Or (1f, 1f, 0.5f, 0.8f)
+- Animation : pulsation (PingPong entre opacité 50 % et 100 %)
+- Vitesse : paramétrable (défaut : 2 cycles/seconde)
 
-**Code:**
+**Code :**
 ```csharp
 private IEnumerator PulseGlow()
 {
@@ -134,17 +140,17 @@ private IEnumerator PulseGlow()
 
 ---
 
-## ðŸŽ¯ SystÃ¨me de Ciblage Visuel
+## 🎯 Système de Ciblage Visuel
 
-### Courbe de BÃ©zier (TargetingCurve.cs)
+### Courbe de Bézier (TargetingCurve.cs)
 
-**Fonctionnement:**
-- Quand une carte est sÃ©lectionnÃ©e, une courbe apparaÃ®t
-- Part d'un point fixe (paramÃ©trable, dÃ©faut: -700, -300)
-- Arrive Ã  la position de la souris
-- Courbe de BÃ©zier quadratique pour le rendu smooth
+**Fonctionnement :**
+- Quand une carte est sélectionnée, une courbe apparaît
+- Part d'un point fixe (paramétrable, défaut : -700, -300)
+- Arrive à la position de la souris
+- Courbe de Bézier quadratique pour le rendu smooth
 
-**ParamÃ¨tres:**
+**Paramètres :**
 ```csharp
 [Header("Courbe Settings")]
 [SerializeField] private float _curveThickness = 5f;
@@ -152,26 +158,26 @@ private IEnumerator PulseGlow()
 [SerializeField] private float _curveBendStrength = 0.3f;
 ```
 
-**Optimisations:**
-- PrÃ©-allocation de l'array de points (`Vector2[]`)
-- Update seulement si souris a bougÃ© >1 pixel
+**Optimisations :**
+- Pré-allocation de l'array de points (`Vector2[]`)
+- Update seulement si souris a bougé >1 pixel
 - Pas d'allocations GC dans `OnPopulateMesh()`
 
-**Visuel:**
-- Couleur: Blanc/Jaune
-- Ã‰paisseur: 5 pixels
-- Lisse grÃ¢ce aux 50 segments
+**Visuel :**
+- Couleur : Blanc/Jaune
+- Épaisseur : 5 pixels
+- Lisse grâce aux 50 segments
 
-### RÃ©ticule de Ciblage (TargetingReticle.cs)
+### Réticule de Ciblage (TargetingReticle.cs)
 
-**Fonctionnement:**
-- Cercle avec crosshair Ã  la position de la souris
-- Suit la souris en temps rÃ©el
-- S'affiche seulement quand une carte est sÃ©lectionnÃ©e
+**Fonctionnement :**
+- Cercle avec crosshair à la position de la souris
+- Suit la souris en temps réel
+- S'affiche seulement quand une carte est sélectionnée
 
-**ParamÃ¨tres:**
+**Paramètres :**
 ```csharp
-[Header("RÃ©ticule Settings")]
+[Header("Réticule Settings")]
 [SerializeField] private float _outerRadius = 30f;
 [SerializeField] private float _innerRadius = 20f;
 [SerializeField] private float _crosshairSize = 15f;
@@ -179,111 +185,97 @@ private IEnumerator PulseGlow()
 [SerializeField] private int _circleSegments = 32;
 ```
 
-**Visuel:**
-- Anneau circulaire (rayon extÃ©rieur - rayon intÃ©rieur)
-- Croix de visÃ©e (horizontal + vertical)
-- Couleur: Blanc/Jaune (selon validitÃ© de la cible)
+**Visuel :**
+- Anneau circulaire (rayon extérieur - rayon intérieur)
+- Croix de visée (horizontal + vertical)
+- Couleur : Blanc/Jaune (selon validité de la cible)
 
-**AmÃ©liorations Futures:**
+**Améliorations Futures :**
 - Couleur verte si cible valide
 - Couleur rouge si cible invalide
-- Animation de rotation du rÃ©ticule
+- Animation de rotation du réticule
 
 ---
 
-## ðŸŽ® HUD de Combat
+## 🎮 HUD de Combat
 
-### Disposition GÃ©nÃ©rale
+### Disposition Générale
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ [Tour: 3]  [Initiative Bar]              [Menu] [âš™]   â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                         â”‚
-â”‚  [Perso 1]          CHAMP DE BATAILLE        [Enemy 1] â”‚
-â”‚  HP: â–ˆâ–ˆâ–ˆâ–ˆâ–‘                                   HP: â–ˆâ–ˆâ–‘â–‘â–‘ â”‚
-â”‚  Rage: â–ˆâ–ˆâ–‘â–‘                                             â”‚
-â”‚                                                         â”‚
-â”‚  [Perso 2]                                   [Enemy 2] â”‚
-â”‚  HP: â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ                                  HP: â–ˆâ–ˆâ–ˆâ–ˆâ–ˆ â”‚
-â”‚  Mana: â–ˆâ–ˆâ–ˆâ–ˆ                                             â”‚
-â”‚                                                         â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚         [MAIN DE CARTES EN ARC]                        â”‚
-â”‚     PA: 4/4    PM: 3/3    [Fin de Tour]                â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────┐
+│ [Tour: 3]  [Phase : JOUEUR]              [Menu] [⚙]  │
+├─────────────────────────────────────────────────────┤
+│                                                       │
+│  [Perso 1]          CHAMP DE BATAILLE      [Enemy 1] │
+│  HP: ████░                                   HP: ██░░░│
+│  Éveil: Colère ██░ Peur █░░                          │
+│                                                       │
+│  [Perso 2]                                 [Enemy 2] │
+│  HP: ██████                                  HP: █████│
+│  [Lyse] HP: ███ (½ PV de Soren)                      │
+│                                                       │
+├─────────────────────────────────────────────────────┤
+│         [MAIN DE CARTES EN ARC]                      │
+│     PA: 5/5    PM: 4/4    [Fin de Tour]              │
+└─────────────────────────────────────────────────────┘
 ```
 
-### Barre d'Initiative
+« Éveil » = une jauge par émotion du deck (voir `SYSTEME_EMOTIONS.md`). Les invocations (Lyse pour Soren) ont leur propre barre de PV. Il n'y a pas de Mana générique.
 
-**Fonctionnement:**
-- Affiche l'ordre des tours
-- Portraits des personnages et ennemis
-- Indicateur de tour actuel (surbrillance)
+### Indicateur de Phase
 
-**Position:** Haut de l'Ã©cran, centrÃ©
+Pas de barre d'initiative. Code actuel : un tour par unité (voir `Combat_System.md`) ; `TurnIndicatorUI` affiche l'unité active.
 
-**Visuel:**
+**Fonctionnement :**
+- Affiche le numéro de tour et la phase en cours (JOUEUR / ENNEMIS)
+- Pendant la phase ennemie : surbrillance du portrait de l'ennemi qui agit
+
+**Position :** Haut de l'écran, centré
+
+**Visuel :**
 ```
-[Ilya] â†’ [Goblin 1] â†’ [Ayla] â†’ [Goblin 2] â†’ [Boss]
-  âœ“                                        (en attente)
-```
-
-**ImplÃ©mentation Future:**
-```csharp
-public class InitiativeBar : MonoBehaviour
-{
-    [SerializeField] private Transform _container;
-    [SerializeField] private GameObject _initiativeSlotPrefab;
-
-    public void UpdateInitiativeOrder(List<CombatUnit> units)
-    {
-        // Vider les slots existants
-        // CrÃ©er un slot par unitÃ©
-        // Mettre Ã  jour les portraits et positions
-    }
-
-    public void HighlightCurrentUnit(CombatUnit unit)
-    {
-        // Surbrillance du slot actuel
-    }
-}
+Tour 3 — PHASE JOUEUR
+Tour 3 — PHASE ENNEMIE : [Ombre 1] → [Ombre 2] → [Boss]  (cycle : Zone ▸ Basique ▸ Heal)
+                            ✓         (en cours)
 ```
 
-### Barres de SantÃ©
+### Barres de Santé
 
-**Pour les AlliÃ©s (CÃ´tÃ© Gauche):**
+**Pour les Alliés (Côté Gauche) :**
 - Portrait du personnage
-- Barre de HP (couleur: vert â†’ jaune â†’ rouge selon %)
+- Barre de HP (couleur : vert → jaune → rouge selon %)
 - Barre de Bouclier (bleu, au-dessus de HP)
-- Ressource spÃ©ciale (Rage/Mana/etc.)
-- Effets de statut (icÃ´nes)
+- Jauges d'Éveil (une par émotion du deck)
+- Indicateurs de passif (ex : bonus du Réflexe du grimpeur, motif de Main gagnante détecté)
+- Effets de statut (icônes)
 
-**Pour les Ennemis (CÃ´tÃ© Droit ou Au-dessus sur la grille):**
+**Pour les Ennemis (au-dessus d'eux sur la grille) :**
 - Nom de l'ennemi
-- Barre de HP simplifiÃ©e
+- Barre de HP simplifiée
 - Effets de statut principaux
+- Intention (prochaine carte du pattern)
 
-**Design:**
+**Design :**
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ [Portrait]      â”‚ ILYA
-â”‚ HP:  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘ â”‚ 60/100
-â”‚ Rage: â–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘ â”‚ 4/10
-â”‚ [ðŸ”¥] [âš”+2]      â”‚ (BrÃ»lure, Force)
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌──────────────────┐
+│ [Portrait]       │ ACE
+│ HP:  ██████░░░░  │ 60/100
+│ Éveil Colère ██░ │ 1 palier
+│ [🛡15%] [-1 PM]  │ (Bouclier, retrait de PM)
+│ Motif : Suite ✓  │ (Main gagnante)
+└──────────────────┘
 ```
 
 ### Ressources du Joueur (PA, PM)
 
-**Position:** Bas de l'Ã©cran, centrÃ©, au-dessus de la main
+**Position :** Bas de l'écran, centré, au-dessus de la main
 
-**Visuel:**
+**Visuel :**
 ```
-PA: â—â—â—â—â—‹  (4/5)    PM: â—â—â—‹  (2/3)    [Fin de Tour]
+PA: ●●●●○  (4/5)    PM: ●●○○  (2/4)    [Fin de Tour]   (profil équilibré 5/4)
 ```
 
-**ImplÃ©mentation:**
+**Implémentation :**
 ```csharp
 public class ResourceDisplay : MonoBehaviour
 {
@@ -303,45 +295,37 @@ public class ResourceDisplay : MonoBehaviour
 }
 ```
 
-### Bouton "Fin de Tour"
+### Bouton « Fin de Tour »
 
-**Position:** Bas droite, Ã  cÃ´tÃ© des ressources
+**Position :** Bas droite, à côté des ressources
 
-**Ã‰tats:**
-- **Normal:** Gris/Blanc, cliquable
-- **Hover:** LÃ©gÃ¨re augmentation de taille, glow
-- **Pressed:** Feedback visuel (scale down)
-- **Disabled:** GrisÃ©, non cliquable (pendant le tour de l'ennemi)
+**États :**
+- **Normal :** Gris/Blanc, cliquable
+- **Hover :** Légère augmentation de taille, glow
+- **Pressed :** Feedback visuel (scale down)
+- **Disabled :** Grisé, non cliquable (pendant la phase ennemie)
 
-**Visuel:**
-```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚   FIN DE TOUR    â”‚
-â”‚    [Enter]       â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-```
-
-**Raccourci Clavier:** Touche EntrÃ©e
+**Raccourci Clavier :** Espace (référence des raccourcis : `UX_Flow.md`)
 
 ---
 
-## ðŸ“Š Preview de DÃ©gÃ¢ts et Informations
+## 📊 Preview de Dégâts et Informations
 
-### Preview de DÃ©gÃ¢ts (Hover sur Ennemi)
+### Preview de Dégâts (Hover sur Ennemi)
 
-**Fonctionnement:**
-- Quand une carte est sÃ©lectionnÃ©e et qu'on hover un ennemi valide
-- Affiche les dÃ©gÃ¢ts prÃ©vus
+**Fonctionnement :**
+- Quand une carte est sélectionnée et qu'on survole un ennemi valide
+- Affiche les dégâts prévus
 
-**Visuel (Popup au-dessus de l'ennemi):**
+**Visuel (Popup au-dessus de l'ennemi) :**
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  -15 HP    â”‚
-â”‚  BrÃ»lure   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌────────────┐
+│  -15 HP    │
+│  Brûlure   │
+└────────────┘
 ```
 
-**ImplÃ©mentation Future:**
+**Implémentation Future :**
 ```csharp
 public class DamagePreview : MonoBehaviour
 {
@@ -351,7 +335,7 @@ public class DamagePreview : MonoBehaviour
     public void ShowPreview(int damage, List<StatusEffect> effects)
     {
         _damageText.text = $"-{damage} HP";
-        // Afficher icÃ´nes des effets de statut
+        // Afficher icônes des effets de statut
         gameObject.SetActive(true);
     }
 
@@ -362,58 +346,58 @@ public class DamagePreview : MonoBehaviour
 }
 ```
 
-### Tooltip de Carte (Hover DÃ©taillÃ©)
+### Tooltip de Carte (Hover Détaillé)
 
-**Fonctionnement:**
-- Hover prolongÃ© sur une carte (>0.5s)
-- Affiche description dÃ©taillÃ©e, keywords expliquÃ©s
+**Fonctionnement :**
+- Hover prolongé sur une carte (>0.5s)
+- Affiche description détaillée, keywords expliqués
 
-**Visuel:**
+**Visuel (exemple avec une carte Standard Peur de l'Excel) :**
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ FRAPPE DÃ‰VASTATRICE              â”‚
-â”‚ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€   â”‚
-â”‚ CoÃ»t: 3 PA, 5 Rage               â”‚
-â”‚ Type: Attaque Physique           â”‚
-â”‚ Cible: Ennemi unique             â”‚
-â”‚ PortÃ©e: MÃªlÃ©e                    â”‚
-â”‚                                   â”‚
-â”‚ Inflige 20 dÃ©gÃ¢ts physiques.     â”‚
-â”‚ Si la cible a moins de 30% HP,   â”‚
-â”‚ inflige 10 dÃ©gÃ¢ts supplÃ©mentairesâ”‚
-â”‚                                   â”‚
-â”‚ Keywords:                         â”‚
-â”‚ â€¢ Finisher: Bonus selon HP cibleâ”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────┐
+│ SILENCE GLAÇANT      [PEUR]      │
+│ ───────────────────────────────  │
+│ Coût: 4 PA · Standard            │
+│ Cible: Ennemi unique · Mêlée     │
+│                                   │
+│ Inflige [valeur Excel] dégâts.   │
+│ La cible perd 2 PM à son         │
+│ prochain tour.                    │
+│ Génère de l'Éveil (Peur).         │
+│                                   │
+│ Keywords:                         │
+│ • Retrait de PM : ne se cumule   │
+│   pas, le plus fort l'emporte    │
+└─────────────────────────────────┘
 ```
 
-**Position:** CÃ´tÃ© de la carte (ajustÃ© pour rester Ã  l'Ã©cran)
+**Position :** Côté de la carte (ajusté pour rester à l'écran)
 
 ---
 
-## ðŸŽ¬ Animations et Transitions
+## 🎬 Animations et Transitions
 
 ### Animations de Cartes
 
-**Apparition (Pioche):**
-- Carte apparaÃ®t depuis le deck (haut de l'Ã©cran)
+**Apparition (Pioche) :**
+- Carte apparaît depuis le deck (haut de l'écran)
 - Descend vers la main avec rotation
-- S'insÃ¨re dans l'arc avec animation smooth
-- DurÃ©e: 0.3s
-- Easing: EaseOutQuad
+- S'insère dans l'arc avec animation smooth
+- Durée : 0.3s
+- Easing : EaseOutQuad
 
-**Disparition (DÃ©fausse):**
-- Carte s'envole vers la dÃ©fausse (cÃ´tÃ© droit)
+**Disparition (Défausse) :**
+- Carte s'envole vers la défausse (côté droit)
 - Fade out progressif
-- DurÃ©e: 0.2s
+- Durée : 0.2s
 
-**Jeu de Carte:**
+**Jeu de Carte :**
 - Carte vole vers la cible
 - Trail effect (particules)
-- Impact visuel Ã  l'arrivÃ©e
-- DurÃ©e: 0.5s
+- Impact visuel à l'arrivée
+- Durée : 0.5s
 
-**Code (Exemple):**
+**Code (Exemple) :**
 ```csharp
 public IEnumerator PlayCardAnimation(Vector3 targetPosition)
 {
@@ -439,150 +423,179 @@ float EaseOutQuad(float t) => t * (2f - t);
 
 ### Animations de Combat
 
-**Attaque:**
-- Personnage se dÃ©place lÃ©gÃ¨rement vers la cible
+**Attaque :**
+- Personnage se déplace légèrement vers la cible
 - Flash/shake de la cible
-- Texte de dÃ©gÃ¢ts flottant (pop-up)
-- Retour Ã  la position d'origine
+- Texte de dégâts flottant (pop-up)
+- Retour à la position d'origine
 
-**DÃ©gÃ¢ts ReÃ§us:**
-- Shake de l'unitÃ©
+**Dégâts Reçus :**
+- Shake de l'unité
 - Flash rouge
 - Barre de HP diminue avec animation
-- Particules de sang/impact
+- Particules d'impact
 
-**Mort:**
+**Mort :**
 - Animation de chute/disparition
 - Fade out
-- Suppression de l'unitÃ© de la grille
+- Suppression de l'unité de la grille
 
 ---
 
-## ðŸŽ¨ Palette de Couleurs
+## 🎨 Palette de Couleurs
 
 ### Couleurs Principales
 
-**Interface:**
-- Fond principal: `#1a1a2e` (Bleu trÃ¨s sombre)
-- Fond secondaire: `#16213e` (Bleu sombre)
-- Accent: `#e94560` (Rouge-rose)
-- Accent secondaire: `#0f3460` (Bleu moyen)
+**Interface :**
+- Fond principal : `#1a1a2e` (Bleu très sombre)
+- Fond secondaire : `#16213e` (Bleu sombre)
+- Accent : `#e94560` (Rouge-rose)
+- Accent secondaire : `#0f3460` (Bleu moyen)
 
-**Texte:**
-- Primaire: `#ffffff` (Blanc)
-- Secondaire: `#c7c7c7` (Gris clair)
-- DÃ©sactivÃ©: `#666666` (Gris moyen)
+**Texte :**
+- Primaire : `#ffffff` (Blanc)
+- Secondaire : `#c7c7c7` (Gris clair)
+- Désactivé : `#666666` (Gris moyen)
 
-**Ressources:**
-- HP: `#ff4444` (Rouge) â†’ `#44ff44` (Vert) selon %
-- Bouclier: `#4488ff` (Bleu)
-- PA: `#ffdd44` (Jaune dorÃ©)
-- PM: `#44ddff` (Cyan)
-- Rage: `#ff4444` (Rouge intense)
-- Mana: `#4488ff` (Bleu magique)
+**Ressources :**
+- HP : `#ff4444` (Rouge) → `#44ff44` (Vert) selon %
+- Bouclier : `#4488ff` (Bleu)
+- PA : `#ffdd44` (Jaune doré)
+- PM : `#44ddff` (Cyan)
+- Jauges d'Éveil : couleur de l'émotion (Colère rouge, Peur vert foncé, Joie jaune)
 
-**RaretÃ©s de Cartes:**
-- Commune: `#ffffff` (Blanc)
-- Rare: `#4488ff` (Bleu)
-- Ã‰pique: `#aa44ff` (Violet)
-- LÃ©gendaire: `#ffaa00` (Or)
+**Raretés de Cartes :**
+- Commune : `#ffffff` (Blanc)
+- Rare : `#4488ff` (Bleu)
+- Épique : `#aa44ff` (Violet)
+- Légendaire : `#ffaa00` (Or)
 
-**Feedback:**
-- SuccÃ¨s/Valide: `#44ff44` (Vert)
-- Erreur/Invalide: `#ff4444` (Rouge)
-- Avertissement: `#ffaa00` (Orange)
-- Information: `#4488ff` (Bleu)
+**Feedback :**
+- Succès/Valide : `#44ff44` (Vert)
+- Erreur/Invalide : `#ff4444` (Rouge)
+- Avertissement : `#ffaa00` (Orange)
+- Information : `#4488ff` (Bleu)
+
+**Couleurs de Familles Émotionnelles :** voir **`SYSTEME_EMOTIONS.md`** (référence unique pour les codes hex).
 
 ---
 
-## ðŸ–¼ï¸ Typographie
+## 🌫️ Désaturation Narrative des Donjons *(11/09/2026)*
+
+Décision de lore (voir `GDD_Main.md`) : le monde du jeu « grisonne » quand les émotions débordent sans être affrontées, et les champions font littéralement revenir la couleur en rééquilibrant les gens. Ce n'est pas qu'un texte d'ambiance — c'est un objectif visuel concret pour le MVP.
+
+### Principe
+
+| État | Palette | Moment |
+|------|---------|--------|
+| **Entrée dans le donjon** | Fortement désaturée (quasi grayscale, légère teinte grise-bleue froide) | Début du donjon |
+| **Progression** | La couleur de la famille émotionnelle du donjon (voir `SYSTEME_EMOTIONS.md`) réapparaît progressivement — zones autour des ennemis vaincus, éléments de décor, etc. | Au fil des combats du donjon |
+| **Victoire (rééquilibrage complet)** | Couleur pleine, saturation normale, teinte dominante = couleur de la famille | Fin du donjon (boss vaincu) |
+
+### Pistes d'implémentation (à valider techniquement, voir `Technical_Specs.md`)
+
+- **Option simple (recommandée pour le MVP)** : un post-processing global (Color Grading / Saturation via URP Volume) dont la valeur de saturation est pilotée par une variable « progression du donjon » (0 = gris, 1 = couleur pleine). Peu coûteux, facile à brancher sur l'avancement des combats.
+- **Option avancée (V2+)** : désaturation localisée (ex : un ennemi vaincu « libère » sa zone en couleur, effet de propagation), plus proche d'un vrai moment « juteux » mais demande plus de travail shader/VFX.
+- Le shader `UI_SwirlingLiquid` déjà utilisé pour le fond des cartes (voir `Technical_Specs.md`) pourrait être réutilisé/adapté pour un effet de « couleur qui infuse » lors de la victoire.
+
+### Portée MVP
+
+Pour la version Alpha, l'objectif minimal est : donjon visiblement désaturé à l'entrée → couleur de la famille restaurée en un fondu à la victoire. Pour l'Orphelinat (Peur, famille Réprouvés), la couleur qui revient est le **vert foncé `#006600`**. Les effets de propagation progressive pendant le combat peuvent attendre la Bêta.
+
+---
+
+## 🖼️ Typographie
 
 ### Fonts
 
-**Police Principale (UI):**
-- Nom: **Roboto** (ou similaire sans-serif)
-- Tailles:
-  - Titres: 32-48pt
-  - Sous-titres: 24-28pt
-  - Corps: 16-20pt
-  - Petit texte: 12-14pt
+**Police Principale (UI) :**
+- Nom : **Roboto** (ou similaire sans-serif)
+- Tailles :
+  - Titres : 32-48pt
+  - Sous-titres : 24-28pt
+  - Corps : 16-20pt
+  - Petit texte : 12-14pt
 
-**Police Secondaire (Cartes):**
-- Nom: **Cinzel** (ou similaire serif Ã©lÃ©gante)
-- Utilisation: Noms de cartes, titres importants
-- Tailles:
-  - Nom de carte: 20-24pt
-  - Description: 14-16pt
+**Police Secondaire (Cartes) :**
+- Nom : **Cinzel** (ou similaire serif élégante)
+- Utilisation : noms de cartes, titres importants
+- Tailles :
+  - Nom de carte : 20-24pt
+  - Description : 14-16pt
 
-**LisibilitÃ©:**
+**Lisibilité :**
 - Toujours avec outline/shadow pour contraste
-- Line-height: 1.2-1.5Ã— selon contexte
-- Ã‰viter les textes trop longs
+- Line-height : 1.2-1.5× selon contexte
+- Éviter les textes trop longs
 
 ---
 
-## ðŸ“± Responsive Design
+## 📱 Responsive Design
 
-### RÃ©solutions SupportÃ©es
+> Plateforme cible : PC. Le mobile, mentionné dans `claude_md_coarchitect.md`, n'est pas couvert par ce document — question ouverte dans `GDD_Main.md`.
 
-**Minimum:** 1280 Ã— 720 (HD Ready)
-**RecommandÃ©:** 1920 Ã— 1080 (Full HD)
-**Maximum:** 3840 Ã— 2160 (4K)
+### Résolutions Supportées
 
-**Canvas Scaler:**
-```csharp
+**Minimum :** 1280 × 720 (HD Ready)
+**Recommandé :** 1920 × 1080 (Full HD)
+**Maximum :** 3840 × 2160 (4K)
+
+**Canvas Scaler :**
+```
 Canvas Scaler Settings:
 - UI Scale Mode: Scale With Screen Size
-- Reference Resolution: 1920 Ã— 1080
+- Reference Resolution: 1920 × 1080
 - Screen Match Mode: Match Width Or Height
-- Match: 0.5 (Ã©quilibre entre width et height)
+- Match: 0.5 (équilibre entre width et height)
 ```
 
 ### Adaptations
 
-**16:9 (Standard):**
-- Layout par dÃ©faut
-- Tout est optimisÃ© pour ce ratio
+**16:9 (Standard) :**
+- Layout par défaut
+- Tout est optimisé pour ce ratio
 
-**21:9 (Ultrawide):**
-- Main de cartes reste centrÃ©e
-- UI latÃ©rale utilise l'espace supplÃ©mentaire
-- Grille de combat centrÃ©e
+**21:9 (Ultrawide) :**
+- Main de cartes reste centrée
+- UI latérale utilise l'espace supplémentaire
+- Grille de combat centrée
 
-**4:3 (Ancien format):**
-- Cartes lÃ©gÃ¨rement plus petites
-- Arc plus serrÃ©
+**4:3 (Ancien format) :**
+- Cartes légèrement plus petites
+- Arc plus serré
 - HUD compact
 
 ---
 
-## â™¿ AccessibilitÃ©
+## ♿ Accessibilité
 
 ### Options de Taille de Texte
 
-- Petit (Ã—0.8)
-- Normal (Ã—1.0)
-- Grand (Ã—1.2)
-- TrÃ¨s Grand (Ã—1.5)
+- Petit (×0.8)
+- Normal (×1.0)
+- Grand (×1.2)
+- Très Grand (×1.5)
 
 ### Daltonisme
 
-**Modes de Couleur:**
+**Modes de Couleur :**
 - Normal
 - Protanopie (Rouge-Vert)
-- DeutÃ©ranopie (Rouge-Vert)
+- Deutéranopie (Rouge-Vert)
 - Tritanopie (Bleu-Jaune)
 
-**ImplÃ©mentation:** Shaders de post-processing ou palette alternative
+**Implémentation :** shaders de post-processing ou palette alternative
 
-### Contraste Ã‰levÃ©
+> Point d'attention (11/09/2026) : le mécanisme de désaturation narrative des donjons doit rester lisible et cohérent avec ces modes daltonisme — la distinction « gris vs couleur de famille » ne doit pas dépendre uniquement de la teinte, prévoir un indicateur secondaire (texture, icône) pour les joueurs concernés. À noter : plusieurs couleurs de familles sont proches pour les daltoniens rouge-vert (Déchaînés rouge / Réprouvés vert foncé / Gardiens vert clair).
 
-**Option:** Augmente le contraste de tous les Ã©lÃ©ments UI
-- Bordures plus Ã©paisses
-- Couleurs plus saturÃ©es
-- Ombres plus prononcÃ©es
+### Contraste Élevé
+
+**Option :** augmente le contraste de tous les éléments UI
+- Bordures plus épaisses
+- Couleurs plus saturées
+- Ombres plus prononcées
 
 ---
 
-**DerniÃ¨re mise Ã  jour:** 11 Janvier 2026
-**Responsable:** Design UI Project TDB
+**Dernière mise à jour :** 23 Septembre 2026
+**Responsable :** Shinda + Claude

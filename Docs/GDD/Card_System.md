@@ -1,178 +1,132 @@
-# Système de Cartes - Project TDB
+# Système de Cartes - Émotions Tactics (Project TDB)
 
-**Version:** 2.0
-**Date:** 11 Janvier 2026
-**Dernière mise à jour:** Reflète l'implémentation actuelle
+**Version:** 4.0
+**Date:** 23 Septembre 2026
+**Changements :**
+- v3.0 (10/09/2026) : dimensions Classe et Élément retirées.
+- v4.0 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — types de cartes Standard / Éveil / Signature, identité émotionnelle (Colère / Peur / Joie / Neutre), deck de 24 cartes, budget de puissance. L'ancien découpage Personnage / Famille / Neutre est archivé.
+
+> **Les chiffres font foi dans l'Excel** (onglets « Références », « Calculateur », « Bibliothèque de cartes », « Suivi de deck »). Ce document explique les règles.
 
 ---
 
 ## Vue d'Ensemble
 
-Le système de cartes de **Project TDB** est basé sur une **double identité** : chaque carte appartient à une **Famille**, une **Classe** (triple identité : et un **Elément**). Ce système permet des synergies profondes et une grande variété stratégique.
+Chaque carte a :
+- une **identité émotionnelle** : Colère, Peur, Joie, ou Neutre
+- un **type** : Standard, Éveil ou Signature
+- un **coût en PA** (1 à 6)
+- des caractéristiques tactiques (portée, zone, ligne de vue, statut, déplacement forcé, contrepartie)
+- une **valeur finale** (dégâts, soin ou points de buff) calculée par le **budget de puissance**
 
-### Les 3 Dimensions des Cartes
+### Identité émotionnelle
 
-A voir si on n'utilise pas juste la famille comme émotion sans avoir de cartes identitaire.
+| Identité | Style |
+|----------|-------|
+| **Colère** | Agressif — burst sans sustain |
+| **Peur** | Contrôle — retrait de PM, poussée/tirage |
+| **Joie** | Soin / valeur — survie, mais lent |
+| **Neutre** | Cartes Signature — jouables quel que soit le deck |
 
-| Dimension    | Nombre | Description                                    |
-|--------------|--------|------------------------------------------------|
-| **Familles** | ?      | Identité thématique et émotions personnalisées |
-| **Classes**  | ?      | Rôle tactique sur le champ de bataille         |
-| **Neutre**   | ?      | Utilisable par tous                            |
+Détail des émotions : `SYSTEME_EMOTIONS.md`.
+
+### Types de cartes
+
+| Type | Règle |
+|------|-------|
+| **Standard** | Jouable avec des PA seulement. Pool de 49 cartes dans la bibliothèque de l'Excel et dans le code (17 Colère, 17 Peur, 15 Joie) ; la Roadmap de l'Excel parle de 36. |
+| **Éveil** | Nécessite un seuil d'Éveil (jauge de l'émotion correspondante). Cartes fortes. À créer. |
+| **Signature** | Fixe, liée au champion (2 par champion), identité Neutre. |
+
+### Rôles (répartition cible dans le deck)
+
+| Rôle | Part du deck |
+|------|--------------|
+| Dégâts / Mouvement | 60 % |
+| Soutien / Buffs | 20 % |
+| Réaction / Soin | 20 % |
 
 ---
 
-## Les 8 Familles
+## Deckbuilding
 
-Chaque famille a sa propre identité thématique et son système d'émotions unique.
+- **24 cartes** : **2 Signature + 6 Éveil + 16 Standard** (code actuel : 18 cartes, 2 Signature + 16 Standard, les slots Éveil ne sont pas encore implémentés)
+- Deck **mono ou bi-émotion**
+- Plusieurs decks par champion, plusieurs champions par compte
+- Le **niveau** du champion débloque des **slots de cartes**, mais n'augmente jamais la puissance des cartes (voir `Progression.md`)
+- Suivi de la composition : onglet « Suivi de deck » de l'Excel
 
-| Famille         | Couleur    | Code Hex  | 
-|-----------------|------------|-----------|
-| **Déchaînés**   | Rouge      | #CC0000 | 
-| **Dissidents**  | Violet     | #800080 |
-| **Insurgents**  | Bleu Foncé | #000080 | 
-| **Exilés**      | Bleu Clair | #80CCFF |
-| **Réprouvés**   | Vert Foncé | #006600 | 
-| **Gardiens**    | Vert Clair | #80FF80 | 
-| **Eveillés**    | Jaune      | #FFEB00 | 
-| **Précurseurs** | Orange     | #FF8000 |
+---
 
+## Budget de Puissance
 
-## Les 5 Classes
+**Valeur finale = Baseline(coût en PA) × (1 + somme des modificateurs)**
 
-Les classes définissent **comment le champion gère son émotion** - la psychologie derrière leur pouvoir.
+### Baseline (mêlée, cible unique, sans statut)
 
-| Classe           | Gestion Émotionnelle     | Mécanique de Jeu                             | Style de Combat      |
-|------------------|--------------------------|----------------------------------------------|----------------------|
-| **Exutoire**     | **Consomme** l'émotion   | Il cherche à se débarrasser de son émotion   | Attaque dévastatrice |
-| **Refoulé**      | **Stocke** l'émotion     | Il empile son émotion pour constuire un mur  | Renforcement         |
-| **Façonneur**    | **Transforme** l'émotion | Il forme son émotion comme de l'argile       | Manipulation         |
-| **Evadé**        | **Anesthésie** l'émotion | Il éteint son émotion pour trouver le calme  | Support              |
-| **Parasite**     | **Déplace** l'émotion    | Il donne son émotion dans des invocation     | Gestion d'unité      |
+| Coût PA | 1 | 2 | 3 | 4 | 5 | 6 |
+|---------|---|---|---|---|---|---|
+| **Dégâts / soin** | 12 | 26 | 42 | 60 | 80 | 102 |
 
+### Modificateurs (résumé — valeurs exactes dans l'Excel)
 
-## Les 4 Eléments
+| Catégorie | Options (modificateur) |
+|-----------|------------------------|
+| **Portée** | Mêlée (0) · 1-3 cases (-0.15) · 1-5 (-0.25) · 1-6 (-0.35) |
+| **Zone** | Cible unique (0) · Ligne 2-3 (-0.2) · Cône 3 (-0.25) · 2 cibles séparées (-0.25) · Cercle rayon 1 (-0.35) · 3 cibles séparées (-0.4) · Cercle rayon 2 (-0.5) · Contagion (-0.5) · Équipe entière (-0.65) |
+| **Ligne de vue** | Requise (0) · Non requise (-0.15) |
+| **Statut (Peur)** | -1 PM (-0.1) · -2 PM (-0.3) · -3 PM (-0.35) · perte totale de PM (-1) |
+| **Déplacement forcé** | Poussée/Tirage (-0.08 par case) · Téléportation (-0.15 par case) |
+| **Éveil** | Génère (-0.1) · Consomme 1 / 2 / 3 paliers (+0.3 / +0.5 / +0.7) |
+| **Type d'effet** | Dégâts (0) · Soin (-0.1) · Soin + miroir dégâts (-0.5) · Buff/Debuff (0) · Pioche (0) |
+| **Contrepartie** | Auto-dégâts (+0.25) · Vulnérabilité sur soi (+0.15) · Déplacement aléatoire sur soi (+0.2) · Touche aussi les alliés (+0.3) · Perd 1 PM au prochain tour (+0.15) · Vol de vie (-0.2) · Élan +2 PM (-0.2) · Bond offensif (-0.15) · Repli automatique (-0.15) |
 
-Les éléments ne sont pas encore mis en place pour l'instant cela reste à examiner pour savoir si on l'incrémente ou pas dans le jeu.
+- Plus une carte a de portée, de zone, de contrôle ou de déplacement, moins elle fait de dégâts bruts.
+- Une contrepartie négative pour le lanceur **augmente** le budget.
+- Cellule rouge dans l'Excel = la carte cumule trop de modificateurs négatifs.
+- **Cartes Buff/Debuff** : la valeur finale est un nombre de points à répartir entre intensité et durée (repère : ~10 points ≈ +10 % d'un effet pendant 1 tour).
 
-| Elément     | Couleur    | Code Hex  | Elément Fort |
-|-------------|------------|-----------|--------------|
-| **Feu**     | Rouge      | #CC0000 | Brasier      |
-| **Poison**  | Violet     | #800080 | Toxine       |
-| **Eau**     | Bleu foncé | #000080 | Glace        |
-| **Foudre**  | Bleu clair | #80CCFF | Electricité  |
-| **Ombre**   | Vert foncé | #006600 | Obscurité    |
-| **Pierre**  | Vert clair | #80FF80 | Terre        |
-| **Lumière** | Jaune      | #FFEB00 | Soleil       |
-| **Vent**    | Orange     | #FF8000 | Tempête      |
+> ⚠️ **Grille** : les tailles de zone (cercle rayon 1 = 9 cases, rayon 2 = 25 cases) supposent une grille carrée **8 directions** (distance de Chebyshev). Le code utilise une grille carrée **4 directions** (distance de Manhattan), où un « cercle » de rayon 1 fait 5 cases et de rayon 2, 13 cases. À aligner (voir `GDD_Main.md`).
 
-
-## Caractéristiques des Cartes
-
-### Informations de Base
-
-| Attribut         | Valeurs | Description            |
-|------------------|---------|------------------------|
-| **Nom**          | Texte   | Nom de la carte        |
-| **Description**  | Texte   | Explication de l'effet |
-| **Illustration** | Image   | Art de la carte        |
-| **Coût en PA**   | Texte   | Points d'Action        |
+---
 
 ## Système de Ciblage
 
-### Types de Cible
+### Types de Cible (code actuel, `CardTargetType`)
 
-| Type            | Description             | Cas d'Usage       | Exemple                            |
-|-----------------|-------------------------|-------------------|------------------------------------|
-| **None**        | Aucune cible            | Effet automatique | Buff personnel instantané          |
-| **Self**        | Soi-même uniquement     | Auto-ciblage      | Se soigner, se buffer              |
-| **Enemy**       | Un ou plusieurs ennemis | Attaques standard | Frappe, Sort offensif              |
-| **Ally**        | Alliés (sauf soi)       | Support d'équipe  | Soigner un allié                   |
-| **AllyOrSelf**  | Alliés ET soi-même      | Support flexible  | Soins de groupe                    |
-| **AllyorEnemy** | Alliés ET ennemis       | Effets mixtes     | Explosion qui touche tout le monde |
-| **AnyUnit**     | N'importe quelle unité  | Polyvalent        | Télékinésie, déplacement forcé     |
-| **EmptyTile**   | Tuiles vides uniquement | Placement         | Invocation, piège, zone            |
-| **AnyTile**     | N'importe quelle tuile  | Zone centrée      | Météore, explosion ciblée          |
+| Type | Description | Exemple |
+|------|--------------|---------|
+| **None** | Aucune cible | Buff personnel instantané |
+| **Self** | Soi-même uniquement | Se soigner, se buffer |
+| **Enemy** | Un ou plusieurs ennemis | Attaque |
+| **Ally** | Alliés (sauf soi) | Soigner un allié |
+| **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
+| **AllyorEnemy** | Alliés ET ennemis | Corde de rappel forcé (l'Alpiniste) |
+| **AnyUnit** | N'importe quelle unité | Piolet d'ascension (l'Alpiniste) |
+| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (Soren) |
+| **AnyTile** | N'importe quelle tuile | Explosion ciblée |
+| **EnemyOrTile** | Un ennemi ou une tuile | Bond, charge |
 
+### Portée
 
-### Portée des Cartes
+Portées utilisées par les cartes MVP : **1 (mêlée)**, **1-3**, **1-5**, **1-6** cases. Distance mesurée sur la grille (code actuel : Manhattan).
 
-| Portée  | Distance              | Usage Type                          |
-|---------|-----------------------|-------------------------------------|
-| **0**   | Soi-même ou adjacents | Buffs personnels, AOE autour de soi |
-| **1**   | Cases adjacentes      | Mêlée, attaques au corps-à-corps    |
-| **2-3** | Portée courte         | Sorts courts, armes de jet          |
-| **4-6** | Portée moyenne        | Sorts standards, arcs               |
-| **7+**  | Portée longue         | Sorts puissants, artillerie         |
-| **99**  | Portée infinie        | Sorts globaux                       |
+### Zones d'Effet
 
+Formes utilisées par les cartes MVP : cible unique, ligne (2-3 cases), cône (3 cases), cercle rayon 1 et 2, cibles multiples séparées (2 ou 3), contagion (se propage aux cibles à 2 cases ou moins), équipe entière.
 
-## Zones d'Effet (AOE)
-
-### Formes d'AOE
-
-| Forme       | Description             |
-|-------------|-------------------------|
-| **None**    | Cible unique            | 
-| **OneTile** | Une seule case          | 
-| **Circle**  | Cercle (rayon variable) | 
-| **Line**    | Ligne droite            | 
-| **Cross**   | Croix (4 directions)    |
-| **Cone**    | Cône directionnel       |         
-
-### Visualisation des Formes
-
-**Circle (Rayon 2):**
-```
-    . . X . .
-    . X X X .
-    X X o X X    o = Epicentre
-    . X X X .    X = Cases affectées
-    . . X . .
-```
-
-**Line:**
-```
-    . . o . .
-    . . X . .
-    . . X . .
-    . . X . .
-```
-
-**Cross:**
-```
-    . . X . .
-    . . X . .
-    X X o X X
-    . . X . .
-    . . X . .
-```
-
-**Cone:**
-```
-    . X X X .
-    . . X . .
-    . . o . .
-```
+Dans le code (`CardAreaEffect`) : None, OneTile, Line, Cross, Circle, Cone (ouverture 90°), WholeTeam.
 
 ### Cibles Affectées dans l'AOE
 
-| Type            | Qui est Affecté     | Usage               | Exemple               |
-|-----------------|---------------------|---------------------|-----------------------|
-| **None**        | Personne            | Zone décorative     | Mur de feu visuel     |
-| **Self**        | Soi-même uniquement | Boost personnel     | Aura personnelle      |
-| **Enemies**     | Que les ennemis     | Attaques offensives | Boule de Feu          |
-| **Ally**        | Que les alliés      | Support pur         | Aura de soins         |
-| **AllyOrSelf**  | Alliés ET soi       | Support inclusif    | Bénédiction de groupe |
-| **AllyorEnemy** | Alliés ET ennemis   | Effet neutre/risqué | Explosion suicidaire  |
-| **AnyUnit**     | Tout le monde       | Effet universel     | Onde de choc totale   |
+| Type | Qui est affecté |
+|------|------------------|
+| **Enemies** | Que les ennemis |
+| **Ally** / **AllyOrSelf** | Alliés (avec ou sans soi) |
+| **AllyorEnemy** / **AnyUnit** | Tout le monde (ex : contrepartie « touche aussi les alliés proches ») |
 
-## Effets
+---
 
-### Effets Principaux
-
-| Effet         | Attribut       | Plage   | Description               |
-|---------------|----------------|---------|---------------------------|
-| **Dégâts**    | damageAmount   | 0 à 50+ | Points de dégâts infligés |
-| **Soins**     | healAmount     | 0 à 50+ | Points de vie restaurés   |
-| **Mouvement** | movementAmount | 0 à 5+  | PM bonus accordés         |
+**Dernière mise à jour:** 23 Septembre 2026
+**Version:** 4.0
+**Responsable:** Shinda + Claude

@@ -1,30 +1,53 @@
-# ðŸ—ºï¸ SystÃ¨me de Grille - Project TDB
+# 🗺️ Système de Grille - Émotions Tactics (Project TDB)
 
-**Version:** 1.0
-**Date:** 11 Janvier 2026
+**Version:** 1.2
+**Date:** 23 Septembre 2026
+**Changements :** v1.1 (23/09/2026) encodage réparé, portée MVP. **v1.3 (23/09/2026)** : alignement sur le code réel — **la grille implémentée est carrée**.
+
+## ✅ Grille implémentée (code, vérifié le 23/09/2026)
+
+| Élément | Code actuel |
+|---------|-------------|
+| **Forme** | Grille **carrée** 10 × 10 (`GridManager._width/_height`), tuiles `Vector2Int` |
+| **Distance / portée** | **Manhattan** (`|dx| + |dy|`) dans `GameActionValidator`, `InputManager`, `EnemyAI` (quelques validations utilisent encore une distance euclidienne) |
+| **Déplacement** | 4 directions (haut, bas, gauche, droite) |
+| **Charges / lignes** | 4 directions cardinales |
+| **Terrain** | Plat, sans obstacles |
+
+> ⚠️ **À aligner (question ouverte, voir `GDD_Main.md`)** : l'Excel suppose une grille carrée **8 directions** (cercle rayon 1 = 9 cases, rayon 2 = 25 cases, distance de Chebyshev). Avec la distance de Manhattan du code, ces « cercles » font 5 et 13 cases. La Roadmap de l'Excel parle encore d'une grille hexagonale : à corriger.
+
+Le reste de ce document décrit la **conception hexagonale d'origine** (coordonnées cubiques, 6 directions), **non implémentée**. Elle est conservée pour référence : terrains, ligne de vue, déplacement forcé et optimisations restent valables sur une grille carrée en adaptant les formules.
 
 ---
 
-## ðŸŽ¯ Vue d'Ensemble
+## 🎯 Vue d'Ensemble
 
-Le systÃ¨me de grille hexagonale est la fondation tactique de **Project TDB**. Il offre 6 directions de mouvement (au lieu de 4 avec une grille carrÃ©e), crÃ©ant des dÃ©cisions stratÃ©giques plus riches pour le positionnement, la portÃ©e et le contrÃ´le de zone.
+La grille est la fondation tactique du jeu : positionnement, portée et contrôle de zone (retrait de PM, poussée/tirage de la Peur, grappin de l'Alpiniste).
+
+### Portée MVP
+
+- **Grille plate, sans obstacles**, ligne de vue directe
+- Les types de terrain, obstacles et la ligne de vue bloquée décrits ci-dessous sont prévus pour la **V2**
+- Taille de grille : 10×10 dans le code (7×7 à 11×11 envisagés selon le combat)
+- Portées des cartes MVP : 1 à 6 cases
 
 ---
 
-## ðŸ“ Grille Hexagonale
+## 📐 Grille Hexagonale *(conception d'origine, non implémentée)*
 
-### GÃ©omÃ©trie de Base
+### Géométrie de Base
 
-**Type:** Hex Pointy-Top (pointes en haut et bas)
+**Type :** le texte d'origine indiquait « Pointy-Top », mais la formule `HexToWorld` ci-dessous correspond à une orientation **Flat-Top** — à corriger si la grille hex revient un jour.
 
-**CoordonnÃ©es Cubiques:**
-Nous utilisons le systÃ¨me de coordonnÃ©es cubiques (q, r, s) oÃ¹:
-- `q + r + s = 0` (contrainte mathÃ©matique)
+**Coordonnées Cubiques :**
+Nous utilisons le système de coordonnées cubiques (q, r, s) où :
+- `q + r + s = 0` (contrainte mathématique)
 - Plus facile pour calculer distances et voisins
+- (Les coordonnées « axiales » sont la même chose en ne stockant que q et r, s étant déduit.)
 
-**Conversion:**
+**Conversion :**
 ```csharp
-// Cube â†’ Position Monde
+// Cube → Position Monde (formule flat-top)
 Vector3 HexToWorld(int q, int r)
 {
     float x = hexSize * (3f/2f * q);
@@ -32,7 +55,7 @@ Vector3 HexToWorld(int q, int r)
     return new Vector3(x, 0, z);
 }
 
-// Position Monde â†’ Cube (arrondi au hex le plus proche)
+// Position Monde → Cube (arrondi au hex le plus proche)
 (int q, int r) WorldToHex(Vector3 worldPos)
 {
     float q = (2f/3f * worldPos.x) / hexSize;
@@ -43,7 +66,7 @@ Vector3 HexToWorld(int q, int r)
 
 ### Voisins et Directions
 
-**6 Directions:**
+**6 Directions :**
 ```csharp
 Vector3Int[] hexDirections = new Vector3Int[]
 {
@@ -56,7 +79,7 @@ Vector3Int[] hexDirections = new Vector3Int[]
 };
 ```
 
-**Obtenir un voisin:**
+**Obtenir un voisin :**
 ```csharp
 Vector3Int GetNeighbor(Vector3Int hex, int direction)
 {
@@ -66,7 +89,7 @@ Vector3Int GetNeighbor(Vector3Int hex, int direction)
 
 ### Distance
 
-**Formule (Distance de Manhattan en coordonnÃ©es cubiques):**
+**Formule (distance de Manhattan en coordonnées cubiques) :**
 ```csharp
 int HexDistance(Vector3Int a, Vector3Int b)
 {
@@ -74,131 +97,135 @@ int HexDistance(Vector3Int a, Vector3Int b)
 }
 ```
 
-**Exemples:**
+**Exemples :**
 - Hex adjacent = Distance 1
 - 2 hex de distance = Distance 2
 - etc.
 
 ---
 
-## ðŸŽ® Taille et Layout de la Grille
+## 🎮 Taille et Layout de la Grille
 
 ### Taille des Combats
 
-**Petits Combats (Tutorial, Rencontres Faciles):**
-- **Taille:** 7 Ã— 7 hex (49 cases)
-- **Ennemis:** 2-3
-- **AlliÃ©s:** 2-3
+**Petits Combats (Tutoriel, Rencontres Faciles) :**
+- **Taille :** 7 × 7 hex (49 cases)
+- **Ennemis :** 2-3
+- **Alliés :** 1 (aventure solo)
 
-**Combats Standards:**
-- **Taille:** 9 Ã— 9 hex (81 cases)
-- **Ennemis:** 3-5
-- **AlliÃ©s:** 3-4
+**Combats Standards :**
+- **Taille :** 9 × 9 hex (81 cases)
+- **Ennemis :** 3-5
+- **Alliés :** 1-3
 
-**Combats de Boss:**
-- **Taille:** 11 Ã— 11 hex (121 cases)
-- **Ennemis:** 1 boss + 2-4 adds
-- **AlliÃ©s:** 4
+**Combats de Boss :**
+- **Taille :** 11 × 11 hex (121 cases)
+- **Ennemis :** 1 boss + 2-4 adds
+- **Alliés :** 1-3
 
-### Zones de DÃ©part
+> Les donjons sont prévus pour une **équipe de 3** (Excel) ; l'aventure est jouable en solo. Coop ou un seul joueur qui contrôle les 3 : question ouverte (`GDD_Main.md`).
 
-**Placement AlliÃ©:**
+### Zones de Départ
+
+**Placement Allié :**
 - Bord gauche de la grille
-- 2-3 rangÃ©es de profondeur
-- Positions prÃ©dÃ©finies selon le nombre de personnages
+- 2-3 rangées de profondeur
+- Positions prédéfinies selon le nombre de personnages
 
-**Placement Ennemi:**
+**Placement Ennemi :**
 - Bord droit de la grille
 - Disposition variable selon le type de combat
 - Boss au centre ou au fond
 
 ---
 
-## ðŸŒ Types de Terrain
+## 🌍 Types de Terrain *(V2)*
+
+> Rappel : dans les donjons, le décor est désaturé à l'entrée et reprend la couleur de la famille émotionnelle à la victoire (voir `UI_Design.md`). Les couleurs de terrain ci-dessous devront rester lisibles dans cet état désaturé (prévoir aussi textures/icônes).
 
 ### Terrain Standard
 
-**PropriÃ©tÃ©s:**
-- CoÃ»t de dÃ©placement: 1 PM
-- Aucun effet spÃ©cial
-- Couleur: Gris/Neutre
+**Propriétés :**
+- Coût de déplacement : 1 PM
+- Aucun effet spécial
+- Couleur : Gris/Neutre
 
 ### Terrain Difficile
 
-**PropriÃ©tÃ©s:**
-- CoÃ»t de dÃ©placement: 2 PM (double)
-- ReprÃ©sente: Boue, sable, dÃ©combres
-- Couleur: Marron
+**Propriétés :**
+- Coût de déplacement : 2 PM (double)
+- Représente : Boue, sable, décombres
+- Couleur : Marron
 
-**StratÃ©gie:**
-- Ralentit les dÃ©placements
-- Peut sÃ©parer le champ de bataille
+**Stratégie :**
+- Ralentit les déplacements
+- Peut séparer le champ de bataille
 - Moins prioritaire pour le positionnement
 
-### Terrain Ã‰levÃ©
+### Terrain Élevé
 
-**PropriÃ©tÃ©s:**
-- CoÃ»t de dÃ©placement: 1 PM
-- Bonus: +20% dÃ©gÃ¢ts depuis cette case
-- ReprÃ©sente: Collines, plateformes
-- Couleur: Vert clair
+**Propriétés :**
+- Coût de déplacement : 1 PM
+- Bonus : +20 % dégâts depuis cette case
+- Représente : Collines, plateformes
+- Couleur : Vert clair
 
-**StratÃ©gie:**
+**Stratégie :**
 - Position prioritaire pour les attaquants
-- ContrÃ´le de zone important
+- Contrôle de zone important
 - Cible de contestation
 
 ### Terrain Dangereux
 
-**Lave:**
-- CoÃ»t de dÃ©placement: 1 PM
-- Effet: 5 dÃ©gÃ¢ts de feu Ã  la fin du tour si sur la case
-- Applique: BrÃ»lure (1 stack)
-- Couleur: Rouge/Orange
+**Lave :**
+- Coût de déplacement : 1 PM
+- Effet : 5 dégâts de feu à la fin du tour si sur la case
+- Applique : Brûlure (1 stack)
+- Couleur : Rouge/Orange
 
-**Poison:**
-- CoÃ»t de dÃ©placement: 1 PM
-- Effet: 3 dÃ©gÃ¢ts de poison Ã  la fin du tour
-- Applique: Poison (1 stack)
-- Couleur: Vert toxique
+**Poison :**
+- Coût de déplacement : 1 PM
+- Effet : 3 dégâts de poison à la fin du tour
+- Applique : Poison (1 stack)
+- Couleur : Vert toxique
 
-**Glace:**
-- CoÃ»t de dÃ©placement: 1 PM
-- Effet: RÃ©duit PM de 1 tant que sur la case
-- Peut faire glisser (mouvement forcÃ©)
-- Couleur: Bleu glacÃ©
+**Glace :**
+- Coût de déplacement : 1 PM
+- Effet : Réduit PM de 1 tant que sur la case
+- Peut faire glisser (mouvement forcé)
+- Couleur : Bleu glacé
 
 ### Obstacles
 
-**Murs:**
+**Murs :**
 - **Infranchissable** : Bloque le mouvement
-- **Bloque la ligne de vue** : EmpÃªche le ciblage
-- ReprÃ©sente: Murs, rochers massifs
-- Peut Ãªtre dÃ©truit par certaines capacitÃ©s
+- **Bloque la ligne de vue** : Empêche le ciblage
+- Représente : Murs, rochers massifs
+- Peut être détruit par certaines capacités
 
-**Couverture:**
+**Couverture :**
 - **Franchissable** : 1 PM
 - **Ne bloque PAS la ligne de vue**
-- **Bonus dÃ©fensif** : -30% dÃ©gÃ¢ts reÃ§us si derriÃ¨re
-- ReprÃ©sente: Barricades, caisses, petits rochers
+- **Bonus défensif** : -30 % dégâts reçus si derrière
+- Représente : Barricades, caisses, petits rochers
 
 ---
 
-## ðŸŽ¯ Ligne de Vue (Line of Sight)
+## 🎯 Ligne de Vue (Line of Sight) *(V2 — MVP : ligne de vue directe)*
 
-### RÃ¨gles de Base
+### Règles de Base
 
-**Ligne de Vue Requise Pour:**
-- Cartes Ã  distance (sauf indication contraire)
-- Certains sorts (Boule de Feu, etc.)
+**Ligne de Vue Requise Pour :**
+- Cartes à distance (sauf indication contraire)
+- Certains sorts
 
-**Ligne de Vue BloquÃ©e Par:**
+**Ligne de Vue Bloquée Par :**
 - Murs et obstacles massifs
-- **PAS** par les unitÃ©s (alliÃ©es ou ennemies)
+- **PAS** par les unités (alliées ou ennemies)
 
 ### Algorithme de Calcul
 
-**Bresenham Line Algorithm (adaptÃ© pour hex):**
+**Bresenham Line Algorithm (adapté pour hex) :**
 ```csharp
 bool HasLineOfSight(Vector3Int from, Vector3Int to)
 {
@@ -206,11 +233,11 @@ bool HasLineOfSight(Vector3Int from, Vector3Int to)
 
     for (int i = 1; i < distance; i++)
     {
-        // Interpolation linÃ©aire entre from et to
+        // Interpolation linéaire entre from et to
         float t = i / (float)distance;
         Vector3Int hex = HexLerp(from, to, t);
 
-        // VÃ©rifier si cette case bloque la ligne de vue
+        // Vérifier si cette case bloque la ligne de vue
         if (IsBlocking(hex))
             return false;
     }
@@ -221,77 +248,77 @@ bool HasLineOfSight(Vector3Int from, Vector3Int to)
 
 ---
 
-## ðŸš¶ SystÃ¨me de Mouvement
+## 🚶 Système de Mouvement
 
-### CoÃ»t de DÃ©placement
+### Coût de Déplacement
 
-**Standard:**
-- 1 PM par case hexagonale
-- ModifiÃ© par le type de terrain
-- Impossible de traverser une case occupÃ©e par un ennemi
+**Standard :**
+- 1 PM par case (règles complètes : `Combat_System.md`)
+- Modifié par le type de terrain (V2)
+- Impossible de traverser une case occupée par un ennemi
 
-**Pathfinding:**
-Algorithme A* adaptÃ© pour grille hexagonale
+**Pathfinding :**
+Algorithme A* (heuristique : distance de la grille)
 
 ```csharp
 List<Vector3Int> FindPath(Vector3Int start, Vector3Int goal, int maxPM)
 {
     // A* avec heuristique de distance hex
-    // CoÃ»t = coÃ»t de terrain
-    // ArrÃªt si coÃ»t total > maxPM
+    // Coût = coût de terrain
+    // Arrêt si coût total > maxPM
 }
 ```
 
 ### Zones de Mouvement
 
-**Highlighting:**
-Quand un personnage est sÃ©lectionnÃ©:
+**Highlighting :**
+Quand un personnage est sélectionné :
 - **Vert** : Cases accessibles avec PM actuels
-- **Jaune** : Cases accessibles en utilisant une carte de dÃ©placement
+- **Jaune** : Cases accessibles en utilisant une carte de déplacement
 - **Rouge** : Cases inaccessibles
 
-**Calcul:**
+**Calcul :**
 ```csharp
 HashSet<Vector3Int> GetReachableTiles(Vector3Int start, int movementPoints)
 {
-    // Flood fill jusqu'Ã  Ã©puiser les PM
-    // Prend en compte le coÃ»t de terrain
-    // Exclut les cases bloquÃ©es
+    // Flood fill jusqu'à épuiser les PM
+    // Prend en compte le coût de terrain
+    // Exclut les cases bloquées
 }
 ```
 
-### DÃ©placement ForcÃ©
+### Déplacement Forcé
 
-**Push (Repousser):**
-- DÃ©place l'unitÃ© de N cases dans une direction
-- Si obstacle ou bord de grille â†’ ArrÃªt anticipÃ©
-- DÃ©gÃ¢ts bonus si collision avec obstacle (2 dÃ©gÃ¢ts)
+**Push (Repousser) :**
+- Déplace l'unité de N cases dans une direction
+- Si obstacle ou bord de grille → Arrêt anticipé
+- Dégâts bonus si collision avec obstacle (2 dégâts)
 
-**Pull (Attirer):**
-- DÃ©place l'unitÃ© vers le lanceur
+**Pull (Attirer) :**
+- Déplace l'unité vers le lanceur
 - Suit le plus court chemin
-- S'arrÃªte Ã  1 case du lanceur
+- S'arrête à 1 case du lanceur
 
-**TÃ©lÃ©portation:**
-- Ignore les obstacles et unitÃ©s
-- Placement instantanÃ©
+**Téléportation :**
+- Ignore les obstacles et unités
+- Placement instantané
 - Certaines cartes permettent ce type de mouvement
 
 ---
 
-## ðŸŽ¨ Visualisation de la Grille
+## 🎨 Visualisation de la Grille
 
 ### Highlighting des Cases
 
-**Ã‰tats Visuels:**
+**États Visuels :**
 
 1. **Neutre** : Pas de surbrillance, couleur de terrain standard
-2. **Accessible (Vert)** : Cases oÃ¹ le personnage peut se dÃ©placer
-3. **Attaque (Rouge)** : Cases dans la portÃ©e d'attaque
+2. **Accessible (Vert)** : Cases où le personnage peut se déplacer
+3. **Attaque (Rouge)** : Cases dans la portée d'attaque
 4. **AoE (Orange)** : Preview de zone d'effet d'une carte
-5. **SÃ©lectionnÃ© (Bleu)** : Case actuellement sous le curseur
+5. **Sélectionné (Bleu)** : Case actuellement sous le curseur
 
-**ImplÃ©mentation:**
+**Implémentation :**
 ```csharp
 public class HexTile : MonoBehaviour
 {
@@ -319,23 +346,23 @@ public class HexTile : MonoBehaviour
 
 ### Feedback Visuel
 
-**Hover sur Case:**
-- LÃ©gÃ¨re Ã©lÃ©vation (0.1 unitÃ©s)
+**Hover sur Case :**
+- Légère élévation (0.1 unités)
 - Outline autour de la case
-- Affichage des informations (type de terrain, coÃ»t)
+- Affichage des informations (type de terrain, coût)
 
-**Chemin de Mouvement:**
-- FlÃ¨ches directionnelles entre les cases
-- Couleur dÃ©gradÃ©e (vert â†’ jaune selon PM restants)
+**Chemin de Mouvement :**
+- Flèches directionnelles entre les cases
+- Couleur dégradée (vert → jaune selon PM restants)
 - Animation de flux
 
 ---
 
-## ðŸ§© Zones d'Effet (AoE)
+## 🧩 Zones d'Effet (AoE)
 
-### Formes de Zone
+Formes disponibles pour les cartes : voir `Card_System.md`. Calcul sur la grille hex :
 
-**Cercle (Radius):**
+**Cercle (Radius) :**
 ```csharp
 HashSet<Vector3Int> GetCircleArea(Vector3Int center, int radius)
 {
@@ -357,7 +384,7 @@ HashSet<Vector3Int> GetCircleArea(Vector3Int center, int radius)
 }
 ```
 
-**Ligne (Line):**
+**Ligne (Line) :**
 ```csharp
 List<Vector3Int> GetLineArea(Vector3Int start, Vector3Int direction, int length)
 {
@@ -372,103 +399,103 @@ List<Vector3Int> GetLineArea(Vector3Int start, Vector3Int direction, int length)
 }
 ```
 
-**CÃ´ne (Cone):**
+**Cône (Cone) :**
 - 3 directions adjacentes
 - Longueur variable
-- Ã‰largissement progressif
+- Élargissement progressif
 
-**Croix (Cross):**
-- 4 cases adjacentes (haut, bas, gauche, droite en systÃ¨me hex)
+**Croix (Cross) :**
+- Sur grille hex : lignes dans les **6 directions** (les 3 axes q, r, s) depuis l'épicentre
 - Taille fixe ou variable
 
 ---
 
-## ðŸŽ² Terrain Dynamique
+## 🎲 Terrain Dynamique *(V2)*
 
-### CrÃ©ation de Terrain Pendant le Combat
+### Création de Terrain Pendant le Combat
 
-**Exemples:**
+**Exemples :**
 
-**Mur de Glace (Carte):**
-- CrÃ©e un obstacle temporaire
+**Mur de Glace (Carte) :**
+- Crée un obstacle temporaire
 - Dure 2 tours
 - Bloque mouvement et ligne de vue
 
-**Zone de Feu (Carte):**
-- CrÃ©e une zone de lave temporaire (rayon 2)
+**Zone de Feu (Carte) :**
+- Crée une zone de lave temporaire (rayon 2)
 - Dure 3 tours
-- 5 dÃ©gÃ¢ts de feu par tour aux unitÃ©s sur la zone
+- 5 dégâts de feu par tour aux unités sur la zone
 
-**TÃ©lÃ©porteur (Ã‰vÃ©nement de Niveau):**
-- Paire de cases spÃ©ciales
-- Entrer sur l'une tÃ©lÃ©porte vers l'autre
-- CoÃ»t: 0 PM pour le tÃ©lÃ©port
+**Téléporteur (Événement de Niveau) :**
+- Paire de cases spéciales
+- Entrer sur l'une téléporte vers l'autre
+- Coût : 0 PM pour le téléport
 
 ---
 
-## ðŸ“Š Optimisations Techniques
+## 📊 Optimisations Techniques
 
-### PrÃ©-calculs
+### Pré-calculs
 
-**Au DÃ©marrage du Combat:**
+**Au Démarrage du Combat :**
 ```csharp
 void InitializeGrid()
 {
-    // PrÃ©-calculer tous les voisins
+    // Pré-calculer tous les voisins
     foreach (var tile in allTiles)
     {
         tile.PrecomputeNeighbors();
     }
 
-    // PrÃ©-calculer les zones communes (rayon 2, rayon 3, etc.)
+    // Pré-calculer les zones communes (rayon 2, rayon 3, etc.)
     PrecomputeCommonAreas();
 }
 ```
 
 ### Caching
 
-**Distances:**
+**Distances :**
 ```csharp
-// Cache des distances entre positions frÃ©quentes
+// Cache des distances entre positions fréquentes
 Dictionary<(Vector3Int, Vector3Int), int> _distanceCache;
 ```
 
-**Pathfinding:**
+**Pathfinding :**
 ```csharp
-// Cache des chemins rÃ©cemment calculÃ©s
+// Cache des chemins récemment calculés
 LRUCache<(Vector3Int, Vector3Int), List<Vector3Int>> _pathCache;
 ```
 
 ### Object Pooling
 
-**Highlighting Overlays:**
-- Pool d'objets rÃ©utilisables pour les highlights
-- Ã‰vite Instantiate/Destroy rÃ©pÃ©tÃ©s
-- AmÃ©liore performance
+**Highlighting Overlays :**
+- Pool d'objets réutilisables pour les highlights
+- Évite Instantiate/Destroy répétés
+- Améliore performance
 
 ---
 
-## ðŸŽ¯ Interactions avec les Autres SystÃ¨mes
+## 🎯 Interactions avec les Autres Systèmes
 
 ### Cartes et Grille
 
-- Cartes utilisent les coordonnÃ©es hex pour le ciblage
-- PortÃ©e des cartes = Distance hex
+- Cartes utilisent les coordonnées hex pour le ciblage
+- Portée des cartes = Distance hex
 - AoE des cartes = Formes hex
 
 ### Combat et Grille
 
-- Position affecte les dÃ©gÃ¢ts (terrain Ã©levÃ©)
-- Ligne de vue dÃ©termine les cibles valides
-- Positionnement tactique = avantage stratÃ©gique
+- Position affecte les dégâts (terrain élevé, V2)
+- Ligne de vue détermine les cibles valides (V2)
+- Positionnement tactique = avantage stratégique
 
 ### UI et Grille
 
 - Hover sur hex = Preview d'action
-- SÃ©lection de hex = Validation d'action
+- Sélection de hex = Validation d'action
 - Feedback visuel constant
 
 ---
 
-**DerniÃ¨re mise Ã  jour:** 11 Janvier 2026
-**Responsable:** Design Grille Project TDB
+**Dernière mise à jour :** 23 Septembre 2026
+**Responsable :** Shinda + Claude

@@ -1,273 +1,285 @@
-# Game Design Document - Project TDB
+# Game Design Document - Émotions Tactics (nom de code : Project TDB)
 
-**Version:** 2.0
-**Date:** 11 Janvier 2026
-**Statut:** Développement actif
-**Mise à jour:** Reflète l'implémentation actuelle
+**Version :** 3.4
+**Date :** 23 Septembre 2026
+**Statut :** Document canon central. Réaligné le 23/09/2026 sur le classeur **`TCG_Tactique_Systeme_de_calcul.xlsx`**, qui fait office de **référence du MVP** (roster, émotions, deck, budget des cartes, progression, monstres).
+
+> Ce document est le point d'entrée du projet. Pour le détail, voir les documents listés ci-dessous. Les concepts abandonnés, mis en pause ou sortis du MVP sont conservés dans `archive/Concepts_Abandonnes.md` — rien n'est perdu, juste rangé.
+
+## 🗺️ Carte des documents du projet
+
+**Référence MVP**
+- `TCG_Tactique_Systeme_de_calcul.xlsx` (projet claude.ai ; copie texte dans le repo : `MVP_Excel_Snapshot.md`) — **le MVP chiffré** : calculateur de cartes (budget PA + modificateurs), bibliothèque de cartes (49 Standard + Signatures), suivi de deck, progression des champions, barème des monstres, fiches des 3 champions, roadmap des décisions.
+
+**Index et état du code**
+- `README.md` — index des documents (repo).
+- `MVP_Excel_Snapshot.md` — copie texte de l'Excel MVP, lisible par Claude Code.
+- `Technical_Specs.md` § « État du code » — ce qui est réellement implémenté dans Unity.
+
+**Vision et cadrage**
+- `GDD_Main.md` *(ce document)* — vision globale, décisions actées, questions ouvertes. Point de départ.
+- `claude_md_coarchitect.md` — le « contrat de collaboration » avec Claude + résumé court de l'état du jeu.
+
+**Émotions et personnages**
+- `SYSTEME_EMOTIONS.md` — les 8 émotions/familles (Plutchik), les 3 émotions de lancement, le système d'Éveil.
+- `CHAMPIONS_CONCEPTS.md` — roster MVP (Soren, l'Alpiniste, Ace) et concepts hors MVP.
+- `ilya_deck_simple.md` — fiche d'Ilya (**hors MVP**, conservé comme concept complet).
+- `astra_noctis_simple.md` — fiche des Jumeaux Astra & Noctis (**hors MVP**).
+- `Characters.md` — structure technique d'un champion (ChampionData).
+- `personnages_a_developper.md` — réservoir de 100 concepts de personnages.
+
+**Systèmes de jeu**
+- `Card_System.md` — types de cartes (Standard / Éveil / Signature), identité émotionnelle, budget de puissance, ciblage, zones.
+- `Combat_System.md` — règles de combat (tour, ressources, statuts, contrôle, main).
+- `Grid_System.md` — grille, déplacement, ligne de vue.
+- `Enemies.md` — monstres (donjon / aventure), barème, deck pattern.
+- `Progression.md` — niveaux, PV, slots, XP, économie.
+
+**Interface et technique**
+- `UX_Flow.md` — parcours joueur écran par écran.
+- `UI_Design.md` — design de l'interface, palette, désaturation narrative.
+- `Technical_Specs.md` — architecture Unity, patterns de code.
+
+**Archive**
+- `archive/Concepts_Abandonnes.md` — Ayla, classes, Éléments, gacha, ancien lore, ancienne jauge -100/+100, ancienne boucle roguelike, anciennes règles de progression et de cartes remplacées par l'Excel.
+
+## 📌 Source unique de vérité
+
+Chaque information n'a qu'**un seul document de référence**. En cas de doute, c'est la source qui fait foi.
+
+| Information | Référence |
+|-------------|-----------|
+| **Chiffres du MVP** : budget des cartes, liste des cartes, profils PA/PM, PV par niveau, XP, barème monstres, champions MVP | **`TCG_Tactique_Systeme_de_calcul.xlsx`** |
+| Vision, lore, décisions, questions ouvertes | `GDD_Main.md` |
+| Émotions/familles, couleurs, Éveil | `SYSTEME_EMOTIONS.md` |
+| Règles de combat (tour, main, statuts, contrôle) | `Combat_System.md` |
+| Règles de deck et de cartes (explication) | `Card_System.md` |
+| Grille, déplacement | `Grid_System.md` |
+| Parcours joueur, raccourcis | `UX_Flow.md` |
+| Visuel, palette, désaturation | `UI_Design.md` |
+| Architecture et code | `Technical_Specs.md` |
+| **Écarts entre le code Unity et le design** | `Technical_Specs.md`, section « État du code » |
+
+Les documents texte **expliquent** les règles ; l'Excel **porte les chiffres**. Quand un chiffre change dans l'Excel, il ne faut pas le recopier ailleurs — seulement renvoyer vers l'Excel.
 
 ## Vision du Jeu
 
-**Project TDB** (Tactical Deck Builder) est un jeu de combat tactique au tour par tour qui fusionne la profondeur stratégique des jeux de grille avec la créativité du deck building et un système d'émotions unique. Le joueur contrôle des champions appartenant à **8 familles distinctes**, chacune avec son propre système émotionnel qui transforme leur style de combat.
+**Émotions Tactics** est un jeu de combat tactique au tour par tour sur grille qui fusionne la profondeur stratégique des jeux de grille (Dofus, Waven) avec le deck building. Le joueur contrôle des champions, construit des decks autour d'**émotions** (Colère, Peur, Joie au lancement) et chaque champion apporte une **mécanique signature** (passif + cartes Signature).
 
-### Concept Unique
+### Univers narratif *(11/09/2026, ajusté le 23/09/2026)*
 
-**Système d'Emotions Transformatives**
-- Chaque champion possède une jauge émotionnelle (0 à 100)
-- Plusieurs paramètres influencent cette jauge
-- Atteindre les seuils déclenche des **transformations** qui changent radicalement les stats et le style de jeu
+Le monde ne s'effondre pas d'un coup — il **grisonne**. À force que les gens négligent le monde et leurs propres émotions, un surplus s'accumule et déborde. Cette accumulation ronge la couleur : chaque émotion a la sienne, et ceux qui laissent leurs émotions déborder sans jamais les affronter perdent la leur, jusqu'à devenir gris, vides, absents à eux-mêmes. Dans les cas extrêmes, ce trop-plein se cristallise en un **donjon intérieur** — l'esprit de cette personne, peuplé par ses émotions devenues manifestations physiques.
 
+Pas de gouvernement oppressif, pas d'organisation secrète. Les champions sont des gens qui ont gardé — ou reconquis — **leur propre couleur**, qui leur permet de percevoir et d'entrer dans ces espaces gris. **Tout champion peut entrer dans n'importe quel donjon** (règle « uniquement sa propre famille » retirée le 23/09/2026).
 
-## Les 8 Familles
+Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPIONS_CONCEPTS.md`) : Soren n'arrive pas à laisser partir sa sœur jumelle Lyse, l'Alpiniste ne supporte plus de laisser quelqu'un hors de portée, Ace ne laisse plus jamais le hasard décider.
 
-Chaque famille a sa propre identité thématique et son système d'émotions unique.
+**Exemples de donjons** :
+- **Orphelinat** : Enfants prisonniers de la Peur → Ennemis : Ombres du Placard, Monstres Sous le Lit — **donjon du MVP**
+- **Bureau Corporatiste** : Employé en burnout (Anxiété) → Ennemis : Dossiers oppressants, Horloges tyranniques
+- **Maison Familiale** : Adulte traumatisé (Colère) → Ennemis : Mots blessants, Poings spectraux
 
-| Famille         | Couleur    | Code Hex  | 
-|-----------------|------------|-----------|
-| **Déchaînés**   | Rouge      | #CC0000 | 
-| **Dissidents**  | Violet     | #800080 |
-| **Insurgents**  | Bleu Foncé | #000080 | 
-| **Exilés**      | Bleu Clair | #80CCFF |
-| **Réprouvés**   | Vert Foncé | #006600 | 
-| **Gardiens**    | Vert Clair | #80FF80 | 
-| **Eveillés**    | Jaune      | #FFEB00 | 
-| **Précurseurs** | Orange     | #FF8000 |
+**Thème central** : L'équilibre émotionnel. La victoire = transformation de l'émotion négative en positive (Peur → Prudence, Colère → Affirmation, Tristesse → Acceptation) — et, visuellement, le retour de la couleur dans un lieu devenu gris.
 
+## Les Émotions
+
+**Vision long terme : 8 émotions** (roue de Plutchik), chacune avec sa couleur — voir `SYSTEME_EMOTIONS.md`.
+
+**MVP : 3 émotions de lancement** (acté dans l'Excel) :
+
+| Émotion | Famille | Rôle | Force / Faiblesse |
+|---------|---------|------|-------------------|
+| **Colère** | Déchaînés | Agressif | Burst, sans sustain |
+| **Peur** | Réprouvés | Contrôle (retrait de PM, poussée/tirage) | Contrôle / tempo |
+| **Joie** | Éveillés | Soin / valeur | Survie, mais lent |
+
+Un deck est **mono ou bi-émotion**. Les cartes Signature sont **Neutres** (jouables quelles que soient les émotions du deck).
+
+## Roster MVP *(Excel, 23/09/2026)*
+
+| Champion | Trauma | Passif | Cartes Signature |
+|----------|--------|--------|------------------|
+| **Soren** | A perdu sa sœur jumelle Lyse | Miroir fraternel (ses invocations rejouent un écho de ses cartes offensives à ~40 %) | Invocation de Lyse (2 PA), Écho de Lyse (1 PA) |
+| **L'Alpiniste** | Accident de cordée filmé, confiance brisée | Réflexe du grimpeur (après un grappin : bouclier près d'un allié, bonus de dégâts près d'un ennemi) | Piolet d'ascension (2 PA), Corde de rappel forcé (4 PA) |
+| **Ace** | A tout perdu sur une main légendaire | Main gagnante (bonus selon le motif des coûts joués : Paire / Suite / Bluff) | Il triche (1 PA), Tapis (5 PA) |
+
+Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
+
+**Hors MVP :** Ilya (concept complet, sa mécanique Rage est à réadapter au système Éveil) et les Jumeaux Astra & Noctis.
 
 ## Piliers de Design
 
-### 1. Emotions et Transformations
-- Système unique qui différencie Project TDB
-- Chaque carte influence l'état émotionnel du champion
-- Les émotions sont personnalisées par famille
+### 1. Émotions et Couleur
+- Les cartes ont une **identité émotionnelle** ; le deck se construit autour d'1 ou 2 émotions
+- Les cartes génèrent de l'**Éveil** (une jauge par émotion) qui débloque des cartes fortes — concept acté, mise en œuvre concrète repoussée
+- **La couleur est un pilier visuel autant que narratif** : un donjon est désaturé à l'entrée et retrouve sa couleur à la victoire (voir `UI_Design.md`)
 
-### 2. Synergie Famille-Classe-Elément
-- **8 Familles** : Identité thématique et émotions
-- **5 Classes** : Gestion de l'émotion
+### 2. Mécanique Signature par Champion (pas de système de classe)
+- Chaque champion = 1 passif + 2 cartes Signature, pensés autour de son trauma
+- Pas de grille Famille × Classe (décision du 10/09/2026)
 
-### 3. Gestion Tactique Multi-dimensionnelle
+### 3. Ressources et Équilibrage
 
-| Ressource                    | Description | Utilisation                      |
-|------------------------------|-------------|----------------------------------|
-| **PA** (Points d'Action)     | 3-5         | Pour jouer des cartes            |
-| **PM** (Points de Mouvement) | 2-4         | Pour se déplacer (1 PM = 1 case) |
-| **HP** (Points de Vie)       | Variable    | Tombe à 0 = vaincu               |
-| **Défense**                  | 10+         | Réduit dégâts physiques          |
-| **Jauge Emotionnelle**       | 0 à 100     | Déclenche transformations        |
+| Ressource | Règle |
+|-----------|-------|
+| **PA + PM** | **Budget fixe de 9 points par tour**, réparti par profil de personnage (min 3 PA, min 2 PM). Ex : brutal 6/3, équilibré 5/4, mobile 4/5. Identique à tous les niveaux. |
+| **PV** | 100 au niveau 1, +15 par niveau |
+| **Éveil** | Une jauge par émotion, alimentée par les cartes (voir `SYSTEME_EMOTIONS.md`) |
+| **Autres stats** (armure, résistances, critique…) | **Non définies** — à trancher |
 
-### 4. Positionnement Tactique sur Grille
-- Grille avec système de coordonnées 2D
-- Portée des cartes variable (mêlée à distance infinie)
-- Zones d'effet : Circle, Line, Cross, Cone
-- Ciblage précis : unités, tuiles vides, zones
+**Règle d'or** : le niveau d'un champion n'augmente **jamais** la puissance des cartes ni les PA/PM. Il n'augmente que les PV, les passifs et les slots de cartes.
 
+### 4. Budget de puissance des cartes
+
+Valeur finale d'une carte = **Baseline(coût en PA) × (1 + somme des modificateurs)**. Baseline : 1 PA = 12, 2 PA = 26, 3 PA = 42, 4 PA = 60, 5 PA = 80, 6 PA = 102. Plus une carte a de portée, de zone, de contrôle ou de déplacement forcé, moins elle fait de dégâts bruts. Détail : `Card_System.md` et l'Excel.
+
+### 5. Positionnement Tactique sur Grille
+- **Grille carrée** : c'est ce qui est implémenté (10×10, distance de Manhattan, déplacement en 4 directions) et ce que suppose le budget de l'Excel (« grille carrée 8 directions », cercle rayon 1 = 9 cases). ⚠️ La Roadmap de l'Excel parle encore d'une grille hexagonale façon Waven, et `Grid_System.md` décrit la conception hex d'origine (voir Questions ouvertes)
+- Portées de 1 (mêlée) à 6 cases
+- Zones : ligne, cône, cercle, cibles multiples, contagion, équipe entière
+
+## Structure de jeu *(23/09/2026)*
+
+**Campagne façon Waven** : donjons fixes enchaînés, progression persistante (pas de roguelike). L'Excel distingue deux types de contenus :
+- **Donjons** : monstres de groupe, prévus pour une **équipe de 3** (jouer en groupe est obligatoire)
+- **Aventure** : monstres « solo-friendly », jouables avec un seul champion
+
+Détail : `UX_Flow.md`, `Enemies.md`, `Progression.md`.
 
 ## Boucle de Combat
 
+Dans le code actuel, chaque unité joue **un tour par unité**, dans l'ordre de la liste des unités (le champion, puis chaque ennemi ; les invocations comme Lyse sont sautées). L'ordre définitif (tours individuels ou phases) reste à confirmer.
+
 ```
-1. INITIALISATION
-   â†“
-2. TOUR DU CHAMPION
-   â€¢ Pioche de cartes (jusqu'à 5 en main)
-   â€¢ Restauration des PA et PM
-   â€¢ Actions du joueur :
-     - Jouer des cartes
-     - Se déplacer sur la grille
-     - Gérer ses émotions
-   â€¢ Fin de tour
-   â†“
-3. TOUR ENNEMI
-   â€¢ IA choisit une action
-   â€¢ Joue une carte (selon pattern)
-   â€¢ Exécution de l'action
-   â†“
+1. INITIALISATION (main de départ)
+   ↓
+2. TOUR D'UN CHAMPION
+   • Pioche 1 carte (règle définitive à trancher — voir Combat_System.md)
+   • PA et PM restaurés selon le profil du champion
+   • Jouer des cartes / se déplacer (ordre libre)
+   ↓
+3. TOUR D'UN MONSTRE (chacun à son tour)
+   • Joue la prochaine carte de son pattern
+   • Action bloquée par un contrôle → Attaque de base (règle anti-lock)
+   ↓
 4. VERIFICATION
-   â€¢ Tous les ennemis vaincus ? â†’ VICTOIRE
-   â€¢ Tous les champions vaincus ? â†’ DEFAITE
-   â€¢ Sinon â†’ Retour au tour du champion
-   â†“
+   • Tous les ennemis vaincus ? → VICTOIRE
+   • Tous les champions vaincus ? → DEFAITE
+   ↓
 5. RECOMPENSES (si victoire)
 ```
 
-
-## Systèmes Principaux
-
-### Cartes et Deck Building
-
-**Caractéristiques des Cartes:**
-- Chaque carte appartient à une Famille, Classe et Neutre
-- Coût en PA : 0 à 5+
-- Portée : 0 (soi-même) à infini
-- Zone d'effet : Aucune, Circle, Line, Cross, Cone
-
-**Types de Ciblage:**
-
-| Type            | Description             | Cas d'Usage       | Exemple                            |
-|-----------------|-------------------------|-------------------|------------------------------------|
-| **None**        | Aucune cible            | Effet automatique | Buff personnel instantané          |
-| **Self**        | Soi-même uniquement     | Auto-ciblage      | Se soigner, se buffer              |
-| **Enemy**       | Un ou plusieurs ennemis | Attaques standard | Frappe, Sort offensif              |
-| **Ally**        | Alliés (sauf soi)       | Support d'équipe  | Soigner un allié                   |
-| **AllyOrSelf**  | Alliés ET soi-même      | Support flexible  | Soins de groupe                    |
-| **AllyorEnemy** | Alliés ET ennemis       | Effets mixtes     | Explosion qui touche tout le monde |
-| **AnyUnit**     | N'importe quelle unité  | Polyvalent        | Télékinésie, déplacement forcé     |
-| **EmptyTile**   | Tuiles vides uniquement | Placement         | Invocation, piège, zone            |
-| **AnyTile**     | N'importe quelle tuile  | Zone centrée      | Météore, explosion ciblée          |
-
-
 ## Architecture Technique
 
-### Patterns de Conception Utilisés
+Détail complet dans `Technical_Specs.md`. Patterns : Service Locator, Event Bus, State Machine (TurnStateMachine), Component Pattern, Repository Pattern, ScriptableObjects (CardData, ChampionData, EnemyData).
 
-| Pattern                | Utilisation                                 | Bénéfice                         |
-|------------------------|---------------------------------------------|----------------------------------|
-| **Service Locator**    | Accès global aux services (Grid, etc.)      | Découplage, testabilité          |
-| **Event Bus**          | Communication entre systèmes                | Découplage total                 |
-| **State Machine**      | Gestion des tours et états d'unités         | Code clair, transitions validées |
-| **Component Pattern**  | Composition (ActionPointsComponent)         | Réutilisation de code            |
-| **Repository Pattern** | Accès optimisé aux données (GridRepository) | Performance                      |
-| **ScriptableObject**   | Données (CardData, ChampionData, etc.)      | Séparation données/logique       |
+## État Actuel du Projet
 
-### Structure des Données
+### Systèmes Implémentés (code Unity, vérifié le 23/09/2026)
 
-**Champions:**
-- Nom, Prefab
-- Famille, Classe
-- Stats : HP, PA, PM, Défense
-- Deck de départ (liste de cartes)
-- Données d'émotions et transformations
+Détail et écarts avec le design : `Technical_Specs.md`, section « État du code ».
 
-**Ennemis:**
-- Nom, Prefab
-- Type : Normal ou Boss
-- Stats : HP, PA, PM, Défense
-- Deck pattern (ordre fixe de cartes)
+**Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
+**Champions jouables :** Ace, l'Alpiniste, Soren (+ invocation Lyse) ; Ilya, Vylos et Calyx existent en fiche mais hors sélection.
+**Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) + Signatures des 3 champions.
+**Decks :** 18 cartes (2 Signature + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), mono/bi-émotion, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
+**Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
+**UI :** écran de sélection de champion, éditeur de deck façon MTG Arena, HUD de combat, main en arc, ciblage (courbe + réticule), barre de vie de boss, preview des cartes ennemies, pop-ups de dégâts.
+**Pas encore dans le code :** jauge d'Éveil, cartes d'Éveil, profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), désaturation des donjons.
 
-**Cartes:**
-- Nom, Description, Illustration
-- Famille, Classe
-- Coût en PA
-- Type de cible et portée
-- Zone d'effet
-- Effets : Dégâts, Soins, Mouvement
+### Design fait (Excel)
+- [x] Système de budget de cartes + calculateur
+- [x] 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) — la Roadmap de l'Excel dit encore 36
+- [x] 3 champions complets (passif + 2 Signatures)
+- [x] Progression (PV, XP, budget PA/PM)
+- [x] Barème des monstres par niveau
+- [x] Playtest papier (triangle Colère/Peur/Joie validé)
 
-
-## Etat Actuel du Projet
-
-### Systèmes Implémentés
-
-**Systèmes Core:**
-- [x] Service Locator pour services globaux
-- [x] Event Bus pour communication
-- [x] Turn State Machine (5 états)
-- [x] GridManager et GridRepository
-- [x] Système de tuiles (Tile)
-
-**Systèmes de Combat:**
-- [x] Classe de base Unit
-- [x] Champions avec gestion PA
-- [x] Ennemis avec pattern deck
-- [x] DeckManager (pioche, défausse, mélange)
-- [x] Système de cartes complet (8 familles, 5 classes)
-- [x] Ciblage avancé (9 types de cibles, AOE variées)
-- [x] EmotionSystem avec transformations
-
-**Interface Utilisateur:**
-- [x] Main de cartes en arc (style Limbus Company)
-- [x] Cartes avec hover et sélection
-- [x] Courbe de ciblage (Bézier)
-- [x] Réticule de ciblage
-- [x] Barre de vie des boss (haut écran)
-- [x] Preview des cartes ennemies
-- [x] Pop-up de dégâts
-- [x] Feedbacks de combat
-
-**Validation et Debug:**
-- [x] Validation des actions de jeu
-- [x] Outils de debug UI
-- [x] Setup automatique de l'UI
-
-### En Cours de Développement
-
-- [ ] Contenu de cartes (création des 8 familles complètes)
-- [ ] IA ennemie avancée (patterns complexes)
-- [ ] Effets de statut (poison, brûlure, gel, etc.)
-- [ ] Système de progression
-- [ ] Méta-progression
-- [ ] Campagne et niveaux
-
-### Planifier
-
-- [ ] Définition des émotions pour les 7 familles restantes
-- [ ] Modes de jeu additionnels
-- [ ] Tutoriel intégré
-- [ ] Polish audio et effets visuels
-- [ ] Equilibrage complet
-
+### Reste à faire pour le MVP
+- [ ] Cartes d'Éveil (6 par deck) — mise en œuvre de l'Éveil
+- [ ] Règle de main/pioche définitive
+- [ ] Confirmer la grille carrée (4 ou 8 directions ?) et mettre à jour la Roadmap de l'Excel
+- [ ] Monstres de l'Orphelinat (stats selon le barème, patterns)
+- [ ] Adapter le code : Éveil (jauge + 6 slots de deck), statuts de contrôle, anti-lock, cycle de boss
+- [ ] Désaturation visuelle des donjons
 
 ## Objectifs de Design
 
-### Court Terme (Version Alpha)
-- Finaliser les 8 familles avec leurs émotions uniques
-- Créer 10-15 cartes par famille (120 cartes total)
-- Implémenter 5-10 ennemis de base + 1 boss
-- Tutorial pour le système d'émotions
-- Interface complète et fonctionnelle
+### Court Terme (MVP)
+- 3 champions : Soren, l'Alpiniste, Ace
+- 3 émotions : Colère, Peur, Joie
+- 1 donjon complet : l'Orphelinat (Peur)
+- Monstres de donjon + boss (cycle Zone / Basique / Heal)
+- Premier passage désaturé → couleur
 
-### Moyen Terme (Version Bêta)
-- 20+ cartes par famille (160 cartes)
-- 20+ types d'ennemis + 3-5 boss
-- Système de progression complet
-- Méta-progression
-- 3 actes de campagne
+### Moyen Terme (Bêta)
+- Plusieurs donjons (Bureau/Anxiété, Maison/Colère…)
+- Cartes bi-émotion dédiées, oppositions d'émotions (paires Plutchik)
+- Nouveaux champions (Ilya, Jumeaux…)
 
-### Long Terme (Version 1.0)
-- 30+ cartes par famille (240+ cartes)
-- Campagne complète avec histoire
-- Modes de jeu variés (Arène, Défis, etc.)
-- Polish complet (audio, VFX, animations)
-- Equilibrage fin et retours communauté
-
+### Long Terme (1.0)
+- Extension vers les 8 émotions
+- Campagne complète, modes additionnels, polish
 
 ## Inspirations
 
-### Jeux de Référence
+| Jeu | Éléments Repris |
+|-----|------------------|
+| **Waven** | Donjons de groupe, campagne, deck building |
+| **Dofus** | Tactique PA/PM, contrôle par retrait de PM, positionnement |
+| **Slay the Spire** | Lisibilité des intentions ennemies, récompenses de cartes |
+| **Magic the Gathering** | Identités de couleur (mono/bi-émotion), budget de cartes |
+| **Chaos Zero Nightmare** | UI des cartes, système EGO |
+| **Darkest Dungeon** | Émotions et traumas comme moteur |
 
-| Jeu                      | Inspiration          | Eléments Repris                             |
-|--------------------------|----------------------|---------------------------------------------|
-| **Waven**                | Deck building        | Construction de deck, progression           |
-| **Dofus**                | Tactique sur grille  | Positionnement précis, conséquences claires |
-| **Darkest Dungeon**      | Gestion stress       | Système de stress/émotions                  |
-| **Chaos Zero Nightmare** | UI et émotions       | Layout cartes, système EGO                  |
-| **Magic the Gathering**  | Création de deck     | Ressources limitées, décisions tactiques    |
+---
 
-### Ce qui Rend Project TDB Unique
+## Décisions actées
 
-1. **8 Familles** avec systèmes d'émotions personnalisés
-2. **Transformations** Système de puissance
-3. **Double identité** des cartes (Famille + Classe)
-4. **Fusion** Deck Building + Grille Tactique + Emotions
-5. **Profondeur stratégique** : chaque carte influence 3 systèmes (combat, position, émotions)
+| Sujet | Décision | Date |
+|-------|----------|------|
+| Nom de code | Project TDB (titre final non tranché ; l'Excel dit « TCG Tactique ») | 10/09 |
+| Système de classe | Abandonné — mécaniques signatures individuelles | 10/09 |
+| Ayla | Abandonnée | 10/09 |
+| Gacha | Abandonné, monétisation à définir | 10/09 |
+| Lore | « Le monde grisonne », les champions ont gardé leur couleur | 11/09 |
+| Désaturation visuelle | Donjons désaturés, couleur restaurée à la victoire | 11/09 |
+| Accès aux donjons | Tout champion peut entrer dans tout donjon | 23/09 |
+| Ancienne jauge -100/+100 | En pause (archivée) — remplacée par l'Éveil | 23/09 |
+| Structure de jeu | Campagne façon Waven, pas de roguelike | 23/09 |
+| **Référence MVP** | **`TCG_Tactique_Systeme_de_calcul.xlsx`** | **23/09** |
+| **Roster MVP** | **Soren, l'Alpiniste, Ace** (Ilya et Jumeaux hors MVP) | **23/09** |
+| **Émotions de lancement** | **Colère, Peur, Joie** | Excel |
+| **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; mono ou bi-émotion ; plusieurs decks par champion** | Excel |
+| **Ressources** | **Budget PA+PM = 9 par profil, fixe quel que soit le niveau** | Excel |
+| **Progression** | **Le niveau n'augmente que PV, passifs, slots ; XP = 100 × niveau ; XP monstre = 15 % de ses PV** | Excel |
+| **Budget de cartes** | **Baseline par PA × (1 + modificateurs)** | Excel |
+| **Anti-lock** | **Un monstre bloqué fait une Attaque de base** | Excel |
+| **Monstres** | **Donjon (groupe obligatoire) vs Aventure (solo-friendly)** | Excel |
+| **Grille** | **Carrée** (code + budget de l'Excel) — la Roadmap de l'Excel dit encore hex, à corriger | Code / Excel |
 
+## Questions ouvertes
 
-## Vision Future
+**Issues de l'Excel (onglet Roadmap) :**
+- **Règle de main/pioche définitive** — le playtest a utilisé main de 3 + repioche à 3/tour ; le code fait main de départ 5, max 5, pioche 1/tour
+- **Éveil** : rythme de remplissage (base : 2 points par palier, jauge par émotion) et contenu des 6 cartes d'Éveil
+- **Équipement** : existe-t-il ? Impact sur quoi ?
+- **Stats au-delà de PV/PA/PM** (armure, résistances, critique…)
+- **Faiblesses émotionnelles des monstres**
+- **Cartes bi-émotion dédiées**
+- **Oppositions d'émotions** (paires Plutchik) — repoussé volontairement
 
-### Extensibilité
-- Système de familles permet ajout facile de nouvelles familles
-- ScriptableObjects facilitent création de contenu
-- Architecture modulaire pour nouveaux modes
+**Relevées lors de la passe de cohérence :**
+- **Grille : 4 ou 8 directions ?** Le code utilise une grille carrée avec distance de Manhattan (4 directions) ; l'Excel dit « 8 directions » et compte les cercles comme des carrés (rayon 1 = 9 cases). Il faut choisir, puis aligner le code ou l'Excel. (La Roadmap de l'Excel dit encore « hexagonale » : à corriger.)
+- **Ordre des tours** : le code fait jouer chaque unité à son tour ; garder ça, ou passer à des phases (tous les champions, puis tous les monstres) ?
+- **Pool Standard** : la bibliothèque de l'Excel (et le code) contient 49 cartes, la Roadmap dit 36 — lequel est la cible ?
+- **Donjon en équipe de 3** : le joueur contrôle-t-il seul les 3 champions, ou est-ce de la coop ?
+- **Ilya** : le garder pour la suite ? Sa Rage devra devenir une variante de l'Éveil Colère.
+- **Nomenclature des familles** (Insurgents, Dissidents… hérités de l'ancien lore) — l'Excel parle directement d'émotions (Colère/Peur/Joie), ce qui plaide pour abandonner les noms de familles.
+- **Plateforme** : PC seul ou PC + Mobile ?
 
-### Rejouabilité
-- 8 familles Ã— multiples archétypes = grande variété
-- Emotions ajoutent imprévisibilité et adaptation
-- Synergies entre familles dans équipes mixtes
+---
 
-### Potentiel Compétitif
-- Mode PvP envisageable (équipes de champions)
-- Classements pour modes challenge
-- Meta évolutive avec patches de contenu
-
-
-**Dernière mise à jour:** 11 Janvier 2026
-**Version GDD:** 2.0
-**Responsable:** Equipe Project TDB
-
+**Dernière mise à jour :** 23 Septembre 2026
+**Version GDD :** 3.4
+**Responsable :** Shinda + Claude

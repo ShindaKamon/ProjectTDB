@@ -1,602 +1,595 @@
-# ðŸŒŠ Flux d'ExpÃ©rience Utilisateur - Project TDB
+# 🌊 Flux d'Expérience Utilisateur - Émotions Tactics (Project TDB)
 
-**Version:** 1.0
-**Date:** 11 Janvier 2026
-
----
-
-## ðŸŽ¯ Philosophie UX
-
-L'expÃ©rience utilisateur de **Project TDB** doit:
-1. **Guider sans Contraindre** : SuggÃ©rer les actions optimales tout en permettant l'exploration
-2. **RÃ©compenser la MaÃ®trise** : Les joueurs expÃ©rimentÃ©s doivent sentir leur progression
-3. **Minimiser la Friction** : RÃ©duire les clics et confirmations inutiles
-4. **Fournir un Feedback Constant** : Chaque action doit avoir une rÃ©ponse visuelle/sonore
+**Version:** 1.3
+**Date:** 23 Septembre 2026
+**Changements :**
+- v1.1 (10/09/2026) : Ayla retirée de l'écran de sélection.
+- v1.2 (23/09/2026) : boucle roguelike (carte à nœuds, runs, événements aléatoires) remplacée par la **campagne façon Waven** ; écran de sélection avec les 3 champions du MVP ; barre d'initiative retirée (ordre par phases) ; raccourcis clavier unifiés (Espace = fin de tour) ; lien cassé vers `Tutorial.md` corrigé. Ce document est la **référence pour les raccourcis clavier**.
+- v1.3 (23/09/2026) : roster Soren / l'Alpiniste / Ace (Excel MVP) ; deck de 24 cartes et plusieurs decks par champion ; donjon en équipe de 3 ; règle de main à trancher.
 
 ---
 
-## ðŸš€ PremiÃ¨re ExpÃ©rience (First Time User Experience)
+## 🎯 Philosophie UX
+
+L'expérience utilisateur d'**Émotions Tactics** doit :
+1. **Guider sans Contraindre** : suggérer les actions optimales tout en permettant l'exploration
+2. **Récompenser la Maîtrise** : les joueurs expérimentés doivent sentir leur progression
+3. **Minimiser la Friction** : réduire les clics et confirmations inutiles
+4. **Fournir un Feedback Constant** : chaque action doit avoir une réponse visuelle/sonore
+
+---
+
+## 🚀 Première Expérience (First Time User Experience)
 
 ### Lancement du Jeu
 
-**1. Ã‰cran de Titre (5 secondes)**
+**1. Écran de Titre (5 secondes)**
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                                      â•‘
-â•‘        PROJECT TDB                   â•‘
-â•‘   Tactical Deck Builder              â•‘
-â•‘                                      â•‘
-â•‘   [Nouvelle Partie]                  â•‘
-â•‘   [Continuer]         (grisÃ©)        â•‘
-â•‘   [Options]                          â•‘
-â•‘   [Quitter]                          â•‘
-â•‘                                      â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-```
-
-**Musique:** ThÃ¨me principal (orchestral Ã©pique)
-**Animation:** Logo fade in, particules d'arriÃ¨re-plan
-
-**2. Nouvelle Partie â†’ SÃ©lection de Personnage (30 secondes)**
-```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘  Choisissez votre premier hÃ©ros      â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘  [  ILYA  ]      [  AYLA  ]         â•‘
-â•‘  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”      â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”         â•‘
-â•‘  â”‚[Image] â”‚      â”‚[Image] â”‚         â•‘
-â•‘  â”‚Ã‰pÃ©iste â”‚      â”‚  Mage  â”‚         â•‘
-â•‘  â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜      â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜         â•‘
-â•‘                                      â•‘
-â•‘  Style: Agressif  Style: ContrÃ´le   â•‘
-â•‘  DifficultÃ©: â­â­   DifficultÃ©: â­â­â­  â•‘
-â•‘                                      â•‘
-â•‘          [COMMENCER]                 â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════╗
+║                                      ║
+║        ÉMOTIONS TACTICS              ║
+║   (nom de code: Project TDB)         ║
+║                                      ║
+║   [Nouvelle Partie]                  ║
+║   [Continuer]         (grisé)        ║
+║   [Options]                          ║
+║   [Quitter]                          ║
+║                                      ║
+╚══════════════════════════════════════╝
 ```
 
-**Interactions:**
-- Hover sur personnage â†’ Preview animÃ© + description dÃ©taillÃ©e
-- Clic sur personnage â†’ SÃ©lection (highlight)
-- Bouton "Commencer" â†’ Transition vers tutoriel
+**Musique :** Thème principal (orchestral épique)
+**Animation :** Logo fade in, particules d'arrière-plan
+
+**2. Nouvelle Partie → Sélection de Personnage (30 secondes)**
+
+> Roster MVP : Soren, l'Alpiniste, Ace (Excel). Les donjons se jouent en **équipe de 3** : à terme cet écran sert à composer l'équipe (et à choisir un champion pour l'aventure solo). Coop ou un seul joueur qui contrôle les 3 : question ouverte (`GDD_Main.md`).
+> **Code actuel** : on choisit **un seul** champion (`Screen_ChampionSelect`, illustration plein écran + rail de champions), puis son deck dans l'écran deck unifié (`Screen_DeckManager`, style MTG Arena) — voir `Technical_Specs.md` § « État du code ».
+
+```
+╔══════════════════════════════════════════════╗
+║  Composez votre équipe                       ║
+╠══════════════════════════════════════════════╣
+║  [ SOREN ]    [ ALPINISTE ]   [   ACE   ]    ║
+║  ┌───────┐    ┌───────┐       ┌───────┐      ║
+║  │[Image]│    │[Image]│       │[Image]│      ║
+║  └───────┘    └───────┘       └───────┘      ║
+║  Invocateur   Grappin         Combos de coûts║
+║  (écho Lyse)  (tank/assassin) (Main gagnante)║
+║                                              ║
+║               [COMMENCER]                    ║
+╚══════════════════════════════════════════════╝
+```
+
+**Interactions :**
+- Hover sur personnage → Preview animé + description détaillée
+- Clic sur personnage → Sélection (highlight)
+- Bouton « Commencer » → Transition vers tutoriel
 
 **3. Tutoriel Interactif (10-15 minutes)**
 
-Voir [Tutorial.md](Tutorial.md) pour le dÃ©tail complet.
+Document de tutoriel détaillé : **à créer** (pas encore de doc dédié dans le projet).
 
-**Ã‰tapes:**
-1. Introduction Ã  la grille et au mouvement
+**Étapes :**
+1. Introduction à la grille et au mouvement
 2. Explication des cartes et de la main
-3. Premier combat guidÃ© (vs 2 Gobelins)
-4. RÃ©compense et amÃ©lioration de deck
+3. Premier combat guidé (vs 2 ennemis du thème Peur, dans l'Orphelinat)
+4. Récompense et amélioration de deck
 5. Transition vers la campagne
 
 ---
 
-## ðŸŽ® Boucle de Jeu Principale
+## 🎮 Boucle de Jeu Principale — Campagne façon Waven
 
 ### Vue d'Ensemble du Flow
 
 ```
 Menu Principal
-    â†“
-SÃ©lection Campagne/Mode
-    â†“
-PrÃ©paration (Deck, Ã‰quipe)
-    â†“
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘   BOUCLE DE RUN   â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘ Combat            â•‘
-â•‘    â†“              â•‘
-â•‘ Victoire          â•‘
-â•‘    â†“              â•‘
-â•‘ RÃ©compenses       â•‘
-â•‘    â†“              â•‘
-â•‘ Ã‰vÃ©nement (25%)   â•‘
-â•‘    â†“              â•‘
-â•‘ Boutique (20%)    â•‘
-â•‘    â†“              â•‘
-â•‘ Prochain Combat   â•‘
-â•‘    â†“              â•‘
-â•‘ (RÃ©pÃ©ter)         â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    â†“
-Boss Final
-    â†“
-Victoire/DÃ©faite
-    â†“
-Statistiques & RÃ©compenses
-    â†“
-Menu Principal
+    ↓
+Écran de Campagne (liste des donjons débloqués)
+    ↓
+Préparation (Équipe de 3, choix du deck de chaque champion, Boutique)
+    ↓
+╔══════════════════════════╗
+║   DONJON (linéaire)      ║
+╠══════════════════════════╣
+║ Combat 1                 ║
+║    ↓                     ║
+║ Récompenses              ║
+║    ↓                     ║
+║ Combat 2 … (3 à 5)       ║
+║    ↓                     ║
+║ (Événement scénarisé)    ║
+║    ↓                     ║
+║ Boss du donjon           ║
+╚══════════════════════════╝
+    ↓
+Victoire → le donjon retrouve sa couleur
+    ↓
+Statistiques & Récompenses (conservées)
+    ↓
+Donjon suivant débloqué → Écran de Campagne
 ```
 
-### Ã‰cran de Carte (Map)
+Tout ce qui est gagné (XP, cartes, Or) est **conservé** — pas de remise à zéro. En cas de défaite, on recommence le combat ou on revient à l'écran de campagne sans rien perdre de sa progression.
 
-**Fonctionnement:**
-- Carte avec chemins possibles
-- IcÃ´nes reprÃ©sentant les types de rencontres:
-  - âš”ï¸ Combat facile
-  - âš”ï¸âš”ï¸ Combat difficile
-  - ðŸ‘‘ Boss
-  - ðŸª Boutique
-  - â“ Ã‰vÃ©nement
-  - ðŸ”¥ Combat Ã‰lite
-  - ðŸ’° TrÃ©sor
+### Écran de Campagne
 
-**UI:**
+**Fonctionnement :**
+- Liste (ou carte illustrée) des donjons, débloqués dans l'ordre
+- Chaque donjon affiche son émotion dominante, sa couleur (grise tant qu'il n'est pas rééquilibré) et sa progression (combats terminés)
+- Un donjon terminé apparaît en couleur
+
+**UI :**
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘                                            â•‘
-â•‘      ACTE 1 - ForÃªt des Gobelins          â•‘
-â•‘      Combat 3/10                           â•‘
-â•‘                                            â•‘
-â•‘           ðŸ‘‘ (Boss)                        â•‘
-â•‘          /    \                            â•‘
-â•‘        âš”ï¸      ðŸª                          â•‘
-â•‘        /  \    /                           â•‘
-â•‘      âš”ï¸âš”ï¸  âš”ï¸  â“                          â•‘
-â•‘        \  /  \ /                           â•‘
-â•‘         âš”ï¸    ðŸ”¥                           â•‘
-â•‘           \  /                             â•‘
-â•‘            â—  â† Vous Ãªtes ici              â•‘
-â•‘                                            â•‘
-â•‘  [Deck] [Personnages] [Progression]       â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔════════════════════════════════════════════╗
+║                                            ║
+║      ACTE 1                                ║
+║                                            ║
+║   [Orphelinat — Peur]      ░░░ 2/5 combats ║
+║   [Bureau — Anxiété]       🔒              ║
+║   [Maison — Colère]        🔒              ║
+║                                            ║
+║  [Deck] [Personnages] [Progression]        ║
+╚════════════════════════════════════════════╝
 ```
 
-**Interactions:**
-- Clic sur un nÅ“ud accessible â†’ Preview du combat/Ã©vÃ©nement
-- Confirmation â†’ Transition vers la rencontre
+**Interactions :**
+- Clic sur un donjon débloqué → Écran de préparation
+- Confirmation → Combat suivant du donjon
 
 ---
 
-## âš”ï¸ Flow de Combat
+## ⚔️ Flow de Combat
 
-### Phase 1: Chargement et Placement
+### Phase 1 : Chargement et Placement
 
-**DurÃ©e:** 2-3 secondes
+**Durée :** 2-3 secondes
 
-**SÃ©quence:**
-1. Fade in de la scÃ¨ne de combat
-2. Grille apparaÃ®t (animation de matÃ©rialisation)
-3. Personnages se tÃ©lÃ©portent sur leurs positions
-4. Ennemis apparaissent (animation d'entrÃ©e)
-5. Calcul de l'initiative (barre d'initiative apparaÃ®t)
-6. MÃ©lange et pioche des cartes (animation)
+**Séquence :**
+1. Fade in de la scène de combat (désaturée — voir `UI_Design.md`)
+2. Grille apparaît (animation de matérialisation)
+3. Personnages se téléportent sur leurs positions
+4. Ennemis apparaissent (animation d'entrée)
+5. Mélange et pioche de la main de départ (taille à trancher, animation)
 
-**UI Visible:**
+**UI Visible :**
 - Grille de combat
-- HUD des personnages (cÃ´tÃ© gauche)
+- HUD des personnages (côté gauche)
 - HUD des ennemis (au-dessus d'eux)
-- Barre d'initiative (haut)
-- Main vide (bas, en attente de pioche)
+- Indicateur de phase et de tour (haut)
+- Main (bas)
 
-### Phase 2: DÃ©but du Tour Joueur
+### Phase 2 : Début de la Phase Joueur
 
-**SÃ©quence:**
-1. Message "Ã€ VOTRE TOUR" (0.5s)
+**Séquence :**
+1. Message « À VOTRE TOUR » (0.5s)
 2. Restauration des ressources (PA, PM)
-3. Pioche de cartes (animation 1s)
-4. Effets de dÃ©but de tour (poison, rÃ©gÃ©nÃ©ration)
-5. Activation des contrÃ´les
+3. Pioche selon la règle de main (à trancher — hypothèse de playtest : repioche jusqu'à 3)
+4. Effets de début de tour (poison, régénération)
+5. Activation des contrôles
 
-**Feedback Visuel:**
+**Feedback Visuel :**
 - Flash de couleur sur le portrait du personnage actif
-- Son de dÃ©but de tour
+- Son de début de tour
 - Cartes volent depuis le deck vers la main
 
-### Phase 3: Actions du Joueur
+### Phase 3 : Actions du Joueur
 
-**Flow d'Action:**
+**Flow d'Action :**
 
-**Option A: Jouer une Carte**
+**Option A : Jouer une Carte**
 ```
 Clic sur Carte
-    â†“
-Carte sÃ©lectionnÃ©e (glow, dÃ©placÃ©e Ã  gauche)
-    â†“
-Ciblage activÃ© (courbe + rÃ©ticule)
-    â†“
-Hover sur cible valide â†’ Preview des effets
-    â†“
-Clic sur cible â†’ Confirmation
-    â†“
+    ↓
+Carte sélectionnée (glow, déplacée à gauche)
+    ↓
+Ciblage activé (courbe + réticule)
+    ↓
+Hover sur cible valide → Preview des effets
+    ↓
+Clic sur cible → Confirmation
+    ↓
 Animation de jeu de carte
-    â†“
-RÃ©solution des effets
-    â†“
-Carte dans la dÃ©fausse
-    â†“
-Retour Ã  la main
+    ↓
+Résolution des effets
+    ↓
+Carte dans la défausse
+    ↓
+Retour à la main
 ```
 
-**Option B: Se DÃ©placer**
+**Option B : Se Déplacer**
 ```
-Clic sur Personnage (ou sÃ©lectionnÃ© par dÃ©faut)
-    â†“
+Clic sur Personnage (ou sélectionné par défaut)
+    ↓
 Cases de mouvement highlighted (vert)
-    â†“
+    ↓
 Clic sur case de destination
-    â†“
-Preview du chemin (flÃ¨ches)
-    â†“
-Confirmation (clic ou Enter)
-    â†“
+    ↓
+Preview du chemin (flèches)
+    ↓
+Confirmation (clic ou Entrée)
+    ↓
 Animation de mouvement
-    â†“
-DÃ©duction des PM
-    â†“
+    ↓
+Déduction des PM
+    ↓
 Fin de l'action
 ```
 
-**Option C: Fin de Tour**
+**Option C : Fin de Tour**
 ```
-Clic sur "Fin de Tour" (ou touche Enter)
-    â†“
-Confirmation si PA/PM non utilisÃ©s (optionnel)
-    â†“
+Clic sur « Fin de Tour » (ou touche Espace)
+    ↓
+Confirmation si PA/PM non utilisés (optionnel)
+    ↓
 Effets de fin de tour (trigger)
-    â†“
-Transition vers le tour suivant
+    ↓
+Transition vers la phase ennemie
 ```
 
-### Phase 4: Tour de l'Ennemi
+### Phase 4 : Phase Ennemie
 
-**SÃ©quence:**
-1. Message "[NOM ENNEMI] AGIT" (0.5s)
-2. Ennemi rÃ©flÃ©chit (0.5-1s, animation "thinking")
-3. DÃ©cision de l'IA
-4. ExÃ©cution de l'action (mouvement + attaque)
-5. Effets rÃ©solus
-6. Fin du tour ennemi
+**Séquence (pour chaque ennemi, l'un après l'autre) :**
+1. Message « [NOM ENNEMI] AGIT » (0.5s)
+2. Courte pause (0.5-1s, animation « thinking »)
+3. L'ennemi joue la prochaine carte de son pattern
+4. Exécution de l'action (mouvement + attaque)
+5. Effets résolus
+6. Ennemi suivant
 
-**Feedback Visuel:**
+**Feedback Visuel :**
 - Portrait de l'ennemi highlighted
-- Intention affichÃ©e (icÃ´ne au-dessus: attaque, mouvement, buff)
+- Intention affichée à l'avance (icône au-dessus : attaque, mouvement, buff — preview des cartes ennemies)
 - Animation d'action
-- DÃ©gÃ¢ts/effets appliquÃ©s
+- Dégâts/effets appliqués
 
-**Vitesse:**
-- Rapide par dÃ©faut (1-2s par tour ennemi)
+**Vitesse :**
+- Rapide par défaut (1-2s par ennemi)
 - Option pour ralentir (utile pour apprentissage)
 
-### Phase 5: Fin du Combat
+### Phase 5 : Fin du Combat
 
-**Victoire:**
+**Victoire :**
 ```
 Dernier ennemi vaincu
-    â†“
+    ↓
 Animation de victoire (0.5s)
-    â†“
-Message "VICTOIRE!" (1s)
-    â†“
+    ↓
+La couleur revient (fondu désaturé → couleur de la famille)
+    ↓
+Message « VICTOIRE ! » (1s)
+    ↓
 Statistiques du combat (5s)
-    â†“
-Ã‰cran de rÃ©compenses
+    ↓
+Écran de récompenses
 ```
 
-**DÃ©faite:**
+**Défaite :**
 ```
-Tous les alliÃ©s vaincus
-    â†“
-Animation de dÃ©faite (0.5s)
-    â†“
-Message "DÃ‰FAITE" (1s)
-    â†“
+Tous les alliés vaincus
+    ↓
+Animation de défaite (0.5s)
+    ↓
+Message « DÉFAITE » (1s)
+    ↓
 Statistiques du combat
-    â†“
-Options:
+    ↓
+Options :
     - Recommencer le combat (-50 Or)
-    - Abandonner le run (retour menu)
+    - Retour à l'écran de campagne (progression conservée)
 ```
 
 ---
 
-## ðŸŽ Ã‰cran de RÃ©compenses
+## 🎁 Écran de Récompenses
 
-### UI des RÃ©compenses
+### UI des Récompenses
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘          VICTOIRE !                          â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘                                              â•‘
-â•‘  +150 XP     +60 Or     +10 Gemmes          â•‘
-â•‘                                              â•‘
-â•‘  Choisissez une carte Ã  ajouter:            â•‘
-â•‘  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â•‘
-â•‘  â”‚ [Carte] â”‚  â”‚ [Carte] â”‚  â”‚ [Carte] â”‚     â•‘
-â•‘  â”‚  RARE   â”‚  â”‚ COMMUNE â”‚  â”‚  RARE   â”‚     â•‘
-â•‘  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â•‘
-â•‘                                              â•‘
-â•‘           [Ignorer] [Confirmer]             â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════════════╗
+║          VICTOIRE !                          ║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  +150 XP     +60 Or     +10 Gemmes          ║
+║                                              ║
+║  Choisissez une carte à ajouter:            ║
+║  ┌─────────┐  ┌─────────┐  ┌─────────┐     ║
+║  │ [Carte] │  │ [Carte] │  │ [Carte] │     ║
+║  │  RARE   │  │ COMMUNE │  │  RARE   │     ║
+║  └─────────┘  └─────────┘  └─────────┘     ║
+║                                              ║
+║           [Ignorer] [Confirmer]             ║
+╚══════════════════════════════════════════════╝
 ```
 
-**Flow:**
-1. Affichage des rÃ©compenses passives (XP, Or)
+**Flow :**
+1. Affichage des récompenses passives (XP, Or)
 2. Animations de compteur (nombre qui augmente)
-3. Affichage des choix de cartes (rÃ©vÃ©lation progressive)
-4. SÃ©lection du joueur (hover pour voir dÃ©tails)
+3. Affichage des choix de cartes (révélation progressive)
+4. Sélection du joueur (hover pour voir détails)
 5. Confirmation
-6. Carte ajoutÃ©e au deck (animation)
-7. Transition vers la carte du monde
+6. Carte ajoutée au deck (animation)
+7. Transition vers le combat suivant du donjon (ou l'écran de campagne si le donjon est terminé)
 
-**Raccourcis Clavier:**
-- Touches 1, 2, 3 pour sÃ©lectionner les cartes
-- Espace pour ignorer
-- Enter pour confirmer
+Montants et raretés : voir `Progression.md`.
 
 ---
 
-## ðŸª Boutique
+## 🏪 Boutique
+
+Accessible depuis l'écran de préparation, entre deux donjons (et à mi-parcours des donjons longs).
 
 ### UI de la Boutique
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘          BOUTIQUE DU VOYAGEUR                â•‘
-â•‘          Or disponible: 120                  â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘                                              â•‘
-â•‘  CARTES DISPONIBLES:                        â•‘
-â•‘  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â•‘
-â•‘  â”‚ [Carte] â”‚  â”‚ [Carte] â”‚  â”‚ [Carte] â”‚     â•‘
-â•‘  â”‚  50 Or  â”‚  â”‚  75 Or  â”‚  â”‚ 100 Or  â”‚     â•‘
-â•‘  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â•‘
-â•‘                                              â•‘
-â•‘  SERVICES:                                   â•‘
-â•‘  [AmÃ©liorer une carte - 100 Or]             â•‘
-â•‘  [Supprimer une carte - 50 Or]              â•‘
-â•‘  [Acheter une Potion - 30 Or]               â•‘
-â•‘                                              â•‘
-â•‘           [Quitter la Boutique]             â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════════════╗
+║          BOUTIQUE                            ║
+║          Or disponible: 120                  ║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  CARTES DISPONIBLES:                        ║
+║  ┌─────────┐  ┌─────────┐  ┌─────────┐     ║
+║  │ [Carte] │  │ [Carte] │  │ [Carte] │     ║
+║  │  50 Or  │  │  75 Or  │  │ 100 Or  │     ║
+║  └─────────┘  └─────────┘  └─────────┘     ║
+║                                              ║
+║  SERVICES:                                   ║
+║  [Améliorer une carte - 100 Or]             ║
+║  [Supprimer une carte - 50 Or]              ║
+║  [Acheter une Potion - 30 Or]               ║
+║                                              ║
+║           [Quitter la Boutique]             ║
+╚══════════════════════════════════════════════╝
 ```
 
-**Interactions:**
-- Clic sur carte â†’ Preview dÃ©taillÃ©e
-- Clic sur "Acheter" â†’ Confirmation si assez d'Or
-- Or dÃ©duit immÃ©diatement
-- Carte ajoutÃ©e au deck
+**Interactions :**
+- Clic sur carte → Preview détaillée
+- Clic sur « Acheter » → Confirmation si assez d'Or
+- Or déduit immédiatement
+- Carte ajoutée au deck
 
-**Feedback:**
-- Animation de piÃ¨ces qui disparaissent
+**Feedback :**
+- Animation de pièces qui disparaissent
 - Son de transaction
 - Carte qui vole vers le deck
 
 ---
 
-## ðŸŽ² Ã‰vÃ©nements AlÃ©atoires
+## 🎭 Événements Scénarisés
 
-### Types d'Ã‰vÃ©nements
+Moments narratifs **placés à la main** dans un donjon (pas de tirage aléatoire). Ils racontent l'esprit de la personne dont c'est le donjon.
 
-**1. Choix Binaire:**
+### Exemple : Choix Binaire
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘          RENCONTRE MYSTÃ‰RIEUSE               â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘                                              â•‘
-â•‘  Vous trouvez un autel ancien avec une      â•‘
-â•‘  inscription: "Sacrifice pour pouvoir".     â•‘
-â•‘                                              â•‘
-â•‘  Que faites-vous?                           â•‘
-â•‘                                              â•‘
-â•‘  [Sacrifier 20 HP]                          â•‘
-â•‘  â†’ Gagnez une carte Ã‰pique                  â•‘
-â•‘                                              â•‘
-â•‘  [Ignorer l'autel]                          â•‘
-â•‘  â†’ Rien ne se passe                         â•‘
-â•‘                                              â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════════════╗
+║          UN SOUVENIR ENFOUI                  ║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  Au fond d'un placard, une vieille          ║
+║  peluche, encore colorée, au milieu du gris. ║
+║                                              ║
+║  Que faites-vous?                           ║
+║                                              ║
+║  [La prendre avec vous (-20 HP)]            ║
+║  → Gagnez une carte Épique                  ║
+║                                              ║
+║  [La laisser où elle est]                   ║
+║  → Rien ne se passe                         ║
+║                                              ║
+╚══════════════════════════════════════════════╝
 ```
 
-**2. Ã‰vÃ©nement de Combat:**
-- Mini-boss surprise
-- RÃ©compenses accrues
+**Autres types :**
+- Événement de combat (mini-boss, récompenses accrues)
+- Trésor (gain d'Or)
 
-**3. Ã‰vÃ©nement de Ressources:**
-- TrÃ©sor
-- Perte/Gain d'Or
-
-**Flow:**
-1. Transition vers l'Ã©cran d'Ã©vÃ©nement
+**Flow :**
+1. Transition vers l'écran d'événement
 2. Lecture de la description (5-10s)
-3. PrÃ©sentation des choix
-4. SÃ©lection du joueur
-5. RÃ©solution immÃ©diate
-6. Transition vers la suite
+3. Présentation des choix
+4. Sélection du joueur
+5. Résolution immédiate
+6. Transition vers la suite du donjon
 
 ---
 
-## ðŸ“Š Ã‰cran de Deck
+## 📊 Écran de Deck
 
 ### UI de Consultation du Deck
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘          DECK DE ILYA (25 cartes)           â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘                                              â•‘
-â•‘  [Toutes] [Attaque] [DÃ©fense] [Util]        â•‘
-â•‘                                              â•‘
-â•‘  â”Œâ”€â”€â”€â” â”Œâ”€â”€â”€â” â”Œâ”€â”€â”€â” â”Œâ”€â”€â”€â” â”Œâ”€â”€â”€â”            â•‘
-â•‘  â”‚ 5Ã—â”‚ â”‚ 3Ã—â”‚ â”‚ 2Ã—â”‚ â”‚ 2Ã—â”‚ â”‚ 1Ã—â”‚            â•‘
-â•‘  â””â”€â”€â”€â”˜ â””â”€â”€â”€â”˜ â””â”€â”€â”€â”˜ â””â”€â”€â”€â”˜ â””â”€â”€â”€â”˜            â•‘
-â•‘                                              â•‘
-â•‘  [Trier: CoÃ»t] [Trier: Nom] [Trier: Type]  â•‘
-â•‘                                              â•‘
-â•‘           [Retour]                           â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════════════╗
+║     DECK « [NOM] » DE [CHAMPION] (24 cartes)║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  [Signature 2] [Éveil 6] [Standard 16]      ║
+║  Émotions : Colère / Peur (bi-émotion)      ║
+║                                              ║
+║  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐            ║
+║  │ 5×│ │ 3×│ │ 2×│ │ 1×│ │ 1×│            ║
+║  └───┘ └───┘ └───┘ └───┘ └───┘            ║
+║                                              ║
+║  [Trier: Coût] [Trier: Nom] [Trier: Type]  ║
+║                                              ║
+║           [Retour]                           ║
+╚══════════════════════════════════════════════╝
 ```
 
-**FonctionnalitÃ©s:**
-- Filtrage par type
-- Tri par diffÃ©rents critÃ¨res
+**Fonctionnalités :**
+- Plusieurs decks par champion (sélection / création)
+- Filtrage par type (Signature / Éveil / Standard) et par émotion
+- Compteur de composition (cible 2 + 6 + 16)
+- Tri par différents critères
 - Affichage du nombre de copies
-- Clic sur carte â†’ DÃ©tails complets
-- Accessible depuis la carte du monde
+- Clic sur carte → Détails complets
+- Accessible depuis l'écran de campagne
 
 ---
 
-## âš™ï¸ Options et ParamÃ¨tres
+## ⚙️ Options et Paramètres
 
 ### Menu Options
 
 ```
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘               OPTIONS                        â•‘
-â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
-â•‘                                              â•‘
-â•‘  AUDIO:                                      â•‘
-â•‘  Musique:     â–“â–“â–“â–“â–“â–“â–“â–‘â–‘â–‘ 70%                â•‘
-â•‘  Effets:      â–“â–“â–“â–“â–“â–“â–“â–“â–“â–‘ 90%                â•‘
-â•‘  Ambiance:    â–“â–“â–“â–“â–“â–‘â–‘â–‘â–‘â–‘ 50%                â•‘
-â•‘                                              â•‘
-â•‘  GRAPHIQUES:                                 â•‘
-â•‘  RÃ©solution:  [1920Ã—1080 â–¼]                 â•‘
-â•‘  Plein Ã©cran: [âœ“]                           â•‘
-â•‘  VSync:       [âœ“]                           â•‘
-â•‘  QualitÃ©:     [Ã‰levÃ©e â–¼]                    â•‘
-â•‘                                              â•‘
-â•‘  GAMEPLAY:                                   â•‘
-â•‘  Vitesse IA:  [Normale â–¼]                   â•‘
-â•‘  Confirmations: [âœ“]                         â•‘
-â•‘  Tutoriels:   [âœ“]                           â•‘
-â•‘                                              â•‘
-â•‘  ACCESSIBILITÃ‰:                              â•‘
-â•‘  Taille texte: [Normal â–¼]                   â•‘
-â•‘  Daltonisme:  [Aucun â–¼]                     â•‘
-â•‘                                              â•‘
-â•‘      [Appliquer]  [Retour]                  â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔══════════════════════════════════════════════╗
+║               OPTIONS                        ║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  AUDIO:                                      ║
+║  Musique:     ▓▓▓▓▓▓▓░░░ 70%                ║
+║  Effets:      ▓▓▓▓▓▓▓▓▓░ 90%                ║
+║  Ambiance:    ▓▓▓▓▓░░░░░ 50%                ║
+║                                              ║
+║  GRAPHIQUES:                                 ║
+║  Résolution:  [1920×1080 ▼]                 ║
+║  Plein écran: [✓]                           ║
+║  VSync:       [✓]                           ║
+║  Qualité:     [Élevée ▼]                    ║
+║                                              ║
+║  GAMEPLAY:                                   ║
+║  Vitesse IA:  [Normale ▼]                   ║
+║  Confirmations: [✓]                         ║
+║  Tutoriels:   [✓]                           ║
+║                                              ║
+║  ACCESSIBILITÉ:                              ║
+║  Taille texte: [Normal ▼]                   ║
+║  Daltonisme:  [Aucun ▼]                     ║
+║                                              ║
+║      [Appliquer]  [Retour]                  ║
+╚══════════════════════════════════════════════╝
 ```
 
-**ParamÃ¨tres SauvegardÃ©s:**
+**Paramètres Sauvegardés :**
 - Automatiquement dans PlayerPrefs
-- Application immÃ©diate pour la plupart
-- Confirmation pour changements majeurs (rÃ©solution)
+- Application immédiate pour la plupart
+- Confirmation pour changements majeurs (résolution)
 
 ---
 
-## ðŸ”„ Transitions et Chargements
+## 🔄 Transitions et Chargements
 
 ### Types de Transitions
 
-**1. Fade In/Out (Standard):**
-- DurÃ©e: 0.3-0.5s
-- UtilisÃ© pour: Menus â†’ Jeu, Combats â†’ Carte
+**1. Fade In/Out (Standard) :**
+- Durée : 0.3-0.5s
+- Utilisé pour : Menus → Jeu, Combat → Combat suivant
 
-**2. Wipe (Balayage):**
-- DurÃ©e: 0.5s
-- Direction: Gauche â†’ Droite
-- UtilisÃ© pour: Changement d'acte
+**2. Wipe (Balayage) :**
+- Durée : 0.5s
+- Direction : Gauche → Droite
+- Utilisé pour : Changement d'acte
 
-**3. Zoom In (Carte â†’ Combat):**
-- DurÃ©e: 0.8s
-- Zoom sur le nÅ“ud sÃ©lectionnÃ©
-- Fondu vers la scÃ¨ne de combat
+**3. Zoom In (Campagne → Donjon) :**
+- Durée : 0.8s
+- Zoom sur le donjon sélectionné
+- Fondu vers la scène de combat
 
-**4. Instant (RÃ©compenses â†’ Carte):**
+**4. Instant (Récompenses → Suite) :**
 - Pas de transition
-- Changement immÃ©diat
+- Changement immédiat
 - Moins de friction
 
-### Ã‰crans de Chargement
+### Écrans de Chargement
 
-**Court (<2s):**
+**Court (<2s) :**
 - Barre de progression simple
-- Pas de texte, juste l'icÃ´ne du jeu
+- Pas de texte, juste l'icône du jeu
 
-**Moyen (2-5s):**
+**Moyen (2-5s) :**
 - Barre de progression
-- Tips de gameplay alÃ©atoires
-- Illustration d'arriÃ¨re-plan
+- Tips de gameplay aléatoires
+- Illustration d'arrière-plan
 
-**Long (>5s, rare):**
+**Long (>5s, rare) :**
 - Barre de progression
 - Tips de gameplay
-- Mini-jeu optionnel (ex: cliquer pour bonus mineur)
+- Mini-jeu optionnel (ex : cliquer pour bonus mineur)
 
 ---
 
-## ðŸŽ¯ Feedback et Satisfaction
+## 🎯 Feedback et Satisfaction
 
 ### Moments de Satisfaction (Juicy Moments)
 
-**1. Ã‰limination d'Ennemi:**
+**1. Élimination d'Ennemi :**
 - Animation de mort spectaculaire
-- Particules d'explosion
+- Particules d'explosion (et une touche de couleur qui revient)
 - Son impactant
-- Texte "Ã‰LIMINÃ‰!" qui pop
-- Shake screen lÃ©ger
+- Texte « ÉLIMINÉ ! » qui pop
+- Shake screen léger
 
-**2. Combo de Cartes:**
-- EnchaÃ®nement rapide (3+ cartes)
-- Multiplicateur de dÃ©gÃ¢ts affichÃ©
-- Effet visuel spÃ©cial (lightning entre les cartes)
+**2. Combo de Cartes :**
+- Enchaînement rapide (3+ cartes)
+- Multiplicateur de dégâts affiché
+- Effet visuel spécial (lightning entre les cartes)
 - Son de combo crescendo
 
-**3. Coup Critique:**
+**3. Coup Critique :**
 - Freeze frame (0.1s)
 - Flash lumineux
-- Son mÃ©tallique
-- Texte "CRITIQUE!" en gros
+- Son métallique
+- Texte « CRITIQUE ! » en gros
 
-**4. Victoire de Boss:**
+**4. Victoire de Boss :**
 - Slow motion de l'attaque finale
-- Explosion massive
-- Ã‰cran blanc flash
+- Retour de la couleur pleine sur tout le donjon
 - Fanfare musicale
-- DÃ©compte de rÃ©compenses thÃ©Ã¢tral
+- Décompte de récompenses théâtral
 
-### PrÃ©vention de la Frustration
+### Prévention de la Frustration
 
-**1. Undo (Annulation):**
-- PossibilitÃ© d'annuler le dernier mouvement (avant confirmation)
-- CoÃ»t: Aucun
-- Limite: 1 annulation par tour
+**1. Undo (Annulation) :**
+- Possibilité d'annuler le dernier mouvement (avant confirmation)
+- Coût : Aucun
+- Limite : 1 annulation par tour
 
-**2. Preview OmniprÃ©sent:**
+**2. Preview Omniprésent :**
 - Toujours afficher l'effet avant confirmation
-- Preview de dÃ©gÃ¢ts, portÃ©e, zone d'effet
-- Pas de surprise nÃ©gative
+- Preview de dégâts, portée, zone d'effet
+- Pas de surprise négative
 
-**3. Confirmations Optionnelles:**
-- DÃ©sactivables dans les options
-- ActivÃ©es par dÃ©faut pour nouveaux joueurs
-- Exemples:
-  - "Terminer le tour avec des PA inutilisÃ©s?"
-  - "Ignorer cette rÃ©compense?"
+**3. Confirmations Optionnelles :**
+- Désactivables dans les options
+- Activées par défaut pour nouveaux joueurs
+- Exemples :
+  - « Terminer le tour avec des PA inutilisés ? »
+  - « Ignorer cette récompense ? »
 
-**4. Sauvegarde Automatique:**
+**4. Sauvegarde Automatique :**
 - Avant chaque combat
-- AprÃ¨s chaque rÃ©compense
+- Après chaque récompense
 - Jamais de perte de progression
 
 ---
 
-## ðŸ“± Raccourcis Clavier
+## 📱 Raccourcis Clavier *(référence unique)*
 
 ### Combats
 
 - **Espace** : Fin de tour
-- **EntrÃ©e** : Confirmer l'action
-- **Ã‰chap** : Annuler la sÃ©lection
-- **1-9** : SÃ©lectionner carte dans la main
+- **Entrée** : Confirmer l'action (déplacement, ciblage)
+- **Échap** : Annuler la sélection
+- **1-9** : Sélectionner une carte dans la main
 - **Tab** : Cycler entre les ennemis
 - **Z** : Annuler le dernier mouvement
 
+### Écran de Récompenses
+
+- **1, 2, 3** : Sélectionner une carte
+- **Entrée** : Confirmer
+- **Échap** : Ignorer la récompense
+
 ### Navigation
 
-- **Ã‰chap** : Menu pause / Retour
-- **M** : Carte du monde
+- **Échap** : Menu pause / Retour
+- **M** : Écran de campagne
 - **D** : Deck
 - **C** : Personnages
 - **O** : Options
 
 ---
 
-**DerniÃ¨re mise Ã  jour:** 11 Janvier 2026
-**Responsable:** Design UX Project TDB
+**Dernière mise à jour :** 23 Septembre 2026
+**Responsable :** Shinda + Claude

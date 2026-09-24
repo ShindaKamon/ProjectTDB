@@ -1,63 +1,37 @@
-# 📚 Game Design Document - Émotions Tactics
+# 📚 GDD — Émotions Tactics (Project TDB)
 
-Documentation complète du jeu **Émotions Tactics** (Tactical Deck Builder).
+**Mis à jour le 23/09/2026** — passe de cohérence : docs réalignés sur l'Excel MVP et sur l'état réel du code.
 
----
+## Par où commencer
 
-## 📖 DOCUMENTS ESSENTIELS
+1. **[GDD_Main.md](GDD_Main.md)** — vision, roster MVP, décisions actées, questions ouvertes, tableau « source unique de vérité »
+2. **[MVP_Excel_Snapshot.md](MVP_Excel_Snapshot.md)** — copie texte de l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`, référence chiffrée du MVP
+3. **[Technical_Specs.md](Technical_Specs.md)** — architecture, et section **« État du code »** (ce qui est réellement implémenté)
 
-### 🎯 Vue d'Ensemble
-1. [**GDD_Main.md**](GDD_Main.md) - Vision globale du jeu
-2. [**README.md**](README.md) - Ce fichier (index)
+## Tous les documents
 
-### 🎭 Système d'Émotions
-3. [**SYSTEME_EMOTIONS.md**](SYSTEME_EMOTIONS.md) - 8 Familles + 5 Classes + États émotionnels
+| Document | Contenu |
+|----------|---------|
+| [GDD_Main.md](GDD_Main.md) | Vision, lore, roster, décisions, questions ouvertes |
+| [MVP_Excel_Snapshot.md](MVP_Excel_Snapshot.md) | Budget des cartes, bibliothèque, progression, barème monstres, roadmap |
+| [claude_md_coarchitect.md](claude_md_coarchitect.md) | Contrat de collaboration avec Claude (importé par `CLAUDE.md`) |
+| [SYSTEME_EMOTIONS.md](SYSTEME_EMOTIONS.md) | 8 émotions, 3 de lancement (Colère, Peur, Joie), Éveil |
+| [CHAMPIONS_CONCEPTS.md](CHAMPIONS_CONCEPTS.md) | Soren, l'Alpiniste, Ace + concepts hors MVP |
+| [Card_System.md](Card_System.md) | Types de cartes, deck de 24, budget de puissance, ciblage |
+| [Combat_System.md](Combat_System.md) | Tours, main, ressources, statuts, anti-lock |
+| [Grid_System.md](Grid_System.md) | Grille (carrée dans le code) |
+| [Enemies.md](Enemies.md) | Monstres de donjon / d'aventure, barème, boss |
+| [Progression.md](Progression.md) | Niveaux, PV, XP, économie |
+| [UX_Flow.md](UX_Flow.md) | Parcours joueur, raccourcis clavier |
+| [UI_Design.md](UI_Design.md) | Interface, palette, désaturation des donjons |
+| [Characters.md](Characters.md) | Structure d'un champion (ChampionData) |
+| [ilya_deck_simple.md](ilya_deck_simple.md) | Ilya (hors MVP) |
+| [astra_noctis_simple.md](astra_noctis_simple.md) | Astra & Noctis (hors MVP) |
+| [personnages_a_developper.md](personnages_a_developper.md) | Réservoir de 100 concepts |
+| [archive/Concepts_Abandonnes.md](archive/Concepts_Abandonnes.md) | Tout ce qui a été abandonné, mis en pause ou remplacé |
 
-### 👥 Personnages
-4. [**CHAMPIONS_CONCEPTS.md**](CHAMPIONS_CONCEPTS.md) - 40 concepts de champions innovants
-5. [**Characters.md**](Characters.md) - Structure technique des champions
-6. [**Enemies.md**](Enemies.md) - Ennemis et boss
+## Règle de cohérence
 
-### ⚔️ Systèmes de Combat
-7. [**Combat_System.md**](Combat_System.md) - Combat tactique tour par tour
-8. [**Card_System.md**](Card_System.md) - Système de cartes et deck building
-9. [**Grid_System.md**](Grid_System.md) - Grille tactique hexagonale
+Chaque information a **un seul document de référence** (voir le tableau dans `GDD_Main.md`). Quand une décision change : mettre à jour la référence, puis la table « Décisions actées » du GDD. Quand le code diverge du design : le noter dans `Technical_Specs.md` § « État du code ».
 
-### 📈 Progression
-10. [**Progression.md**](Progression.md) - Progression et récompenses
-
-### 🎨 Interface & Expérience
-11. [**UI_Design.md**](UI_Design.md) - Design de l'interface utilisateur
-12. [**UX_Flow.md**](UX_Flow.md) - Flux d'expérience utilisateur
-
-### 💻 Technique
-13. [**Technical_Specs.md**](Technical_Specs.md) - Architecture technique Unity
-
-### 📝 Développement
-14. [**claude_md_coarchitect.md**](claude_md_coarchitect.md) - Guide de collaboration
-
----
-
-## 🎯 RÉSUMÉ DU PROJET
-
-**Émotions Tactics** fusionne :
-- ⚔️ Combat tactique sur grille
-- 🃏 Deck building
-- 🎭 Système d'émotions unique (8 familles × 5 classes)
-
-**Architecture :**
-- 8 Familles (Colère, Dégoût, Tristesse, Surprise, Peur, Confiance, Joie, Anticipation)
-- 5 Classes (Réprimé, Impulsif, Alchimiste, Émissaire, Évadé)
-- 40 champions possibles (matrice 8×5)
-
-**Statut Actuel :**
-- ✅ Architecture finalisée
-- ✅ 2 champions développés (Ilya, Astra & Noctis)
-- ⏳ États émotionnels (1/8 familles)
-- ⏳ Implémentation Unity
-
----
-
-**Version :** 3.0  
-**Dernière mise à jour :** 17 Janvier 2026  
-**Créé par :** Shinda + Claude
+Ces docs existent aussi dans le projet claude.ai « EMOTIONS TACTICS - Game Dev ». **Le repo est la version de référence** ; resynchroniser le projet claude.ai après chaque changement important.

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 /// <summary>
@@ -32,8 +33,10 @@ public class DeckEditorUI : MonoBehaviour
     [SerializeField] private int _cardsPerPage = 8;
 
     [Header("Zone Deck (liste groupée triée par coût)")]
-    [SerializeField] private Transform _deckGridParent;
-    [SerializeField] private GameObject _deckGridItemPrefab; // DeckGridCardUI
+    [FormerlySerializedAs("_deckGridParent")]
+    [SerializeField] private Transform _deckListParent;
+    [FormerlySerializedAs("_deckGridItemPrefab")]
+    [SerializeField] private GameObject _deckListRowPrefab; // DeckListRowUI (nom + quantité)
 
     [Header("Courbe de coût PA")]
     [SerializeField] private PACurveUI _paCurve;
@@ -54,7 +57,7 @@ public class DeckEditorUI : MonoBehaviour
     private CardCollection _cardCollection;
 
     private List<CardPoolItemUI> _poolItems = new List<CardPoolItemUI>();
-    private List<DeckGridCardUI> _deckGridItems = new List<DeckGridCardUI>();
+    private List<DeckListRowUI> _deckRows = new List<DeckListRowUI>();
     private List<CardData> _currentDeckCards = new List<CardData>();
     private List<CardData> _filteredCards = new List<CardData>(); // Cartes filtrées pour la pagination
 
@@ -158,7 +161,7 @@ public class DeckEditorUI : MonoBehaviour
         if (_resetButton != null)
             _resetButton.gameObject.SetActive(!isReadOnly);
 
-        foreach (var item in _deckGridItems)
+        foreach (var item in _deckRows)
         {
             if (item != null)
                 item.SetInteractable(!isReadOnly);
@@ -167,17 +170,17 @@ public class DeckEditorUI : MonoBehaviour
 
     #region Zone Deck (liste groupée)
 
-    private void RefreshDeckGrid()
+    private void RefreshDeckList()
     {
-        if (_deckGridParent == null) return;
+        if (_deckListParent == null) return;
 
-        foreach (Transform child in _deckGridParent)
+        foreach (Transform child in _deckListParent)
             Destroy(child.gameObject);
-        _deckGridItems.Clear();
+        _deckRows.Clear();
 
-        if (_deckGridItemPrefab == null)
+        if (_deckListRowPrefab == null)
         {
-            GameLog.LogWarning("DeckEditorUI: _deckGridItemPrefab n'est pas assigné!");
+            GameLog.LogWarning("DeckEditorUI: _deckListRowPrefab n'est pas assigné!");
             return;
         }
 
@@ -206,15 +209,15 @@ public class DeckEditorUI : MonoBehaviour
 
         foreach (var entry in sortedCards)
         {
-            var itemGO = Instantiate(_deckGridItemPrefab, _deckGridParent);
-            var gridCardUI = itemGO.GetComponent<DeckGridCardUI>();
+            var itemGO = Instantiate(_deckListRowPrefab, _deckListParent);
+            var row = itemGO.GetComponent<DeckListRowUI>();
 
-            if (gridCardUI != null)
+            if (row != null)
             {
-                gridCardUI.Setup(entry.card, entry.count);
-                gridCardUI.SetInteractable(!isReadOnly);
-                gridCardUI.OnCardClicked += OnDeckCardGroupClicked;
-                _deckGridItems.Add(gridCardUI);
+                row.Setup(entry.card, entry.count);
+                row.SetInteractable(!isReadOnly);
+                row.OnCardClicked += OnDeckCardGroupClicked;
+                _deckRows.Add(row);
             }
         }
 
@@ -259,7 +262,7 @@ public class DeckEditorUI : MonoBehaviour
 
     private void UpdateDeckDisplay()
     {
-        RefreshDeckGrid();
+        RefreshDeckList();
         UpdateHeader();
     }
 

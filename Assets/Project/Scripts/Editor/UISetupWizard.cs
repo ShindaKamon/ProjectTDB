@@ -23,7 +23,7 @@ public class UISetupWizard : EditorWindow
     {
         EnsureFolderExists(PrefabPath);
 
-        CreateCardGridItemPrefab();
+        CreateDeckListRowPrefab();
         CreateDeckSlotPrefab();
         CreateCardPoolItemPrefab();
         CreateDeckCardSlotPrefab();
@@ -45,8 +45,8 @@ public class UISetupWizard : EditorWindow
         GUILayout.Space(10);
         GUILayout.Label("Ou generez individuellement:", EditorStyles.label);
 
-        if (GUILayout.Button("CardGridItem (grille de deck)"))
-            CreateCardGridItemPrefab();
+        if (GUILayout.Button("DeckListRow (liste du deck)"))
+            CreateDeckListRowPrefab();
 
         if (GUILayout.Button("DeckSlot (slot de deck)"))
             CreateDeckSlotPrefab();
@@ -84,116 +84,94 @@ public class UISetupWizard : EditorWindow
     }
 
     /// <summary>
-    /// Cree le prefab CardGridItem pour la grille de deck (mode visualisation)
+    /// Cree le prefab DeckListRow : une ligne de la liste du deck (facon MTG Arena) avec bande
+    /// de couleur de l'emotion, cout PA, nom et quantite.
     /// </summary>
-    [MenuItem("Tools/UI/Prefabs/CardGridItem")]
-    public static void CreateCardGridItemPrefab()
+    [MenuItem("Tools/UI/Prefabs/DeckListRow")]
+    public static void CreateDeckListRowPrefab()
     {
         EnsureFolderExists(PrefabPath);
 
-        // Root
-        GameObject root = new GameObject("CardGridItem");
+        // Root : fond de la ligne, hauteur fixe pour le VerticalLayoutGroup de la liste
+        GameObject root = new GameObject("DeckListRow");
         RectTransform rootRT = root.AddComponent<RectTransform>();
-        rootRT.sizeDelta = new Vector2(100, 140);
+        rootRT.sizeDelta = new Vector2(300, 32);
 
         Image rootImage = root.AddComponent<Image>();
-        rootImage.color = new Color(0.15f, 0.15f, 0.2f);
+        rootImage.color = CodexCardVisual.CardBackground;
 
-        DeckGridCardUI cardUI = root.AddComponent<DeckGridCardUI>();
+        LayoutElement layout = root.AddComponent<LayoutElement>();
+        layout.minHeight = 32;
+        layout.preferredHeight = 32;
 
-        // Card Frame (fond)
-        GameObject frame = CreateChild(root, "CardFrame");
-        Image frameImg = frame.AddComponent<Image>();
-        frameImg.color = new Color(0.1f, 0.1f, 0.15f);
-        SetAnchors(frame, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+        CanvasGroup canvasGroup = root.AddComponent<CanvasGroup>();
+        DeckListRowUI rowUI = root.AddComponent<DeckListRowUI>();
 
-        // Family Border (bordure coloree)
-        GameObject border = CreateChild(root, "FamilyBorder");
-        Image borderImg = border.AddComponent<Image>();
-        borderImg.color = Color.red;
-        SetAnchors(border, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        Outline borderOutline = border.AddComponent<Outline>();
-        borderOutline.effectColor = Color.red;
-        borderOutline.effectDistance = new Vector2(2, -2);
+        // Bande de couleur de l'emotion (bord gauche)
+        GameObject strip = CreateChild(root, "EmotionStrip");
+        Image stripImg = strip.AddComponent<Image>();
+        stripImg.color = Color.red;
+        stripImg.raycastTarget = false;
+        SetAnchors(strip, new Vector2(0, 0), new Vector2(0, 1), Vector2.zero, new Vector2(6, 0));
 
-        // Card Image (artwork)
-        GameObject cardImage = CreateChild(root, "CardImage");
-        Image cardImg = cardImage.AddComponent<Image>();
-        cardImg.color = new Color(0.3f, 0.3f, 0.3f);
-        SetAnchors(cardImage, new Vector2(0.05f, 0.25f), new Vector2(0.95f, 0.95f), Vector2.zero, Vector2.zero);
-
-        // Name Background
-        GameObject nameBg = CreateChild(root, "NameBackground");
-        Image nameBgImg = nameBg.AddComponent<Image>();
-        nameBgImg.color = new Color(0, 0, 0, 0.7f);
-        SetAnchors(nameBg, new Vector2(0, 0), new Vector2(1, 0.25f), Vector2.zero, Vector2.zero);
-
-        // Card Name Text
-        GameObject nameText = CreateChild(nameBg, "CardNameText");
-        TextMeshProUGUI nameTMP = nameText.AddComponent<TextMeshProUGUI>();
-        nameTMP.text = "Nom Carte";
-        nameTMP.fontSize = 12;
-        nameTMP.alignment = TextAlignmentOptions.Center;
-        nameTMP.color = Color.white;
-        SetAnchors(nameText, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
-
-        // Cost Badge (coin haut gauche)
+        // Badge de cout PA
         GameObject costBadge = CreateChild(root, "CostBadge");
         Image costBadgeImg = costBadge.AddComponent<Image>();
         costBadgeImg.color = new Color(0.9f, 0.7f, 0.2f);
-        RectTransform costBadgeRT = costBadge.GetComponent<RectTransform>();
-        costBadgeRT.anchorMin = new Vector2(0, 1);
-        costBadgeRT.anchorMax = new Vector2(0, 1);
-        costBadgeRT.pivot = new Vector2(0, 1);
-        costBadgeRT.anchoredPosition = new Vector2(5, -5);
-        costBadgeRT.sizeDelta = new Vector2(24, 24);
+        costBadgeImg.raycastTarget = false;
+        RectTransform costRT = costBadge.GetComponent<RectTransform>();
+        costRT.anchorMin = new Vector2(0, 0.5f);
+        costRT.anchorMax = new Vector2(0, 0.5f);
+        costRT.pivot = new Vector2(0, 0.5f);
+        costRT.anchoredPosition = new Vector2(12, 0);
+        costRT.sizeDelta = new Vector2(24, 24);
 
-        // Cost Text
         GameObject costText = CreateChild(costBadge, "CostText");
         TextMeshProUGUI costTMP = costText.AddComponent<TextMeshProUGUI>();
         costTMP.text = "2";
-        costTMP.fontSize = 14;
+        costTMP.fontSize = 15;
         costTMP.fontStyle = FontStyles.Bold;
         costTMP.alignment = TextAlignmentOptions.Center;
         costTMP.color = Color.white;
+        costTMP.raycastTarget = false;
         SetAnchors(costText, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-        // Count Badge (coin bas droite)
-        GameObject countBadge = CreateChild(root, "CountBadge");
-        Image countBadgeImg = countBadge.AddComponent<Image>();
-        countBadgeImg.color = new Color(0.2f, 0.2f, 0.8f);
-        RectTransform countBadgeRT = countBadge.GetComponent<RectTransform>();
-        countBadgeRT.anchorMin = new Vector2(1, 0);
-        countBadgeRT.anchorMax = new Vector2(1, 0);
-        countBadgeRT.pivot = new Vector2(1, 0);
-        countBadgeRT.anchoredPosition = new Vector2(-5, 5);
-        countBadgeRT.sizeDelta = new Vector2(28, 20);
+        // Nom de la carte (entre le cout et la quantite, tronque si trop long)
+        GameObject nameText = CreateChild(root, "NameText");
+        TextMeshProUGUI nameTMP = nameText.AddComponent<TextMeshProUGUI>();
+        nameTMP.text = "Nom de la carte";
+        nameTMP.fontSize = 16;
+        nameTMP.alignment = TextAlignmentOptions.MidlineLeft;
+        nameTMP.color = Color.white;
+        nameTMP.textWrappingMode = TextWrappingModes.NoWrap;
+        nameTMP.overflowMode = TextOverflowModes.Ellipsis;
+        nameTMP.raycastTarget = false;
+        SetAnchors(nameText, Vector2.zero, Vector2.one, new Vector2(44, 0), new Vector2(-44, 0));
 
-        // Count Text
-        GameObject countText = CreateChild(countBadge, "CountText");
+        // Quantite (bord droit)
+        GameObject countText = CreateChild(root, "CountText");
         TextMeshProUGUI countTMP = countText.AddComponent<TextMeshProUGUI>();
-        countTMP.text = "x2";
-        countTMP.fontSize = 12;
+        countTMP.text = "×2";
+        countTMP.fontSize = 16;
         countTMP.fontStyle = FontStyles.Bold;
-        countTMP.alignment = TextAlignmentOptions.Center;
-        countTMP.color = Color.white;
-        SetAnchors(countText, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        countTMP.alignment = TextAlignmentOptions.MidlineRight;
+        countTMP.color = new Color(1f, 0.85f, 0.5f);
+        countTMP.raycastTarget = false;
+        SetAnchors(countText, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-42, 0), new Vector2(-8, 0));
 
         // Assigner les references au script
-        SerializedObject so = new SerializedObject(cardUI);
-        so.FindProperty("_cardFrame").objectReferenceValue = frameImg;
-        so.FindProperty("_cardImage").objectReferenceValue = cardImg;
-        so.FindProperty("_familyBorder").objectReferenceValue = borderImg;
+        SerializedObject so = new SerializedObject(rowUI);
+        so.FindProperty("_background").objectReferenceValue = rootImage;
+        so.FindProperty("_emotionStrip").objectReferenceValue = stripImg;
         so.FindProperty("_costBadge").objectReferenceValue = costBadgeImg;
         so.FindProperty("_costText").objectReferenceValue = costTMP;
-        so.FindProperty("_countBadge").objectReferenceValue = countBadgeImg;
+        so.FindProperty("_nameText").objectReferenceValue = nameTMP;
         so.FindProperty("_countText").objectReferenceValue = countTMP;
-        so.FindProperty("_cardNameText").objectReferenceValue = nameTMP;
-        so.FindProperty("_nameBackground").objectReferenceValue = nameBgImg;
+        so.FindProperty("_canvasGroup").objectReferenceValue = canvasGroup;
         so.ApplyModifiedProperties();
 
         // Sauvegarder le prefab
-        string path = $"{PrefabPath}/CardGridItem.prefab";
+        string path = $"{PrefabPath}/DeckListRow.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         DestroyImmediate(root);
 
@@ -284,114 +262,149 @@ public class UISetupWizard : EditorWindow
     }
 
     /// <summary>
-    /// Cree le prefab CardPoolItem pour le pool d'edition
+    /// Cree le prefab CardPoolItem (carte du pool d'edition) au design du codex emotionnel :
+    /// en-tete (rond de cout, nom, sous-titre), schema de portee 9x9 + legende, pastilles
+    /// d'effets (icones du codex dans Textures/UI/CodexIcons), description.
     /// </summary>
     [MenuItem("Tools/UI/Prefabs/CardPoolItem")]
     public static void CreateCardPoolItemPrefab()
     {
         EnsureFolderExists(PrefabPath);
 
-        // Root
+        Sprite rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        Sprite circle = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+
+        // Root : cadre de la carte
         GameObject root = new GameObject("CardPoolItem");
         RectTransform rootRT = root.AddComponent<RectTransform>();
-        rootRT.sizeDelta = new Vector2(200, 60);
+        rootRT.sizeDelta = new Vector2(250, 250);
 
-        Image rootImage = root.AddComponent<Image>();
-        rootImage.color = new Color(0.15f, 0.15f, 0.2f);
+        Image bg = root.AddComponent<Image>();
+        bg.sprite = rounded;
+        bg.type = Image.Type.Sliced;
+        bg.color = CodexCardVisual.CardBackground;
 
-        CardPoolItemUI poolUI = root.AddComponent<CardPoolItemUI>();
+        Outline border = root.AddComponent<Outline>();
+        border.effectColor = CodexCardVisual.CardBorder;
+        border.effectDistance = new Vector2(1.5f, -1.5f);
 
-        // Family Border (barre coloree a gauche)
-        GameObject border = CreateChild(root, "FamilyBorder");
-        Image borderImg = border.AddComponent<Image>();
-        borderImg.color = Color.red;
-        RectTransform borderRT = border.GetComponent<RectTransform>();
-        borderRT.anchorMin = Vector2.zero;
-        borderRT.anchorMax = new Vector2(0, 1);
-        borderRT.pivot = new Vector2(0, 0.5f);
-        borderRT.anchoredPosition = Vector2.zero;
-        borderRT.sizeDelta = new Vector2(4, 0);
+        CardPoolItemUI ui = root.AddComponent<CardPoolItemUI>();
 
-        // Card Icon
-        GameObject icon = CreateChild(root, "CardIcon");
-        Image iconImg = icon.AddComponent<Image>();
-        iconImg.color = new Color(0.3f, 0.3f, 0.3f);
-        RectTransform iconRT = icon.GetComponent<RectTransform>();
-        iconRT.anchorMin = new Vector2(0, 0.1f);
-        iconRT.anchorMax = new Vector2(0, 0.9f);
-        iconRT.pivot = new Vector2(0, 0.5f);
-        iconRT.anchoredPosition = new Vector2(10, 0);
-        iconRT.sizeDelta = new Vector2(45, 0);
+        // --- En-tete ---
+        GameObject costCircle = CreateChild(root, "CostCircle");
+        Image costImg = costCircle.AddComponent<Image>();
+        costImg.sprite = circle;
+        costImg.color = CodexCardVisual.EmotionColor(EmotionType.Colere);
+        costImg.raycastTarget = false;
+        RectTransform costRT = costCircle.GetComponent<RectTransform>();
+        costRT.anchorMin = costRT.anchorMax = new Vector2(0, 1);
+        costRT.pivot = new Vector2(0, 1);
+        costRT.anchoredPosition = new Vector2(12, -12);
+        costRT.sizeDelta = new Vector2(32, 32);
 
-        // Cost Badge
-        GameObject costBadge = CreateChild(root, "CostBadge");
-        Image costBadgeImg = costBadge.AddComponent<Image>();
-        costBadgeImg.color = new Color(0.9f, 0.7f, 0.2f);
-        RectTransform costBadgeRT = costBadge.GetComponent<RectTransform>();
-        costBadgeRT.anchorMin = new Vector2(0, 0.5f);
-        costBadgeRT.anchorMax = new Vector2(0, 0.5f);
-        costBadgeRT.pivot = new Vector2(0, 0.5f);
-        costBadgeRT.anchoredPosition = new Vector2(60, 0);
-        costBadgeRT.sizeDelta = new Vector2(24, 24);
+        TextMeshProUGUI costTMP = AddText(costCircle, "CostText", "2", 19, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        SetAnchors(costTMP.gameObject, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-        // Cost Text
-        GameObject costText = CreateChild(costBadge, "CostText");
-        TextMeshProUGUI costTMP = costText.AddComponent<TextMeshProUGUI>();
-        costTMP.text = "2";
-        costTMP.fontSize = 14;
-        costTMP.fontStyle = FontStyles.Bold;
-        costTMP.alignment = TextAlignmentOptions.Center;
-        costTMP.color = Color.white;
-        SetAnchors(costText, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        TextMeshProUGUI nameTMP = AddText(root, "NameText", "Nom de la carte", 17, FontStyles.Bold, TextAlignmentOptions.TopLeft, CodexCardVisual.Ink);
+        nameTMP.overflowMode = TextOverflowModes.Ellipsis;
+        nameTMP.textWrappingMode = TextWrappingModes.NoWrap;
+        SetAnchors(nameTMP.gameObject, new Vector2(0, 1), new Vector2(1, 1), new Vector2(52, -32), new Vector2(-10, -11));
 
-        // Card Name
-        GameObject nameText = CreateChild(root, "CardNameText");
-        TextMeshProUGUI nameTMP = nameText.AddComponent<TextMeshProUGUI>();
-        nameTMP.text = "Nom de la Carte";
-        nameTMP.fontSize = 14;
-        nameTMP.fontStyle = FontStyles.Bold;
-        nameTMP.alignment = TextAlignmentOptions.Left;
-        nameTMP.color = Color.white;
-        RectTransform nameRT = nameText.GetComponent<RectTransform>();
-        nameRT.anchorMin = new Vector2(0, 0.5f);
-        nameRT.anchorMax = new Vector2(1, 1);
-        nameRT.pivot = new Vector2(0, 0.5f);
-        nameRT.anchoredPosition = new Vector2(90, 0);
-        nameRT.sizeDelta = new Vector2(-100, 0);
+        TextMeshProUGUI subTMP = AddText(root, "SubtitleText", "Colère · Standard", 11.5f, FontStyles.Normal, TextAlignmentOptions.TopLeft, CodexCardVisual.InkDim);
+        subTMP.overflowMode = TextOverflowModes.Ellipsis;
+        subTMP.textWrappingMode = TextWrappingModes.NoWrap;
+        SetAnchors(subTMP.gameObject, new Vector2(0, 1), new Vector2(1, 1), new Vector2(52, -48), new Vector2(-10, -32));
 
-        // Description
-        GameObject descText = CreateChild(root, "CardDescriptionText");
-        TextMeshProUGUI descTMP = descText.AddComponent<TextMeshProUGUI>();
-        descTMP.text = "Description de la carte...";
-        descTMP.fontSize = 10;
-        descTMP.alignment = TextAlignmentOptions.Left;
-        descTMP.color = new Color(0.7f, 0.7f, 0.7f);
-        descTMP.enableWordWrapping = true;
+        // --- Schema de portee 9x9 (cases de 9 px, 1 px de trait) ---
+        GameObject diagram = CreateChild(root, "Diagram");
+        Image diagramFrame = diagram.AddComponent<Image>();
+        diagramFrame.color = CodexCardVisual.GridLine; // le fond visible entre les cases fait office de quadrillage
+        diagramFrame.raycastTarget = false;
+        RectTransform diagRT = diagram.GetComponent<RectTransform>();
+        diagRT.anchorMin = diagRT.anchorMax = new Vector2(0, 1);
+        diagRT.pivot = new Vector2(0, 1);
+        diagRT.anchoredPosition = new Vector2(12, -58);
+        diagRT.sizeDelta = new Vector2(91, 91);
+
+        GridLayoutGroup grid = diagram.AddComponent<GridLayoutGroup>();
+        grid.padding = new RectOffset(1, 1, 1, 1);
+        grid.cellSize = new Vector2(9, 9);
+        grid.spacing = new Vector2(1, 1);
+        grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = CodexCardVisual.DiagramSize;
+        for (int i = 0; i < CodexCardVisual.DiagramSize * CodexCardVisual.DiagramSize; i++)
+        {
+            GameObject cell = CreateChild(diagram, "Cell");
+            Image cellImg = cell.AddComponent<Image>();
+            cellImg.color = CodexCardVisual.GridCell;
+            cellImg.raycastTarget = false;
+        }
+
+        TextMeshProUGUI captionTMP = AddText(root, "CaptionText", "au contact", 10.5f, FontStyles.Normal, TextAlignmentOptions.TopLeft, CodexCardVisual.InkDim);
+        SetAnchors(captionTMP.gameObject, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -178), new Vector2(112, -152));
+
+        // --- Pastilles d'effets (a droite du schema, une par ligne) ---
+        GameObject chips = CreateChild(root, "Chips");
+        SetAnchors(chips, new Vector2(0, 1), new Vector2(1, 1), new Vector2(116, -150), new Vector2(-10, -58));
+        VerticalLayoutGroup chipsLayout = chips.AddComponent<VerticalLayoutGroup>();
+        chipsLayout.spacing = 5;
+        chipsLayout.childAlignment = TextAnchor.UpperLeft;
+        chipsLayout.childControlWidth = false;
+        chipsLayout.childControlHeight = false;
+        chipsLayout.childForceExpandWidth = false;
+        chipsLayout.childForceExpandHeight = false;
+
+        // --- Description ---
+        TextMeshProUGUI descTMP = AddText(root, "DescriptionText", "Description de la carte.", 12.5f, FontStyles.Normal, TextAlignmentOptions.TopLeft, CodexCardVisual.Ink);
+        descTMP.enableAutoSizing = true;
+        descTMP.fontSizeMin = 10;
+        descTMP.fontSizeMax = 12.5f;
         descTMP.overflowMode = TextOverflowModes.Ellipsis;
-        RectTransform descRT = descText.GetComponent<RectTransform>();
-        descRT.anchorMin = new Vector2(0, 0);
-        descRT.anchorMax = new Vector2(1, 0.5f);
-        descRT.pivot = new Vector2(0, 0.5f);
-        descRT.anchoredPosition = new Vector2(90, 0);
-        descRT.sizeDelta = new Vector2(-100, 0);
+        SetAnchors(descTMP.gameObject, new Vector2(0, 0), new Vector2(1, 1), new Vector2(12, 10), new Vector2(-12, -182));
 
-        // Assigner les references
-        SerializedObject so = new SerializedObject(poolUI);
-        so.FindProperty("_backgroundImage").objectReferenceValue = rootImage;
-        so.FindProperty("_familyBorder").objectReferenceValue = borderImg;
-        so.FindProperty("_cardIcon").objectReferenceValue = iconImg;
-        so.FindProperty("_costBadge").objectReferenceValue = costBadgeImg;
-        so.FindProperty("_cardCostText").objectReferenceValue = costTMP;
-        so.FindProperty("_cardNameText").objectReferenceValue = nameTMP;
-        so.FindProperty("_cardDescriptionText").objectReferenceValue = descTMP;
+        // Icones du codex (generees depuis ses SVG)
+        var icons = new System.Collections.Generic.List<Sprite>();
+        foreach (string guid in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Project/Textures/UI/CodexIcons" }))
+            icons.Add(AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guid)));
+
+        // Assigner les references au script
+        SerializedObject so = new SerializedObject(ui);
+        so.FindProperty("_background").objectReferenceValue = bg;
+        so.FindProperty("_border").objectReferenceValue = border;
+        so.FindProperty("_costCircle").objectReferenceValue = costImg;
+        so.FindProperty("_costText").objectReferenceValue = costTMP;
+        so.FindProperty("_nameText").objectReferenceValue = nameTMP;
+        so.FindProperty("_subtitleText").objectReferenceValue = subTMP;
+        so.FindProperty("_diagramGrid").objectReferenceValue = diagram.transform;
+        so.FindProperty("_captionText").objectReferenceValue = captionTMP;
+        so.FindProperty("_chipsContainer").objectReferenceValue = chips.transform;
+        so.FindProperty("_chipBackground").objectReferenceValue = rounded;
+        so.FindProperty("_descriptionText").objectReferenceValue = descTMP;
+        SerializedProperty iconsProp = so.FindProperty("_chipIcons");
+        iconsProp.arraySize = icons.Count;
+        for (int i = 0; i < icons.Count; i++)
+            iconsProp.GetArrayElementAtIndex(i).objectReferenceValue = icons[i];
         so.ApplyModifiedProperties();
 
-        // Sauvegarder
+        // Sauvegarder le prefab
         string path = $"{PrefabPath}/CardPoolItem.prefab";
         PrefabUtility.SaveAsPrefabAsset(root, path);
         DestroyImmediate(root);
 
-        Debug.Log($"Prefab cree: {path}");
+        Debug.Log($"Prefab cree: {path} ({icons.Count} icones)");
+    }
+
+    private static TextMeshProUGUI AddText(GameObject parent, string name, string text, float size, FontStyles style, TextAlignmentOptions align, Color color)
+    {
+        GameObject go = CreateChild(parent, name);
+        TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
+        tmp.text = text;
+        tmp.fontSize = size;
+        tmp.fontStyle = style;
+        tmp.alignment = align;
+        tmp.color = color;
+        tmp.raycastTarget = false;
+        return tmp;
     }
 
     /// <summary>
@@ -502,11 +515,11 @@ public class UISetupWizard : EditorWindow
             SerializedObject so = new SerializedObject(deckEditor);
 
             // Charger les prefabs
-            GameObject deckGridItem = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/CardGridItem.prefab");
+            GameObject deckListRow = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/DeckListRow.prefab");
             GameObject cardPoolItem = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabPath}/CardPoolItem.prefab");
 
-            if (deckGridItem != null)
-                so.FindProperty("_deckGridItemPrefab").objectReferenceValue = deckGridItem;
+            if (deckListRow != null)
+                so.FindProperty("_deckListRowPrefab").objectReferenceValue = deckListRow;
             if (cardPoolItem != null)
                 so.FindProperty("_cardPoolItemPrefab").objectReferenceValue = cardPoolItem;
 

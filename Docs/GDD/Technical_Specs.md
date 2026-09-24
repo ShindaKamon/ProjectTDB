@@ -143,13 +143,13 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **Écrans construits :**
 - Sélection de champion (`Screen_ChampionSelect`) : illustration plein écran (`ChampionData.fullBodyArt`, art provisoire), rail de champions, carte de stats en overlay.
-- Écran deck unifié (`Screen_DeckManager`, style MTG Arena) : onglets de loadout, pool filtrable, liste groupée ×N, courbe de coût en PA, bouton « Lancer le combat » (tolère un deck incomplet), sauvegarde automatique. Variante mobile (onglets Pool/Deck) : pas encore faite.
+- Écran deck unifié (`Screen_DeckManager`, style MTG Arena) : onglets de loadout, pool filtrable (~73 % de la largeur) dont les cartes reprennent le design du codex émotionnel (`CardPoolItemUI` + `CodexCardVisual` : rond de coût à la couleur de l'émotion, schéma de portée 9×9, pastilles d'effets avec les icônes du codex dans `Textures/UI/CodexIcons`, description ; exemple et valeurs Excel non repris), liste du deck en colonne façon MTG Arena (une ligne par carte : couleur de l'émotion, coût PA, nom, ×N ; clic = retirer un exemplaire ; prefab `DeckListRow` généré par `UISetupWizard`), courbe de coût en PA, pas d'illustration du personnage, bouton « Lancer le combat » (tolère un deck incomplet), sauvegarde automatique. Variante mobile (onglets Pool/Deck) : pas encore faite.
 - HUD de combat (`CombatScene`) : stats du personnage en haut à gauche sous l'indicateur de tour, carte ennemie en haut à droite.
 
 **À savoir :**
 - `ChampionData.portrait` (buste) existe mais n'est assigné à aucun champion.
 - Pool de cartes façon SpamDex : filtre et tri dans `CardPoolQuery` (C# pur, `Scripts/Deck/`, testé en EditMode), piloté par le panneau `PoolFilterBarUI` (ligne `FiltersRow` de la zone pool) : recherche nom/effet insensible aux accents, pastilles `FilterChipUI` d'émotion (seulement celles du deck, masquées si une seule) et de catégorie en multi-sélection, coût PA 0/1/2/3/4+ (un à la fois), tri au clic coût → nom → émotion avec ordre réversible, bouton « Réinitialiser » visible si un filtre est actif, message si aucun résultat. Le panneau reste utilisable sur le deck de base (lecture seule). Tout le pool est affiché dans la zone de défilement ; la pagination reste optionnelle (active seulement si les boutons de page sont câblés). À venir : zoom de la grille, fiche détaillée de carte.
-- Connu : le prefab `CardPoolItem` (cellule 150×60) affiche mal les noms longs (texte qui se chevauche), et la grille du deck déborde à gauche de sa zone.
+- Connu : Rugissement destructeur (cible `Self`) donne +7 DEF au lanceur via `ModifyStats`, alors que sa description annonce une armure réduite pour les ennemis autour (données ou code à corriger).
 - L'écran de sélection affiche encore ATK et DEF, alors que le design ne définit que PV / PA / PM.
 
 ---

@@ -40,7 +40,7 @@ public class DeckData
     {
         if (Emotion1 == EmotionType.None)
             return new Color(0.3f, 0.3f, 0.4f); // Gris-bleu par défaut
-        return CardVisualHelper.GetEmotionColor(Emotion1);
+        return CodexCardVisual.EmotionColor(Emotion1);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public class DeckData
     {
         if (Emotion2 == EmotionType.None)
             return new Color(0.25f, 0.25f, 0.35f); // Gris-bleu foncé par défaut
-        return CardVisualHelper.GetEmotionColor(Emotion2);
+        return CodexCardVisual.EmotionColor(Emotion2);
     }
 
     /// <summary>

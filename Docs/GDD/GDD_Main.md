@@ -266,6 +266,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Faiblesse émotionnelle** | **Une émotion par monstre, +25 % de dégâts des cartes de cette émotion** (à valider), visible sur le monstre ; pas de résistance au MVP | 24/09 |
 | **Pool Standard** | **49 cartes** (17 Colère, 17 Peur, 15 Joie) pour l'instant — la Roadmap de l'Excel dit 36, à corriger | 24/09 |
 | **Noms de familles** | **Abandonnés** (Déchaînés, Réprouvés, Éveillés…) : on parle directement des émotions | 24/09 |
+| **Palette des émotions** | **Celle du codex** (Colère #D64545, Peur #3F9D5C, Joie #D9A91F…), seule référence, codée dans `CodexCardVisual` ; l'ancienne (#CC0000, #006600, #FFEB00) est abandonnée | 24/09 |
 | Éveil | Mis de côté pour l'instant, à réfléchir plus tard | 24/09 |
 | Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
 | Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |

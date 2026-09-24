@@ -97,23 +97,6 @@ public class UnitStateChangedEvent : GameEvent
 }
 
 /// <summary>
-/// Publié quand une unité se déplace d'une case
-/// </summary>
-public class UnitMovedEvent : GameEvent
-{
-    public Unit Unit { get; private set; }
-    public Vector2Int FromPosition { get; private set; }
-    public Vector2Int ToPosition { get; private set; }
-
-    public UnitMovedEvent(Unit unit, Vector2Int fromPosition, Vector2Int toPosition)
-    {
-        Unit = unit;
-        FromPosition = fromPosition;
-        ToPosition = toPosition;
-    }
-}
-
-/// <summary>
 /// Publié quand une unité prend des dégâts
 /// </summary>
 public class UnitDamagedEvent : GameEvent
@@ -142,42 +125,6 @@ public class UnitHealedEvent : GameEvent
     {
         Target = target;
         HealAmount = healAmount;
-    }
-}
-
-// ========== ÉVÉNEMENTS DE CARTES ==========
-
-/// <summary>
-/// Publié quand une carte est jouée
-/// </summary>
-public class CardPlayedEvent : GameEvent
-{
-    public CardData Card { get; private set; }
-    public Unit Source { get; private set; }
-    public Unit TargetUnit { get; private set; }
-    public Vector2Int TargetTile { get; private set; }
-
-    public CardPlayedEvent(CardData card, Unit source, Unit targetUnit, Vector2Int targetTile)
-    {
-        Card = card;
-        Source = source;
-        TargetUnit = targetUnit;
-        TargetTile = targetTile;
-    }
-}
-
-/// <summary>
-/// Publié quand une carte est piochée
-/// </summary>
-public class CardDrawnEvent : GameEvent
-{
-    public CardData Card { get; private set; }
-    public Unit Unit { get; private set; }
-
-    public CardDrawnEvent(CardData card, Unit unit)
-    {
-        Card = card;
-        Unit = unit;
     }
 }
 
@@ -236,38 +183,6 @@ public class ShowAOEZoneEvent : GameEvent
 public class ResetTileColorsEvent : GameEvent
 {
     // Événement simple sans données
-}
-
-/// <summary>
-/// Publié pour demander la mise à jour de l'UI des unités
-/// </summary>
-public class UpdateUnitUIEvent : GameEvent
-{
-    public Unit Unit { get; private set; }
-
-    public UpdateUnitUIEvent(Unit unit = null)
-    {
-        Unit = unit; // null = mettre à jour l'unité active
-    }
-}
-
-// ========== ÉVÉNEMENTS D'ÉMOTION ==========
-
-/// <summary>
-/// Publié quand l'émotion d'une unité change
-/// </summary>
-public class EmotionChangedEvent : GameEvent
-{
-    public Unit Unit { get; private set; }
-    public float NewEmotion { get; private set; }
-    public float MaxEmotion { get; private set; }
-
-    public EmotionChangedEvent(Unit unit, float newEmotion, float maxEmotion)
-    {
-        Unit = unit;
-        NewEmotion = newEmotion;
-        MaxEmotion = maxEmotion;
-    }
 }
 
 // ========== ÉVÉNEMENTS DE MARQUES ==========

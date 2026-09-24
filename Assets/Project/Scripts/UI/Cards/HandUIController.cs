@@ -251,7 +251,6 @@ public class HandUIController : MonoBehaviour
             activeUnit.PayHealth(_selectedCard.costHP);
         }
 
-        Services.Grid.UpdateUnitUI();
         _pendingMultiTargets.Clear();
         _summonToMove = null;
         _selectedCard = null;
@@ -815,7 +814,6 @@ public class HandUIController : MonoBehaviour
             activeUnit.PayHealth(_selectedCard.costHP);
         }
 
-        Services.Grid.UpdateUnitUI();
         _selectedCard = null;
         ResetSelectedCardUIPosition();
         ResetCardHighlights();

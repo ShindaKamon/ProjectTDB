@@ -57,14 +57,14 @@ public class CreateDeckPopup : MonoBehaviour
             // Appliquer la couleur de l'émotion
             if (image != null)
             {
-                image.color = CardVisualHelper.GetEmotionColor(emotion);
+                image.color = CodexCardVisual.EmotionColor(emotion);
             }
 
             // Ajouter un texte avec le nom de l'émotion si possible
             var text = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null)
             {
-                text.text = CardVisualHelper.GetEmotionName(emotion);
+                text.text = CodexCardVisual.EmotionName(emotion);
             }
 
             if (button != null)

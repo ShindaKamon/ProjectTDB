@@ -83,13 +83,6 @@ public interface IGridService
     /// </summary>
     void InvalidateAttackTilesCache();
 
-    // ========== UI ==========
-
-    /// <summary>
-    /// Met à jour l'UI de l'unité active
-    /// </summary>
-    void UpdateUnitUI();
-
     // ========== STATE MACHINE (Phase 3.4) ==========
 
     /// <summary>

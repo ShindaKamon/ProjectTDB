@@ -1,117 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Structure contenant les informations d'un chemin de charge
-/// </summary>
-public struct ChargePathInfo
-{
-    public bool IsValid;
-    public Vector2Int StepDirection;
-    public int Distance;
-    public List<Tile> Path;
-    public Unit EnemyHit;
-
-    public static ChargePathInfo Invalid => new ChargePathInfo { IsValid = false };
-}
-
-/// <summary>
-/// Classe utilitaire pour les calculs de charge
-/// </summary>
-public static class ChargeHelper
-{
-    /// <summary>
-    /// Calcule la direction de charge entre deux positions (ligne droite uniquement)
-    /// </summary>
-    /// <returns>La direction normalisée ou Vector2.zero si pas en ligne droite</returns>
-    public static bool TryGetChargeDirection(Vector2Int sourcePos, Vector2Int targetPos, out Vector2Int direction, out int distance)
-    {
-        // Même ligne ou même colonne (grille en 4 directions)
-        return GridGeometry.TryGetLine(sourcePos, targetPos, out direction, out distance);
-    }
-
-    /// <summary>
-    /// Calcule le chemin de charge complet, en s'arrêtant si une unité bloque
-    /// </summary>
-    public static ChargePathInfo CalculateChargePath(Vector2Int sourcePos, Vector2Int targetPos, Unit source)
-    {
-        if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2Int stepDirection, out int totalDistance))
-        {
-            return ChargePathInfo.Invalid;
-        }
-
-        List<Tile> chargePath = new List<Tile>();
-        Vector2Int currentPos = sourcePos;
-        Unit enemyHit = null;
-
-        for (int i = 0; i < totalDistance; i++)
-        {
-            Vector2Int nextPos = currentPos + stepDirection;
-            Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
-
-            if (nextTile == null) break; // Bord de la grille
-
-            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(nextPos);
-            if (unitOnTile != null)
-            {
-                if (unitOnTile.GetFaction() != source.GetFaction())
-                {
-                    enemyHit = unitOnTile;
-                }
-                break; // On s'arrête devant toute unité
-            }
-
-            chargePath.Add(nextTile);
-            currentPos = nextPos;
-        }
-
-        return new ChargePathInfo
-        {
-            IsValid = true,
-            StepDirection = stepDirection,
-            Distance = totalDistance,
-            Path = chargePath,
-            EnemyHit = enemyHit
-        };
-    }
-
-    /// <summary>
-    /// Vérifie si une position cible est valide pour une charge (chemin non bloqué)
-    /// </summary>
-    public static bool IsValidChargeTarget(Vector2Int sourcePos, Vector2Int targetPos, Unit source)
-    {
-        if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2Int stepDirection, out int distance))
-        {
-            return false;
-        }
-
-        // Vérifie chaque case sur le chemin jusqu'à la cible
-        for (int i = 1; i <= distance; i++)
-        {
-            Vector2Int checkPos = sourcePos + stepDirection * i;
-            Unit unitOnPath = Services.Grid.GetUnitAtGridPos(checkPos);
-
-            if (unitOnPath != null)
-            {
-                // Il y a une unité sur le chemin
-                if (checkPos == targetPos)
-                {
-                    // C'est la case cible : valide seulement si c'est un ennemi
-                    return unitOnPath.GetFaction() != source.GetFaction();
-                }
-                else
-                {
-                    // C'est une case intermédiaire : le chemin est bloqué
-                    return false;
-                }
-            }
-        }
-
-        // Aucune unité sur le chemin = valide
-        return true;
-    }
-}
-
 // Enum pour spécifier le type de cible valide
 public enum CardTargetType
 {
@@ -155,14 +44,14 @@ public enum CardAffectedTarget
 public enum EmotionType
 {
     None,
-    Colere,         // Rouge #CC0000
-    Degout,         // Violet #800080
-    Tristesse,      // Bleu foncé #000080
-    Surprise,       // Bleu clair #80CCFF
-    Peur,           // Vert foncé #006600
-    Confiance,      // Vert clair #80FF80
-    Joie,           // Jaune #FFEB00
-    Anticipation    // Orange #FF8000
+    Colere,         // Rouge #D64545
+    Degout,         // Violet #9A4FBF
+    Tristesse,      // Bleu #5A6FD8
+    Surprise,       // Bleu clair #4FA8E8
+    Peur,           // Vert #3F9D5C
+    Confiance,      // Vert clair #5CC98A
+    Joie,           // Jaune #D9A91F
+    Anticipation    // Orange #E08A3A
 }
 
 public enum CardEffectType
@@ -1294,69 +1183,5 @@ public class CardData : ScriptableObject
         comboTracker?.OnCardResolved(this);
 
         onComplete?.Invoke();
-    }
-}
-
-/// <summary>
-/// Classe helper pour obtenir les couleurs associées aux émotions et éléments
-/// </summary>
-public static class CardVisualHelper
-{
-    /// <summary>
-    /// Retourne la couleur associée à une émotion
-    /// </summary>
-    public static Color GetEmotionColor(EmotionType emotion)
-    {
-        switch (emotion)
-        {
-            case EmotionType.Colere:
-                return new Color(204f/255f, 0f, 0f);           // Colère - Rouge #CC0000
-            case EmotionType.Degout:
-                return new Color(128f/255f, 0f, 128f/255f);    // Dégoût - Violet #800080
-            case EmotionType.Tristesse:
-                return new Color(0f, 0f, 128f/255f);           // Tristesse - Bleu foncé #000080
-            case EmotionType.Surprise:
-                return new Color(128f/255f, 204f/255f, 1f);    // Surprise - Bleu clair #80CCFF
-            case EmotionType.Peur:
-                return new Color(0f, 102f/255f, 0f);           // Peur - Vert foncé #006600
-            case EmotionType.Confiance:
-                return new Color(128f/255f, 1f, 128f/255f);    // Confiance - Vert clair #80FF80
-            case EmotionType.Joie:
-                return new Color(1f, 235f/255f, 0f);           // Joie - Jaune #FFEB00
-            case EmotionType.Anticipation:
-                return new Color(1f, 128f/255f, 0f);           // Anticipation - Orange #FF8000
-            default:
-                return Color.white;
-        }
-    }
-
-    /// <summary>
-    /// Retourne la couleur associée à un coût en PA
-    /// </summary>
-    public static Color GetCostColor(int cost)
-    {
-        if (cost <= 1) return new Color(0.3f, 0.8f, 0.4f);
-        if (cost == 2) return new Color(0.9f, 0.7f, 0.2f);
-        if (cost == 3) return new Color(0.9f, 0.4f, 0.2f);
-        return new Color(0.8f, 0.2f, 0.2f);
-    }
-
-    /// <summary>
-    /// Retourne le nom français de l'émotion
-    /// </summary>
-    public static string GetEmotionName(EmotionType emotion)
-    {
-        switch (emotion)
-        {
-            case EmotionType.Colere: return "Colère";
-            case EmotionType.Degout: return "Dégoût";
-            case EmotionType.Tristesse: return "Tristesse";
-            case EmotionType.Surprise: return "Surprise";
-            case EmotionType.Peur: return "Peur";
-            case EmotionType.Confiance: return "Confiance";
-            case EmotionType.Joie: return "Joie";
-            case EmotionType.Anticipation: return "Anticipation";
-            default: return "Neutre";
-        }
     }
 }

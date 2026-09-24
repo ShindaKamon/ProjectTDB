@@ -500,7 +500,7 @@ Décision de lore (voir `GDD_Main.md`) : le monde du jeu « grisonne » quand le
 
 ### Portée MVP
 
-Pour la version Alpha, l'objectif minimal est : donjon visiblement désaturé à l'entrée → couleur de la famille restaurée en un fondu à la victoire. Pour l'Orphelinat (Peur), la couleur qui revient est le **vert foncé `#006600`**. Les effets de propagation progressive pendant le combat peuvent attendre la Bêta.
+Pour la version Alpha, l'objectif minimal est : donjon visiblement désaturé à l'entrée → couleur de la famille restaurée en un fondu à la victoire. Pour l'Orphelinat (Peur), la couleur qui revient est le **vert de la Peur `#3F9D5C`** (palette de `SYSTEME_EMOTIONS.md`). Les effets de propagation progressive pendant le combat peuvent attendre la Bêta.
 
 ---
 

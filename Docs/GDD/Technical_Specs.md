@@ -1,6 +1,6 @@
 # 🔧 Spécifications Techniques - Émotions Tactics (Project TDB)
 
-**Version:** 2.5
+**Version:** 2.6
 **Date:** 24 Septembre 2026
 **Statut:** Reflète l'architecture actuelle.
 **Changements :**
@@ -9,6 +9,7 @@
 - v2.3 (23/09/2026) : écarts entre le code et l'Excel MVP listés (section « Adaptations à prévoir »).
 - v2.4 (24/09/2026) : nettoyage hors MVP — code d'Ilya (Rage) et de Vylos (Stigmate) retiré, assets morts supprimés, prefabs champions sortis des dossiers de familles ; pool de l'éditeur de deck façon SpamDex.
 - v2.5 (24/09/2026) : règle de grille unifiée dans `GridGeometry` : 4 directions (Manhattan) partout, la portée euclidienne de certaines validations est supprimée ; IA ennemie sans contrainte d'alignement ; écho du Miroir fraternel compris.
+- v2.6 (24/09/2026) : scripts rangés par domaine (Core = infrastructure, Grid, Combat, Units/Champions|Enemies|Summons, UI/Combat…) ; palette des émotions unique (`CodexCardVisual`).
 
 ---
 
@@ -41,16 +42,15 @@
 
 | Dossier | Contenu |
 |---------|---------|
-| **Assets/Project/Scripts/Cards/** | `CardData` (ScriptableObject data-driven), `DeckManager`, `DeckDiscardUI` |
-| **Assets/Project/Scripts/Core/** | `ServiceLocator`/`Services`, `EventBus`/`GameEvent`, `TurnStateMachine`, `GridManager`, `GridRepository`, `BattleUIManager`, `HealthBarManager`, `ChampionSelectManager`, `GameLog` |
-| **Assets/Project/Scripts/Grid/** | `Tile` |
-| **Assets/Project/Scripts/Units/** | `Unit` → `Champion` → `AceUnit`, `AlpinisteUnit`, `SorenUnit` ; `SummonUnit`/`LyseUnit` ; `Enemy`, `EnemyAI` ; interfaces `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner` ; `ChampionData`, `EnemyData` |
-| **Assets/Project/Scripts/Deck/** | `DeckData`, `DeckSaveManager`, `ChampionDecksData`, `AllDecksData`, `CardCollection` |
-| **Assets/Project/Scripts/Marks/** | Marques (`IMarkable`, `UnitMark`, `MarkType` : Poison, AllMarks) |
-| **Assets/Project/Scripts/Debuffs/** | `ResourceDebuffManager` (retraits de PA/PM) |
+| **Assets/Project/Scripts/Core/** | Infrastructure seulement : `ServiceLocator`/`Services`, `EventBus`/`GameEvent`, `GameLog`/`GameLogConfig`, `ComponentLocator` |
+| **Assets/Project/Scripts/Grid/** | `GridManager` (grille, spawn, rotation des tours), `GridRepository`, `GridGeometry` (distance en 4 directions), `IGridService`, `Tile` |
+| **Assets/Project/Scripts/Combat/** | `TurnStateMachine`, `ResourceDebuffManager` (retraits de PA/PM), `Marks/` (`IMarkable`, `UnitMark`, `MarkType` : Poison, AllMarks) |
+| **Assets/Project/Scripts/Cards/** | `CardData` (ScriptableObject data-driven + enums de cartes), `ChargeHelper`, `CodexCardVisual` (visuels et palette des émotions), `DeckManager` (pioche/main/défausse en combat) |
+| **Assets/Project/Scripts/Deck/** | Construction et sauvegarde des decks : `DeckData`, `DeckRules`, `DeckSaveManager`, `CardPoolQuery`, `ChampionDecksData`, `AllDecksData`, `CardCollection` |
+| **Assets/Project/Scripts/Units/** | `Unit`, `UnitState`, `ActionPointsComponent`, interfaces (`IActionPointsUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) ; `Champions/` (`Champion`, `ChampionData`, `AceUnit`, `AlpinisteUnit`, `SorenUnit`), `Enemies/` (`Enemy`, `EnemyAI`, `EnemyData`), `Summons/` (`SummonUnit`, `LyseUnit`) |
 | **Assets/Project/Scripts/Validation/** | `GameActionValidator`, `ValidationResult` |
 | **Assets/Project/Scripts/Input/** | `InputManager` |
-| **Assets/Project/Scripts/UI/** | Main de cartes (`HandUIController`, `CardUIElement`, `TargetingCurve`, `TargetingReticle`), sélection de champion, éditeur de deck, HUD de combat |
+| **Assets/Project/Scripts/UI/** | `Combat/` (HUD, `BattleUIManager`, `HealthBarManager`, orbe de vie, barres de vie, retours de combat), `ChampionSelect/` (écrans de sélection et de decks, `ChampionSelectManager`, `ChampionSelectFlowController`), `Cards/` (main de cartes, ciblage), `DeckEditor/`, `Common/` |
 | **Assets/Project/Scripts/Editor/** | `UISetupWizard`, `DeckDebugMenu`, `PlayModeStartSceneSetup` |
 | **Assets/Project/Tests/EditMode/** | Tests NUnit (`GameActionValidatorTests`, `DeckManagerCostOverrideTests`, `ValidationResultTests`) |
 | **Assets/Project/Scenes/** | `ChampionSelectScene`, `CombatScene` |
@@ -421,5 +421,5 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 ---
 
 **Dernière mise à jour :** 23 Septembre 2026
-**Version :** 2.2
+**Version :** 2.6
 **Responsable :** Shinda + Claude

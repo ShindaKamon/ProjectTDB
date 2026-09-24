@@ -15,6 +15,7 @@ Le reste de ce fichier couvre uniquement le côté technique.
 
 - Unity **6000.4.0f1** (`ProjectSettings/ProjectVersion.txt`), URP 17.3, uGUI + TextMeshPro, Input System, Test Framework 1.6.
 - Tout le code du jeu est sous `Assets/Project/` ; `Assets/ThirdParty/` et `Assets/TextMesh Pro/` sont des assets importés à ne pas modifier.
+- **Scripts rangés par domaine** : `Core/` (infrastructure seulement), `Grid/`, `Combat/` (tours, retraits de PA/PM, marques), `Cards/`, `Deck/` (construction et sauvegarde), `Units/` (+ `Champions/`, `Enemies/`, `Summons/`), `UI/` (`Combat/`, `ChampionSelect/`, `Cards/`, `DeckEditor/`). Un nouveau script va dans le dossier de son domaine, pas dans `Core/`.
 - Code et commentaires en français ; classes dans le namespace global (pas de `namespace` malgré le `rootNamespace` de l'asmdef).
 - Assemblies : `ProjectTDB` (runtime, `Assets/Project/Scripts`), `ProjectTDB.Editor` (`Scripts/Editor`), `ProjectTDB.Tests.EditMode` (`Assets/Project/Tests/EditMode`, NUnit).
 - Les fichiers `.csproj`/`.sln*` à la racine sont générés par Unity — ne pas les éditer.
@@ -55,6 +56,7 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 ### Communication entre systèmes
 - **ServiceLocator + façade `Services`** (`Scripts/Core/`) : les managers de scène s'enregistrent sous une interface dans leur `Awake` (`IGridService` ← `GridManager`, `IBattleUIService` ← `BattleUIManager`, `IHealthBarService` ← `HealthBarManager`). Accéder via `Services.Grid`, `Services.BattleUI`, etc. plutôt que via des singletons ou `FindObjectOfType`.
 - **EventBus** (statique, typé) : événements = classes dérivant de `GameEvent` (`Core/GameEvent.cs`). Toujours appairer `Subscribe`/`Unsubscribe` (typiquement `OnEnable`/`OnDisable`) ; le bus est vidé au chargement du runtime.
+- **Couleurs des émotions** : une seule palette, `CodexCardVisual.EmotionColor` / `EmotionName` (`Cards/CodexCardVisual.cs`) ; ne pas redéfinir de couleurs d'émotion ailleurs.
 - **ComponentLocator** : helpers type `TryGetComponentSafe` pour récupérer des composants sur les unités.
 
 ### Combat

@@ -11,7 +11,7 @@ using UnityEngine;
 /// Suite > Paire). Version provisoire (choix de cible/déclenchement automatique plutôt qu'un
 /// choix du joueur) — cf. notes de design du classeur source, à retravailler en playtest.
 /// </summary>
-public class AceUnit : Champion, IActionPointsUser, IComboTracker
+public class AceUnit : Champion, IComboTracker
 {
     [Header("=== Main gagnante ===")]
     [Tooltip("Réduction des dégâts subis quand le bouclier Bluff est actif (0.10 = -10%)")]
@@ -24,13 +24,6 @@ public class AceUnit : Champion, IActionPointsUser, IComboTracker
 
     public int PASpentThisTurn => _paSpentThisTurn;
     public bool ShouldIgnoreDamageReduction => _ignoreReductionThisCard;
-
-    public new void Initialize(ChampionData data, Vector2Int initialGridPos)
-    {
-        base.Initialize(data, initialGridPos);
-
-        GameLog.Log($"{name} (Ace) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, ATK: {GetAttack()}");
-    }
 
     protected override void Start()
     {

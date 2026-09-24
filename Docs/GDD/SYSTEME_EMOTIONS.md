@@ -6,7 +6,7 @@
 - v4.0 (10/09/2026) : le système de Classes (5 classes, multiplicateurs, matrice 8×5) a été abandonné — voir `archive/Concepts_Abandonnes.md`.
 - v4.1 (23/09/2026) : l'ancienne jauge -100/+100 (Contrariété / Colère / Rage) est archivée.
 - v4.2 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — 3 émotions de lancement (Colère, Peur, Joie), système d'Éveil, roster Evan / Crux / Raze.
-- v4.3 (24/09/2026) : noms de familles abandonnés, on parle directement des émotions ; faiblesses émotionnelles des monstres actées.
+- v4.3 (24/09/2026) : noms de familles abandonnés, on parle directement des émotions ; faiblesses émotionnelles des monstres actées ; palette du codex adoptée comme référence.
 
 ---
 
@@ -24,14 +24,16 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 
 | # | Émotion | Couleur | Code Hex |
 |---|---------|---------|----------|
-| 1 | **Colère** | Rouge | #CC0000 |
-| 2 | **Dégoût** | Violet | #800080 |
-| 3 | **Tristesse** | Bleu foncé | #000080 |
-| 4 | **Surprise** | Bleu clair | #80CCFF |
-| 5 | **Peur** | Vert foncé | #006600 |
-| 6 | **Confiance** | Vert clair | #80FF80 |
-| 7 | **Joie** | Jaune | #FFEB00 |
-| 8 | **Anticipation** | Orange | #FF8000 |
+| 1 | **Colère** | Rouge | #D64545 |
+| 2 | **Dégoût** | Violet | #9A4FBF |
+| 3 | **Tristesse** | Bleu | #5A6FD8 |
+| 4 | **Surprise** | Bleu clair | #4FA8E8 |
+| 5 | **Peur** | Vert | #3F9D5C |
+| 6 | **Confiance** | Vert clair | #5CC98A |
+| 7 | **Joie** | Jaune | #D9A91F |
+| 8 | **Anticipation** | Orange | #E08A3A |
+
+> **Palette de référence (24/09/2026)** : celle du codex émotionnel, lisible sur fond sombre. Elle est codée à un seul endroit, `CodexCardVisual.EmotionColor` (`Scripts/Cards/CodexCardVisual.cs`) ; ne pas redéfinir ces couleurs ailleurs. L'ancienne palette (#CC0000, #006600, #FFEB00…) est abandonnée.
 
 **Émotions « composées »** : certains donjons parlent d'émotions qui ne sont pas l'une des 8 (ex : l'**Anxiété** du Bureau Corporatiste). Chez Plutchik, l'anxiété se situe entre Peur et Anticipation — la famille de rattachement reste à choisir.
 
@@ -41,9 +43,9 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 
 | Émotion | Couleur | Rôle | Force / Faiblesse (validé en playtest) | Mécaniques typiques |
 |---------|---------|------|-----------------------------------------|---------------------|
-| **Colère** | Rouge #CC0000 | Agressif | Burst, **sans sustain** | Gros dégâts, zones, contrecoups sur soi, vol de vie |
-| **Peur** | Vert foncé #006600 | Contrôle | Contrôle / tempo | **Retrait de PM** au prochain tour (-1 / -2 / -3 / total), poussée/tirage, boucliers |
-| **Joie** | Jaune #FFEB00 | Soin / valeur | Survie, mais **lent** | Soins, boucliers, buffs de groupe, soin + dégâts miroir |
+| **Colère** | Rouge #D64545 | Agressif | Burst, **sans sustain** | Gros dégâts, zones, contrecoups sur soi, vol de vie |
+| **Peur** | Vert #3F9D5C | Contrôle | Contrôle / tempo | **Retrait de PM** au prochain tour (-1 / -2 / -3 / total), poussée/tirage, boucliers |
+| **Joie** | Jaune #D9A91F | Soin / valeur | Survie, mais **lent** | Soins, boucliers, buffs de groupe, soin + dégâts miroir |
 
 - Pool Standard : **49 cartes** dans la bibliothèque de l'Excel et dans le code (17 Colère, 17 Peur, 15 Joie) ; la Roadmap de l'Excel parle de 12 par émotion (36) — à harmoniser.
 - Cartes **Neutres** : les cartes Signature des champions, jouables quelles que soient les émotions du deck.
@@ -109,14 +111,14 @@ Code actuel (`Cards/CardData.cs`) — les émotions sont nommées par émotion, 
 public enum EmotionType
 {
     None,
-    Colere,         // Rouge #CC0000
-    Degout,         // Violet #800080
-    Tristesse,      // Bleu foncé #000080
-    Surprise,       // Bleu clair #80CCFF
-    Peur,           // Vert foncé #006600
-    Confiance,      // Vert clair #80FF80
-    Joie,           // Jaune #FFEB00
-    Anticipation    // Orange #FF8000
+    Colere,         // Rouge #D64545
+    Degout,         // Violet #9A4FBF
+    Tristesse,      // Bleu #5A6FD8
+    Surprise,       // Bleu clair #4FA8E8
+    Peur,           // Vert #3F9D5C
+    Confiance,      // Vert clair #5CC98A
+    Joie,           // Jaune #D9A91F
+    Anticipation    // Orange #E08A3A
 }
 
 // Pas d'enum CardClassType : le système de classes a été retiré le 10/09/2026.

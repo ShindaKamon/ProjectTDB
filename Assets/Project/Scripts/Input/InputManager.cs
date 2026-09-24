@@ -604,7 +604,6 @@ public class InputManager : MonoBehaviour
             activeUnit.MoveToTile(pathToTarget);
             activeUnit.SpendMovement(movementCost);
             GameLog.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
-            Services.Grid.UpdateUnitUI();
             StartCoroutine(RefreshRangeAfterMovement(activeUnit));
         }
     }

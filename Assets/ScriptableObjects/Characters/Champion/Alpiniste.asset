@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
   m_Name: Alpiniste
   m_EditorClassIdentifier: ProjectTDB::ChampionData
-  championName: L'Alpiniste
+  championName: Crux
   title: Le Grimpeur
   description: Un accident d'escalade filme l'a brise ; il verifie et securise tout
     deux fois plutot qu'une.

@@ -1,7 +1,7 @@
 # ILYA - « Le Dévoué Enchaîné »
 
 **Statut :** Fiche de référence d'Ilya (source unique de vérité pour ses stats, son système Rage et son deck — voir `GDD_Main.md`). Mise à jour le 23/09/2026 : la liste détaillée des 12 cartes et les spécifications Rage, auparavant dans `claude_md_coarchitect.md`, ont été déplacées ici.
-**Place dans le MVP :** **hors MVP** (roster MVP = Soren, l'Alpiniste, Ace — voir `GDD_Main.md`).
+**Place dans le MVP :** **hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`).
 
 > ⚠️ **Conçu avant l'Excel MVP** (`TCG_Tactique_Systeme_de_calcul.xlsx`). Plusieurs éléments ne respectent plus les règles actuelles et devront être adaptés s'il revient :
 > - stats ATK/DEF (le système ne définit que PV, PA, PM) et PA/PM qui changent avec la forme (le budget PA+PM est fixé à 9 par profil) ;

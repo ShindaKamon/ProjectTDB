@@ -4,7 +4,7 @@
 **Date :** 23 Septembre 2026
 **Changements :**
 - v4.0 (10/09/2026) : dimension Classe retirée de la méthodologie.
-- v5.0 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`, onglet « Champions ») — roster **Soren, l'Alpiniste, Ace**. Ilya et les Jumeaux passent hors MVP.
+- v5.0 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`, onglet « Champions ») — roster **Evan, Crux, Raze**. Ilya et les Jumeaux passent hors MVP.
 
 > Les valeurs chiffrées (coûts, points de budget, pourcentages) font foi dans l'Excel. Ce document résume.
 
@@ -24,23 +24,29 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer un deck
 
 ## 🎮 ROSTER MVP
 
-### 1. SOREN — l'écho d'invocation
+### 1. EVAN — l'écho d'invocation
 
 **Trauma :** a perdu sa sœur jumelle, Lyse, dont la présence n'a jamais vraiment disparu — un idéal éphémère qu'il n'arrive pas à lâcher, et qu'il fait revivre un instant à chaque combat.
 
-**Passif — Miroir fraternel :** quand Soren joue une carte offensive, si une de ses invocations actives (Lyse, ou toute autre invocation future) a une cible valide à sa propre portée — n'importe quel ennemi — le joueur peut lui faire rejouer un **écho de la carte à ~40 % de puissance**, gratuitement. L'invocation peut viser une autre cible que Soren (répartition des dégâts plutôt que doublement). Les PV de Lyse = **moitié des PV actuels de Soren**, recalculés en continu : elle peut mourir sans être ciblée.
+**Passif — Miroir fraternel :** quand Evan joue une carte offensive, si une de ses invocations actives (Lyse, ou toute autre invocation future) a une cible valide à sa propre portée — n'importe quel ennemi — le joueur peut lui faire rejouer un **écho de la carte à ~40 % de puissance**, gratuitement. L'invocation peut viser une autre cible qu'Evan (répartition des dégâts plutôt que doublement). Les PV de Lyse = **moitié des PV actuels d'Evan**, recalculés en continu : elle peut mourir sans être ciblée.
+
+> **Règles de l'écho (actées le 24/09/2026, implémentées) :**
+> - **Portée** = celle de la carte jouée par Evan, **mesurée depuis Lyse**, dans les **8 directions** (une diagonale compte pour 1 case). Ex. : Coup de colère (portée 1) → Lyse fait son écho si un ennemi est sur l'une des 8 cases autour d'elle. On place donc Lyse en fonction de la carte qu'on veut jouer.
+> - **Cible** : l'ennemi attaqué par Evan s'il est à portée de Lyse (et encore en vie) ; sinon l'ennemi le plus proche de Lyse.
+> - **Déclenchement automatique** pour le MVP (choix manuel de la cible prévu pour la V2). Dégâts = 40 % des dégâts réellement infligés par Evan.
+> - **Retour visuel** : Lyse bondit vers sa cible, le chiffre de l'écho apparaît en cyan, décalé de celui d'Evan.
 
 | Carte Signature | PA | Effet |
 |-----------------|----|-------|
 | **Invocation de Lyse** (cœur de gameplay) | 2 | Invoque le fantôme de Lyse sur une case, portée 2-3 |
-| **Écho de Lyse** (utilitaire) | 1 | Repositionne Lyse (ou une autre invocation) jusqu'à 3 cases |
+| **Écho évanescent** (utilitaire) | 1 | Choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) : elle s'y déplace. Injouable sans invocation sur le terrain |
 
 **Gameplay :** bien placer le fantôme par rapport aux cibles probables. Mécanique d'écho réutilisable pour d'autres invocateurs.
 **À trancher en playtest :** choix de cible quand plusieurs sont valides ; complexité globale.
 
 ---
 
-### 2. L'ALPINISTE — le choix de cible au déplacement
+### 2. Crux — le choix de cible au déplacement
 
 **Trauma :** lors d'une ascension filmée et sponsorisée, un mousqueton a cédé ; toute son équipe est restée suspendue deux jours avant les secours. Personne n'est mort, mais l'humiliation publique et la perte de confiance en son jugement l'ont brisé. Depuis, il sécurise tout deux fois et ne supporte plus de laisser quelqu'un hors de sa portée.
 
@@ -49,11 +55,11 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer un deck
 | Carte Signature | PA | Effet |
 |-----------------|----|-------|
 | **Piolet d'ascension** (cœur de gameplay) | 2 | Se propulse au grappin adjacent à une unité (alliée ou ennemie), portée 4-5 ; déclenche le Réflexe du grimpeur |
-| **Corde de rappel forcé** (coup de maître) | 4 | Portée 2-3, tire la cible de 2 cases vers lui. Ennemi : 35 dégâts + tiré au contact. Allié : aucun dégât, juste tiré (sauvetage) |
+| **Corde de rappel** (coup de maître) | 4 | Portée 2-3, tire la cible de 2 cases vers lui. Ennemi : 35 dégâts + tiré au contact. Allié : aucun dégât, juste tiré (sauvetage) |
 
 ---
 
-### 3. ACE — le combo de coûts
+### 3. RAZE — le combo de coûts
 
 **Trauma :** a tout misé sur une main légendaire et a tout perdu en un instant — fortune, réputation, confiance de ses proches. Depuis, il ne laisse plus jamais le hasard décider : il triche, compte les cartes, calcule chaque probabilité.
 
@@ -65,10 +71,10 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer un deck
 
 | Carte Signature | PA | Effet |
 |-----------------|----|-------|
-| **Il triche** (cœur de gameplay) | 1 | Modifie de ±1 le coût en PA d'une carte de la main (min 1) pour forcer un motif. Pas de dégâts. |
+| **Triche** (cœur de gameplay) | 1 | Modifie de ±1 le coût en PA d'une carte de la main (min 1) pour forcer un motif. Pas de dégâts. |
 | **Tapis** (coup de maître) | 5 | 72 dégâts de base, +10 par PA déjà dépensé ce tour. Finisher « all-in » à retravailler (ajouter un vrai risque) |
 
-**Note :** le bonus du passif n'est pas calculable dans le tableur de budget ; il s'ajoute en jeu. La fiche de Soren mentionne aussi un « Full » et un ancien nom « l'Ingénieur » — à harmoniser dans l'Excel.
+**Note :** le bonus du passif n'est pas calculable dans le tableur de budget ; il s'ajoute en jeu. La fiche d'Evan mentionne aussi un « Full » et un ancien nom « l'Ingénieur » — à harmoniser dans l'Excel.
 
 ---
 

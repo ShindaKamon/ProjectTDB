@@ -147,10 +147,10 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 ## Roster MVP (Excel, 23/09/2026)
 
-**Soren, l'Alpiniste, Ace** — fiches complètes dans l'onglet « Champions » de l'Excel et dans `CHAMPIONS_CONCEPTS.md`.
-- **Soren** : invoque le fantôme de sa sœur jumelle Lyse ; ses invocations rejouent un écho de ses attaques (Miroir fraternel).
-- **L'Alpiniste** : grappin vers une unité ; bouclier s'il atterrit près d'un allié, bonus de dégâts près d'un ennemi (Réflexe du grimpeur).
-- **Ace** : bonus selon le motif des coûts de cartes joués dans le tour (Main gagnante : Paire / Suite / Bluff) ; peut tricher sur les coûts.
+**Evan, Crux, Raze** — fiches complètes dans l'onglet « Champions » de l'Excel et dans `CHAMPIONS_CONCEPTS.md`.
+- **Evan** : invoque le fantôme de sa sœur jumelle Lyse ; ses invocations rejouent un écho de ses attaques (Miroir fraternel).
+- **Crux** : grappin vers une unité ; bouclier s'il atterrit près d'un allié, bonus de dégâts près d'un ennemi (Réflexe du grimpeur).
+- **Raze** : bonus selon le motif des coûts de cartes joués dans le tour (Main gagnante : Paire / Suite / Bluff) ; peut tricher sur les coûts.
 
 **Hors MVP** : Ilya (`ilya_deck_simple.md`, Rage à réadapter à l'Éveil) et les Jumeaux Astra & Noctis.
 
@@ -170,7 +170,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 ## Contraintes et priorités
 
 ### Scope MVP (3-6 mois)
-- ✅ 3 champions jouables : Soren, l'Alpiniste, Ace
+- ✅ 3 champions jouables : Evan, Crux, Raze
 - ✅ 3 émotions : Colère, Peur, Joie (49 cartes Standard + cartes d'Éveil à créer)
 - ✅ Système de combat sur grille fonctionnel
 - ✅ Monstres de donjon + boss selon le barème de l'Excel
@@ -214,7 +214,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 ## Milestones prévus
 
-> Note (23/09/2026) : milestones à réécrire autour du roster Soren / l'Alpiniste / Ace. Le design chiffré est largement fait dans l'Excel ; une partie du prototype de combat existe déjà dans le code (voir « État actuel » dans `GDD_Main.md`).
+> Note (23/09/2026) : milestones à réécrire autour du roster Evan / Crux / Raze. Le design chiffré est largement fait dans l'Excel ; une partie du prototype de combat existe déjà dans le code (voir « État actuel » dans `GDD_Main.md`).
 
 ### Phase 0 : Design ✅ en grande partie fait
 - GDD réorganisé et remis en cohérence
@@ -229,7 +229,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 - À ajouter : Éveil (jauge + 6 slots), statuts de contrôle (retrait de PM, poussée/tirage), anti-lock
 
 ### Phase 2 : Champions signatures
-- Passifs et cartes Signature de Soren (invocation + écho), l'Alpiniste (grappin), Ace (motifs de coûts)
+- Passifs et cartes Signature d'Evan (invocation + écho), Crux (grappin), Raze (motifs de coûts)
 - **Livrable** : les 3 champions jouables
 
 ### Phase 3 : Contenu

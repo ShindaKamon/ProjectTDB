@@ -6,7 +6,7 @@
 
 ## Vue d'Ensemble
 
-Chaque **champion** a un trauma, un **passif** et **2 cartes Signature** (identité Neutre), plus un **profil PA/PM**. Il peut jouer des decks de n'importe quelle émotion (mono ou bi-émotion). Roster MVP : Soren, l'Alpiniste, Ace (voir `CHAMPIONS_CONCEPTS.md` et l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`).
+Chaque **champion** a un trauma, un **passif** et **2 cartes Signature** (identité Neutre), plus un **profil PA/PM**. Il peut jouer des decks de n'importe quelle émotion (mono ou bi-émotion). Roster MVP : Evan, Crux, Raze (voir `CHAMPIONS_CONCEPTS.md` et l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`).
 
 > **Pas de champ Classe** (décision du 10/09/2026). **Champ Famille** : les champions du MVP n'ont pas d'émotion attitrée (leurs Signatures sont Neutres) — le champ `Famille` de ChampionData devient optionnel ou disparaît.
 

@@ -22,7 +22,7 @@
 
 **Émotions et personnages**
 - `SYSTEME_EMOTIONS.md` — les 8 émotions/familles (Plutchik), les 3 émotions de lancement, le système d'Éveil.
-- `CHAMPIONS_CONCEPTS.md` — roster MVP (Soren, l'Alpiniste, Ace) et concepts hors MVP.
+- `CHAMPIONS_CONCEPTS.md` — roster MVP (Evan, Crux, Raze) et concepts hors MVP.
 - `ilya_deck_simple.md` — fiche d'Ilya (**hors MVP**, conservé comme concept complet).
 - `astra_noctis_simple.md` — fiche des Jumeaux Astra & Noctis (**hors MVP**).
 - `Characters.md` — structure technique d'un champion (ChampionData).
@@ -72,7 +72,7 @@ Le monde ne s'effondre pas d'un coup — il **grisonne**. À force que les gens 
 
 Pas de gouvernement oppressif, pas d'organisation secrète. Les champions sont des gens qui ont gardé — ou reconquis — **leur propre couleur**, qui leur permet de percevoir et d'entrer dans ces espaces gris. **Tout champion peut entrer dans n'importe quel donjon** (règle « uniquement sa propre famille » retirée le 23/09/2026).
 
-Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPIONS_CONCEPTS.md`) : Soren n'arrive pas à laisser partir sa sœur jumelle Lyse, l'Alpiniste ne supporte plus de laisser quelqu'un hors de portée, Ace ne laisse plus jamais le hasard décider.
+Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPIONS_CONCEPTS.md`) : Evan n'arrive pas à laisser partir sa sœur jumelle Lyse, Crux ne supporte plus de laisser quelqu'un hors de portée, Raze ne laisse plus jamais le hasard décider.
 
 **Exemples de donjons** :
 - **Orphelinat** : Enfants prisonniers de la Peur → Ennemis : Ombres du Placard, Monstres Sous le Lit — **donjon du MVP**
@@ -99,9 +99,9 @@ Un deck est **mono ou bi-émotion**. Les cartes Signature sont **Neutres** (joua
 
 | Champion | Trauma | Passif | Cartes Signature |
 |----------|--------|--------|------------------|
-| **Soren** | A perdu sa sœur jumelle Lyse | Miroir fraternel (ses invocations rejouent un écho de ses cartes offensives à ~40 %) | Invocation de Lyse (2 PA), Écho de Lyse (1 PA) |
-| **L'Alpiniste** | Accident de cordée filmé, confiance brisée | Réflexe du grimpeur (après un grappin : bouclier près d'un allié, bonus de dégâts près d'un ennemi) | Piolet d'ascension (2 PA), Corde de rappel forcé (4 PA) |
-| **Ace** | A tout perdu sur une main légendaire | Main gagnante (bonus selon le motif des coûts joués : Paire / Suite / Bluff) | Il triche (1 PA), Tapis (5 PA) |
+| **Evan** | A perdu sa sœur jumelle Lyse | Miroir fraternel (ses invocations rejouent un écho de ses cartes offensives à ~40 %) | Invocation de Lyse (2 PA), Écho évanescent (1 PA) |
+| **Crux** | Accident de cordée filmé, confiance brisée | Réflexe du grimpeur (après un grappin : bouclier près d'un allié, bonus de dégâts près d'un ennemi) | Piolet d'ascension (2 PA), Corde de rappel (4 PA) |
+| **Raze** | A tout perdu sur une main légendaire | Main gagnante (bonus selon le motif des coûts joués : Paire / Suite / Bluff) | Triche (1 PA), Tapis (5 PA) |
 
 Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 
@@ -180,7 +180,7 @@ Détail complet dans `Technical_Specs.md`. Patterns : Service Locator, Event Bus
 Détail et écarts avec le design : `Technical_Specs.md`, section « État du code ».
 
 **Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
-**Champions jouables :** Ace, l'Alpiniste, Soren (+ invocation Lyse) ; Ilya, Vylos et Calyx existent en fiche mais hors sélection.
+**Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Ilya, Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
 **Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) + Signatures des 3 champions.
 **Decks :** 18 cartes (2 Signature + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), mono/bi-émotion, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
 **Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
@@ -206,7 +206,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 ## Objectifs de Design
 
 ### Court Terme (MVP)
-- 3 champions : Soren, l'Alpiniste, Ace
+- 3 champions : Evan, Crux, Raze
 - 3 émotions : Colère, Peur, Joie
 - 1 donjon complet : l'Orphelinat (Peur)
 - Monstres de donjon + boss (cycle Zone / Basique / Heal)
@@ -248,7 +248,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Ancienne jauge -100/+100 | En pause (archivée) — remplacée par l'Éveil | 23/09 |
 | Structure de jeu | Campagne façon Waven, pas de roguelike | 23/09 |
 | **Référence MVP** | **`TCG_Tactique_Systeme_de_calcul.xlsx`** | **23/09** |
-| **Roster MVP** | **Soren, l'Alpiniste, Ace** (Ilya et Jumeaux hors MVP) | **23/09** |
+| **Roster MVP** | **Evan, Crux, Raze** (Ilya et Jumeaux hors MVP) | **23/09** |
 | **Émotions de lancement** | **Colère, Peur, Joie** | Excel |
 | **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; mono ou bi-émotion ; plusieurs decks par champion** | Excel |
 | **Ressources** | **Budget PA+PM = 9 par profil, fixe quel que soit le niveau** | Excel |
@@ -257,6 +257,11 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Anti-lock** | **Un monstre bloqué fait une Attaque de base** | Excel |
 | **Monstres** | **Donjon (groupe obligatoire) vs Aventure (solo-friendly)** | Excel |
 | **Grille** | **Carrée** (code + budget de l'Excel) — la Roadmap de l'Excel dit encore hex, à corriger | Code / Excel |
+| Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
+| Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |
+| Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer | 24/09 |
+| Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`) | 24/09 |
+| Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 8 directions ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
 
 ## Questions ouvertes
 

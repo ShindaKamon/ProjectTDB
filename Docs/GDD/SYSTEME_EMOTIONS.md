@@ -5,7 +5,7 @@
 **Changements :**
 - v4.0 (10/09/2026) : le système de Classes (5 classes, multiplicateurs, matrice 8×5) a été abandonné — voir `archive/Concepts_Abandonnes.md`.
 - v4.1 (23/09/2026) : l'ancienne jauge -100/+100 (Contrariété / Colère / Rage) est archivée.
-- v4.2 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — 3 émotions de lancement (Colère, Peur, Joie), système d'Éveil, roster Soren / l'Alpiniste / Ace.
+- v4.2 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — 3 émotions de lancement (Colère, Peur, Joie), système d'Éveil, roster Evan / Crux / Raze.
 
 ---
 
@@ -71,9 +71,9 @@ Les champions du MVP n'appartiennent pas à une émotion : leurs cartes Signatur
 
 | Champion | Statut |
 |----------|--------|
-| **Soren** | MVP — complet (Excel) |
-| **L'Alpiniste** | MVP — complet (Excel) |
-| **Ace** | MVP — complet (Excel) |
+| **Evan** | MVP — complet (Excel) |
+| **Crux** | MVP — complet (Excel) |
+| **Raze** | MVP — complet (Excel) |
 | **Ilya** (Colère) | Hors MVP — concept complet, Rage à réadapter à l'Éveil |
 | **Astra & Noctis** | Hors MVP — deux concepts concurrents |
 

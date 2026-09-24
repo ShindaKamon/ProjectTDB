@@ -212,7 +212,7 @@ private IEnumerator PulseGlow()
 │                                                       │
 │  [Perso 2]                                 [Enemy 2] │
 │  HP: ██████                                  HP: █████│
-│  [Lyse] HP: ███ (½ PV de Soren)                      │
+│  [Lyse] HP: ███ (½ PV d'Evan)                        │
 │                                                       │
 ├─────────────────────────────────────────────────────┤
 │         [MAIN DE CARTES EN ARC]                      │
@@ -220,7 +220,7 @@ private IEnumerator PulseGlow()
 └─────────────────────────────────────────────────────┘
 ```
 
-« Éveil » = une jauge par émotion du deck (voir `SYSTEME_EMOTIONS.md`). Les invocations (Lyse pour Soren) ont leur propre barre de PV. Il n'y a pas de Mana générique.
+« Éveil » = une jauge par émotion du deck (voir `SYSTEME_EMOTIONS.md`). Les invocations (Lyse pour Evan) ont leur propre barre de PV. Il n'y a pas de Mana générique.
 
 ### Indicateur de Phase
 
@@ -258,7 +258,7 @@ Tour 3 — PHASE ENNEMIE : [Ombre 1] → [Ombre 2] → [Boss]  (cycle : Zone ▸
 **Design :**
 ```
 ┌──────────────────┐
-│ [Portrait]       │ ACE
+│ [Portrait]       │ RAZE
 │ HP:  ██████░░░░  │ 60/100
 │ Éveil Colère ██░ │ 1 palier
 │ [🛡15%] [-1 PM]  │ (Bouclier, retrait de PM)

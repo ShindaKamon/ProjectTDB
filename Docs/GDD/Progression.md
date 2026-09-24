@@ -36,7 +36,7 @@ Il n'augmente **jamais** la puissance des cartes ni les **PA/PM par tour** : ceu
 | Équilibré | 5 | 4 |
 | Mobile | 4 | 5 |
 
-Profils de Soren, l'Alpiniste et Ace : à renseigner dans l'Excel.
+Profils d'Evan, Crux et Raze : à renseigner dans l'Excel.
 
 ### PV et niveaux
 
@@ -208,7 +208,7 @@ Bouclier → Contre-Attaque (rare)
 ### Déblocage de Personnages
 
 **Personnages de Base (MVP) :**
-- Soren, l'Alpiniste et Ace : jouables dès le départ
+- Evan, Crux et Raze : jouables dès le départ
 
 > Ilya et les Jumeaux : hors MVP, candidats au déblocage plus tard.
 

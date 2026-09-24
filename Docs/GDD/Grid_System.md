@@ -22,7 +22,7 @@ Le reste de ce document décrit la **conception hexagonale d'origine** (coordonn
 
 ## 🎯 Vue d'Ensemble
 
-La grille est la fondation tactique du jeu : positionnement, portée et contrôle de zone (retrait de PM, poussée/tirage de la Peur, grappin de l'Alpiniste).
+La grille est la fondation tactique du jeu : positionnement, portée et contrôle de zone (retrait de PM, poussée/tirage de la Peur, grappin de Crux).
 
 ### Portée MVP
 

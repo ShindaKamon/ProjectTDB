@@ -107,7 +107,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 ### 2. Cartes et decks
 
 - `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, effets `CardEffectType`, marques, charge, émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
-- `DeckManager` (sur l'unité) : pioche, main, défausse, coûts effectifs (`GetEffectiveCost`, overrides de coût pour Ace).
+- `DeckManager` (sur l'unité) : pioche, main, défausse, coûts effectifs (`GetEffectiveCost`, overrides de coût pour Raze).
 - `DeckData` : 2 slots Signature + 16 Standard (les 6 slots Éveil ne sont pas encore ajoutés) ; `DeckSaveManager` : sauvegarde JSON, 1 deck de base + 3 decks perso par champion. Les decks référencent les cartes **par nom**.
 
 ### 3. UI de cartes
@@ -131,7 +131,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_md_coarchitect.md` et fait foi pour décrire ce qui existe **dans le code**.
 
-**Roster jouable :** Ace (« Le Tricheur »), l'Alpiniste (« Le Grimpeur »), Soren (« Le Frère », + invocation Lyse), référencés dans `ChampionSelectManager._allChampions`. Seuls ces 3 champions existent (fiches dans `Assets/ScriptableObjects/Characters/Champion/`, prefabs dans `Assets/Project/Prefabs/Champions/`). Les 3 champions MVP ont 100 PV, 5 PA, 4 PM.
+**Roster jouable :** Raze (« Le Tricheur »), Crux (« Le Grimpeur »), Evan (« Le Frère », + invocation Lyse), référencés dans `ChampionSelectManager._allChampions`. Seuls ces 3 champions existent (fiches dans `Assets/ScriptableObjects/Characters/Champion/`, prefabs dans `Assets/Project/Prefabs/Champions/`). Les 3 champions MVP ont 100 PV, 5 PA, 4 PM.
 
 **Ilya, Vylos, Calyx (hors MVP) : retirés du code le 24/09/2026.** Ilya y avait une version différente de `ilya_deck_simple.md` (carte Rage ajoutée à la main tous les 10 dégâts subis, stock max 5) ; Vylos portait la marque Stigmate. Le code reste consultable dans l'historique git (commit `00afe5d`, dernier état avant le nettoyage) si Ilya revient, sa Rage étant à réadapter à l'Éveil.
 
@@ -158,7 +158,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 | Sujet | Code actuel | Design (Excel) |
 |-------|-------------|----------------|
-| Ressources | `maxActionPoints` / `movementRange` par champion (Ace, Alpiniste, Soren : 5 / 4) | Profil PA/PM avec budget total de 9 — déjà respecté, la règle n'est pas vérifiée par le code |
+| Ressources | `maxActionPoints` / `movementRange` par champion (Raze, Crux, Evan : 5 / 4) | Profil PA/PM avec budget total de 9 — déjà respecté, la règle n'est pas vérifiée par le code |
 | Émotion | Identité de carte (`EmotionType`), pas de jauge | Jauges d'Éveil par émotion, paliers |
 | Cartes | `CardData` avec émotion et catégorie | + génération/consommation d'Éveil |
 | Deck | 18 cartes (2 Signature + 16 Standard), 1 base + 3 perso | 24 cartes (2 / 6 / 16) |

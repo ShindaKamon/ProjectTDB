@@ -1,6 +1,6 @@
 # ASTRA & NOCTIS - « Les Jumeaux de la Dualité » — Version 1 (concept d'origine)
 
-> ⚠️ **Statut (23/09/2026) : hors MVP** (roster MVP = Soren, l'Alpiniste, Ace — voir `GDD_Main.md`). Ce concept (« Version 1 », dualité fusionnelle) est conservé en parallèle d'un second concept (« Version 2 », 1 unité à 2 phases) résumé dans `CHAMPIONS_CONCEPTS.md`. À noter : Soren (MVP) explore déjà un thème proche (jumeaux, invocation de la sœur) — à garder en tête pour ne pas faire doublon.
+> ⚠️ **Statut (23/09/2026) : hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`). Ce concept (« Version 1 », dualité fusionnelle) est conservé en parallèle d'un second concept (« Version 2 », 1 unité à 2 phases) résumé dans `CHAMPIONS_CONCEPTS.md`. À noter : Evan (MVP) explore déjà un thème proche (jumeaux, invocation de la sœur) — à garder en tête pour ne pas faire doublon.
 > S'il revient, ce concept devra suivre les règles de l'Excel : budget PA+PM de 9, deck de 24 cartes, 1 passif + 2 cartes Signature.
 
 **Noms** : Astra Lumina (♀) & Noctis Umbra (♂)
@@ -128,7 +128,7 @@
 4. **Transformation** : Comment fonctionne Éclipse ?
 5. **Équilibrage** : 2 unités = trop puissant ? Contraintes nécessaires ?
 6. **Lequel garder** : cette Version 1 (dualité fusionnelle) ou la Version 2 (voir `CHAMPIONS_CONCEPTS.md`) ?
-7. **Doublon** : comment se distinguer de Soren (jumelle invoquée) ?
+7. **Doublon** : comment se distinguer d'Evan (jumelle invoquée) ?
 
 ---
 

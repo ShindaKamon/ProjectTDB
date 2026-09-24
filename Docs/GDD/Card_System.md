@@ -101,9 +101,9 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 | **Enemy** | Un ou plusieurs ennemis | Attaque |
 | **Ally** | Alliés (sauf soi) | Soigner un allié |
 | **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
-| **AllyorEnemy** | Alliés ET ennemis | Corde de rappel forcé (l'Alpiniste) |
-| **AnyUnit** | N'importe quelle unité | Piolet d'ascension (l'Alpiniste) |
-| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (Soren) |
+| **AllyorEnemy** | Alliés ET ennemis | Corde de rappel (Crux) |
+| **AnyUnit** | N'importe quelle unité | Piolet d'ascension (Crux) |
+| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (Evan) |
 | **AnyTile** | N'importe quelle tuile | Explosion ciblée |
 | **EnemyOrTile** | Un ennemi ou une tuile | Bond, charge |
 

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
   m_Name: Soren
   m_EditorClassIdentifier: ProjectTDB::ChampionData
-  championName: Soren
+  championName: Evan
   title: Le Frere
   description: A perdu sa soeur jumelle, Lyse, dont la presence n'a jamais vraiment
     disparu.

@@ -1,12 +1,12 @@
 # PERSONNAGES À DÉVELOPPER - ÉMOTIONS TACTICS
 
 **Mis à jour :** 23 Septembre 2026 (notes de statut uniquement — contenu créatif original inchangé)
-**Statut :** 2 personnages développés (Ilya, Jumeaux), 7 favoris en attente. Roster MVP : Soren, l'Alpiniste, Ace (voir l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx` et `CHAMPIONS_CONCEPTS.md`).
+**Statut :** 2 personnages développés (Ilya, Jumeaux), 7 favoris en attente. Roster MVP : Evan, Crux, Raze (voir l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx` et `CHAMPIONS_CONCEPTS.md`).
 
 > ℹ️ **Note de statut :** ce document date d'avant plusieurs décisions structurelles (voir `GDD_Main.md`). Quatre choses à garder en tête en le lisant :
 > 1. **Les tags « Famille » utilisent l'ancien système à 3 familles** (🔴 Rouge/Incarnat, 🔵 Bleu/Sérénite, 🟡 Jaune/Exalté). Le système visé est à 8 familles façon Plutchik (voir `SYSTEME_EMOTIONS.md`). Personne n'a encore fait la correspondance, donc ces tags sont une **inspiration thématique approximative**.
 > 2. **Les tags « Archétype » (Tisseur, Ombrelame, Harmoniste...) renvoient à l'ancien système de classes, abandonné le 10/09/2026.** Ils restent utiles comme description de rôle, pas comme mécanique à implémenter.
-> 3. **Le roster MVP (Soren, l'Alpiniste, Ace)** est documenté dans l'Excel et `CHAMPIONS_CONCEPTS.md`. Ace reprend l'esprit de #12 KAIROS (joueur, destin) — attention au doublon.
+> 3. **Le roster MVP (Evan, Crux, Raze)** est documenté dans l'Excel et `CHAMPIONS_CONCEPTS.md`. Raze reprend l'esprit de #12 KAIROS (joueur, destin) — attention au doublon.
 > 4. Tout nouveau champion doit suivre le format actuel : trauma + passif + 2 cartes Signature + profil PA/PM (budget 9), deck de 24 cartes.
 >
 > Rien n'a été supprimé ci-dessous : c'est une matière première créative précieuse (100 concepts), elle reste intacte.
@@ -30,7 +30,7 @@
 - **Mécanique :** 2 personnages, 1 esprit (PA partagés), Résonance Distance
 - **Formes :** Séparés (Versatile) ↔ Éclipse (Fusion Ultra-puissante)
 - **Deck :** 18 cartes (6 Astra + 6 Noctis + 6 Jumeaux)
-- **Statut :** Concept posé, stats, passifs, distance et Éclipse **à définir** (voir `astra_noctis_simple.md`). Second concept (« Version 2 ») dans `CHAMPIONS_CONCEPTS.md`. Thème proche de Soren (MVP).
+- **Statut :** Concept posé, stats, passifs, distance et Éclipse **à définir** (voir `astra_noctis_simple.md`). Second concept (« Version 2 ») dans `CHAMPIONS_CONCEPTS.md`. Thème proche d'Evan (MVP).
 
 ---
 
@@ -382,9 +382,9 @@
 4. **Courbe Apprentissage :** Alterner complexité (Simple → Difficile → Moyen)
 5. **Narratif :** Chaque personnage = histoire émotionnelle forte
 
-### Ordre Suggéré Développement (après le roster MVP : Soren, l'Alpiniste, Ace)
+### Ordre Suggéré Développement (après le roster MVP : Evan, Crux, Raze)
 1. **MIRA** (Moyen, Bleu Tisseur) - Complète archétype Mage
-2. **KAIROS** (Moyen, Jaune Ombrelame) - Gameplay RNG fun *(proche d'Ace — à différencier ou fusionner)*
+2. **KAIROS** (Moyen, Jaune Ombrelame) - Gameplay RNG fun *(proche de Raze — à différencier ou fusionner)*
 3. **NEXUS** (Difficile, Bleu Tisseur alt) - Concept swarm unique
 4. **MASQ** (Difficile, Multi) - Versatilité maximale
 5. **BINAIRE** (Très difficile, Jaune Tisseur alt) - Pour experts

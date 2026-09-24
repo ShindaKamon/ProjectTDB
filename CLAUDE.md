@@ -59,9 +59,9 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 
 ### Combat
 - `TurnStateMachine` (classe C# pure, pas MonoBehaviour) porte l'état du tour ; `GridManager` orchestre la grille (**carrée** 10×10, positions `Vector2Int`, distance de Manhattan), le spawn et la rotation des tours (un tour par unité dans l'ordre de `_units`, invocations sautées), avec `GridRepository` pour les données de grille.
-- Unités : `Unit` (base MonoBehaviour, PV, buffs, marques via `IMarkable`) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion (`AceUnit`, `AlpinisteUnit`, `SorenUnit`) qui porte ses passifs. Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
+- Unités : `Unit` (base MonoBehaviour, PV, buffs, marques via `IMarkable`) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion qui porte ses passifs (voir « Noms des champions » ci-dessous). Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
 - Ennemis : `Enemy` + `EnemyAI` (un monstre = un `EnemyData` + un prefab, ex. `UnderBed`), qui joue aussi des `CardData`.
-- Invocations : `SummonUnit : Unit` (pas de tour propre, PA/PM = 0, pilotée par les cartes de l'invocateur `ISummonOwner`) ; `LyseUnit` en dérive, avec des PV recalculés en continu depuis ceux de Soren.
+- Invocations : `SummonUnit : Unit` (pas de tour propre, PA/PM = 0, pilotée par les cartes de l'invocateur `ISummonOwner`) ; `LyseUnit` en dérive, avec des PV recalculés en continu depuis ceux d'Evan.
 - États transverses gérés par des classes statiques plutôt que par les unités : `ResourceDebuffManager` (retraits de PA/PM appliqués au début du tour suivant). Les marques (`MarkType` : Poison, AllMarks) sont portées par l'unité (`IMarkable`) ; les valeurs de `MarkType` sont sérialisées dans les cartes, ne pas les renuméroter.
 
 ### Cartes
@@ -70,7 +70,16 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 - `GameActionValidator` (statique, retourne `ValidationResult`) centralise la validation « peut-on jouer cette carte / se déplacer / cibler » — y ajouter les nouvelles règles plutôt que de disperser les checks dans l'UI. C'est aussi la partie la plus couverte par les tests.
 
 ### Données
-ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, `CardCollection`). Les decks sauvegardés référencent les cartes **par nom** (`GetCardsFromNames`) : renommer un asset `CardData` casse les sauvegardes existantes.
+ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, `CardCollection`). Les decks sauvegardés sont rangés **par nom de champion** et référencent les cartes **par nom** : renommer un champion (`championName`) ou une carte (`cardName`) exige d'ajouter l'ancien nom dans `RenamedChampions` / `RenamedCards` de `DeckSaveManager`, sinon les decks existants perdent le champion ou la carte.
+
+### Noms des champions
+Le roster a été renommé le 24/09/2026 : seuls les noms affichés (`ChampionData.championName`) ont changé, pas les identifiants internes.
+
+| Nom (jeu et GDD) | Classe | Fiche / prefab |
+|---|---|---|
+| Evan (+ invocation Lyse) | `SorenUnit` | `Soren.asset`, `Soren_Base.prefab` |
+| Crux | `AlpinisteUnit` | `Alpiniste.asset`, `Alpiniste_Base.prefab` |
+| Raze | `AceUnit` | `Ace.asset`, `Ace_Base.prefab` |
 
 ### Logs
 Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build via `[Conditional]`) au lieu de `Debug.Log`. `Debug.LogError` reste direct.
@@ -79,4 +88,4 @@ Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build
 `Scripts/Editor/UISetupWizard.cs` (génération de hiérarchies UI), `DeckDebugMenu.cs` (reset/inspection des sauvegardes de decks).
 
 ## Documentation
-`Docs/GDD/` : GDD découpé par système (index : `Docs/GDD/README.md`) — à consulter avant de concevoir une mécanique. Émotions de lancement : Colère, Peur, Joie ; roster MVP : Ace, l'Alpiniste, Soren ; deck cible 24 cartes (2 Signature + 6 Éveil + 16 Standard, le code en gère 18 pour l'instant).
+`Docs/GDD/` : GDD découpé par système (index : `Docs/GDD/README.md`) — à consulter avant de concevoir une mécanique. Émotions de lancement : Colère, Peur, Joie ; roster MVP : Evan, Crux, Raze ; deck cible 24 cartes (2 Signature + 6 Éveil + 16 Standard, le code en gère 18 pour l'instant).

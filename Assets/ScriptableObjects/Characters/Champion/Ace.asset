@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
   m_Name: Ace
   m_EditorClassIdentifier: ProjectTDB::ChampionData
-  championName: Ace
+  championName: Raze
   title: Le Tricheur
   description: A tout perdu sur une main legendaire ; il ne laisse plus jamais le
     hasard decider.

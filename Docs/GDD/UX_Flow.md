@@ -5,7 +5,7 @@
 **Changements :**
 - v1.1 (10/09/2026) : Ayla retirée de l'écran de sélection.
 - v1.2 (23/09/2026) : boucle roguelike (carte à nœuds, runs, événements aléatoires) remplacée par la **campagne façon Waven** ; écran de sélection avec les 3 champions du MVP ; barre d'initiative retirée (ordre par phases) ; raccourcis clavier unifiés (Espace = fin de tour) ; lien cassé vers `Tutorial.md` corrigé. Ce document est la **référence pour les raccourcis clavier**.
-- v1.3 (23/09/2026) : roster Soren / l'Alpiniste / Ace (Excel MVP) ; deck de 24 cartes et plusieurs decks par champion ; donjon en équipe de 3 ; règle de main à trancher.
+- v1.3 (23/09/2026) : roster Evan / Crux / Raze (Excel MVP) ; deck de 24 cartes et plusieurs decks par champion ; donjon en équipe de 3 ; règle de main à trancher.
 
 ---
 
@@ -43,14 +43,14 @@ L'expérience utilisateur d'**Émotions Tactics** doit :
 
 **2. Nouvelle Partie → Sélection de Personnage (30 secondes)**
 
-> Roster MVP : Soren, l'Alpiniste, Ace (Excel). Les donjons se jouent en **équipe de 3** : à terme cet écran sert à composer l'équipe (et à choisir un champion pour l'aventure solo). Coop ou un seul joueur qui contrôle les 3 : question ouverte (`GDD_Main.md`).
+> Roster MVP : Evan, Crux, Raze (Excel). Les donjons se jouent en **équipe de 3** : à terme cet écran sert à composer l'équipe (et à choisir un champion pour l'aventure solo). Coop ou un seul joueur qui contrôle les 3 : question ouverte (`GDD_Main.md`).
 > **Code actuel** : on choisit **un seul** champion (`Screen_ChampionSelect`, illustration plein écran + rail de champions), puis son deck dans l'écran deck unifié (`Screen_DeckManager`, style MTG Arena) — voir `Technical_Specs.md` § « État du code ».
 
 ```
 ╔══════════════════════════════════════════════╗
 ║  Composez votre équipe                       ║
 ╠══════════════════════════════════════════════╣
-║  [ SOREN ]    [ ALPINISTE ]   [   ACE   ]    ║
+║  [ EVAN ]    [   CRUX   ]   [   RAZE   ]    ║
 ║  ┌───────┐    ┌───────┐       ┌───────┐      ║
 ║  │[Image]│    │[Image]│       │[Image]│      ║
 ║  └───────┘    └───────┘       └───────┘      ║

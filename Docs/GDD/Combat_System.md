@@ -153,7 +153,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 - Certaines cartes donnent des PM bonus (contrepartie « Élan tactique » : +2 PM)
 - Téléportation possible (ignore obstacles)
 - Déplacement forcé (poussée/tirage), bond offensif, repli automatique
-- Grappin (Piolet d'ascension de l'Alpiniste)
+- Grappin (Piolet d'ascension de Crux)
 
 
 ### Santé (HP)
@@ -191,7 +191,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | **2. Coût**         | Dépenser les PA (et paliers d'Éveil si la carte en consomme) | Déduction immédiate |
 | **3. Calcul**       | Calculer dégâts/effets      | Appliquer modificateurs        |
 | **4. Application**  | Appliquer effets            | Dégâts, soins, mouvements      |
-| **5. Éveil / passif** | Ajouter l'Éveil généré ; déclencher les passifs (écho de Soren, Réflexe du grimpeur, Main gagnante d'Ace) | Selon la carte et le champion |
+| **5. Éveil / passif** | Ajouter l'Éveil généré ; déclencher les passifs (écho d'Evan, Réflexe du grimpeur, Main gagnante de Raze) | Selon la carte et le champion |
 | **6. Vérification** | Vérifier morts              | Retirer unités vaincues        |
 
 
@@ -202,8 +202,8 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | Effet | Source | Règle |
 |-------|--------|-------|
 | **Retrait de PM** | Peur | -1 / -2 / -3 PM ou perte totale au **prochain tour** de la cible. Ne se cumulent pas : un retrait plus fort remplace un plus faible ; un plus faible n'écrase jamais un plus fort en cours |
-| **Poussée / Tirage** | Peur, Alpiniste | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
-| **Bouclier (% de réduction)** | Colère (Armure de rage), Peur, Joie, Alpiniste | Réduit les prochains dégâts subis d'un pourcentage ; ignoré par la Paire d'Ace |
+| **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
+| **Bouclier (% de réduction)** | Colère (Armure de rage), Peur, Joie, Crux | Réduit les prochains dégâts subis d'un pourcentage ; ignoré par la Paire de Raze |
 | **Vulnérabilité** | Contrepartie (Joie) | Le lanceur subit plus de dégâts |
 | **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour) |
 | **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour |
@@ -237,7 +237,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 **Formations Recommandées :**
 - Ligne : couverture maximale du terrain
 - Dispersée : évite les AOE ennemies
-- Tactique : protéger les champions fragiles ; l'Alpiniste peut extraire un allié en danger (Corde de rappel forcé)
+- Tactique : protéger les champions fragiles ; Crux peut extraire un allié en danger (Corde de rappel)
 
 
 ## Difficulté et Équilibrage (À Implémenter)
@@ -267,7 +267,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 ### Priorité Haute
 - Profils PA/PM (budget 9) et types de cartes Standard / Éveil / Signature
 - Statuts de contrôle (retrait de PM, poussée/tirage) + règle anti-lock
-- Invocations (Soren), grappin (Alpiniste), détection de motifs de coûts (Ace)
+- Invocations (Evan), grappin (Crux), détection de motifs de coûts (Raze)
 - Réactions (effets « si ciblé ce tour », ex : Réflexe de survie)
 - IA ennemie : patterns + cycle de boss Zone / Basique / Heal
 

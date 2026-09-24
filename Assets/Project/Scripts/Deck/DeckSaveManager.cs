@@ -76,6 +76,13 @@ public static class DeckSaveManager
         var allDecks = LoadAllDecks();
         var championDecks = allDecks.GetChampionDecks(champion.championName);
 
+        // Champion renommé : reprend ses decks enregistrés sous l'ancien nom (une seule fois)
+        if (championDecks == null)
+        {
+            championDecks = MigrateRenamedChampion(allDecks, champion.championName);
+            if (championDecks != null) SaveAllDecks();
+        }
+
         if (championDecks == null)
         {
             // Créer les données avec le deck de base
@@ -316,12 +323,70 @@ public static class DeckSaveManager
     /// <summary>
     /// Convertit une liste de noms de cartes en CardData
     /// </summary>
+    /// <summary>
+    /// Anciens noms de champions renommés -> nom actuel. Les decks sauvegardés sont rangés par nom
+    /// de champion : sans cette table, un champion renommé perdrait tous ses decks personnalisés.
+    /// À compléter à chaque renommage (ne jamais retirer une entrée).
+    /// </summary>
+    private static readonly Dictionary<string, string> RenamedChampions = new Dictionary<string, string>
+    {
+        { "Soren", "Evan" },
+        { "L'Alpiniste", "Crux" },
+        { "Ace", "Raze" },
+    };
+
+    /// <summary>
+    /// Si aucun deck n'existe sous le nom actuel du champion, récupère ceux enregistrés sous un
+    /// ancien nom (table RenamedChampions) et les renomme. Ne sauvegarde pas : à l'appelant de le faire.
+    /// </summary>
+    public static ChampionDecksData MigrateRenamedChampion(AllDecksData allDecks, string currentName)
+    {
+        if (allDecks == null || string.IsNullOrEmpty(currentName)) return null;
+
+        foreach (var rename in RenamedChampions)
+        {
+            if (rename.Value != currentName) continue;
+
+            var oldDecks = allDecks.GetChampionDecks(rename.Key);
+            if (oldDecks == null) continue;
+
+            oldDecks.championName = currentName;
+            GameLog.Log($"Decks de « {rename.Key} » repris sous le nouveau nom « {currentName} ».");
+            return oldDecks;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Anciens noms de cartes renommées -> nom actuel. Les decks sauvegardés référencent les cartes
+    /// par nom : sans cette table, une carte renommée disparaîtrait des decks existants.
+    /// À compléter à chaque renommage de carte (ne jamais retirer une entrée).
+    /// </summary>
+    private static readonly Dictionary<string, string> RenamedCards = new Dictionary<string, string>
+    {
+        { "Il triche", "Triche" },
+        { "Corde de rappel forcé", "Corde de rappel" },
+        { "Écho de Lyse", "Écho évanescent" },
+        { "Écho evanescent", "Écho évanescent" }, // orthographe provisoire du 24/09/2026
+    };
+
+    /// <summary>Nom actuel d'une carte (suit les renommages successifs).</summary>
+    public static string ResolveCardName(string name)
+    {
+        int guard = 0;
+        while (name != null && RenamedCards.TryGetValue(name, out string newName) && guard++ < 10)
+        {
+            name = newName;
+        }
+        return name;
+    }
+
     public static List<CardData> GetCardsFromNames(List<string> cardNames, CardCollection collection)
     {
         var cards = new List<CardData>();
         foreach (var name in cardNames)
         {
-            var card = collection.GetCardByName(name);
+            var card = collection.GetCardByName(ResolveCardName(name));
             if (card != null)
                 cards.Add(card);
             else
@@ -349,7 +414,27 @@ public static class DeckSaveManager
         }
 
         // Pour les decks custom, utiliser la recherche par nom
-        return GetCardsFromNames(deck.cardNames, collection);
+        var cards = GetCardsFromNames(deck.cardNames, collection);
+
+        // Mise en conformité avec les règles de construction (DeckRules), sauvegardée si besoin :
+        // cartes hors des couleurs du deck et exemplaires en trop retirés, Signatures ajoutées.
+        int removed = DeckRules.EnforceColors(cards, DeckRules.DeckColors(deck, cards));
+        removed += DeckRules.EnforceCopyLimits(cards);
+        int added = 0;
+        if (collection != null)
+        {
+            var missing = DeckRules.MissingSignatures(cards, champion, collection.AllCards);
+            cards.AddRange(missing);
+            added = missing.Count;
+        }
+
+        if (removed > 0 || added > 0)
+        {
+            deck.cardNames = cards.ConvertAll(c => c.cardName);
+            SaveAllDecks();
+            GameLog.Log($"Deck « {deck.deckName} » mis en conformité : {removed} carte(s) hors couleurs ou en trop retirée(s), {added} Signature(s) ajoutée(s).");
+        }
+        return cards;
     }
 
     /// <summary>

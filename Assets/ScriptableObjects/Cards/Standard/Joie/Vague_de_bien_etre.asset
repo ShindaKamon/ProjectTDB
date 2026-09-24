@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Vague_de_bien_etre
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Vague de bien-\xEAtre"
-  description: Soin de zone en cercle autour de la cible.
+  description: "Soigne de 27 PV les alli\xE9s dans une zone de rayon 1 autour d'un
+    alli\xE9 au contact."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
@@ -26,6 +27,8 @@ MonoBehaviour:
   areaEffect: 4
   aoeRadius: 1
   affectedTarget: 4
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
   healAmount: 27
@@ -39,6 +42,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -54,9 +58,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

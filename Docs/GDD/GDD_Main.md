@@ -22,7 +22,7 @@
 
 **Émotions et personnages**
 - `SYSTEME_EMOTIONS.md` — les 8 émotions/familles (Plutchik), les 3 émotions de lancement, le système d'Éveil.
-- `CHAMPIONS_CONCEPTS.md` — roster MVP (Soren, l'Alpiniste, Ace) et concepts hors MVP.
+- `CHAMPIONS_CONCEPTS.md` — roster MVP (Evan, Crux, Raze) et concepts hors MVP.
 - `ilya_deck_simple.md` — fiche d'Ilya (**hors MVP**, conservé comme concept complet).
 - `astra_noctis_simple.md` — fiche des Jumeaux Astra & Noctis (**hors MVP**).
 - `Characters.md` — structure technique d'un champion (ChampionData).
@@ -72,7 +72,7 @@ Le monde ne s'effondre pas d'un coup — il **grisonne**. À force que les gens 
 
 Pas de gouvernement oppressif, pas d'organisation secrète. Les champions sont des gens qui ont gardé — ou reconquis — **leur propre couleur**, qui leur permet de percevoir et d'entrer dans ces espaces gris. **Tout champion peut entrer dans n'importe quel donjon** (règle « uniquement sa propre famille » retirée le 23/09/2026).
 
-Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPIONS_CONCEPTS.md`) : Soren n'arrive pas à laisser partir sa sœur jumelle Lyse, l'Alpiniste ne supporte plus de laisser quelqu'un hors de portée, Ace ne laisse plus jamais le hasard décider.
+Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPIONS_CONCEPTS.md`) : Evan n'arrive pas à laisser partir sa sœur jumelle Lyse, Crux ne supporte plus de laisser quelqu'un hors de portée, Raze ne laisse plus jamais le hasard décider.
 
 **Exemples de donjons** :
 - **Orphelinat** : Enfants prisonniers de la Peur → Ennemis : Ombres du Placard, Monstres Sous le Lit — **donjon du MVP**
@@ -87,21 +87,21 @@ Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPI
 
 **MVP : 3 émotions de lancement** (acté dans l'Excel) :
 
-| Émotion | Famille | Rôle | Force / Faiblesse |
-|---------|---------|------|-------------------|
-| **Colère** | Déchaînés | Agressif | Burst, sans sustain |
-| **Peur** | Réprouvés | Contrôle (retrait de PM, poussée/tirage) | Contrôle / tempo |
-| **Joie** | Éveillés | Soin / valeur | Survie, mais lent |
+| Émotion | Rôle | Force / Faiblesse |
+|---------|------|-------------------|
+| **Colère** | Agressif | Burst, sans sustain |
+| **Peur** | Contrôle (retrait de PM, poussée/tirage) | Contrôle / tempo |
+| **Joie** | Soin / valeur | Survie, mais lent |
 
-Un deck est **mono ou bi-émotion**. Les cartes Signature sont **Neutres** (jouables quelles que soient les émotions du deck).
+Un champion peut jouer **toutes les émotions**, mais **chaque deck a 1 ou 2 couleurs**, choisies à sa création, et ne contient que des cartes de ces couleurs (décision du 24/09/2026). **4 exemplaires maximum** par carte. Les cartes Signature sont **Neutres**, réservées à leur champion et **obligatoires** dans son deck (1 exemplaire chacune).
 
 ## Roster MVP *(Excel, 23/09/2026)*
 
 | Champion | Trauma | Passif | Cartes Signature |
 |----------|--------|--------|------------------|
-| **Soren** | A perdu sa sœur jumelle Lyse | Miroir fraternel (ses invocations rejouent un écho de ses cartes offensives à ~40 %) | Invocation de Lyse (2 PA), Écho de Lyse (1 PA) |
-| **L'Alpiniste** | Accident de cordée filmé, confiance brisée | Réflexe du grimpeur (après un grappin : bouclier près d'un allié, bonus de dégâts près d'un ennemi) | Piolet d'ascension (2 PA), Corde de rappel forcé (4 PA) |
-| **Ace** | A tout perdu sur une main légendaire | Main gagnante (bonus selon le motif des coûts joués : Paire / Suite / Bluff) | Il triche (1 PA), Tapis (5 PA) |
+| **Evan** | A perdu sa sœur jumelle Lyse | Miroir fraternel (ses invocations rejouent un écho de ses cartes offensives à ~40 %) | Invocation de Lyse (2 PA), Écho évanescent (1 PA) |
+| **Crux** | Accident de cordée filmé, confiance brisée | Réflexe du grimpeur (après un grappin : bouclier près d'un allié, bonus de dégâts près d'un ennemi) | Piolet d'ascension (2 PA), Corde de rappel (4 PA) |
+| **Raze** | A tout perdu sur une main légendaire | Main gagnante (bonus selon le motif des coûts joués : Paire / Suite / Bluff) | Triche (1 PA), Tapis (5 PA) |
 
 Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 
@@ -134,7 +134,7 @@ Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 Valeur finale d'une carte = **Baseline(coût en PA) × (1 + somme des modificateurs)**. Baseline : 1 PA = 12, 2 PA = 26, 3 PA = 42, 4 PA = 60, 5 PA = 80, 6 PA = 102. Plus une carte a de portée, de zone, de contrôle ou de déplacement forcé, moins elle fait de dégâts bruts. Détail : `Card_System.md` et l'Excel.
 
 ### 5. Positionnement Tactique sur Grille
-- **Grille carrée** : c'est ce qui est implémenté (10×10, distance de Manhattan, déplacement en 4 directions) et ce que suppose le budget de l'Excel (« grille carrée 8 directions », cercle rayon 1 = 9 cases). ⚠️ La Roadmap de l'Excel parle encore d'une grille hexagonale façon Waven, et `Grid_System.md` décrit la conception hex d'origine (voir Questions ouvertes)
+- **Grille carrée en 4 directions** *(24/09/2026)* : 10×10, pas de diagonales (distance de Manhattan) pour le déplacement, la portée, les zones, les charges et l'adjacence ; un cercle de rayon 1 = 5 cases, de rayon 2 = 13 cases. ⚠️ Le budget de l'Excel suppose des zones de 9 et 25 cases (8 directions) : le coût des cartes à zone est à revoir dans l'Excel. La Roadmap parle encore d'une grille hexagonale : à corriger. Détail : `Grid_System.md`
 - Portées de 1 (mêlée) à 6 cases
 - Zones : ligne, cône, cercle, cibles multiples, contagion, équipe entière
 
@@ -143,6 +143,8 @@ Valeur finale d'une carte = **Baseline(coût en PA) × (1 + somme des modificate
 **Campagne façon Waven** : donjons fixes enchaînés, progression persistante (pas de roguelike). L'Excel distingue deux types de contenus :
 - **Donjons** : monstres de groupe, prévus pour une **équipe de 3** (jouer en groupe est obligatoire)
 - **Aventure** : monstres « solo-friendly », jouables avec un seul champion
+
+**Un champion par joueur** *(24/09/2026)* : le joueur contrôle un seul champion ; l'équipe de 3 viendra avec le multijoueur (V2). Les stats des monstres (PV, dégâts) augmentent avec le nombre de joueurs : un même donjon marche à 1 comme à 3 (voir `Enemies.md`).
 
 Détail : `UX_Flow.md`, `Enemies.md`, `Progression.md`.
 
@@ -180,9 +182,9 @@ Détail complet dans `Technical_Specs.md`. Patterns : Service Locator, Event Bus
 Détail et écarts avec le design : `Technical_Specs.md`, section « État du code ».
 
 **Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
-**Champions jouables :** Ace, l'Alpiniste, Soren (+ invocation Lyse) ; Ilya, Vylos et Calyx existent en fiche mais hors sélection.
+**Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Ilya, Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
 **Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) + Signatures des 3 champions.
-**Decks :** 18 cartes (2 Signature + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), mono/bi-émotion, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
+**Decks :** 18 cartes (2 Signature + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
 **Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
 **UI :** écran de sélection de champion, éditeur de deck façon MTG Arena, HUD de combat, main en arc, ciblage (courbe + réticule), barre de vie de boss, preview des cartes ennemies, pop-ups de dégâts.
 **Pas encore dans le code :** jauge d'Éveil, cartes d'Éveil, profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), désaturation des donjons.
@@ -197,8 +199,8 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 
 ### Reste à faire pour le MVP
 - [ ] Cartes d'Éveil (6 par deck) — mise en œuvre de l'Éveil
-- [ ] Règle de main/pioche définitive
-- [ ] Confirmer la grille carrée (4 ou 8 directions ?) et mettre à jour la Roadmap de l'Excel
+- [x] Règle de main/pioche : celle du code (départ 5, max 5, pioche 1/tour) — 24/09
+- [x] Grille carrée 4 directions (24/09) — reste à corriger la Roadmap de l'Excel (« hexagonale ») et le budget des zones (5 / 13 cases au lieu de 9 / 25)
 - [ ] Monstres de l'Orphelinat (stats selon le barème, patterns)
 - [ ] Adapter le code : Éveil (jauge + 6 slots de deck), statuts de contrôle, anti-lock, cycle de boss
 - [ ] Désaturation visuelle des donjons
@@ -206,7 +208,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 ## Objectifs de Design
 
 ### Court Terme (MVP)
-- 3 champions : Soren, l'Alpiniste, Ace
+- 3 champions : Evan, Crux, Raze
 - 3 émotions : Colère, Peur, Joie
 - 1 donjon complet : l'Orphelinat (Peur)
 - Monstres de donjon + boss (cycle Zone / Basique / Heal)
@@ -248,38 +250,45 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Ancienne jauge -100/+100 | En pause (archivée) — remplacée par l'Éveil | 23/09 |
 | Structure de jeu | Campagne façon Waven, pas de roguelike | 23/09 |
 | **Référence MVP** | **`TCG_Tactique_Systeme_de_calcul.xlsx`** | **23/09** |
-| **Roster MVP** | **Soren, l'Alpiniste, Ace** (Ilya et Jumeaux hors MVP) | **23/09** |
+| **Roster MVP** | **Evan, Crux, Raze** (Ilya et Jumeaux hors MVP) | **23/09** |
 | **Émotions de lancement** | **Colère, Peur, Joie** | Excel |
-| **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; mono ou bi-émotion ; plusieurs decks par champion** | Excel |
+| **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; 1 ou 2 couleurs par deck, choisies à sa création ; plusieurs decks par champion** | Excel |
 | **Ressources** | **Budget PA+PM = 9 par profil, fixe quel que soit le niveau** | Excel |
 | **Progression** | **Le niveau n'augmente que PV, passifs, slots ; XP = 100 × niveau ; XP monstre = 15 % de ses PV** | Excel |
 | **Budget de cartes** | **Baseline par PA × (1 + modificateurs)** | Excel |
 | **Anti-lock** | **Un monstre bloqué fait une Attaque de base** | Excel |
 | **Monstres** | **Donjon (groupe obligatoire) vs Aventure (solo-friendly)** | Excel |
-| **Grille** | **Carrée** (code + budget de l'Excel) — la Roadmap de l'Excel dit encore hex, à corriger | Code / Excel |
+| **Grille** | **Carrée, 4 directions** (pas de diagonales, distance de Manhattan) pour le déplacement, la portée, les zones, les charges et l'adjacence, écho du Miroir fraternel compris. Le budget de l'Excel (zones de 9 / 25 cases) est à revoir | 24/09 |
+| **Main et pioche** | **Règle du code** : main de départ 5, 5 cartes max, 1 carte piochée par tour | 24/09 |
+| **Ordre des tours** | **Chaque unité joue à son tour** (pas de phases) | 24/09 |
+| **Joueurs** | **Un seul champion par joueur** ; les équipes de 3 viendront avec le multijoueur (V2) | 24/09 |
+| **Monstres et nombre de joueurs** | **PV × N joueurs, dégâts × (1 + 0,5 × (N − 1))** (à valider) ; PA, PM, portée et pattern inchangés — barème de base = 1 joueur (voir `Enemies.md`) | 24/09 |
+| **Faiblesse émotionnelle** | **Une émotion par monstre, +25 % de dégâts des cartes de cette émotion** (à valider), visible sur le monstre ; pas de résistance au MVP | 24/09 |
+| **Pool Standard** | **49 cartes** (17 Colère, 17 Peur, 15 Joie) pour l'instant — la Roadmap de l'Excel dit 36, à corriger | 24/09 |
+| **Noms de familles** | **Abandonnés** (Déchaînés, Réprouvés, Éveillés…) : on parle directement des émotions | 24/09 |
+| Éveil | Mis de côté pour l'instant, à réfléchir plus tard | 24/09 |
+| Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
+| Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |
+| Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer | 24/09 |
+| Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`), style simple : 1-2 phrases courtes, verbe + cible + chiffre (+ contrepartie), sans conseil ni parenthèse (ex. « Inflige 11 dégâts à un ennemi au contact. ») | 24/09 |
+| Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 4 directions (comme toute la grille) ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
+| Construction de deck | Un champion peut jouer toutes les émotions, mais chaque deck a 1 ou 2 couleurs (choisies à la création) et ne contient que ces couleurs ; 4 exemplaires max par carte ; Signatures du champion obligatoires, 1 exemplaire chacune (nombre à redéfinir plus tard) ; Signatures des autres champions interdites | 24/09 |
 
 ## Questions ouvertes
 
 **Issues de l'Excel (onglet Roadmap) :**
-- **Règle de main/pioche définitive** — le playtest a utilisé main de 3 + repioche à 3/tour ; le code fait main de départ 5, max 5, pioche 1/tour
-- **Éveil** : rythme de remplissage (base : 2 points par palier, jauge par émotion) et contenu des 6 cartes d'Éveil
+- **Éveil** : rythme de remplissage (base : 2 points par palier, jauge par émotion) et contenu des 6 cartes d'Éveil — **mis de côté le 24/09/2026**, à réfléchir plus tard
 - **Équipement** : existe-t-il ? Impact sur quoi ?
 - **Stats au-delà de PV/PA/PM** (armure, résistances, critique…)
-- **Faiblesses émotionnelles des monstres**
 - **Cartes bi-émotion dédiées**
 - **Oppositions d'émotions** (paires Plutchik) — repoussé volontairement
 
 **Relevées lors de la passe de cohérence :**
-- **Grille : 4 ou 8 directions ?** Le code utilise une grille carrée avec distance de Manhattan (4 directions) ; l'Excel dit « 8 directions » et compte les cercles comme des carrés (rayon 1 = 9 cases). Il faut choisir, puis aligner le code ou l'Excel. (La Roadmap de l'Excel dit encore « hexagonale » : à corriger.)
-- **Ordre des tours** : le code fait jouer chaque unité à son tour ; garder ça, ou passer à des phases (tous les champions, puis tous les monstres) ?
-- **Pool Standard** : la bibliothèque de l'Excel (et le code) contient 49 cartes, la Roadmap dit 36 — lequel est la cible ?
-- **Donjon en équipe de 3** : le joueur contrôle-t-il seul les 3 champions, ou est-ce de la coop ?
 - **Ilya** : le garder pour la suite ? Sa Rage devra devenir une variante de l'Éveil Colère.
-- **Nomenclature des familles** (Insurgents, Dissidents… hérités de l'ancien lore) — l'Excel parle directement d'émotions (Colère/Peur/Joie), ce qui plaide pour abandonner les noms de familles.
 - **Plateforme** : PC seul ou PC + Mobile ?
 
 ---
 
-**Dernière mise à jour :** 23 Septembre 2026
+**Dernière mise à jour :** 24 Septembre 2026
 **Version GDD :** 3.4
 **Responsable :** Shinda + Claude

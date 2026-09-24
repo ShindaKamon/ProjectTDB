@@ -1,38 +1,37 @@
 # 🎭 SYSTÈME D'ÉMOTIONS - Émotions Tactics
 
-**Version :** 4.2
-**Date :** 23 Septembre 2026
+**Version :** 4.3
+**Date :** 24 Septembre 2026
 **Changements :**
 - v4.0 (10/09/2026) : le système de Classes (5 classes, multiplicateurs, matrice 8×5) a été abandonné — voir `archive/Concepts_Abandonnes.md`.
 - v4.1 (23/09/2026) : l'ancienne jauge -100/+100 (Contrariété / Colère / Rage) est archivée.
-- v4.2 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — 3 émotions de lancement (Colère, Peur, Joie), système d'Éveil, roster Soren / l'Alpiniste / Ace.
+- v4.2 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — 3 émotions de lancement (Colère, Peur, Joie), système d'Éveil, roster Evan / Crux / Raze.
+- v4.3 (24/09/2026) : noms de familles abandonnés, on parle directement des émotions ; faiblesses émotionnelles des monstres actées.
 
 ---
 
 ## 📊 VUE D'ENSEMBLE
 
-Le système d'émotions repose sur **8 émotions** (roue de Plutchik), chacune avec sa **couleur**. Dans le jeu, l'émotion est avant tout une **identité de carte** : un deck se construit autour d'1 ou 2 émotions (mono ou bi-émotion), comme les couleurs dans Magic. Le gameplay propre à chaque champion vient de sa **mécanique signature** (passif + cartes Signature), pas d'une classe.
+Le système d'émotions repose sur **8 émotions** (roue de Plutchik), chacune avec sa **couleur**. Dans le jeu, l'émotion est avant tout une **identité de carte** : un champion peut jouer toutes les émotions, et chaque deck en choisit 1 ou 2 (mono ou bi-émotion), comme les couleurs dans Magic. Le gameplay propre à chaque champion vient de sa **mécanique signature** (passif + cartes Signature), pas d'une classe.
 
 Ce document est la **référence** pour les noms, émotions et couleurs des familles (les autres documents renvoient ici).
 
 ---
 
-## 🎨 LES 8 FAMILLES (Émotions)
+## 🎨 LES 8 ÉMOTIONS
 
-Basées sur la Roue de Plutchik.
+Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms de familles (Déchaînés, Dissidents, Insurgents, etc.) sont abandonnés** (24/09/2026). Ils venaient de l'ancien lore « gouvernement dystopique » et ne collaient plus à « le monde grisonne ».
 
-| # | Famille | Émotion | Couleur | Code Hex | Thème |
-|---|---------|---------|---------|----------|-------|
-| 1 | **Déchaînés** | Colère | Rouge | #CC0000 | Guerriers impulsifs |
-| 2 | **Dissidents** | Dégoût | Violet | #800080 | Rebelles rejetant |
-| 3 | **Insurgents** | Tristesse | Bleu foncé | #000080 | Révolutionnaires mélancoliques |
-| 4 | **Exilés** | Surprise | Bleu clair | #80CCFF | Parias imprévisibles |
-| 5 | **Réprouvés** | Peur | Vert foncé | #006600 | Maudits terrifiés |
-| 6 | **Gardiens** | Confiance | Vert clair | #80FF80 | Protecteurs nobles |
-| 7 | **Éveillés** | Joie | Jaune | #FFEB00 | Illuminés joyeux |
-| 8 | **Précurseurs** | Anticipation | Orange | #FF8000 | Pionniers visionnaires |
-
-> ⚠️ **Nomenclature (question ouverte, voir `GDD_Main.md`)** : plusieurs noms et thèmes (Insurgents/« révolutionnaires », Dissidents/« rebelles », Réprouvés/« maudits », Exilés/« parias ») évoquent la rébellion contre un pouvoir — un héritage de l'ancien lore « gouvernement dystopique », abandonné le 11/09/2026. Ils ne collent plus au lore actuel (« le monde grisonne ») et sont candidats à un renommage.
+| # | Émotion | Couleur | Code Hex |
+|---|---------|---------|----------|
+| 1 | **Colère** | Rouge | #CC0000 |
+| 2 | **Dégoût** | Violet | #800080 |
+| 3 | **Tristesse** | Bleu foncé | #000080 |
+| 4 | **Surprise** | Bleu clair | #80CCFF |
+| 5 | **Peur** | Vert foncé | #006600 |
+| 6 | **Confiance** | Vert clair | #80FF80 |
+| 7 | **Joie** | Jaune | #FFEB00 |
+| 8 | **Anticipation** | Orange | #FF8000 |
 
 **Émotions « composées »** : certains donjons parlent d'émotions qui ne sont pas l'une des 8 (ex : l'**Anxiété** du Bureau Corporatiste). Chez Plutchik, l'anxiété se situe entre Peur et Anticipation — la famille de rattachement reste à choisir.
 
@@ -40,11 +39,11 @@ Basées sur la Roue de Plutchik.
 
 ## 🚀 LES 3 ÉMOTIONS DE LANCEMENT (MVP — Excel)
 
-| Émotion | Famille | Couleur | Rôle | Force / Faiblesse (validé en playtest) | Mécaniques typiques |
-|---------|---------|---------|------|-----------------------------------------|---------------------|
-| **Colère** | Déchaînés | Rouge #CC0000 | Agressif | Burst, **sans sustain** | Gros dégâts, zones, contrecoups sur soi, vol de vie |
-| **Peur** | Réprouvés | Vert foncé #006600 | Contrôle | Contrôle / tempo | **Retrait de PM** au prochain tour (-1 / -2 / -3 / total), poussée/tirage, boucliers |
-| **Joie** | Éveillés | Jaune #FFEB00 | Soin / valeur | Survie, mais **lent** | Soins, boucliers, buffs de groupe, soin + dégâts miroir |
+| Émotion | Couleur | Rôle | Force / Faiblesse (validé en playtest) | Mécaniques typiques |
+|---------|---------|------|-----------------------------------------|---------------------|
+| **Colère** | Rouge #CC0000 | Agressif | Burst, **sans sustain** | Gros dégâts, zones, contrecoups sur soi, vol de vie |
+| **Peur** | Vert foncé #006600 | Contrôle | Contrôle / tempo | **Retrait de PM** au prochain tour (-1 / -2 / -3 / total), poussée/tirage, boucliers |
+| **Joie** | Jaune #FFEB00 | Soin / valeur | Survie, mais **lent** | Soins, boucliers, buffs de groupe, soin + dégâts miroir |
 
 - Pool Standard : **49 cartes** dans la bibliothèque de l'Excel et dans le code (17 Colère, 17 Peur, 15 Joie) ; la Roadmap de l'Excel parle de 12 par émotion (36) — à harmoniser.
 - Cartes **Neutres** : les cartes Signature des champions, jouables quelles que soient les émotions du deck.
@@ -71,9 +70,9 @@ Les champions du MVP n'appartiennent pas à une émotion : leurs cartes Signatur
 
 | Champion | Statut |
 |----------|--------|
-| **Soren** | MVP — complet (Excel) |
-| **L'Alpiniste** | MVP — complet (Excel) |
-| **Ace** | MVP — complet (Excel) |
+| **Evan** | MVP — complet (Excel) |
+| **Crux** | MVP — complet (Excel) |
+| **Raze** | MVP — complet (Excel) |
 | **Ilya** (Colère) | Hors MVP — concept complet, Rage à réadapter à l'Éveil |
 | **Astra & Noctis** | Hors MVP — deux concepts concurrents |
 
@@ -85,18 +84,18 @@ Dans le MVP, l'émotion se génère **en jouant des cartes** (jauge d'Éveil, vo
 
 ---
 
-## 📋 DÉCLENCHEURS PAR FAMILLE (pistes, hors MVP)
+## 📋 DÉCLENCHEURS PAR ÉMOTION (pistes, hors MVP)
 
-| Famille | Déclencheurs Émotionnels |
+| Émotion | Déclencheurs Émotionnels |
 |---------|---------------------------|
-| **Déchaînés** | Dégâts reçus/infligés, éliminations |
-| **Dissidents** | Debuffs subis, résistances, toxicité |
-| **Insurgents** | Alliés blessés, temps, échecs |
-| **Exilés** | Critiques, événements inattendus, hasard |
-| **Réprouvés** | HP bas, ennemis puissants, encerclement |
-| **Gardiens** | Soins, protections, alliés en bonne santé |
-| **Éveillés** | Victoires, buffs, combos |
-| **Précurseurs** | Planification, temps, préparation |
+| **Colère** | Dégâts reçus/infligés, éliminations |
+| **Dégoût** | Debuffs subis, résistances, toxicité |
+| **Tristesse** | Alliés blessés, temps, échecs |
+| **Surprise** | Critiques, événements inattendus, hasard |
+| **Peur** | HP bas, ennemis puissants, encerclement |
+| **Confiance** | Soins, protections, alliés en bonne santé |
+| **Joie** | Victoires, buffs, combos |
+| **Anticipation** | Planification, temps, préparation |
 
 ---
 

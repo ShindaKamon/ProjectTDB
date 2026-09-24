@@ -76,8 +76,13 @@ public class InputManager : MonoBehaviour
             _lastHoveredTilePos = new Vector2Int(-1, -1); // Reset hover
         }
 
+        // Preview hover d'une carte de déplacement d'invocation (ciblage en 2 étapes)
+        if (currentSelectedCard != null && currentSelectedCard.isRepositionSummonCard)
+        {
+            HandleRepositionSummonHover(currentSelectedCard, activeUnit);
+        }
         // Preview hover pour les cartes avec cibles (AOE ou non)
-        if (currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile))
+        else if (currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile))
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
             RaycastHit hit;
@@ -98,15 +103,15 @@ public class InputManager : MonoBehaviour
                     Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
                     Vector2Int targetPos = hoveredUnit.GetCurrentGridPos();
 
-                    // Pour les cartes de charge, vérifie la ligne droite et la portée Manhattan
+                    // Pour les cartes de charge, vérifie la ligne droite (4 directions) et la portée
                     if (currentSelectedCard.isChargeCard)
                     {
                         Tile unitTile = Services.Grid.GetTileAtPosition(targetPos);
-                        int manhattanDist = Mathf.RoundToInt(Mathf.Abs(targetPos.x - sourcePos.x) + Mathf.Abs(targetPos.y - sourcePos.y));
+                        int lineDist = GridGeometry.Distance(sourcePos, targetPos);
 
                         // Valide si en ligne droite, dans la portée, et c'est un ennemi
                         if (currentSelectedCard.IsValidChargeTarget(unitTile, activeUnit) &&
-                            manhattanDist <= currentSelectedCard.targetRange &&
+                            lineDist <= currentSelectedCard.targetRange &&
                             hoveredUnit.GetFaction() != activeUnit.GetFaction())
                         {
                             hoveredPos = targetPos;
@@ -253,6 +258,55 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Survol d'une carte de déplacement d'invocation : surligne l'invocation survolée (étape 1)
+    /// ou la case d'arrivée survolée (étape 2) si elle est valide.
+    /// </summary>
+    private void HandleRepositionSummonHover(CardData card, Unit activeUnit)
+    {
+        SummonUnit chosen = _handUIController.SummonToMove;
+        Unit targetingSource = chosen != null ? (Unit)chosen : activeUnit;
+        bool isValid = false;
+        Vector2Int hoveredPos = new Vector2Int(-1, -1);
+
+        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
+        {
+            GameObject hovered = hit.collider.gameObject;
+            hovered.TryGetComponentSafe(out Unit hoveredUnit);
+
+            if (hoveredUnit != null)
+                hoveredPos = hoveredUnit.GetCurrentGridPos();
+            else if (TryGetGridPosition(hovered, out Vector2Int tilePos))
+            {
+                hoveredPos = tilePos;
+                hoveredUnit = Services.Grid.GetUnitAtGridPos(tilePos);
+            }
+
+            if (chosen == null)
+            {
+                isValid = hoveredUnit != null && GameActionValidator.CanSelectSummonToMove(card, activeUnit, hoveredUnit).IsValid;
+            }
+            else if (hoveredPos.x >= 0)
+            {
+                bool isFree = Services.Grid.GetTileAtPosition(hoveredPos) != null && hoveredUnit == null;
+                isValid = GameActionValidator.CanMoveSummonTo(card, chosen, hoveredPos, isFree).IsValid;
+            }
+        }
+
+        if (isValid && hoveredPos != _lastHoveredTilePos)
+        {
+            _lastHoveredTilePos = hoveredPos;
+            EventBus.Publish(new ShowCardTargetsEvent(card, targetingSource));
+            Services.Grid.HighlightTile(hoveredPos, Color.red);
+        }
+        else if (!isValid && _lastHoveredTilePos != new Vector2Int(-1, -1))
+        {
+            _lastHoveredTilePos = new Vector2Int(-1, -1);
+            EventBus.Publish(new ShowCardTargetsEvent(card, targetingSource));
+        }
+    }
+
     private void HandleMovementHover(Unit activeUnit)
     {
         Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
@@ -342,6 +396,20 @@ public class InputManager : MonoBehaviour
             }
         }
 
+        // Cas spécial : carte de déplacement d'invocation (ex: Écho évanescent), en 2 étapes :
+        // 1er clic = une invocation du lanceur, 2e clic = sa case d'arrivée. Un clic invalide est
+        // ignoré sans désélectionner la carte (clic droit pour revenir en arrière).
+        if (selectedCard.isRepositionSummonCard)
+        {
+            if (_handUIController.SummonToMove == null)
+                _handUIController.SelectSummonToMove(targetUnit);
+            else if (targetUnit == _handUIController.SummonToMove)
+                _handUIController.CancelTargetingStep(); // recliquer l'invocation = en choisir une autre
+            else if (targetTile != null || targetUnit != null)
+                _handUIController.PlayRepositionSummonCard(targetTilePos);
+            return;
+        }
+
         // Cas spécial : carte à cibles multiples (ex: Frappe rapide) - accumule les cibles une par
         // une au lieu d'exécuter au premier clic ; HandUIController valide chaque cible et déclenche
         // l'exécution automatiquement une fois le nombre requis atteint (ou plus de cible valide).
@@ -355,7 +423,7 @@ public class InputManager : MonoBehaviour
             return;
         }
 
-        // BUGFIX: carte ciblant une carte de la main (ex: Il triche, targetsHandCard = true,
+        // BUGFIX: carte ciblant une carte de la main (ex: Triche, targetsHandCard = true,
         // targetsUnit = targetsTile = false). Le ciblage se fait EXCLUSIVEMENT en cliquant une
         // autre carte de la main (HandUIController.HandleCardClicked / PlayHandCardTargetingCard).
         // Sans ce garde-fou, un clic sur le monde tombait dans le cas "carte sans cible" ci-dessous
@@ -404,16 +472,16 @@ public class InputManager : MonoBehaviour
                 return;
             }
 
-            // Vérifie la portée en distance Manhattan (pour les cartes en ligne)
-            int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(enemyPos.x - sourcePos.x) + Mathf.Abs(enemyPos.y - sourcePos.y));
-            if (manhattanDistance > selectedCard.targetRange)
+            // Vérifie la portée (4 directions, voir GridGeometry)
+            int lineDistance = GridGeometry.Distance(sourcePos, enemyPos);
+            if (lineDistance > selectedCard.targetRange)
             {
-                GameLog.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {manhattanDistance}, portée: {selectedCard.targetRange})");
+                GameLog.Log($"Charge invalide : {targetUnit.name} est hors de portée (distance: {lineDistance}, portée: {selectedCard.targetRange})");
                 _handUIController.DeselectCard();
                 return;
             }
 
-            GameLog.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {manhattanDistance}");
+            GameLog.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {lineDistance}");
             // Joue la carte avec la position de l'ennemi comme cible
             StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, enemyPos));
             return;
@@ -424,25 +492,12 @@ public class InputManager : MonoBehaviour
         {
             Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
 
-            // Pour les cartes de charge sur tuile vide, utilise la distance Manhattan
-            if (selectedCard.isChargeCard)
+            // Portée en 4 directions (voir GridGeometry), charge comprise
+            if (GridGeometry.Distance(sourcePos, targetTilePos) > selectedCard.targetRange)
             {
-                int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(targetTilePos.x - sourcePos.x) + Mathf.Abs(targetTilePos.y - sourcePos.y));
-                if (manhattanDistance > selectedCard.targetRange)
-                {
-                    _handUIController.DeselectCard();
-                    return;
-                }
-            }
-            else
-            {
-                float distance = Vector2.Distance(sourcePos, targetTilePos);
-                if (distance > selectedCard.targetRange)
-                {
-                    // Hors de portée, désélectionne la carte
-                    _handUIController.DeselectCard();
-                    return;
-                }
+                // Hors de portée, désélectionne la carte
+                _handUIController.DeselectCard();
+                return;
             }
         }
 

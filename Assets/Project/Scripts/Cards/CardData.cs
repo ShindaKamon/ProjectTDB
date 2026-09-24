@@ -26,26 +26,8 @@ public static class ChargeHelper
     /// <returns>La direction normalisée ou Vector2.zero si pas en ligne droite</returns>
     public static bool TryGetChargeDirection(Vector2Int sourcePos, Vector2Int targetPos, out Vector2Int direction, out int distance)
     {
-        Vector2Int diff = targetPos - sourcePos;
-
-        if (Mathf.Abs(diff.x) > 0 && diff.y == 0)
-        {
-            // Mouvement horizontal
-            direction = new Vector2Int((int)Mathf.Sign(diff.x), 0);
-            distance = Mathf.Abs(diff.x);
-            return true;
-        }
-        else if (Mathf.Abs(diff.y) > 0 && diff.x == 0)
-        {
-            // Mouvement vertical
-            direction = new Vector2Int(0, (int)Mathf.Sign(diff.y));
-            distance = Mathf.Abs(diff.y);
-            return true;
-        }
-
-        direction = Vector2Int.zero;
-        distance = 0;
-        return false;
+        // Même ligne ou même colonne (grille en 4 directions)
+        return GridGeometry.TryGetLine(sourcePos, targetPos, out direction, out distance);
     }
 
     /// <summary>
@@ -205,25 +187,6 @@ public enum MarkConsumeTarget
 }
 
 /// <summary>
-/// Mode de consommation de Rage pour les cartes
-/// </summary>
-public enum RageConsumeMode
-{
-    None,           // Pas de consommation de Rage
-    Fixed,          // Consomme un montant fixe de Rage (rageCost)
-    All             // Consomme TOUTE la Rage disponible
-}
-
-/// <summary>
-/// Type de scaling des effets avec la Rage
-/// </summary>
-public enum RageScalingType
-{
-    Flat,           // Bonus fixe par Rage (ex: +10 heal par Rage)
-    Percent         // Bonus en pourcentage par Rage (ex: +25% dégâts par Rage)
-}
-
-/// <summary>
 /// Catégorie de slot dans un deck (structure 2 Signature + 6 Éveil + 16 Standard).
 /// </summary>
 public enum CardCategory
@@ -297,7 +260,7 @@ public class CardData : ScriptableObject
     public CardAffectedTarget affectedTarget = CardAffectedTarget.None;
 
     [Space(5)]
-    [Tooltip("Si true, cette carte cible une autre carte de la main du lanceur (ex: Il triche) au lieu d'une unité/tuile de la grille")]
+    [Tooltip("Si true, cette carte cible une autre carte de la main du lanceur (ex: Triche) au lieu d'une unité/tuile de la grille")]
     public bool targetsHandCard = false;
 
     [Space(5)]
@@ -375,7 +338,7 @@ public class CardData : ScriptableObject
     [Tooltip("Distance de knockback/recul")]
     public int knockbackDistance = 0;
 
-    [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel forcé)")]
+    [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel)")]
     public bool pullsTowardCaster = false;
 
     [Space(5)]
@@ -437,28 +400,6 @@ public class CardData : ScriptableObject
 
     [Tooltip("Nombre de copies à ajouter")]
     public int cardsToAddCount = 0;
-
-    // ╔════════════════════════════════════════════════════════════════════════════╗
-    // ║                         9. SYSTÈME RAGE (Ilya)                             ║
-    // ╚════════════════════════════════════════════════════════════════════════════╝
-
-    [Header("═══ SYSTÈME RAGE ═══")]
-    [Tooltip("Si true, cette carte génère 1 Rage quand jouée")]
-    public bool isRageCard = false;
-
-    [Space(5)]
-    [Tooltip("Mode de consommation de Rage")]
-    public RageConsumeMode rageMode = RageConsumeMode.None;
-
-    [Tooltip("Coût en Rage (si mode = Fixed)")]
-    public int rageCost = 0;
-
-    [Space(5)]
-    [Tooltip("Type de scaling (Flat = +X par Rage, Percent = +X% par Rage)")]
-    public RageScalingType rageScaling = RageScalingType.Flat;
-
-    [Tooltip("Bonus par Rage consommée")]
-    public int rageBonus = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                       10. DÉGÂTS CONDITIONNELS                             ║
@@ -631,7 +572,7 @@ public class CardData : ScriptableObject
     /// <summary>
     /// Détermine si une case donnée est couverte par la forme de zone de la carte
     /// (Circle/OneTile centrés sur l'épicentre ; Line/Cone tracés depuis le lanceur en
-    /// direction de l'épicentre, sur 8 directions ; WholeTeam ignore position/épicentre).
+    /// direction de l'épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
     /// </summary>
     private bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
     {
@@ -641,7 +582,8 @@ public class CardData : ScriptableObject
                 return tilePos == epicenter;
 
             case CardAreaEffect.Circle:
-                return Vector2.Distance(epicenter, tilePos) <= aoeRadius;
+                // 4 directions : un « cercle » de rayon r est un losange (rayon 1 = 5 cases, rayon 2 = 13)
+                return GridGeometry.Distance(epicenter, tilePos) <= aoeRadius;
 
             case CardAreaEffect.Cross:
             {
@@ -681,8 +623,7 @@ public class CardData : ScriptableObject
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
                 Vector2Int toTile = tilePos - sourcePos;
-                float distance = toTile.magnitude;
-                if (distance > aoeRadius) return false;
+                if (GridGeometry.Distance(sourcePos, tilePos) > aoeRadius) return false;
 
                 float angle = Vector2.Angle(dir, toTile);
                 return angle <= 45f; // ouverture totale de 90°
@@ -697,58 +638,64 @@ public class CardData : ScriptableObject
     }
 
     /// <summary>
-    /// Direction (8 cases possibles, diagonales incluses) la plus proche entre deux positions.
+    /// Direction (parmi les 4) la plus proche entre deux positions : l'axe dominant.
     /// </summary>
-    private static Vector2Int GetSnappedDirection(Vector2Int from, Vector2Int to)
-    {
-        Vector2Int diff = to - from;
-        if (diff == Vector2Int.zero) return Vector2Int.zero;
-
-        int dx = diff.x == 0 ? 0 : (diff.x > 0 ? 1 : -1);
-        int dy = diff.y == 0 ? 0 : (diff.y > 0 ? 1 : -1);
-        return new Vector2Int(dx, dy);
-    }
+    private static Vector2Int GetSnappedDirection(Vector2Int from, Vector2Int to) =>
+        GridGeometry.SnapDirection(from, to);
 
     /// <summary>
-    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active et que cette
-    /// invocation a un ennemi à portée (même portée que la carte jouée, mesurée depuis sa
-    /// propre position), inflige un écho à 40% des dégâts réellement infligés (après réduction/
-    /// boucliers) sur l'ennemi le plus proche de l'invocation. Choix de cible (le plus proche) et déclenchement automatique (plutôt
-    /// qu'un choix du joueur) sont des simplifications de première passe, à retravailler en
-    /// playtest si besoin (cf. notes de design du classeur source).
+    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active avec un ennemi à
+    /// portée, elle inflige un écho à 40% des dégâts réellement infligés (après réduction/boucliers).
+    /// Règles (décision du 24/09/2026) :
+    /// - portée = celle de la carte jouée, mesurée depuis l'invocation, en 4 directions comme toute
+    ///   la grille : on place Lyse selon la carte qu'on veut jouer ;
+    /// - cible : l'ennemi visé par le lanceur s'il est à portée de l'invocation (et encore en vie),
+    ///   sinon l'ennemi le plus proche de l'invocation ;
+    /// - déclenchement automatique (le choix manuel de la cible est prévu pour la V2).
     /// </summary>
-    private void TryTriggerSummonEcho(Unit source, int appliedDamage)
+    private void TryTriggerSummonEcho(Unit source, int appliedDamage, Unit sourceTarget)
     {
         if (appliedDamage <= 0) return;
         if (!(source is ISummonOwner summonOwner)) return;
 
         SummonUnit summon = summonOwner.ActiveSummon;
-        if (summon == null) return;
+        if (summon == null || IsDead(summon)) return;
 
-        UnitState summonState = summon.GetUnitState();
-        if (summonState != null && summonState.IsDead()) return;
+        Vector2Int summonPos = summon.GetCurrentGridPos();
+        bool IsValidEchoTarget(Unit unit) =>
+            unit != null && unit != source && unit != summon && !IsDead(unit)
+            && unit.GetFaction() != summon.GetFaction() // uniquement les ennemis de l'invocation
+            && GridGeometry.Distance(summonPos, unit.GetCurrentGridPos()) <= targetRange;
 
-        Unit echoTarget = null;
-        float bestDist = float.MaxValue;
+        Unit echoTarget = IsValidEchoTarget(sourceTarget) ? sourceTarget : null;
 
-        foreach (Unit unit in Services.Grid.GetAllUnits())
+        if (echoTarget == null)
         {
-            if (unit == null || unit == source || unit == summon) continue;
-            if (unit.GetFaction() == summon.GetFaction()) continue; // uniquement les ennemis de l'invocation
-
-            float dist = Vector2.Distance(summon.GetCurrentGridPos(), unit.GetCurrentGridPos());
-            if (dist <= targetRange && dist < bestDist)
+            int bestDist = int.MaxValue;
+            foreach (Unit unit in Services.Grid.GetAllUnits())
             {
-                bestDist = dist;
-                echoTarget = unit;
+                if (!IsValidEchoTarget(unit)) continue;
+
+                int dist = GridGeometry.Distance(summonPos, unit.GetCurrentGridPos());
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    echoTarget = unit;
+                }
             }
         }
 
         if (echoTarget == null) return;
 
         int echoDamage = Mathf.Max(1, Mathf.RoundToInt(appliedDamage * 0.4f));
-        echoTarget.TakeDamage(echoDamage);
+        echoTarget.TakeDamageFrom(echoDamage, summon);
         GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
+    }
+
+    private static bool IsDead(Unit unit)
+    {
+        UnitState state = unit.GetUnitState();
+        return state != null && state.IsDead();
     }
 
     // Méthode pour exécuter l'effet de la carte
@@ -756,7 +703,7 @@ public class CardData : ScriptableObject
     /// True quand cet appel correspond à une cible supplémentaire d'une MÊME carte à cibles
     /// multiples déjà résolue pour une cible précédente (voir HandUIController.ExecutePendingMultiTargetCard,
     /// qui appelle ExecuteEffect une fois par cible). Dans ce cas, les effets qui doivent se
-    /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés : Rage,
+    /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés :
     /// combo tracker (Main gagnante d'Ace), invocation/repositionnement, dégâts sur soi, pioche,
     /// fetch, ajout de cartes au deck, écho de Miroir fraternel.
     /// </param>
@@ -783,17 +730,6 @@ public class CardData : ScriptableObject
                 targetUnit = null;
         }
 
-        // --- NOUVEAU : STOCKAGE DE RAGE ---
-        // Si c'est une carte Rage, on l'ajoute au stock du lanceur (si c'est Ilya)
-        // Une seule fois par carte jouée, pas une fois par cible.
-        if (isRageCard && !isAdditionalMultiTargetHit)
-        {
-            if (source is IRageUser rageUser)
-            {
-                rageUser.AddRageStock(1);
-            }
-        }
-
         // Variables locales pour les valeurs finales (modifiables par boost)
         int finalDamage = damageAmount;
         int finalHeal = healAmount;
@@ -802,68 +738,6 @@ public class CardData : ScriptableObject
         int finalFetch = fetchAmount;
         int finalAtk = atkIncreased;
         int finalLifesteal = lifestealFixedAmount;
-
-        // --- SYSTÈME DE BOOST PAR RAGE (Simplifié) ---
-        int rageConsumed = 0;
-
-        if (rageMode != RageConsumeMode.None && source is IlyaUnit ilyaPlayer)
-        {
-            int currentRage = ilyaPlayer.GetRageStock();
-
-            // Détermine combien de Rage consommer
-            if (rageMode == RageConsumeMode.All && currentRage > 0)
-            {
-                // Consomme TOUTE la Rage
-                if (ilyaPlayer.ConsumeRageStock(currentRage))
-                {
-                    rageConsumed = currentRage;
-                }
-            }
-            else if (rageMode == RageConsumeMode.Fixed && rageCost > 0 && currentRage >= rageCost)
-            {
-                // Consomme un montant fixe
-                if (ilyaPlayer.ConsumeRageStock(rageCost))
-                {
-                    rageConsumed = rageCost;
-                }
-            }
-
-            // Applique le boost si de la Rage a été consommée
-            if (rageConsumed > 0 && rageBonus > 0)
-            {
-                if (rageScaling == RageScalingType.Flat)
-                {
-                    // Bonus FLAT : +rageBonus par Rage consommée
-                    int totalBonus = rageBonus * rageConsumed;
-                    
-                    // CORRECTION : On applique le bonus uniquement aux valeurs de base non nulles
-                    // Cela évite qu'une carte de Soin inflige des Dégâts (car damageAmount était 0 + bonus)
-                    // ou qu'une carte de Dégâts soigne l'ennemi.
-                    if (damageAmount > 0) finalDamage += totalBonus;
-                    if (healAmount > 0) finalHeal += totalBonus;
-                    if (defenseAmount > 0) finalDefense += totalBonus;
-                    if (atkIncreased > 0) finalAtk += totalBonus;
-                    if (lifestealFixedAmount > 0) finalLifesteal += totalBonus;
-                    // Draw et Fetch restent inchangés (pas de scaling)
-
-                    GameLog.Log($"🔥 RAGE BOOST (Flat) ! {source.name} consomme {rageConsumed} Rage → +{totalBonus} aux effets");
-                }
-                else // RageScalingType.Percent
-                {
-                    // Bonus PERCENT : +rageBonus% par Rage consommée
-                    float percentBonus = 1f + (rageBonus * rageConsumed / 100f);
-                    finalDamage = Mathf.RoundToInt(finalDamage * percentBonus);
-                    finalHeal = Mathf.RoundToInt(finalHeal * percentBonus);
-                    finalDefense = Mathf.RoundToInt(finalDefense * percentBonus);
-                    finalAtk = Mathf.RoundToInt(finalAtk * percentBonus);
-                    finalLifesteal = Mathf.RoundToInt(finalLifesteal * percentBonus);
-
-                    GameLog.Log($"🔥 RAGE BOOST (Percent) ! {source.name} consomme {rageConsumed} Rage → x{percentBonus:F2} aux effets");
-                }
-            }
-        }
-
-        GameLog.Log($"[CardData] {cardName} calculé : FinalHeal={finalHeal} (Base={healAmount} + Boost={finalHeal - healAmount}), RageConsumed={rageConsumed}");
 
         // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis d'Ace) ---
         if (scalesWithPASpentThisTurn && comboDamagePerPASpent > 0 && comboTracker != null)
@@ -891,7 +765,7 @@ public class CardData : ScriptableObject
             }
         }
 
-        // --- INVOCATION / REPOSITIONNEMENT (ex: Invocation de Lyse, Écho de Lyse) ---
+        // --- INVOCATION / REPOSITIONNEMENT (ex: Invocation de Lyse, Écho évanescent) ---
         // Une seule fois par carte jouée (pas une fois par cible d'une carte à cibles multiples).
         if (!isAdditionalMultiTargetHit)
         {
@@ -919,7 +793,11 @@ public class CardData : ScriptableObject
             }
             else if (isRepositionSummonCard && targetsTile && source is ISummonOwner repositionOwner)
             {
-                repositionOwner.RepositionSummon(targetTile);
+                // Invocation choisie à la 1re étape du ciblage (targetUnit) ; à défaut (IA, appel
+                // direct), l'invocation active du lanceur.
+                SummonUnit summonToMove = targetUnit as SummonUnit;
+                if (summonToMove == null) summonToMove = repositionOwner.ActiveSummon;
+                repositionOwner.RepositionSummon(summonToMove, targetTile);
             }
         }
 
@@ -1052,7 +930,7 @@ public class CardData : ScriptableObject
         // Une seule fois par carte jouée (pas une fois par cible).
         if (!isAdditionalMultiTargetHit)
         {
-            TryTriggerSummonEcho(source, actualDamageDealt);
+            TryTriggerSummonEcho(source, actualDamageDealt, targetUnit);
         }
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)
@@ -1100,7 +978,7 @@ public class CardData : ScriptableObject
             statTarget.ModifyStats(finalAtk, finalDefense, effectDuration);
         }
 
-        // 5. Ajout de cartes au deck (Génération de Rage ou autre)
+        // 5. Ajout de cartes au deck (cartes générées)
         // Une seule fois par carte jouée (pas une fois par cible).
         if (cardToAddToDeck != null && cardsToAddCount > 0 && !isAdditionalMultiTargetHit)
         {
@@ -1154,127 +1032,109 @@ public class CardData : ScriptableObject
         // 8a. Consommation de marques (doit être fait AVANT l'application pour éviter de consommer ce qu'on vient d'appliquer)
         if (consumeMarks && markToConsume != MarkType.None)
         {
-            // Cas spécial : Stigmate utilise son propre système avec heal et perte de PA
-            if (markToConsume == MarkType.Stigmate)
+            List<Unit> markTargets = new List<Unit>();
+
+            // Détermine les cibles en fonction de consumeMarkTarget
+            switch (consumeMarkTarget)
             {
-                // Consomme tous les Stigmates appliqués par ce champion
-                // healAmount de la carte = heal par ennemi marqué
-                int consumedCount = StigmateManager.ConsumeAllStigmates(source, healAmount);
-                GameLog.Log($"🎯 STIGMATE ! {consumedCount} marque(s) consommée(s), heal: {healAmount} par marque");
+                case MarkConsumeTarget.AllEnemies:
+                    markTargets = Services.Grid?.GetAllEnemyUnits() ?? new List<Unit>();
+                    break;
+
+                case MarkConsumeTarget.AllAllies:
+                    markTargets = Services.Grid?.GetAllPlayerUnits() ?? new List<Unit>();
+                    break;
+
+                case MarkConsumeTarget.AllUnits:
+                    markTargets = Services.Grid?.GetAllUnits() ?? new List<Unit>();
+                    break;
+
+                case MarkConsumeTarget.CardTarget:
+                default:
+                    // Utilise le ciblage standard de la carte
+                    if (isAOE && aoeRadius > 0)
+                    {
+                        markTargets = GetAOEAffectedUnits(source, effectEpicenter);
+                    }
+                    else if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
+                    {
+                        markTargets.Add(targetUnit);
+                    }
+                    break;
             }
-            else
+
+            int totalHeal = 0;
+
+            foreach (Unit markTarget in markTargets)
             {
-                // Système générique pour les autres types de marques (incluant AllMarks)
-                List<Unit> markTargets = new List<Unit>();
-
-                // Détermine les cibles en fonction de consumeMarkTarget
-                switch (consumeMarkTarget)
+                // AllMarks : consomme TOUTES les marques de tous types sur cette cible
+                if (markToConsume == MarkType.AllMarks)
                 {
-                    case MarkConsumeTarget.AllEnemies:
-                        markTargets = Services.Grid?.GetAllEnemyUnits() ?? new List<Unit>();
-                        break;
+                    List<UnitMark> consumedMarks = markTarget.ConsumeAllMarksFromSource(source);
 
-                    case MarkConsumeTarget.AllAllies:
-                        markTargets = Services.Grid?.GetAllPlayerUnits() ?? new List<Unit>();
-                        break;
-
-                    case MarkConsumeTarget.AllUnits:
-                        markTargets = Services.Grid?.GetAllUnits() ?? new List<Unit>();
-                        break;
-
-                    case MarkConsumeTarget.CardTarget:
-                    default:
-                        // Utilise le ciblage standard de la carte
-                        if (isAOE && aoeRadius > 0)
-                        {
-                            markTargets = GetAOEAffectedUnits(source, effectEpicenter);
-                        }
-                        else if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
-                        {
-                            markTargets.Add(targetUnit);
-                        }
-                        break;
-                }
-
-                int totalHeal = 0;
-
-                foreach (Unit markTarget in markTargets)
-                {
-                    // AllMarks : consomme TOUTES les marques de tous types sur cette cible
-                    if (markToConsume == MarkType.AllMarks)
+                    foreach (UnitMark consumedMark in consumedMarks)
                     {
-                        List<UnitMark> consumedMarks = markTarget.ConsumeAllMarksFromSource(source);
-
-                        foreach (UnitMark consumedMark in consumedMarks)
+                        // Dégâts par stack
+                        int bonusDamage = consumedMark.stacks * damagePerMarkStack;
+                        if (bonusDamage > 0)
                         {
-                            // Si c'est un Stigmate, applique l'effet spécial (perte de PA)
-                            if (consumedMark.markType == MarkType.Stigmate)
-                            {
-                                StigmateManager.RegisterPALossPublic(markTarget, StigmateManager.PA_LOSS_ON_CONSUME);
-                            }
-
-                            // Dégâts par stack
-                            int bonusDamage = consumedMark.stacks * damagePerMarkStack;
-                            if (bonusDamage > 0)
-                            {
-                                markTarget.TakeDamage(bonusDamage);
-                                GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {consumedMark.markType})");
-                            }
-
-                            // Bonus de la marque
-                            if (consumedMark.bonusValue > 0)
-                            {
-                                int markBonus = consumedMark.bonusValue * consumedMark.stacks;
-                                markTarget.TakeDamage(markBonus);
-                                GameLog.Log($"🎯 BONUS DE MARQUE ! {markBonus} dégâts supplémentaires");
-                            }
-
-                            // Heal par marque consommée
-                            if (healAmount > 0)
-                            {
-                                totalHeal += healAmount;
-                            }
+                            markTarget.TakeDamage(bonusDamage);
+                            GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {consumedMark.markType})");
                         }
-                    }
-                    // Type de marque spécifique
-                    else if (markTarget.HasMark(markToConsume))
-                    {
-                        // Consomme uniquement les marques appliquées par ce champion
-                        UnitMark consumedMark = markTarget.ConsumeMarkFromSource(markToConsume, source);
 
-                        if (consumedMark.markType != MarkType.None)
+                        // Bonus de la marque
+                        if (consumedMark.bonusValue > 0)
                         {
-                            // Calcule les dégâts bonus basés sur les stacks
-                            int bonusDamage = consumedMark.stacks * damagePerMarkStack;
+                            int markBonus = consumedMark.bonusValue * consumedMark.stacks;
+                            markTarget.TakeDamage(markBonus);
+                            GameLog.Log($"🎯 BONUS DE MARQUE ! {markBonus} dégâts supplémentaires");
+                        }
 
-                            if (bonusDamage > 0)
-                            {
-                                markTarget.TakeDamage(bonusDamage);
-                                GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {markToConsume})");
-                            }
-
-                            // Bonus supplémentaire de la marque
-                            if (consumedMark.bonusValue > 0)
-                            {
-                                markTarget.TakeDamage(consumedMark.bonusValue * consumedMark.stacks);
-                                GameLog.Log($"🎯 BONUS DE MARQUE ! {consumedMark.bonusValue * consumedMark.stacks} dégâts supplémentaires");
-                            }
-
-                            // Heal par marque consommée
-                            if (healAmount > 0)
-                            {
-                                totalHeal += healAmount;
-                            }
+                        // Heal par marque consommée
+                        if (healAmount > 0)
+                        {
+                            totalHeal += healAmount;
                         }
                     }
                 }
-
-                // Applique le heal total au lanceur
-                if (totalHeal > 0)
+                // Type de marque spécifique
+                else if (markTarget.HasMark(markToConsume))
                 {
-                    source.Heal(totalHeal);
-                    GameLog.Log($"🎯 {source.name} récupère {totalHeal} PV (marques consommées)");
+                    // Consomme uniquement les marques appliquées par ce champion
+                    UnitMark consumedMark = markTarget.ConsumeMarkFromSource(markToConsume, source);
+
+                    if (consumedMark.markType != MarkType.None)
+                    {
+                        // Calcule les dégâts bonus basés sur les stacks
+                        int bonusDamage = consumedMark.stacks * damagePerMarkStack;
+
+                        if (bonusDamage > 0)
+                        {
+                            markTarget.TakeDamage(bonusDamage);
+                            GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {markToConsume})");
+                        }
+
+                        // Bonus supplémentaire de la marque
+                        if (consumedMark.bonusValue > 0)
+                        {
+                            markTarget.TakeDamage(consumedMark.bonusValue * consumedMark.stacks);
+                            GameLog.Log($"🎯 BONUS DE MARQUE ! {consumedMark.bonusValue * consumedMark.stacks} dégâts supplémentaires");
+                        }
+
+                        // Heal par marque consommée
+                        if (healAmount > 0)
+                        {
+                            totalHeal += healAmount;
+                        }
+                    }
                 }
+            }
+
+            // Applique le heal total au lanceur
+            if (totalHeal > 0)
+            {
+                source.Heal(totalHeal);
+                GameLog.Log($"🎯 {source.name} récupère {totalHeal} PV (marques consommées)");
             }
         }
 
@@ -1295,17 +1155,8 @@ public class CardData : ScriptableObject
 
             foreach (Unit markTarget in markTargets)
             {
-                // Cas spécial : Stigmate utilise son propre système avec limite de 3
-                if (markToApply == MarkType.Stigmate)
-                {
-                    StigmateManager.ApplyStigmate(source, markTarget, markBonusValue);
-                }
-                else
-                {
-                    // Système générique pour les autres types de marques
-                    markTarget.ApplyMark(markToApply, source, markStacks, markDuration, markBonusValue);
-                    GameLog.Log($"🎯 MARQUE APPLIQUÉE ! {source.name} marque {markTarget.name} avec {markToApply} ({markStacks} stack(s), durée: {(markDuration == 0 ? "permanent" : markDuration + " tours")})");
-                }
+                markTarget.ApplyMark(markToApply, source, markStacks, markDuration, markBonusValue);
+                GameLog.Log($"🎯 MARQUE APPLIQUÉE ! {source.name} marque {markTarget.name} avec {markToApply} ({markStacks} stack(s), durée: {(markDuration == 0 ? "permanent" : markDuration + " tours")})");
             }
         }
 

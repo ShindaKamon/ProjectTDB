@@ -24,7 +24,8 @@ public class ConfirmDeletePopup : MonoBehaviour
         if (_cancelButton != null)
             _cancelButton.onClick.AddListener(Hide);
 
-        Hide();
+        // Ne pas appeler Hide() ici : le popup est désactivé dans la scène, et Awake ne s'exécute
+        // qu'à sa 1re activation (dans Show) : Hide() le refermait aussitôt (même règle que CreateDeckPopup).
     }
 
     /// <summary>

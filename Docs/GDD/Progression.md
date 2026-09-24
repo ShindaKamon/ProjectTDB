@@ -36,7 +36,7 @@ Il n'augmente **jamais** la puissance des cartes ni les **PA/PM par tour** : ceu
 | Équilibré | 5 | 4 |
 | Mobile | 4 | 5 |
 
-Profils de Soren, l'Alpiniste et Ace : à renseigner dans l'Excel.
+Profils d'Evan, Crux et Raze : à renseigner dans l'Excel.
 
 ### PV et niveaux
 
@@ -112,7 +112,7 @@ Souffle apaisant (1 PA) → Souffle apaisant+ (1 PA, +30 % soin)
 
 **Stratégie :**
 - Supprimer les cartes de départ faibles au fil de la campagne
-- Affiner le deck autour de son émotion (mono ou bi-émotion)
+- Affiner le deck autour de ses couleurs (1 ou 2 émotions)
 - Respecter le format 24 cartes (2 Signature + 6 Éveil + 16 Standard)
 
 ### Transformation de Cartes
@@ -208,7 +208,7 @@ Bouclier → Contre-Attaque (rare)
 ### Déblocage de Personnages
 
 **Personnages de Base (MVP) :**
-- Soren, l'Alpiniste et Ace : jouables dès le départ
+- Evan, Crux et Raze : jouables dès le départ
 
 > Ilya et les Jumeaux : hors MVP, candidats au déblocage plus tard.
 
@@ -264,7 +264,7 @@ Bouclier → Contre-Attaque (rare)
 ## 📈 Courbe de Progression
 
 - **20 niveaux** ; les PV des monstres suivent ceux des joueurs (barème de l'Excel : aventure solo = 1× PV joueur, groupe de donjon = 3× PV joueur, boss = 1.33× PV de l'équipe, superboss = 3.3× PV de l'équipe)
-- Les donjons sont prévus pour une **équipe de 3**
+- Les donjons sont prévus pour une **équipe de 3**, qui viendra avec le multijoueur (V2) : un joueur = un champion (24/09/2026). Pour le MVP solo, voir « Donjon en solo » dans `GDD_Main.md`
 - Découpage en Actes et estimation de temps de jeu : à refaire sur cette base
 
 ---

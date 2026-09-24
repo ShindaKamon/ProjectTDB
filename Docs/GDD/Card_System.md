@@ -51,7 +51,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 ## Deckbuilding
 
 - **24 cartes** : **2 Signature + 6 Éveil + 16 Standard** (code actuel : 18 cartes, 2 Signature + 16 Standard, les slots Éveil ne sont pas encore implémentés)
-- Deck **mono ou bi-émotion**
+- Deck : **1 ou 2 couleurs** choisies à sa création (cartes de ces couleurs uniquement ; un champion peut choisir n'importe lesquelles) ; **4 exemplaires max** par carte ; les **2 Signatures du champion obligatoires** (1 exemplaire chacune)
 - Plusieurs decks par champion, plusieurs champions par compte
 - Le **niveau** du champion débloque des **slots de cartes**, mais n'augmente jamais la puissance des cartes (voir `Progression.md`)
 - Suivi de la composition : onglet « Suivi de deck » de l'Excel
@@ -86,7 +86,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 - Cellule rouge dans l'Excel = la carte cumule trop de modificateurs négatifs.
 - **Cartes Buff/Debuff** : la valeur finale est un nombre de points à répartir entre intensité et durée (repère : ~10 points ≈ +10 % d'un effet pendant 1 tour).
 
-> ⚠️ **Grille** : les tailles de zone (cercle rayon 1 = 9 cases, rayon 2 = 25 cases) supposent une grille carrée **8 directions** (distance de Chebyshev). Le code utilise une grille carrée **4 directions** (distance de Manhattan), où un « cercle » de rayon 1 fait 5 cases et de rayon 2, 13 cases. À aligner (voir `GDD_Main.md`).
+> ⚠️ **Grille** (24/09/2026) : carrée en **4 directions** (distance de Manhattan). Un cercle de rayon 1 fait 5 cases, de rayon 2, 13 cases, alors que le budget de l'Excel suppose 9 et 25 cases : le coût des cartes à zone est à revoir. Voir `Grid_System.md`.
 
 ---
 
@@ -101,15 +101,15 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 | **Enemy** | Un ou plusieurs ennemis | Attaque |
 | **Ally** | Alliés (sauf soi) | Soigner un allié |
 | **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
-| **AllyorEnemy** | Alliés ET ennemis | Corde de rappel forcé (l'Alpiniste) |
-| **AnyUnit** | N'importe quelle unité | Piolet d'ascension (l'Alpiniste) |
-| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (Soren) |
+| **AllyorEnemy** | Alliés ET ennemis | Corde de rappel (Crux) |
+| **AnyUnit** | N'importe quelle unité | Piolet d'ascension (Crux) |
+| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (Evan) |
 | **AnyTile** | N'importe quelle tuile | Explosion ciblée |
 | **EnemyOrTile** | Un ennemi ou une tuile | Bond, charge |
 
 ### Portée
 
-Portées utilisées par les cartes MVP : **1 (mêlée)**, **1-3**, **1-5**, **1-6** cases. Distance mesurée sur la grille (code actuel : Manhattan).
+Portées utilisées par les cartes MVP : **1 (mêlée)**, **1-3**, **1-5**, **1-6** cases. Distance mesurée sur la grille en 4 directions (une case en diagonale est à 2 cases).
 
 ### Zones d'Effet
 

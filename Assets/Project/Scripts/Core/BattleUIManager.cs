@@ -12,7 +12,6 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     [SerializeField] private BossHealthBarUI _bossHealthBar;
     [SerializeField] private EnemyCardPreviewUI _enemyCardPreview;
     [SerializeField] private HealthOrbController _playerHealthOrb;
-    [SerializeField] private RageStackUI _rageStackUI;
 
     [Header("Settings")]
     [SerializeField] private Color _defaultOrbColor = Color.red;
@@ -97,16 +96,6 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             else
             {
                 GameLog.LogWarning("BattleUIManager: EnemyCardPreviewUI introuvable dans la scène!");
-            }
-        }
-
-        // Auto-trouve RageStackUI si non assignée
-        if (_rageStackUI == null)
-        {
-            _rageStackUI = ComponentLocator.FindSingleObjectOfType<RageStackUI>("BattleUIManager setup");
-            if (_rageStackUI != null)
-            {
-                GameLog.Log("BattleUIManager: RageStackUI trouvée automatiquement");
             }
         }
     }
@@ -267,19 +256,6 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
 
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
-
-        // Connecte le RageStackUI au joueur (seulement si son système de Rage est actif)
-        if (_rageStackUI != null && player is IlyaUnit ilyaPlayer && ilyaPlayer.HasRageSystem)
-        {
-            _rageStackUI.SetPlayer(ilyaPlayer);
-            GameLog.Log($"BattleUIManager: RageStackUI connecté à {ilyaPlayer.name}");
-        }
-        else if (_rageStackUI != null)
-        {
-            // Cache le RageStackUI si le joueur n'a pas le système de Rage (ex: Vylos, Astra, Nova)
-            _rageStackUI.gameObject.SetActive(false);
-            GameLog.Log($"BattleUIManager: RageStackUI désactivé (joueur sans système de Rage)");
-        }
 
         // Mise à jour initiale
         UpdatePlayerOrbUI();

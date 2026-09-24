@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Terreur_paralysante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Terreur paralysante
-  description: "Contr\xF4le pur, la cible perd tous ses PM \xE0 son prochain tour,
-    aucun d\xE9g\xE2t (valeur brute n\xE9gative dans la formule, clamp\xE9e \xE0
-    0)."
+  description: Un ennemi au contact perd tous ses PM au prochain tour.
   artwork: {fileID: 0}
   emotionType: 5
   category: 0
@@ -28,6 +26,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
   healAmount: 0
@@ -41,6 +41,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -56,9 +57,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

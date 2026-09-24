@@ -92,7 +92,7 @@ public class ActionPointsComponent : IActionPointsUser
     }
 
     /// <summary>
-    /// Réduit les PA courants d'un montant donné (utilisé pour les debuffs comme Stigmate)
+    /// Réduit les PA courants d'un montant donné (utilisé pour les debuffs de ressources)
     /// </summary>
     /// <param name="amount">Montant de PA à retirer</param>
     public void ReduceCurrentPA(int amount)
@@ -105,7 +105,7 @@ public class ActionPointsComponent : IActionPointsUser
     }
 
     /// <summary>
-    /// Ajoute des PA courants (utilisé pour les passifs comme Vylos)
+    /// Ajoute des PA courants (utilisé par les passifs)
     /// </summary>
     /// <param name="amount">Montant de PA à ajouter</param>
     public void AddPA(int amount)

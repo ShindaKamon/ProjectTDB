@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Piolet_d_ascension
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Piolet d'ascension
-  description: "Signature L'Alpiniste - se propulse au grappin adjacent \xE0 une
-    unit\xE9 (d\xE9clenche le R\xE9flexe du grimpeur = Phase 3, pas encore actif)."
+  description: "Propulse-toi \xE0 c\xF4t\xE9 d'une unit\xE9 \xE0 1-5 cases. Pr\xE8s
+    d'un alli\xE9 : -15 % de d\xE9g\xE2ts subis. Pr\xE8s d'un ennemi : +15 % de d\xE9g\xE2ts
+    sur ta prochaine carte."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
@@ -27,6 +28,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
   healAmount: 0
@@ -40,6 +43,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 1
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -55,9 +59,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

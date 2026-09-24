@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Frenesie_incontrolee
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Fr\xE9n\xE9sie incontr\xF4l\xE9e"
-  description: La rage aveugle, recul sur soi.
+  description: "Inflige 48 d\xE9g\xE2ts \xE0 un ennemi au contact. Tu subis 10 d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0
@@ -26,6 +26,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 48
   damageSelf: 10
   healAmount: 0
@@ -39,6 +41,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -54,9 +57,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

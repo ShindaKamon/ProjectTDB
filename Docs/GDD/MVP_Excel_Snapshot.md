@@ -122,12 +122,12 @@ Colonnes : coût PA · portée · zone · statut · déplacement forcé · Évei
 
 | Carte | Champion | PA | Portée | Zone | Effet |
 |-------|----------|----|--------|------|-------|
-| Écho de Lyse | Soren | 1 | 1-3 | Unique | Repositionne Lyse (ou une autre invocation) jusqu'à 3 cases |
-| Invocation de Lyse | Soren | 2 | 1-3 | Unique | Invoque Lyse (PV = moitié des PV actuels de Soren, recalculés en continu) |
-| Piolet d'ascension | L'Alpiniste | 2 | 1-5 | Unique | Grappin adjacent à une unité, déclenche le Réflexe du grimpeur |
-| Corde de rappel forcé | L'Alpiniste | 4 | 1-3 | 2 cibles | Ennemi : 35 dégâts + tiré de 2 cases ; allié : tiré de 2 cases sans dégâts |
-| Il triche | Ace | 1 | Mêlée | Unique | Modifie de ±1 le coût d'une carte en main (min 1) |
-| Tapis | Ace | 5 | Mêlée | 2 cibles | 72 dégâts, +10 par PA déjà dépensé ce tour (à retravailler) |
+| Écho de Lyse | Evan | 1 | 1-3 | Unique | Repositionne Lyse (ou une autre invocation) jusqu'à 3 cases |
+| Invocation de Lyse | Evan | 2 | 1-3 | Unique | Invoque Lyse (PV = moitié des PV actuels d'Evan, recalculés en continu) |
+| Piolet d'ascension | Crux | 2 | 1-5 | Unique | Grappin adjacent à une unité, déclenche le Réflexe du grimpeur |
+| Corde de rappel forcé | Crux | 4 | 1-3 | 2 cibles | Ennemi : 35 dégâts + tiré de 2 cases ; allié : tiré de 2 cases sans dégâts |
+| Il triche | Raze | 1 | Mêlée | Unique | Modifie de ±1 le coût d'une carte en main (min 1) |
+| Tapis | Raze | 5 | Mêlée | 2 cibles | 72 dégâts, +10 par PA déjà dépensé ce tour (à retravailler) |
 
 ---
 
@@ -156,7 +156,7 @@ Cible : **24 cartes** = 2 Signature + 6 Éveil + 16 Standard.
 
 ## Roadmap (décisions)
 
-**Actées :** budget PA+PM de 9 · grille « hexagonale façon Waven » *(⚠️ contredit par le Lisez-moi et le code : grille carrée)* · émotions de lancement Colère / Peur / Joie · decks mono ou bi-émotion, plusieurs decks par personnage · 24 cartes (2/6/16) · Éveil (concept ; mise en œuvre repoussée) · règle anti-lock · triangle Colère = burst sans sustain, Peur = contrôle/tempo, Joie = survie/lent · monstres de donjon (groupe) vs d'aventure (solo) · pool Standard « 36 cartes » *(⚠️ la bibliothèque en contient 49)* · 3 champions complets (Soren, l'Alpiniste, Ace) · montée en niveau (XP 100 × niveau, XP monstre = 15 % des PV).
+**Actées :** budget PA+PM de 9 · grille « hexagonale façon Waven » *(⚠️ contredit par le Lisez-moi et le code : grille carrée)* · émotions de lancement Colère / Peur / Joie · decks mono ou bi-émotion, plusieurs decks par personnage · 24 cartes (2/6/16) · Éveil (concept ; mise en œuvre repoussée) · règle anti-lock · triangle Colère = burst sans sustain, Peur = contrôle/tempo, Joie = survie/lent · monstres de donjon (groupe) vs d'aventure (solo) · pool Standard « 36 cartes » *(⚠️ la bibliothèque en contient 49)* · 3 champions complets (Evan, Crux, Raze) · montée en niveau (XP 100 × niveau, XP monstre = 15 % des PV).
 
 **En attente :** équipement · système de stats (armure, résistances, critique) · oppositions d'émotions (repoussé) · faiblesses émotionnelles des monstres · cartes bi-émotion dédiées · main/pioche définitive (playtest : main de 3 + repioche à 3) · rythme de l'Éveil (base : 2 points par palier, jauge par émotion, les Signatures génèrent au choix).
 
@@ -164,10 +164,10 @@ Cible : **24 cartes** = 2 Signature + 6 Éveil + 16 Standard.
 
 ## Champions
 
-**Soren** — a perdu sa sœur jumelle Lyse. Passif *Miroir fraternel* : quand Soren joue une carte offensive, une invocation active ayant une cible valide peut rejouer un écho à ~40 % sur n'importe quel ennemi. Les PV de Lyse = moitié des PV actuels de Soren.
+**Evan** — a perdu sa sœur jumelle Lyse. Passif *Miroir fraternel* : quand Evan joue une carte offensive, une invocation active ayant une cible valide peut rejouer un écho à ~40 % sur n'importe quel ennemi. Les PV de Lyse = moitié des PV actuels d'Evan.
 
-**L'Alpiniste** — accident de cordée filmé, confiance brisée. Passif *Réflexe du grimpeur* : après un déplacement rapide vers une unité, adjacent à un allié → -15 % aux prochains dégâts subis ; adjacent à un ennemi → +15 % de dégâts sur la prochaine carte.
+**Crux** — accident de cordée filmé, confiance brisée. Passif *Réflexe du grimpeur* : après un déplacement rapide vers une unité, adjacent à un allié → -15 % aux prochains dégâts subis ; adjacent à un ennemi → +15 % de dégâts sur la prochaine carte.
 
-**Ace** — a tout perdu sur une main légendaire. Passif *Main gagnante* (provisoire) : Paire (2 cartes de même coût) → la 2ᵉ ignore les réductions de dégâts en % ; Suite (N puis N+1) → +1 PA ; Bluff (2 émotions différentes, bi-émotion uniquement) → -10 % aux prochains dégâts subis. Un seul motif par tour (Bluff > Suite > Paire).
+**Raze** — a tout perdu sur une main légendaire. Passif *Main gagnante* (provisoire) : Paire (2 cartes de même coût) → la 2ᵉ ignore les réductions de dégâts en % ; Suite (N puis N+1) → +1 PA ; Bluff (2 émotions différentes, bi-émotion uniquement) → -10 % aux prochains dégâts subis. Un seul motif par tour (Bluff > Suite > Paire).
 
 *(Détails : `CHAMPIONS_CONCEPTS.md`.)*

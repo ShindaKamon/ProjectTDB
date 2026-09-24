@@ -51,17 +51,13 @@ public class AlpinisteUnit : Champion, IActionPointsUser, IChargeLandingReactor,
         if (!Services.IsGridServiceAvailable()) return;
 
         Vector2Int pos = GetCurrentGridPos();
-        Vector2Int[] neighbors =
-        {
-            pos + Vector2Int.up, pos + Vector2Int.down, pos + Vector2Int.left, pos + Vector2Int.right
-        };
 
         bool adjacentAlly = false;
         bool adjacentEnemy = false;
 
-        foreach (var n in neighbors)
+        foreach (var offset in GridGeometry.Directions4)
         {
-            Unit unit = Services.Grid.GetUnitAtGridPos(n);
+            Unit unit = Services.Grid.GetUnitAtGridPos(pos + offset);
             if (unit == null || unit == this) continue;
 
             if (unit.GetFaction() == GetFaction())

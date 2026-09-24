@@ -21,7 +21,11 @@ public static class GameActionValidator
         if (card == null)
             return ValidationResult.Fail("Carte null - aucune carte sélectionnée");
 
-        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        // Carte de déplacement d'invocation (ex: Écho évanescent) : il faut une invocation à déplacer
+        if (card.isRepositionSummonCard && !HasSummonToMove(player))
+            return ValidationResult.Fail("Aucune invocation à déplacer");
+
+        // Coût effectif (tient compte d'un éventuel override, ex: Triche)
         int effectiveCostPA = card.costPA;
         if (player.TryGetComponentSafe(out DeckManager deckManager))
         {
@@ -53,15 +57,6 @@ public static class GameActionValidator
             }
         }
 
-        // Validation des cartes Rage (stock plein = impossible de jouer)
-        if (card.isRageCard && player is IRageUser rageUser)
-        {
-            if (rageUser.IsRageStockFull())
-            {
-                return ValidationResult.Fail("Stock de Rage plein (5/5) - Consommez de la Rage avant de jouer cette carte");
-            }
-        }
-
         return ValidationResult.Success();
     }
 
@@ -85,11 +80,11 @@ public static class GameActionValidator
         if (target == null)
             return ValidationResult.Fail($"{card.cardName} nécessite une cible");
 
-        // Validation de la portée
-        float distance = Vector2.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
+        // Validation de la portée (4 directions, voir GridGeometry)
+        int distance = GridGeometry.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
         if (distance > card.targetRange)
         {
-            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance:F1}/{card.targetRange}");
+            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");
         }
 
         // Validation du type de cible (allié/ennemi)
@@ -160,34 +155,79 @@ public static class GameActionValidator
 
         Vector2Int sourcePos = source.GetCurrentGridPos();
 
-        // Pour les cartes de charge, utilise la distance Manhattan et vérifie la ligne droite
-        if (card.isChargeCard)
+        // Charge : ligne droite uniquement (même ligne ou même colonne)
+        if (card.isChargeCard && !GridGeometry.TryGetLine(sourcePos, targetTilePos, out _, out _))
         {
-            // Vérifie que la cible est en ligne droite
-            bool isInLine = (sourcePos.x == targetTilePos.x || sourcePos.y == targetTilePos.y);
-            if (!isInLine)
-            {
-                return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
-            }
-
-            // Distance Manhattan pour les cartes en ligne
-            int manhattanDistance = Mathf.RoundToInt(Mathf.Abs(targetTilePos.x - sourcePos.x) + Mathf.Abs(targetTilePos.y - sourcePos.y));
-            if (manhattanDistance > card.targetRange)
-            {
-                return ValidationResult.Fail($"{card.cardName} hors de portée : {manhattanDistance}/{card.targetRange}");
-            }
+            return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
         }
-        else
+
+        // Portée en 4 directions (voir GridGeometry)
+        int distance = GridGeometry.Distance(sourcePos, targetTilePos);
+        if (distance > card.targetRange)
         {
-            // Validation de la portée classique (distance euclidienne)
-            float distance = Vector2.Distance(sourcePos, targetTilePos);
-            if (distance > card.targetRange)
-            {
-                return ValidationResult.Fail($"{card.cardName} hors de portée : {distance:F1}/{card.targetRange}");
-            }
+            return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");
         }
 
         return ValidationResult.Success();
+    }
+
+    // ========== CARTES DE DÉPLACEMENT D'INVOCATION (ex: Écho évanescent) ==========
+    // Ciblage en 2 étapes : 1) choisir une invocation du lanceur, 2) choisir la case d'arrivée,
+    // à portée de l'INVOCATION (pas du lanceur).
+
+    /// <summary>Le lanceur a-t-il au moins une invocation vivante à déplacer ?</summary>
+    public static bool HasSummonToMove(Unit caster)
+    {
+        return caster is ISummonOwner owner && owner.ActiveSummon != null && !IsDead(owner.ActiveSummon);
+    }
+
+    /// <summary>Étape 1 : la cible cliquée est-elle une invocation vivante du lanceur ?</summary>
+    public static ValidationResult CanSelectSummonToMove(CardData card, Unit caster, Unit target)
+    {
+        if (card == null || !card.isRepositionSummonCard)
+            return ValidationResult.Fail("Cette carte ne déplace pas d'invocation");
+
+        if (!(target is SummonUnit summon))
+            return ValidationResult.Fail("Choisis d'abord une de tes invocations");
+
+        if (summon.Owner != caster)
+            return ValidationResult.Fail($"{summon.name} n'est pas une de tes invocations");
+
+        if (IsDead(summon))
+            return ValidationResult.Fail($"{summon.name} est morte");
+
+        return ValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Étape 2 : la case d'arrivée est-elle valide ? Distance en cases (4 directions, comme toute
+    /// la grille) entre 1 et la portée de la carte, mesurée depuis l'invocation. L'existence et
+    /// la disponibilité de la case sont fournies par l'appelant (la grille), pour garder la règle testable.
+    /// </summary>
+    public static ValidationResult CanMoveSummonTo(CardData card, SummonUnit summon, Vector2Int destination, bool destinationIsFree)
+    {
+        if (card == null || summon == null)
+            return ValidationResult.Fail("Carte ou invocation manquante");
+
+        Vector2Int from = summon.GetCurrentGridPos();
+        int distance = GridGeometry.Distance(from, destination);
+
+        if (distance < 1)
+            return ValidationResult.Fail($"{summon.name} est déjà sur cette case");
+
+        if (distance > card.targetRange)
+            return ValidationResult.Fail($"Case trop loin de {summon.name} : {distance}/{card.targetRange}");
+
+        if (!destinationIsFree)
+            return ValidationResult.Fail("La case d'arrivée doit être libre");
+
+        return ValidationResult.Success();
+    }
+
+    private static bool IsDead(Unit unit)
+    {
+        UnitState state = unit.GetUnitState();
+        return state != null && state.IsDead();
     }
 
     // ========== VALIDATION DES DÉPLACEMENTS ==========

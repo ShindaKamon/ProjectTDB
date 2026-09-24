@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Frappe_rapide
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Frappe rapide
-  description: "Touche 2 cibles s\xE9par\xE9es \xE0 distance plut\xF4t qu'une seule."
+  description: "Inflige 16 d\xE9g\xE2ts \xE0 2 ennemis \xE0 1-3 cases."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0
@@ -57,11 +57,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

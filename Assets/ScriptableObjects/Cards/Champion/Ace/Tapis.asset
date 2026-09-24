@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Tapis
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Tapis
-  description: "Signature Ace - 72 d\xE9g\xE2ts de base, +10 par PA d\xE9j\xE0 d\xE9pens\xE9
-    ce tour (le scaling par PA = Phase 3, pas encore actif)."
+  description: "Inflige 72 d\xE9g\xE2ts \xE0 2 ennemis au contact, +10 par PA d\xE9j\xE0
+    d\xE9pens\xE9 ce tour."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
@@ -27,6 +27,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 72
   damageSelf: 0
   healAmount: 0
@@ -40,6 +42,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -55,11 +58,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

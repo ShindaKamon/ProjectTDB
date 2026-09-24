@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Effroi_partage
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Effroi partag\xE9"
-  description: "Peur - touche une cible, la peur se propage \xE0 toute autre cible
-    \xE0 2 cases ou moins, chaque cible touch\xE9e perd 2 PM."
+  description: "Inflige 10 d\xE9g\xE2ts \xE0 un ennemi au contact et aux ennemis
+    \xE0 2 cases de lui. Ils perdent 2 PM."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0
@@ -28,6 +28,7 @@ MonoBehaviour:
   aoeRadius: 2
   affectedTarget: 2
   targetsHandCard: 0
+  targetCount: 1
   damageAmount: 10
   damageSelf: 0
   healAmount: 0
@@ -57,11 +58,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

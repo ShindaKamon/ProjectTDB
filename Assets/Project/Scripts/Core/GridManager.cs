@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// <summary>
 /// GridManager adapté pour Émotions Tactics
 /// Gère la grille carrée, les unités, le système de tours, et l'UI
-/// Compatible avec Unit de base ET IlyaUnit
+/// Compatible avec Unit de base ET Champion
 /// Phase 3.5: Implémente IGridService pour injection de dépendances
 /// </summary>
 public class GridManager : MonoBehaviour, IGridService
@@ -184,7 +184,7 @@ public class GridManager : MonoBehaviour, IGridService
             GameObject playerUnitGO = Instantiate(ChampionSelectManager.SelectedChampion.prefab);
             
             // On récupère le composant Champion pour appeler son initialisation.
-            // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (comme IlyaUnit, VylosUnit, etc.)
+            // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (SorenUnit, AlpinisteUnit, AceUnit)
             Champion instantiatedChampion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
             instantiatedPlayerUnit = instantiatedChampion;
 
@@ -272,7 +272,7 @@ public class GridManager : MonoBehaviour, IGridService
                 // Sinon, c'est une autre unité (un champion placé dans la scène)
                 else if (!unit.IsInitialized())
                 {
-                    // Tente d'initialiser comme un champion (IlyaUnit, VylosUnit, etc.)
+                    // Tente d'initialiser comme un champion
                     Champion championInScene = unit as Champion;
                     if (championInScene != null && championInScene.championData != null)
                     {
@@ -465,10 +465,6 @@ public class GridManager : MonoBehaviour, IGridService
         
         // Traite les marques au début du tour (dégâts de poison, etc.)
         unit.ProcessMarksOnTurnStart();
-        
-        // Applique les pertes de PA en attente (effets Stigmate, etc.)
-        // Doit être appelé APRÈS RefreshActiveUnitTurn() pour que la perte soit appliquée sur les PA rafraîchis
-        StigmateManager.ProcessPendingPALoss(unit);
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
@@ -707,6 +703,18 @@ public class GridManager : MonoBehaviour, IGridService
 
         ResetAllTileColors();
 
+        // Carte de déplacement d'invocation (ex: Écho évanescent), ciblage en 2 étapes :
+        // source = lanceur -> étape 1, on montre ses invocations ; source = l'invocation choisie
+        // -> étape 2, on montre les cases d'arrivée autour d'elle.
+        if (card.isRepositionSummonCard)
+        {
+            if (source is SummonUnit chosenSummon)
+                ShowSummonMoveTargets(card, chosenSummon);
+            else
+                ShowSummonsToMove(card, source);
+            return;
+        }
+
         Vector2Int sourcePos = source.GetCurrentGridPos();
         int range = card.targetRange;
 
@@ -729,6 +737,29 @@ public class GridManager : MonoBehaviour, IGridService
         GameLog.Log($"Portée affichée pour {card.cardName} (portée: {range})");
     }
 
+    /// <summary>Étape 1 d'une carte de déplacement d'invocation : surligne les invocations du lanceur.</summary>
+    private void ShowSummonsToMove(CardData card, Unit caster)
+    {
+        foreach (Unit unit in _units)
+        {
+            if (!GameActionValidator.CanSelectSummonToMove(card, caster, unit).IsValid) continue;
+
+            Tile tile = GetTileAtPosition(unit.GetCurrentGridPos());
+            if (tile != null) tile.SetColor(_cardTargetColor);
+        }
+    }
+
+    /// <summary>Étape 2 : surligne les cases d'arrivée valides autour de l'invocation choisie.</summary>
+    private void ShowSummonMoveTargets(CardData card, SummonUnit summon)
+    {
+        foreach (var pair in _tiles)
+        {
+            bool isFree = GetUnitAtGridPos(pair.Key) == null;
+            if (GameActionValidator.CanMoveSummonTo(card, summon, pair.Key, isFree).IsValid)
+                pair.Value.SetColor(_cardTargetColor);
+        }
+    }
+
     /// <summary>
     /// Affiche les cibles valides pour une carte de charge (lignes droites uniquement)
     /// Affiche les cases vides ET les cases avec ennemis comme cibles valides (jaune)
@@ -736,10 +767,8 @@ public class GridManager : MonoBehaviour, IGridService
     /// </summary>
     private void ShowChargeTargets(Vector2Int sourcePos, int range, Unit source)
     {
-        // Directions : haut, bas, gauche, droite
-        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-
-        foreach (Vector2Int dir in directions)
+        // 4 directions : haut, bas, gauche, droite
+        foreach (Vector2Int dir in GridGeometry.Directions4)
         {
             for (int i = 1; i <= range; i++)
             {

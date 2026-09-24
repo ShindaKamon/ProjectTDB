@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Montee_d_adrenaline
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Mont\xE9e d'adr\xE9naline"
-  description: "Buff sur soi, points \xE0 convertir en bonus d\xE9g\xE2ts prochaine
-    carte."
+  description: "Ta prochaine carte offensive inflige +23 d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0
@@ -27,6 +26,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
   healAmount: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -55,9 +57,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

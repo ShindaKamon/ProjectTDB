@@ -124,12 +124,12 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 - **Genre** : Tactics + Deck-building
 - **Plateforme** : PC ; Mobile mentionné à l'origine — **à confirmer** (question ouverte dans `GDD_Main.md`)
 - **Engine** : Unity + C# (Visual Studio)
-- **Format** : **Campagne façon Waven** (donjons fixes enchaînés, progression persistante — décision du 23/09/2026). Donjons prévus pour une équipe de 3 champions (coop ou un joueur qui contrôle les 3 : à trancher)
+- **Format** : **Campagne façon Waven** (donjons fixes enchaînés, progression persistante — décision du 23/09/2026). Un joueur = un champion (24/09/2026) ; les donjons en équipe de 3 viendront avec le multijoueur (V2)
 - **Monétisation** : à définir. **Pas de gacha** (décision du 10/09/2026).
 
 ### Émotions
 **Vision long terme : 8 émotions** (roue de Plutchik) — détail dans `SYSTEME_EMOTIONS.md`.
-**MVP : Colère (agressif), Peur (contrôle), Joie (soin/valeur).** Decks mono ou bi-émotion.
+**MVP : Colère (agressif), Peur (contrôle), Joie (soin/valeur).** Un champion peut jouer toutes les émotions ; chaque deck en choisit 1 ou 2.
 
 ### Pas de système de classe
 - Pas de système de classe transversal (décision du 10/09/2026, anciennes nomenclatures archivées).
@@ -147,10 +147,10 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 ## Roster MVP (Excel, 23/09/2026)
 
-**Soren, l'Alpiniste, Ace** — fiches complètes dans l'onglet « Champions » de l'Excel et dans `CHAMPIONS_CONCEPTS.md`.
-- **Soren** : invoque le fantôme de sa sœur jumelle Lyse ; ses invocations rejouent un écho de ses attaques (Miroir fraternel).
-- **L'Alpiniste** : grappin vers une unité ; bouclier s'il atterrit près d'un allié, bonus de dégâts près d'un ennemi (Réflexe du grimpeur).
-- **Ace** : bonus selon le motif des coûts de cartes joués dans le tour (Main gagnante : Paire / Suite / Bluff) ; peut tricher sur les coûts.
+**Evan, Crux, Raze** — fiches complètes dans l'onglet « Champions » de l'Excel et dans `CHAMPIONS_CONCEPTS.md`.
+- **Evan** : invoque le fantôme de sa sœur jumelle Lyse ; ses invocations rejouent un écho de ses attaques (Miroir fraternel).
+- **Crux** : grappin vers une unité ; bouclier s'il atterrit près d'un allié, bonus de dégâts près d'un ennemi (Réflexe du grimpeur).
+- **Raze** : bonus selon le motif des coûts de cartes joués dans le tour (Main gagnante : Paire / Suite / Bluff) ; peut tricher sur les coûts.
 
 **Hors MVP** : Ilya (`ilya_deck_simple.md`, Rage à réadapter à l'Éveil) et les Jumeaux Astra & Noctis.
 
@@ -160,17 +160,17 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 - **PA + PM = 9 points par tour**, répartis selon le profil du champion (min 3 PA, 2 PM) — fixe quel que soit le niveau
 - **Mouvement** : 1 PM par case, fractionnable
-- **Ordre des tours** : code actuel = un tour par unité (champion puis chaque ennemi) ; tours individuels ou phases à confirmer
-- **Main** : règle définitive à trancher (code : départ 5, max 5, pioche 1/tour ; playtest : main de 3, repioche à 3)
+- **Ordre des tours** : chaque unité joue à son tour (champion puis chaque ennemi) — acté le 24/09/2026
+- **Main** : départ 5, max 5, pioche 1/tour — acté le 24/09/2026
 - **Contrôle** (Peur) : retrait de PM au prochain tour, poussée/tirage ; **anti-lock** : un monstre bloqué fait son Attaque de base
-- **Grille** : carrée 10×10 dans le code (Manhattan, 4 directions) ; l'Excel suppose 8 directions — à aligner
+- **Grille** : carrée 10×10 en **4 directions** (pas de diagonales) — actée le 24/09/2026 ; le budget des zones de l'Excel (9 / 25 cases) est à revoir (5 / 13 en 4 directions)
 
 ---
 
 ## Contraintes et priorités
 
 ### Scope MVP (3-6 mois)
-- ✅ 3 champions jouables : Soren, l'Alpiniste, Ace
+- ✅ 3 champions jouables : Evan, Crux, Raze
 - ✅ 3 émotions : Colère, Peur, Joie (49 cartes Standard + cartes d'Éveil à créer)
 - ✅ Système de combat sur grille fonctionnel
 - ✅ Monstres de donjon + boss selon le barème de l'Excel
@@ -214,12 +214,12 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 ## Milestones prévus
 
-> Note (23/09/2026) : milestones à réécrire autour du roster Soren / l'Alpiniste / Ace. Le design chiffré est largement fait dans l'Excel ; une partie du prototype de combat existe déjà dans le code (voir « État actuel » dans `GDD_Main.md`).
+> Note (23/09/2026) : milestones à réécrire autour du roster Evan / Crux / Raze. Le design chiffré est largement fait dans l'Excel ; une partie du prototype de combat existe déjà dans le code (voir « État actuel » dans `GDD_Main.md`).
 
 ### Phase 0 : Design ✅ en grande partie fait
 - GDD réorganisé et remis en cohérence
 - Excel MVP : budget de cartes, 49 cartes Standard, 3 champions, progression, barème monstres, playtest papier
-- Reste à faire : cartes d'Éveil, règle de main, grille 4 ou 8 directions, monstres de l'Orphelinat
+- Reste à faire : monstres de l'Orphelinat (barème à 1 joueur, faiblesse émotionnelle) ; cartes d'Éveil plus tard
 
 ### Phase 1 : Prototype Combat — en grande partie réalisée
 - Grille fonctionnelle ✅
@@ -229,7 +229,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 - À ajouter : Éveil (jauge + 6 slots), statuts de contrôle (retrait de PM, poussée/tirage), anti-lock
 
 ### Phase 2 : Champions signatures
-- Passifs et cartes Signature de Soren (invocation + écho), l'Alpiniste (grappin), Ace (motifs de coûts)
+- Passifs et cartes Signature d'Evan (invocation + écho), Crux (grappin), Raze (motifs de coûts)
 - **Livrable** : les 3 champions jouables
 
 ### Phase 3 : Contenu
@@ -310,10 +310,9 @@ Décisions actées et questions ouvertes : **voir `GDD_Main.md`** (sections « D
 **Ce qui existe réellement dans le code** (roster jouable, deck 18 cartes, grille carrée, écrans construits…) : **`Technical_Specs.md`, section « État du code »**. Elle remplace l'ancienne section « Mise à jour implémentation » de ce document. En cas de conflit entre le design et le code, cette section dit ce qui est implémenté ; le GDD dit ce qui est visé.
 
 ### Prochaines étapes 🔄
-1. Trancher : grille 4 ou 8 directions, et ordre des tours (tours individuels ou phases)
-2. Trancher : règle de main/pioche définitive
-3. Concevoir la mise en œuvre de l'Éveil et les cartes d'Éveil
-4. Designer les monstres de l'Orphelinat à partir du barème
+1. Designer les monstres de l'Orphelinat : barème à 1 joueur (PV et dégâts montent avec le nombre de joueurs) et une faiblesse émotionnelle chacun
+2. Excel : corriger la Roadmap (grille « hexagonale », anciens noms des champions) et revoir le coût des cartes à zone (5 / 13 cases en 4 directions)
+3. (Plus tard) Éveil : mis de côté pour l'instant
 
 ---
 

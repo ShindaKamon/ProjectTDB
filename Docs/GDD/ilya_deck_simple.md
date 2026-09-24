@@ -1,7 +1,7 @@
 # ILYA - « Le Dévoué Enchaîné »
 
 **Statut :** Fiche de référence d'Ilya (source unique de vérité pour ses stats, son système Rage et son deck — voir `GDD_Main.md`). Mise à jour le 23/09/2026 : la liste détaillée des 12 cartes et les spécifications Rage, auparavant dans `claude_md_coarchitect.md`, ont été déplacées ici.
-**Place dans le MVP :** **hors MVP** (roster MVP = Soren, l'Alpiniste, Ace — voir `GDD_Main.md`).
+**Place dans le MVP :** **hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`).
 
 > ⚠️ **Conçu avant l'Excel MVP** (`TCG_Tactique_Systeme_de_calcul.xlsx`). Plusieurs éléments ne respectent plus les règles actuelles et devront être adaptés s'il revient :
 > - stats ATK/DEF (le système ne définit que PV, PA, PM) et PA/PM qui changent avec la forme (le budget PA+PM est fixé à 9 par profil) ;
@@ -9,7 +9,7 @@
 > - deck de 12 cartes Personnage/Famille/Neutre → format **24 cartes** (2 Signature + 6 Éveil + 16 Standard) ;
 > - dégâts des cartes à recalculer avec le budget (ex : 1 PA = 12 dégâts de base, pas 20).
 >
-> ⚠️ **Le code implémente une autre version d'Ilya** (`IlyaUnit`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). À réconcilier s'il revient.
+> ⚠️ **Une autre version d'Ilya a existé dans le code** (`IlyaUnit`, retiré le 24/09/2026, récupérable via le commit `00afe5d`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). À réconcilier avec ce document s'il revient.
 
 **Famille** : 🔴 Déchaînés — Colère *(appelée « Rouge (Incarnat) » dans les tout premiers brouillons — même personnage)*
 **Concept** : « Le Dévoué qui se sacrifie par amour, mais enchaîne sa colère »

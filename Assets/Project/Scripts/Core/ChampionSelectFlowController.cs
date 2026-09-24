@@ -2,32 +2,39 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Coordonne la navigation plein écran de ChampionSelectScene entre ses 2 étapes :
-/// sélection du champion, et écran unifié de gestion des decks (loadout + pool + deck +
-/// courbe PA, façon MTG Arena). Les popups (CreateDeckPopup, RenameDeckPopup,
-/// ConfirmDeletePopup) restent des overlays indépendants au-dessus de l'écran courant.
+/// Coordonne la navigation plein écran de ChampionSelectScene entre ses 3 étapes :
+/// sélection du champion -> choix du deck (liste des decks du champion : ouvrir, créer,
+/// renommer, supprimer) -> gestionnaire de deck (pool + liste du deck + courbe PA, façon
+/// MTG Arena). Les popups (CreateDeckPopup, RenameDeckPopup, ConfirmDeletePopup) restent des
+/// overlays indépendants au-dessus de l'écran courant.
 /// </summary>
 public class ChampionSelectFlowController : MonoBehaviour
 {
     public enum Screen
     {
         ChampionSelect,
+        DeckSelect,
         DeckManager
     }
 
     [Header("Écrans plein écran (un seul actif à la fois)")]
     [SerializeField] private GameObject _screenChampionSelectRoot;
+    [SerializeField] private GameObject _screenDeckSelectRoot;
     [SerializeField] private GameObject _screenDeckManagerRoot;
 
-    [Header("Bouton Retour (écran Gestion des Decks -> écran Sélection Champion)")]
+    [Header("Boutons Retour")]
+    [Tooltip("Écran Choix du deck -> écran Sélection du champion.")]
     [SerializeField] private Button _backToChampionSelectButton;
+    [Tooltip("Gestionnaire de deck -> écran Choix du deck.")]
+    [SerializeField] private Button _backToDeckSelectButton;
+
+    [Header("Choix du deck")]
+    [Tooltip("Liste des decks : ouvrir un deck mène au gestionnaire de deck.")]
+    [SerializeField] private LoadoutTabsUI _deckList;
 
     [Header("Illustration Personnage")]
     [Tooltip("Image plein écran de l'écran Sélection Champion, alimentée par ChampionData.fullBodyArt.")]
     [SerializeField] private Image _characterArtChampionSelect;
-    [Tooltip("Image de la bande personnage dédiée (écran Gestion des Decks, colonne exclusive " +
-             "jamais recouverte par le pool/deck), même sprite que ci-dessus.")]
-    [SerializeField] private Image _characterArtDeckManager;
 
     private ChampionData _currentArtChampion;
 
@@ -37,6 +44,18 @@ public class ChampionSelectFlowController : MonoBehaviour
     {
         if (_backToChampionSelectButton != null)
             _backToChampionSelectButton.onClick.AddListener(GoToChampionSelect);
+
+        if (_backToDeckSelectButton != null)
+            _backToDeckSelectButton.onClick.AddListener(GoToDeckSelect);
+
+        if (_deckList != null)
+            _deckList.OnDeckOpened += GoToDeckManager;
+    }
+
+    void OnDestroy()
+    {
+        if (_deckList != null)
+            _deckList.OnDeckOpened -= GoToDeckManager;
     }
 
     void Start()
@@ -45,7 +64,7 @@ public class ChampionSelectFlowController : MonoBehaviour
     }
 
     /// <summary>
-    /// Active l'écran demandé et désactive l'autre.
+    /// Active l'écran demandé et désactive les autres.
     /// </summary>
     public void ShowScreen(Screen screen)
     {
@@ -54,14 +73,15 @@ public class ChampionSelectFlowController : MonoBehaviour
         if (_screenChampionSelectRoot != null)
             _screenChampionSelectRoot.SetActive(screen == Screen.ChampionSelect);
 
+        if (_screenDeckSelectRoot != null)
+            _screenDeckSelectRoot.SetActive(screen == Screen.DeckSelect);
+
         if (_screenDeckManagerRoot != null)
             _screenDeckManagerRoot.SetActive(screen == Screen.DeckManager);
     }
 
     /// <summary>
-    /// Met à jour l'illustration du champion sélectionné sur les 2 emplacements (plein écran
-    /// Sélection Champion, bande dédiée Gestion des Decks). Appelé par ChampionSelectManager à
-    /// chaque changement de sélection.
+    /// Met à jour l'illustration plein écran du champion sélectionné (écran Sélection Champion).
     /// </summary>
     public void UpdateCharacterArt(ChampionData champion)
     {
@@ -70,7 +90,6 @@ public class ChampionSelectFlowController : MonoBehaviour
         Sprite fullBody = champion != null ? champion.fullBodyArt : null;
 
         ApplySprite(_characterArtChampionSelect, fullBody);
-        ApplySprite(_characterArtDeckManager, fullBody);
     }
 
     private static void ApplySprite(Image image, Sprite sprite)
@@ -82,5 +101,6 @@ public class ChampionSelectFlowController : MonoBehaviour
 
     // Méthodes sans paramètre pour un branchement direct depuis Button.onClick (Inspector).
     public void GoToChampionSelect() => ShowScreen(Screen.ChampionSelect);
+    public void GoToDeckSelect() => ShowScreen(Screen.DeckSelect);
     public void GoToDeckManager() => ShowScreen(Screen.DeckManager);
 }

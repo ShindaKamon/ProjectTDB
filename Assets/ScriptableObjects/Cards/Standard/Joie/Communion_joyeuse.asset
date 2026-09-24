@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Communion_joyeuse
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Communion joyeuse
-  description: "Soin toute l'\xE9quipe peu importe la position (vuln\xE9rabilit\xE9
-    du lanceur non encore appliqu\xE9e)."
+  description: "Soigne toute l'\xE9quipe de 31 PV. Ensuite, tu subis plus de d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
@@ -27,6 +26,8 @@ MonoBehaviour:
   areaEffect: 6
   aoeRadius: 1
   affectedTarget: 4
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
   healAmount: 31
@@ -40,6 +41,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -55,11 +57,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

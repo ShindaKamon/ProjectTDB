@@ -15,7 +15,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 
 ### Machine à États (TurnStateMachine)
 
-**Code actuel :** **un tour par unité**, dans l'ordre de la liste des unités (le champion, puis chaque ennemi ; les invocations comme Lyse sont sautées). Les états `PlayerTurn` / `EnemyTurn` indiquent à qui appartient l'unité active. Pas de barre d'initiative. Tours individuels ou phases : à confirmer.
+**Code actuel :** **un tour par unité**, dans l'ordre de la liste des unités (le champion, puis chaque ennemi ; les invocations comme Lyse sont sautées). Les états `PlayerTurn` / `EnemyTurn` indiquent à qui appartient l'unité active. Pas de barre d'initiative. ✅ Acté le 24/09/2026 : chaque unité joue à son tour (pas de phases « tous les champions puis tous les monstres »).
 
 | État                  | Description              | Transitions               |
 |-----------------------|--------------------------|---------------------------|
@@ -47,16 +47,15 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 
 | Action              | Description                                        |
 |---------------------|----------------------------------------------------|
-| **Pioche**          | Selon la règle de main (à trancher)                |
+| **Pioche**          | 1 carte (si la main n'est pas pleine)             |
 | **Restauration PA** | PA restaurés selon le profil du champion           |
 | **Restauration PM** | PM restaurés selon le profil du champion (moins les retraits de PM subis) |
 | **Effets de début** | Résolution des effets en cours                     |
 
-**Règles de main — ⚠️ à trancher :**
+**Règles de main — ✅ actée le 24/09/2026 : celle du code**
 - **Code actuel** (`DeckManager`) : main de départ **5**, maximum **5**, **1 carte piochée** au début de chaque tour, pioche sautée si la main est pleine
-- Hypothèse de travail utilisée en playtest (Excel) : **main de 3 cartes, repioche jusqu'à 3 à chaque tour**
+- Écartée : main de 3, repioche jusqu'à 3 à chaque tour (hypothèse du playtest papier de l'Excel)
 - Ancienne règle (conçue pour Ilya) : main de départ 5, 7 max, pioche 1 carte/tour, pioche bloquée si main pleine — archivée
-- La règle définitive doit être validée en playtest (Roadmap de l'Excel)
 
 **Actions Disponibles (Ordre Libre) :**
 
@@ -153,7 +152,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 - Certaines cartes donnent des PM bonus (contrepartie « Élan tactique » : +2 PM)
 - Téléportation possible (ignore obstacles)
 - Déplacement forcé (poussée/tirage), bond offensif, repli automatique
-- Grappin (Piolet d'ascension de l'Alpiniste)
+- Grappin (Piolet d'ascension de Crux)
 
 
 ### Santé (HP)
@@ -191,7 +190,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | **2. Coût**         | Dépenser les PA (et paliers d'Éveil si la carte en consomme) | Déduction immédiate |
 | **3. Calcul**       | Calculer dégâts/effets      | Appliquer modificateurs        |
 | **4. Application**  | Appliquer effets            | Dégâts, soins, mouvements      |
-| **5. Éveil / passif** | Ajouter l'Éveil généré ; déclencher les passifs (écho de Soren, Réflexe du grimpeur, Main gagnante d'Ace) | Selon la carte et le champion |
+| **5. Éveil / passif** | Ajouter l'Éveil généré ; déclencher les passifs (écho d'Evan, Réflexe du grimpeur, Main gagnante de Raze) | Selon la carte et le champion |
 | **6. Vérification** | Vérifier morts              | Retirer unités vaincues        |
 
 
@@ -202,8 +201,8 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | Effet | Source | Règle |
 |-------|--------|-------|
 | **Retrait de PM** | Peur | -1 / -2 / -3 PM ou perte totale au **prochain tour** de la cible. Ne se cumulent pas : un retrait plus fort remplace un plus faible ; un plus faible n'écrase jamais un plus fort en cours |
-| **Poussée / Tirage** | Peur, Alpiniste | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
-| **Bouclier (% de réduction)** | Colère (Armure de rage), Peur, Joie, Alpiniste | Réduit les prochains dégâts subis d'un pourcentage ; ignoré par la Paire d'Ace |
+| **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
+| **Bouclier (% de réduction)** | Colère (Armure de rage), Peur, Joie, Crux | Réduit les prochains dégâts subis d'un pourcentage ; ignoré par la Paire de Raze |
 | **Vulnérabilité** | Contrepartie (Joie) | Le lanceur subit plus de dégâts |
 | **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour) |
 | **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour |
@@ -237,7 +236,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 **Formations Recommandées :**
 - Ligne : couverture maximale du terrain
 - Dispersée : évite les AOE ennemies
-- Tactique : protéger les champions fragiles ; l'Alpiniste peut extraire un allié en danger (Corde de rappel forcé)
+- Tactique : protéger les champions fragiles ; Crux peut extraire un allié en danger (Corde de rappel)
 
 
 ## Difficulté et Équilibrage (À Implémenter)
@@ -267,7 +266,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 ### Priorité Haute
 - Profils PA/PM (budget 9) et types de cartes Standard / Éveil / Signature
 - Statuts de contrôle (retrait de PM, poussée/tirage) + règle anti-lock
-- Invocations (Soren), grappin (Alpiniste), détection de motifs de coûts (Ace)
+- Invocations (Evan), grappin (Crux), détection de motifs de coûts (Raze)
 - Réactions (effets « si ciblé ce tour », ex : Réflexe de survie)
 - IA ennemie : patterns + cycle de boss Zone / Basique / Heal
 

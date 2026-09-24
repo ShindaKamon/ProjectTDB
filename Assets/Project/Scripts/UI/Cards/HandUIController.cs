@@ -43,6 +43,11 @@ public class HandUIController : MonoBehaviour
     // Propriété publique pour que l'InputManager puisse accéder à la carte sélectionnée
     public CardData SelectedCard => _selectedCard;
 
+    // Carte de déplacement d'invocation (ex: Écho évanescent) : invocation choisie à la 1re étape
+    // du ciblage ; null tant que le joueur n'en a pas choisi (il doit alors cliquer une invocation).
+    private SummonUnit _summonToMove;
+    public SummonUnit SummonToMove => _summonToMove;
+
     public void DeselectCard()
     {
         if (_selectedCard != null)
@@ -50,6 +55,7 @@ public class HandUIController : MonoBehaviour
             GameLog.Log($"Carte {_selectedCard.cardName} désélectionnée via appel externe.");
             _selectedCard = null;
             _pendingMultiTargets.Clear();
+            _summonToMove = null;
             ResetSelectedCardUIPosition();
             ResetCardHighlights();
 
@@ -68,13 +74,21 @@ public class HandUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Annule une étape de ciblage : retire la dernière cible choisie pour une carte à cibles
-    /// multiples en cours de sélection, ou désélectionne complètement la carte s'il n'y a
-    /// aucune cible en attente (comportement classique).
+    /// Annule une étape de ciblage : revient au choix de l'invocation pour une carte de
+    /// déplacement d'invocation, retire la dernière cible choisie pour une carte à cibles
+    /// multiples, ou désélectionne complètement la carte s'il n'y a aucune étape en attente.
     /// </summary>
     public void CancelTargetingStep()
     {
-        if (_pendingMultiTargets.Count > 0)
+        if (_summonToMove != null)
+        {
+            GameLog.Log($"{_summonToMove.name} n'est plus sélectionnée : choisis une invocation.");
+            _summonToMove = null;
+            Unit activeUnit = Services.Grid?.GetActiveUnit();
+            if (activeUnit != null)
+                EventBus.Publish(new ShowCardTargetsEvent(_selectedCard, activeUnit));
+        }
+        else if (_pendingMultiTargets.Count > 0)
         {
             Unit removed = _pendingMultiTargets[_pendingMultiTargets.Count - 1];
             _pendingMultiTargets.RemoveAt(_pendingMultiTargets.Count - 1);
@@ -153,14 +167,77 @@ public class HandUIController : MonoBehaviour
         bool isFirstTarget = true;
         foreach (Unit target in _pendingMultiTargets)
         {
-            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (Rage, combo
+            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (combo
             // tracker, invocation, dégâts sur soi, pioche, fetch, ajout au deck, écho de Lyse) —
             // voir CardData.ExecuteEffect(isAdditionalMultiTargetHit).
             _selectedCard.ExecuteEffect(activeUnit, target, default, !isFirstTarget);
             isFirstTarget = false;
         }
 
-        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        PayCostsAndEndCardPlay(activeUnit);
+        GameLog.Log($"✅ Carte à cibles multiples jouée avec succès");
+    }
+
+    /// <summary>
+    /// Étape 1 d'une carte de déplacement d'invocation : le joueur clique une de ses invocations.
+    /// La portée affichée passe alors aux cases autour de cette invocation.
+    /// </summary>
+    public void SelectSummonToMove(Unit target)
+    {
+        if (_selectedCard == null || !_selectedCard.isRepositionSummonCard) return;
+
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        ValidationResult result = GameActionValidator.CanSelectSummonToMove(_selectedCard, activeUnit, target);
+        if (!result.IsValid)
+        {
+            GameLog.Log($"❌ {_selectedCard.cardName} : {result.ErrorMessage}");
+            return;
+        }
+
+        _summonToMove = (SummonUnit)target;
+        GameLog.Log($"🎯 {_summonToMove.name} sélectionnée : choisis sa case d'arrivée.");
+        EventBus.Publish(new ShowCardTargetsEvent(_selectedCard, _summonToMove));
+    }
+
+    /// <summary>
+    /// Étape 2 d'une carte de déplacement d'invocation : déplace l'invocation choisie sur la case
+    /// cliquée, puis paie la carte. Case invalide : rien ne se passe, le joueur peut recliquer.
+    /// </summary>
+    public void PlayRepositionSummonCard(Vector2Int destination)
+    {
+        if (_selectedCard == null || _summonToMove == null || _playerDeckManager == null) return;
+
+        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        if (activeUnit == null) return;
+
+        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
+        if (!canPlayResult.IsValid)
+        {
+            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
+            DeselectCard();
+            return;
+        }
+
+        bool isFree = Services.Grid.GetTileAtPosition(destination) != null && Services.Grid.GetUnitAtGridPos(destination) == null;
+        ValidationResult moveResult = GameActionValidator.CanMoveSummonTo(_selectedCard, _summonToMove, destination, isFree);
+        if (!moveResult.IsValid)
+        {
+            GameLog.Log($"❌ {_selectedCard.cardName} : {moveResult.ErrorMessage}");
+            return;
+        }
+
+        _selectedCard.ExecuteEffect(activeUnit, _summonToMove, destination);
+        PayCostsAndEndCardPlay(activeUnit);
+        GameLog.Log($"✅ Invocation déplacée avec succès");
+    }
+
+    /// <summary>
+    /// Fin commune d'une carte jouée : défausse, paiement des PA (coût effectif, overrides compris)
+    /// et des PV, puis remise à zéro de la sélection et des affichages de ciblage.
+    /// </summary>
+    private void PayCostsAndEndCardPlay(Unit activeUnit)
+    {
+        // Coût effectif (tient compte d'un éventuel override, ex: Triche)
         int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
         _playerDeckManager.PlayCard(_selectedCard);
 
@@ -176,13 +253,12 @@ public class HandUIController : MonoBehaviour
 
         Services.Grid.UpdateUnitUI();
         _pendingMultiTargets.Clear();
+        _summonToMove = null;
         _selectedCard = null;
         ResetSelectedCardUIPosition();
         ResetCardHighlights();
         EventBus.Publish(new ResetTileColorsEvent());
         EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
-
-        GameLog.Log($"✅ Carte à cibles multiples jouée avec succès");
     }
 
     void OnEnable()
@@ -232,12 +308,6 @@ public class HandUIController : MonoBehaviour
             {
                 champion.OnActionPointsChanged += HandlePAChanged;
             }
-            
-            // S'abonner aux changements de Rage si c'est IlyaUnit (seul champion avec Rage pour l'instant)
-            if (champion is IlyaUnit ilyaUnit)
-            {
-                ilyaUnit.OnRageStockChanged += HandleRageStockChanged;
-            }
 
             _isInitialized = true;
         }
@@ -255,7 +325,7 @@ public class HandUIController : MonoBehaviour
             _playerDeckManager.OnHandChanged -= UpdateHandUI; // Se désabonner pour éviter les fuites de mémoire
         }
 
-        // Se désabonner des changements de PA et de Rage
+        // Se désabonner des changements de PA
         // Vérifie que le service est disponible avant d'y accéder (évite erreurs lors de la destruction de scène)
         if (Services.IsGridServiceAvailable())
         {
@@ -267,12 +337,6 @@ public class HandUIController : MonoBehaviour
                 {
                     champion.OnActionPointsChanged -= HandlePAChanged;
                 }
-                
-                // Désabonnement Rage (seulement IlyaUnit)
-                if (activeUnit is IlyaUnit ilyaUnit)
-                {
-                    ilyaUnit.OnRageStockChanged -= HandleRageStockChanged;
-                }
             }
         }
     }
@@ -281,14 +345,6 @@ public class HandUIController : MonoBehaviour
     /// Appelé quand les PA changent pour mettre à jour l'état des cartes
     /// </summary>
     private void HandlePAChanged(int current, int max)
-    {
-        RefreshCardAffordability();
-    }
-
-    /// <summary>
-    /// Appelé quand le stock de Rage change pour mettre à jour l'état des cartes Rage
-    /// </summary>
-    private void HandleRageStockChanged(int rageStock)
     {
         RefreshCardAffordability();
     }
@@ -549,7 +605,7 @@ public class HandUIController : MonoBehaviour
     {
         GameLog.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
 
-        // Cas spécial : une carte "cible une carte de la main" (ex: Il triche) est sélectionnée
+        // Cas spécial : une carte "cible une carte de la main" (ex: Triche) est sélectionnée
         // et on clique sur une AUTRE carte -> c'est le ciblage, pas un changement de sélection.
         if (_selectedCard != null && _selectedCard.targetsHandCard && clickedCard != _selectedCard)
         {
@@ -566,7 +622,9 @@ public class HandUIController : MonoBehaviour
         // multi-cibles en attente de la carte PRÉCÉDEMMENT sélectionnée. Sans ça, des cibles restaient
         // accrochées (stuck) et pouvaient être réutilisées à tort pour une autre carte multi-cibles
         // sélectionnée juste après (cf. DeselectCard/CancelTargetingStep qui le font déjà).
+        // Même chose pour l'invocation choisie par une carte de déplacement d'invocation.
         _pendingMultiTargets.Clear();
+        _summonToMove = null;
 
         if (_selectedCard == clickedCard)
         {
@@ -712,37 +770,13 @@ public class HandUIController : MonoBehaviour
         {
             _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
         }
-        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
-        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
 
-        _playerDeckManager.PlayCard(_selectedCard);
-
-        // Déduire le coût en PA (validation déjà faite par CanPlayCard)
-        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
-        {
-            paUser.SpendPA(effectiveCostPA);
-        }
-
-        // Déduire le coût en PV
-        if (_selectedCard.costHP > 0)
-        {
-            activeUnit.PayHealth(_selectedCard.costHP);
-        }
-
-        // Nettoyage UI
-        Services.Grid.UpdateUnitUI();
-        _selectedCard = null;
-        ResetSelectedCardUIPosition();
-        ResetCardHighlights();
-        // OPTIMISATION Phase 3.2: Utilise EventBus au lieu d'appel direct
-        EventBus.Publish(new ResetTileColorsEvent());
-        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
-
+        PayCostsAndEndCardPlay(activeUnit);
         GameLog.Log($"✅ Carte jouée avec succès");
     }
 
     /// <summary>
-    /// Joue une carte qui cible une autre carte de la main (ex: Il triche sur "targetCard").
+    /// Joue une carte qui cible une autre carte de la main (ex: Triche sur "targetCard").
     /// Maintenir Maj pendant le clic augmente le coût de +1 PA au lieu de le réduire de -1 PA.
     /// </summary>
     private void PlayHandCardTargetingCard(CardData targetCard)
@@ -859,7 +893,7 @@ public class HandUIController : MonoBehaviour
 
         bool canAfford = true;
 
-        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        // Coût effectif (tient compte d'un éventuel override, ex: Triche)
         int effectiveCostPA = _playerDeckManager != null ? _playerDeckManager.GetEffectiveCost(card) : card.costPA;
         cardUIElement.RefreshCost(effectiveCostPA);
 
@@ -872,7 +906,7 @@ public class HandUIController : MonoBehaviour
             }
             else
             {
-                canAfford = false; // Les unités non-Ilya ne peuvent pas jouer de cartes avec coût PA
+                canAfford = false; // Unité sans PA : ne peut pas jouer de carte à coût PA
             }
         }
 
@@ -885,13 +919,10 @@ public class HandUIController : MonoBehaviour
             }
         }
 
-        // Vérification du stock de Rage pour les cartes Rage
-        if (canAfford && card.isRageCard && activeUnit is IRageUser rageUser)
+        // Carte de déplacement d'invocation sans invocation sur le terrain : injouable
+        if (canAfford && card.isRepositionSummonCard && !GameActionValidator.HasSummonToMove(activeUnit))
         {
-            if (rageUser.IsRageStockFull())
-            {
-                canAfford = false; // Stock de Rage plein (5/5)
-            }
+            canAfford = false;
         }
 
         cardUIElement.SetAffordable(canAfford);

@@ -28,7 +28,8 @@ public class RenameDeckPopup : MonoBehaviour
         if (_nameInput != null)
             _nameInput.onValueChanged.AddListener(OnNameChanged);
 
-        Hide();
+        // Ne pas appeler Hide() ici : le popup est désactivé dans la scène, et Awake ne s'exécute
+        // qu'à sa 1re activation (dans Show) : Hide() le refermait aussitôt (même règle que CreateDeckPopup).
     }
 
     private void OnNameChanged(string value)

@@ -69,19 +69,17 @@ public class EnemyAI : MonoBehaviour
             if (nextCard != null && nextCard.targetType == CardTargetType.Enemy)
             {
                 int maxCardRange = nextCard.targetRange;
-                int currentDistance = GetManhattanDistance(_enemyUnit.GetCurrentGridPos(), closestPlayerUnit.GetCurrentGridPos());
-                bool isAligned = Mathf.Approximately(_enemyUnit.GetCurrentGridPos().x, closestPlayerUnit.GetCurrentGridPos().x)
-                              || Mathf.Approximately(_enemyUnit.GetCurrentGridPos().y, closestPlayerUnit.GetCurrentGridPos().y);
+                int currentDistance = GridGeometry.Distance(_enemyUnit.GetCurrentGridPos(), closestPlayerUnit.GetCurrentGridPos());
 
-                // Doit se rapprocher si hors portée OU pas aligné (pas de tir en diagonale)
-                if (currentDistance > maxCardRange || !isAligned)
+                // Même règle que le joueur : portée en 4 directions (Manhattan), sans contrainte d'alignement
+                if (currentDistance > maxCardRange)
                 {
                     needsToMoveCloser = true;
-                    GameLog.Log($"{_enemyUnit.name} doit se rapprocher (distance: {currentDistance}, portée: {maxCardRange}, aligné: {isAligned})");
+                    GameLog.Log($"{_enemyUnit.name} doit se rapprocher (distance: {currentDistance}, portée: {maxCardRange})");
                 }
                 else
                 {
-                    GameLog.Log($"{_enemyUnit.name} est déjà à portée et aligné ({currentDistance} <= {maxCardRange}), pas de déplacement");
+                    GameLog.Log($"{_enemyUnit.name} est déjà à portée ({currentDistance} <= {maxCardRange}), pas de déplacement");
                 }
             }
             else if (nextCard != null)
@@ -176,14 +174,10 @@ public class EnemyAI : MonoBehaviour
             // Si l'ennemi a des cartes, s'arrête à portée de carte
             if (maxCardRange > 0)
             {
-                // Utilise la distance de Manhattan (cardinale) au lieu de euclidienne
-                int manhattanDistance = GetManhattanDistance(currentPos, targetPos);
-
-                // Vérifie aussi l'alignement pour éviter de s'arrêter en diagonale
-                bool isAligned = Mathf.Approximately(currentPos.x, targetPos.x) || Mathf.Approximately(currentPos.y, targetPos.y);
-                if (manhattanDistance <= maxCardRange && isAligned)
+                int distance = GridGeometry.Distance(currentPos, targetPos);
+                if (distance <= maxCardRange)
                 {
-                    GameLog.Log($"À portée de carte ({maxCardRange}) après {i} mouvements, distance Manhattan: {manhattanDistance}");
+                    GameLog.Log($"À portée de carte ({maxCardRange}) après {i} mouvements, distance: {distance}");
                     break; // On est assez proche pour jouer une carte
                 }
             }
@@ -207,14 +201,6 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// Calcule la distance de Manhattan (pas de diagonales)
-    /// </summary>
-    private int GetManhattanDistance(Vector2Int from, Vector2Int to)
-    {
-        return Mathf.Abs(from.x - to.x) + Mathf.Abs(from.y - to.y);
-    }
-
-    /// <summary>
     /// Obtient la portée maximale des cartes de l'ennemi
     /// </summary>
     private int GetMaxCardRange()
@@ -227,61 +213,30 @@ public class EnemyAI : MonoBehaviour
         return nextCard.targetRange;
     }
 
-    // Trouve le meilleur mouvement depuis une position donnée vers une cible
+    // Trouve le meilleur mouvement depuis une position donnée vers une cible (4 directions) :
+    // la case libre la plus proche en cases, départagée par la distance réelle (trajet plus droit).
     private Vector2Int FindBestMoveFrom(Vector2Int fromPos, Vector2Int targetPos)
     {
-        Vector2Int direction = targetPos - fromPos;
-
-        // Liste des directions à essayer (par ordre de priorité)
-        // SEULEMENT des mouvements orthogonaux (pas de diagonales)
-        List<Vector2Int> directionsToTry = new List<Vector2Int>();
-
-        // Direction principale (vers le joueur)
-        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
-        {
-            // Le joueur est plus à gauche/droite qu'en haut/bas
-            directionsToTry.Add(new Vector2Int((int)Mathf.Sign(direction.x), 0)); // Horizontal d'abord
-            directionsToTry.Add(new Vector2Int(0, (int)Mathf.Sign(direction.y))); // Vertical ensuite
-        }
-        else
-        {
-            // Le joueur est plus en haut/bas qu'à gauche/droite
-            directionsToTry.Add(new Vector2Int(0, (int)Mathf.Sign(direction.y))); // Vertical d'abord
-            directionsToTry.Add(new Vector2Int((int)Mathf.Sign(direction.x), 0)); // Horizontal ensuite
-        }
-
-        // Ajouter les autres directions orthogonales comme alternatives
-        directionsToTry.Add(new Vector2Int(-(int)Mathf.Sign(direction.x), 0)); // Horizontal opposé
-        directionsToTry.Add(new Vector2Int(0, -(int)Mathf.Sign(direction.y))); // Vertical opposé
-
-        // Essayer chaque direction
         Vector2Int bestMove = Vector2Int.zero;
-        float bestDistanceToTarget = float.MaxValue;
+        int bestDistance = GridGeometry.Distance(fromPos, targetPos);
+        float bestTieBreak = float.MaxValue;
 
-        foreach (Vector2Int dir in directionsToTry)
+        foreach (Vector2Int dir in GridGeometry.Directions4)
         {
             Vector2Int nextPos = fromPos + dir;
 
-            // Vérifier que la case est valide
-            Tile nextTile = Services.Grid.GetTileAtPosition(nextPos);
-            if (nextTile == null) continue; // Case hors grille
+            if (Services.Grid.GetTileAtPosition(nextPos) == null) continue; // Case hors grille
+            if (Services.Grid.GetUnitAtGridPos(nextPos) != null) continue;   // Case occupée
 
-            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(nextPos);
-            if (unitOnTile != null) continue; // Case occupée
+            int distance = GridGeometry.Distance(nextPos, targetPos);
+            float tieBreak = Vector2.Distance(nextPos, targetPos);
 
-            // Calculer la distance au joueur depuis cette case
-            float distToTarget = Vector2.Distance(nextPos, targetPos);
-
-            // Pénalise les positions non alignées (diagonales) pour forcer un mouvement type "Tour" (Rook)
-            // Si ni x ni y ne sont alignés avec la cible, on ajoute un malus
-            if (!Mathf.Approximately(nextPos.x, targetPos.x) && !Mathf.Approximately(nextPos.y, targetPos.y))
+            // Ne recule jamais : il faut se rapprocher (ou rester à distance égale en contournant)
+            if (distance > bestDistance) continue;
+            if (distance < bestDistance || tieBreak < bestTieBreak)
             {
-                distToTarget += 1.0f; // Malus suffisant pour préférer une case alignée plus lointaine
-            }
-
-            if (distToTarget < bestDistanceToTarget)
-            {
-                bestDistanceToTarget = distToTarget;
+                bestDistance = distance;
+                bestTieBreak = tieBreak;
                 bestMove = nextPos;
             }
         }
@@ -297,7 +252,9 @@ public class EnemyAI : MonoBehaviour
 
         foreach (Unit playerUnit in playerUnits)
         {
-            float distance = Vector2.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos());
+            // Distance en cases (4 directions), départagée par la distance réelle
+            float distance = GridGeometry.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos())
+                             + 0.001f * Vector2.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos());
             if (distance < minDistance)
             {
                 minDistance = distance;
@@ -333,19 +290,14 @@ public class EnemyAI : MonoBehaviour
             return false;
         }
 
-        // Vérifie la portée pour les cartes ciblant l'ennemi (distance de Manhattan, pas de diagonales)
+        // Vérifie la portée pour les cartes ciblant l'ennemi (4 directions, comme le joueur)
         if (card.targetType == CardTargetType.Enemy)
         {
-            int distance = GetManhattanDistance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
-
-            // Vérifie aussi l'alignement (pas de tir en diagonale)
-            bool isAligned = Mathf.Approximately(_enemy.GetCurrentGridPos().x, closestPlayer.GetCurrentGridPos().x)
-                          || Mathf.Approximately(_enemy.GetCurrentGridPos().y, closestPlayer.GetCurrentGridPos().y);
-
-            if (distance > card.targetRange || !isAligned)
+            int distance = GridGeometry.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
+            if (distance > card.targetRange)
             {
-                GameLog.Log($"{_enemy.name}: {card.cardName} hors de portée ou pas aligné (distance: {distance}, portée: {card.targetRange}, aligné: {isAligned})");
-                return false; // Hors de portée ou pas aligné
+                GameLog.Log($"{_enemy.name}: {card.cardName} hors de portée (distance: {distance}, portée: {card.targetRange})");
+                return false;
             }
         }
 
@@ -376,18 +328,15 @@ public class EnemyAI : MonoBehaviour
                 // Carte offensive contre joueur
                 if (card.targetType == CardTargetType.Enemy)
                 {
-                    // Vérifie la portée (Manhattan) et l'alignement
-                    int distance = GetManhattanDistance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
-                    bool isAligned = Mathf.Approximately(_enemy.GetCurrentGridPos().x, closestPlayer.GetCurrentGridPos().x)
-                                  || Mathf.Approximately(_enemy.GetCurrentGridPos().y, closestPlayer.GetCurrentGridPos().y);
-
-                    if (distance <= card.targetRange && isAligned)
+                    // Vérifie la portée (4 directions)
+                    int distance = GridGeometry.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
+                    if (distance <= card.targetRange)
                     {
                         targetUnit = closestPlayer;
                     }
                     else
                     {
-                        GameLog.LogWarning($"{_enemy.name}: Cible hors de portée ou pas aligné pour {card.cardName}");
+                        GameLog.LogWarning($"{_enemy.name}: Cible hors de portée pour {card.cardName}");
                     }
                 }
                 // Carte de soin sur soi-même

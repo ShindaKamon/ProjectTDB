@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Frappe_hesitante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Frappe h\xE9sitante"
-  description: "Touche 2 cibles s\xE9par\xE9es en m\xEAl\xE9e, chacune subit le retrait
-    de PM."
+  description: "Inflige 14 d\xE9g\xE2ts \xE0 2 ennemis au contact. Ils perdent 1
+    PM au prochain tour."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0
@@ -58,11 +58,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

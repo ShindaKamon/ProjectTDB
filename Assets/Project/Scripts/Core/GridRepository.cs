@@ -250,16 +250,10 @@ public class GridRepository
                 reachableTilesWithCost.Add(currentTile, currentCost);
             }
 
-            Vector2Int[] neighbors = new Vector2Int[]
+            // 4 directions, pas de diagonales (voir GridGeometry)
+            foreach (Vector2Int offset in GridGeometry.Directions4)
             {
-                currentPos + new Vector2Int(0, 1),
-                currentPos + new Vector2Int(0, -1),
-                currentPos + new Vector2Int(1, 0),
-                currentPos + new Vector2Int(-1, 0)
-            };
-
-            foreach (Vector2Int neighborPos in neighbors)
-            {
+                Vector2Int neighborPos = currentPos + offset;
                 Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
                 bool isOccupied = (unitAtNeighbor != null && unitAtNeighbor != ignoreUnit);
 
@@ -308,16 +302,10 @@ public class GridRepository
                 reachableTiles.Add(currentTile);
             }
 
-            Vector2Int[] neighbors = new Vector2Int[]
+            // 4 directions, pas de diagonales (voir GridGeometry)
+            foreach (Vector2Int offset in GridGeometry.Directions4)
             {
-                currentPos + new Vector2Int(0, 1),
-                currentPos + new Vector2Int(0, -1),
-                currentPos + new Vector2Int(1, 0),
-                currentPos + new Vector2Int(-1, 0)
-            };
-
-            foreach (Vector2Int neighborPos in neighbors)
-            {
+                Vector2Int neighborPos = currentPos + offset;
                 if (_tiles.ContainsKey(neighborPos) &&
                     !visited.ContainsKey(neighborPos) &&
                     currentCost + 1 <= range)
@@ -369,16 +357,10 @@ public class GridRepository
                 break;
             }
 
-            Vector2Int[] neighbors = new Vector2Int[]
+            // 4 directions, pas de diagonales (voir GridGeometry)
+            foreach (Vector2Int offset in GridGeometry.Directions4)
             {
-                currentPos + new Vector2Int(0, 1),
-                currentPos + new Vector2Int(0, -1),
-                currentPos + new Vector2Int(1, 0),
-                currentPos + new Vector2Int(-1, 0)
-            };
-
-            foreach (Vector2Int neighborPos in neighbors)
-            {
+                Vector2Int neighborPos = currentPos + offset;
                 Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
                 bool isOccupied = (unitAtNeighbor != null && unitAtNeighbor != ignoreUnit);
 

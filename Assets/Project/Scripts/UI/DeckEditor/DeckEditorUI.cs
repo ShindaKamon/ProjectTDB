@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 /// <summary>
@@ -20,24 +21,22 @@ public class DeckEditorUI : MonoBehaviour
 
     [Header("Zone Pool")]
     [SerializeField] private CanvasGroup _poolInteractionGroup; // grisé/non cliquable si deck de base
-    [SerializeField] private TMP_InputField _searchInput;
     [SerializeField] private Transform _cardPoolParent;
     [SerializeField] private GameObject _cardPoolItemPrefab;
+    [SerializeField] private PoolFilterBarUI _filterBar;          // recherche, filtres, tri
+    [SerializeField] private TextMeshProUGUI _emptyPoolText;      // "Aucune carte ne correspond à ces filtres."
 
-    [Header("Filtres par Émotion")]
-    [SerializeField] private Transform _emotionFiltersParent;
-    [SerializeField] private GameObject _emotionFilterButtonPrefab;
-    [SerializeField] private Button _showAllButton;
-
-    [Header("Pagination")]
+    [Header("Pagination (optionnelle : sans boutons, tout le pool défile)")]
     [SerializeField] private Button _prevPageButton;
     [SerializeField] private Button _nextPageButton;
     [SerializeField] private TextMeshProUGUI _pageIndicatorText;
     [SerializeField] private int _cardsPerPage = 8;
 
     [Header("Zone Deck (liste groupée triée par coût)")]
-    [SerializeField] private Transform _deckGridParent;
-    [SerializeField] private GameObject _deckGridItemPrefab; // DeckGridCardUI
+    [FormerlySerializedAs("_deckGridParent")]
+    [SerializeField] private Transform _deckListParent;
+    [FormerlySerializedAs("_deckGridItemPrefab")]
+    [SerializeField] private GameObject _deckListRowPrefab; // DeckListRowUI (nom + quantité)
 
     [Header("Courbe de coût PA")]
     [SerializeField] private PACurveUI _paCurve;
@@ -58,12 +57,12 @@ public class DeckEditorUI : MonoBehaviour
     private CardCollection _cardCollection;
 
     private List<CardPoolItemUI> _poolItems = new List<CardPoolItemUI>();
-    private List<DeckGridCardUI> _deckGridItems = new List<DeckGridCardUI>();
+    private List<DeckListRowUI> _deckRows = new List<DeckListRowUI>();
     private List<CardData> _currentDeckCards = new List<CardData>();
     private List<CardData> _filteredCards = new List<CardData>(); // Cartes filtrées pour la pagination
 
-    private List<Button> _emotionFilterButtons = new List<Button>();
-    private EmotionType? _activeEmotionFilter = null;
+    private readonly CardPoolQuery _poolQuery = new CardPoolQuery(); // filtres + tri du pool
+    private List<EmotionType> _deckColors = new List<EmotionType>();  // couleurs du deck affiché (DeckRules.DeckColors)
     private int _currentPage = 0;
     private Coroutine _autosaveRoutine;
 
@@ -84,17 +83,21 @@ public class DeckEditorUI : MonoBehaviour
         if (_duplicateButton != null)
             _duplicateButton.onClick.AddListener(OnDuplicatePressed);
 
-        if (_searchInput != null)
-            _searchInput.onValueChanged.AddListener(OnSearchChanged);
-
-        if (_showAllButton != null)
-            _showAllButton.onClick.AddListener(OnShowAllClicked);
+        if (_filterBar != null)
+            _filterBar.Changed += OnFiltersChanged;
 
         if (_prevPageButton != null)
             _prevPageButton.onClick.AddListener(OnPrevPageClicked);
 
         if (_nextPageButton != null)
             _nextPageButton.onClick.AddListener(OnNextPageClicked);
+    }
+
+    // Quitter l'écran (Retour vers le choix du deck) le désactive, ce qui arrête la coroutine
+    // d'autosave : la dernière modification doit être écrite tout de suite.
+    void OnDisable()
+    {
+        FlushPendingAutosave();
     }
 
     void OnDestroy()
@@ -115,8 +118,13 @@ public class DeckEditorUI : MonoBehaviour
         _currentDeckData = deckData;
         _cardCollection = collection;
         _currentDeckCards = new List<CardData>(cards);
+        _deckColors = DeckRules.DeckColors(deckData, cards);
 
-        SetupEmotionFilter();
+        if (_filterBar != null)
+            _filterBar.Bind(_poolQuery, _deckColors);
+        else
+            _poolQuery.ResetFilters();
+
         CreatePoolItems();
         UpdateDeckDisplay();
         ApplyReadOnlyState();
@@ -162,7 +170,7 @@ public class DeckEditorUI : MonoBehaviour
         if (_resetButton != null)
             _resetButton.gameObject.SetActive(!isReadOnly);
 
-        foreach (var item in _deckGridItems)
+        foreach (var item in _deckRows)
         {
             if (item != null)
                 item.SetInteractable(!isReadOnly);
@@ -171,17 +179,17 @@ public class DeckEditorUI : MonoBehaviour
 
     #region Zone Deck (liste groupée)
 
-    private void RefreshDeckGrid()
+    private void RefreshDeckList()
     {
-        if (_deckGridParent == null) return;
+        if (_deckListParent == null) return;
 
-        foreach (Transform child in _deckGridParent)
+        foreach (Transform child in _deckListParent)
             Destroy(child.gameObject);
-        _deckGridItems.Clear();
+        _deckRows.Clear();
 
-        if (_deckGridItemPrefab == null)
+        if (_deckListRowPrefab == null)
         {
-            GameLog.LogWarning("DeckEditorUI: _deckGridItemPrefab n'est pas assigné!");
+            GameLog.LogWarning("DeckEditorUI: _deckListRowPrefab n'est pas assigné!");
             return;
         }
 
@@ -210,15 +218,16 @@ public class DeckEditorUI : MonoBehaviour
 
         foreach (var entry in sortedCards)
         {
-            var itemGO = Instantiate(_deckGridItemPrefab, _deckGridParent);
-            var gridCardUI = itemGO.GetComponent<DeckGridCardUI>();
+            var itemGO = Instantiate(_deckListRowPrefab, _deckListParent);
+            var row = itemGO.GetComponent<DeckListRowUI>();
 
-            if (gridCardUI != null)
+            if (row != null)
             {
-                gridCardUI.Setup(entry.card, entry.count);
-                gridCardUI.SetInteractable(!isReadOnly);
-                gridCardUI.OnCardClicked += OnDeckCardGroupClicked;
-                _deckGridItems.Add(gridCardUI);
+                row.Setup(entry.card, entry.count);
+                row.SetInteractable(!isReadOnly);
+                row.SetLocked(DeckRules.IsOwnSignature(entry.card, _currentChampion)); // Signature obligatoire
+                row.OnCardClicked += OnDeckCardGroupClicked;
+                _deckRows.Add(row);
             }
         }
 
@@ -229,6 +238,14 @@ public class DeckEditorUI : MonoBehaviour
     {
         if (card == null) return;
         if (_currentDeckData != null && _currentDeckData.isDefault) return; // lecture seule
+
+        // Les Signatures du champion sont obligatoires (DeckRules)
+        ValidationResult canRemove = DeckRules.CanRemoveCard(card, _currentChampion);
+        if (!canRemove.IsValid)
+        {
+            GameLog.Log($"Retrait refusé : {canRemove.ErrorMessage}");
+            return;
+        }
 
         int indexToRemove = _currentDeckCards.FindLastIndex(c => c != null && c.cardName == card.cardName);
         if (indexToRemove < 0) return;
@@ -241,115 +258,6 @@ public class DeckEditorUI : MonoBehaviour
 
     #region Pool
 
-    private void SetupEmotionFilter()
-    {
-        ClearEmotionFilterButtons();
-
-        if (_emotionFiltersParent == null) return;
-
-        if (_currentDeckData == null || !_currentDeckData.HasEmotions)
-        {
-            if (_showAllButton != null)
-                _showAllButton.gameObject.SetActive(false);
-            return;
-        }
-
-        if (_showAllButton != null)
-        {
-            _showAllButton.gameObject.SetActive(true);
-            UpdateShowAllButtonState();
-        }
-
-        CreateEmotionFilterButton(_currentDeckData.Emotion1);
-
-        if (_currentDeckData.Emotion2 != EmotionType.None && _currentDeckData.Emotion2 != _currentDeckData.Emotion1)
-        {
-            CreateEmotionFilterButton(_currentDeckData.Emotion2);
-        }
-
-        _activeEmotionFilter = null;
-    }
-
-    private void CreateEmotionFilterButton(EmotionType emotion)
-    {
-        if (emotion == EmotionType.None) return;
-        if (_emotionFilterButtonPrefab == null || _emotionFiltersParent == null) return;
-
-        var buttonGO = Instantiate(_emotionFilterButtonPrefab, _emotionFiltersParent);
-        var button = buttonGO.GetComponent<Button>();
-
-        if (button != null)
-        {
-            var buttonImage = button.GetComponent<Image>();
-            if (buttonImage != null)
-                buttonImage.color = CardVisualHelper.GetEmotionColor(emotion);
-
-            buttonGO.name = emotion.ToString();
-
-            var label = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
-            if (label != null)
-                label.text = CardVisualHelper.GetEmotionName(emotion);
-
-            EmotionType capturedEmotion = emotion;
-            button.onClick.AddListener(() => OnEmotionFilterClicked(capturedEmotion));
-
-            _emotionFilterButtons.Add(button);
-        }
-    }
-
-    private void ClearEmotionFilterButtons()
-    {
-        foreach (var button in _emotionFilterButtons)
-        {
-            if (button != null)
-                Destroy(button.gameObject);
-        }
-        _emotionFilterButtons.Clear();
-    }
-
-    private void OnEmotionFilterClicked(EmotionType emotion)
-    {
-        _activeEmotionFilter = emotion;
-        _currentPage = 0;
-        UpdateEmotionFilterButtonStates();
-        ApplyFiltersAndRefreshPool();
-    }
-
-    private void OnShowAllClicked()
-    {
-        _activeEmotionFilter = null;
-        _currentPage = 0;
-        UpdateEmotionFilterButtonStates();
-        ApplyFiltersAndRefreshPool();
-    }
-
-    private void UpdateEmotionFilterButtonStates()
-    {
-        UpdateShowAllButtonState();
-
-        foreach (var button in _emotionFilterButtons)
-        {
-            if (button == null) continue;
-
-            bool isActive = _activeEmotionFilter.HasValue &&
-                           button.gameObject.name == _activeEmotionFilter.Value.ToString();
-
-            button.transform.localScale = isActive ? Vector3.one * 1.15f : Vector3.one;
-
-            var colors = button.colors;
-            colors.normalColor = isActive ? Color.white : new Color(0.8f, 0.8f, 0.8f);
-            button.colors = colors;
-        }
-    }
-
-    private void UpdateShowAllButtonState()
-    {
-        if (_showAllButton == null) return;
-
-        bool isActive = !_activeEmotionFilter.HasValue;
-        _showAllButton.transform.localScale = isActive ? Vector3.one * 1.1f : Vector3.one;
-    }
-
     private void CreatePoolItems()
     {
         ClearPoolItems();
@@ -357,7 +265,6 @@ public class DeckEditorUI : MonoBehaviour
         if (_cardCollection == null || _cardPoolItemPrefab == null || _cardPoolParent == null) return;
 
         _currentPage = 0;
-        _activeEmotionFilter = null;
         ApplyFiltersAndRefreshPool();
     }
 
@@ -373,7 +280,7 @@ public class DeckEditorUI : MonoBehaviour
 
     private void UpdateDeckDisplay()
     {
-        RefreshDeckGrid();
+        RefreshDeckList();
         UpdateHeader();
     }
 
@@ -394,24 +301,11 @@ public class DeckEditorUI : MonoBehaviour
         if (card == null) return;
         if (_currentDeckData != null && _currentDeckData.isDefault) return; // deck de base : lecture seule
 
-        // Limite par catégorie (2 Signature + 16 Standard ; Éveil différé, 0 slot pour l'instant)
-        int categoryLimit = card.category switch
+        // Règles de construction : exemplaires max, emplacements, Signatures réservées (DeckRules)
+        ValidationResult canAdd = DeckRules.CanAddCard(_currentDeckCards, card, _currentChampion, _deckColors);
+        if (!canAdd.IsValid)
         {
-            CardCategory.Signature => DeckData.SIGNATURE_SLOTS,
-            CardCategory.Standard => DeckData.STANDARD_SLOTS,
-            _ => 0,
-        };
-
-        int categoryCount = 0;
-        foreach (var c in _currentDeckCards)
-        {
-            if (c != null && c.category == card.category)
-                categoryCount++;
-        }
-
-        if (categoryCount >= categoryLimit)
-        {
-            GameLog.Log($"Limite atteinte pour la catégorie {card.category} ({categoryLimit}).");
+            GameLog.Log($"Ajout refusé : {canAdd.ErrorMessage}");
             return;
         }
 
@@ -419,7 +313,7 @@ public class DeckEditorUI : MonoBehaviour
         NotifyDeckContentChanged();
     }
 
-    private void OnSearchChanged(string searchText)
+    private void OnFiltersChanged()
     {
         _currentPage = 0;
         ApplyFiltersAndRefreshPool();
@@ -427,42 +321,7 @@ public class DeckEditorUI : MonoBehaviour
 
     private void ApplyFiltersAndRefreshPool()
     {
-        string searchText = _searchInput?.text?.ToLower() ?? "";
-
-        _filteredCards.Clear();
-
-        if (_cardCollection == null) return;
-
-        foreach (var card in _cardCollection.AllCards)
-        {
-            if (card == null) continue;
-
-            // Cartes Signature : uniquement celles du champion actif (pool partagé sinon)
-            if (card.category == CardCategory.Signature && card.signatureOwner != _currentChampion)
-                continue;
-
-            if (_currentDeckData != null && !_currentDeckData.CardMatchesDeckEmotions(card))
-                continue;
-
-            if (_activeEmotionFilter.HasValue && card.emotionType != _activeEmotionFilter.Value)
-                continue;
-
-            if (!string.IsNullOrEmpty(searchText))
-            {
-                bool matchesSearch = card.cardName.ToLower().Contains(searchText) ||
-                                    card.description.ToLower().Contains(searchText);
-                if (!matchesSearch) continue;
-            }
-
-            _filteredCards.Add(card);
-        }
-
-        _filteredCards.Sort((a, b) =>
-        {
-            int costCompare = a.costPA.CompareTo(b.costPA);
-            if (costCompare != 0) return costCompare;
-            return a.cardName.CompareTo(b.cardName);
-        });
+        _filteredCards = _poolQuery.Apply(_cardCollection?.AllCards, _currentChampion, _deckColors);
 
         RefreshPoolDisplay();
         UpdatePaginationUI();
@@ -476,8 +335,12 @@ public class DeckEditorUI : MonoBehaviour
                 item.gameObject.SetActive(false);
         }
 
-        int startIndex = _currentPage * _cardsPerPage;
-        int endIndex = Mathf.Min(startIndex + _cardsPerPage, _filteredCards.Count);
+        int pageSize = GetPageSize();
+        int startIndex = _currentPage * pageSize;
+        int endIndex = Mathf.Min(startIndex + pageSize, _filteredCards.Count);
+
+        if (_emptyPoolText != null)
+            _emptyPoolText.gameObject.SetActive(_filteredCards.Count == 0);
 
         for (int i = startIndex; i < endIndex; i++)
         {
@@ -531,10 +394,15 @@ public class DeckEditorUI : MonoBehaviour
         }
     }
 
+    // Sans boutons de page câblés, le pool entier est affiché dans la zone de défilement
+    // (sinon seules les _cardsPerPage premières cartes seraient accessibles).
+    private int GetPageSize() =>
+        _prevPageButton != null && _nextPageButton != null ? Mathf.Max(1, _cardsPerPage) : int.MaxValue;
+
     private int GetMaxPage()
     {
         if (_filteredCards.Count == 0) return 0;
-        return (_filteredCards.Count - 1) / _cardsPerPage;
+        return (_filteredCards.Count - 1) / GetPageSize();
     }
 
     private void UpdatePaginationUI()

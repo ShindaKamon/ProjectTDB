@@ -67,7 +67,7 @@ public class Unit : MonoBehaviour, IMarkable
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
     protected int _health;
-    protected int _attackDamage; // NOTE: Utilisé uniquement par IlyaUnit pour le système de transformation
+    protected int _attackDamage;
     protected int _maxMovementPoints; // PM (Points de Mouvement) maximum
 
     // PM (Points de Mouvement) restants pour le tour actuel.
@@ -242,14 +242,12 @@ public class Unit : MonoBehaviour, IMarkable
             direction.y = 0; // On ignore la hauteur pour la rotation
 
             // Applique la rotation seulement si on a une direction horizontale significative.
-            // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp,
-            // donc pas de passage transitoire par un angle en diagonale pendant les virages.
+            // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp, donc pas
+            // de passage transitoire par un angle en diagonale pendant les virages.
             if (direction.sqrMagnitude > 0.001f)
             {
-                Vector3 cardinalDirection = Mathf.Abs(direction.x) > Mathf.Abs(direction.z)
-                    ? new Vector3(Mathf.Sign(direction.x), 0, 0)
-                    : new Vector3(0, 0, Mathf.Sign(direction.z));
-                transform.rotation = Quaternion.LookRotation(cardinalDirection);
+                Vector2Int snapped = GridGeometry.SnapDirection(new Vector2(direction.x, direction.z));
+                transform.rotation = Quaternion.LookRotation(new Vector3(snapped.x, 0, snapped.y));
             }
 
             transform.position = Vector3.MoveTowards(transform.position, _targetWorldPosition, _moveSpeed * Time.deltaTime);
@@ -311,6 +309,26 @@ public class Unit : MonoBehaviour, IMarkable
         transform.rotation = targetRotation; // Snap final pour la précision
     }
 
+    // Origine des dégâts en cours d'application (voir TakeDamageFrom), relayée dans UnitDamagedEvent
+    private Unit _incomingDamageSource;
+
+    /// <summary>
+    /// Inflige des dégâts en précisant leur origine (ex: écho de Lyse), pour que les retours
+    /// visuels puissent les distinguer. Passe par TakeDamage, surcharges comprises (boucliers).
+    /// </summary>
+    public void TakeDamageFrom(int damage, Unit source)
+    {
+        _incomingDamageSource = source;
+        try
+        {
+            TakeDamage(damage);
+        }
+        finally
+        {
+            _incomingDamageSource = null;
+        }
+    }
+
     // Méthode pour infliger des dégâts à cette unité.
     public virtual void TakeDamage(int damage)
     {
@@ -340,8 +358,8 @@ public class Unit : MonoBehaviour, IMarkable
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        // Note: On ne connaît pas forcément la source des dégâts ici, donc on passe null
-        EventBus.Publish(new UnitDamagedEvent(this, null, damage));
+        // Source connue seulement via TakeDamageFrom (null sinon)
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -386,7 +404,7 @@ public class Unit : MonoBehaviour, IMarkable
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        EventBus.Publish(new UnitDamagedEvent(this, null, damage));
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -425,7 +443,7 @@ public class Unit : MonoBehaviour, IMarkable
     }
 
     /// <summary>
-    /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus comme la Rage)
+    /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus)
     /// </summary>
     public void PayHealth(int amount)
     {
@@ -526,12 +544,6 @@ public class Unit : MonoBehaviour, IMarkable
         }
     }
 
-    // NOTE: Utilisé uniquement par IlyaUnit pour modifier l'ATK lors des transformations
-    protected void SetAttackDamage(int value)
-    {
-        _attackDamage = value;
-    }
-
     /// <summary>
     /// Retourne la UnitState (Phase 3.4)
     /// </summary>
@@ -563,12 +575,6 @@ public class Unit : MonoBehaviour, IMarkable
         return _health;
     }
 
-    // NOTE: Utilisé uniquement par IlyaUnit pour le système de lifesteal en forme Déchaînée
-    public int GetAttackDamage()
-    {
-        return _attackDamage;
-    }
-
     /// <summary>
     /// Gère la mort de l'unité
     /// </summary>
@@ -579,18 +585,8 @@ public class Unit : MonoBehaviour, IMarkable
         // Phase 3.4: Marque comme mort
         _unitState?.SetDead();
 
-        // Nettoie les marques Stigmate
-        // 1. Si c'est un champion, retire tous les Stigmates qu'il a appliqués sur les ennemis
-        if (GetFaction() == UnitFaction.Player)
-        {
-            StigmateManager.RemoveAllStigmatesFromSource(this);
-        }
-
-        // 2. Retire toutes les marques sur cette unité (y compris Stigmate)
+        // Retire toutes les marques sur cette unité
         ClearAllMarks();
-
-        // 3. Nettoie les effets de PA en attente
-        StigmateManager.ClearPendingPALoss(this);
 
         OnUnitDied?.Invoke(this);
 
@@ -691,7 +687,7 @@ public class Unit : MonoBehaviour, IMarkable
             {
                 // Retire les effets du buff
                 _attackDamage -= buff.atkModifier;
-                // Note: DEF est géré par les classes dérivées (IlyaUnit, Enemy)
+                // Note: DEF est géré par les classes dérivées (Enemy)
 
                 GameLog.Log($"{name}: Buff expiré - ATK restaurée de {buff.atkModifier}");
                 _activeBuffs.RemoveAt(i);
@@ -752,20 +748,9 @@ public class Unit : MonoBehaviour, IMarkable
         Vector2Int currentPos = GetCurrentGridPos();
         Vector2Int finalPos = currentPos;
 
-        // Normalise la direction en mouvement de grille (1 case à la fois)
-        Vector2Int stepDirection = new Vector2Int(
-            Mathf.RoundToInt(direction.x),
-            Mathf.RoundToInt(direction.y)
-        );
-
-        // Si la direction est diagonale, on prend la composante la plus forte
-        if (stepDirection.x != 0 && stepDirection.y != 0)
-        {
-            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
-                stepDirection.y = 0;
-            else
-                stepDirection.x = 0;
-        }
+        // Direction cardinale dominante (4 directions), 1 case à la fois
+        Vector2Int stepDirection = GridGeometry.SnapDirection(direction);
+        if (stepDirection == Vector2Int.zero) return currentPos;
 
         // Repousse case par case
         for (int i = 0; i < distance; i++)
@@ -1102,12 +1087,6 @@ public class Unit : MonoBehaviour, IMarkable
             {
                 count++;
             }
-        }
-
-        // 3. Perte de PA (via StigmateManager)
-        if (StigmateManager.HasPendingPALoss(this))
-        {
-            count++;
         }
 
         return count;

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Vision_cauchemardesque
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Vision cauchemardesque
-  description: "Carte de contr\xF4le \xE0 distance, pousse la cible de 2 cases."
+  description: "Inflige 25 d\xE9g\xE2ts \xE0 un ennemi \xE0 1-5 cases et repousse-le
+    de 2 cases."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0
@@ -26,6 +27,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 25
   damageSelf: 0
   healAmount: 0
@@ -39,6 +42,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 2
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -54,9 +58,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

@@ -1,20 +1,25 @@
 # 🗺️ Système de Grille - Émotions Tactics (Project TDB)
 
-**Version:** 1.2
-**Date:** 23 Septembre 2026
-**Changements :** v1.1 (23/09/2026) encodage réparé, portée MVP. **v1.3 (23/09/2026)** : alignement sur le code réel — **la grille implémentée est carrée**.
+**Version:** 1.5
+**Date:** 24 Septembre 2026
+**Changements :** v1.1 (23/09/2026) encodage réparé, portée MVP. v1.3 (23/09/2026) : alignement sur le code réel — la grille implémentée est carrée. v1.4 (24/09/2026) : essai en 8 directions. **v1.5 (24/09/2026)** : **retour aux 4 directions** (décision actée), règle unifiée dans le code.
 
-## ✅ Grille implémentée (code, vérifié le 23/09/2026)
+## ✅ Grille implémentée (code, 24/09/2026)
 
-| Élément | Code actuel |
-|---------|-------------|
+**Règle unique : 4 directions, pas de diagonales** (distance de Manhattan, `|dx| + |dy|`), partout. Elle est codée une seule fois dans `GridGeometry` (`Scripts/Core/GridGeometry.cs`) ; ne pas recalculer une distance à la main.
+
+| Élément | Règle |
+|---------|-------|
 | **Forme** | Grille **carrée** 10 × 10 (`GridManager._width/_height`), tuiles `Vector2Int` |
-| **Distance / portée** | **Manhattan** (`|dx| + |dy|`) dans `GameActionValidator`, `InputManager`, `EnemyAI` (quelques validations utilisent encore une distance euclidienne) |
-| **Déplacement** | 4 directions (haut, bas, gauche, droite) |
-| **Charges / lignes** | 4 directions cardinales |
+| **Distance / portée** | 4 directions : une case en diagonale est à 2 cases ; portée 1 = les 4 cases qui touchent le lanceur ; joueur et monstres suivent la même règle, sans contrainte d'alignement |
+| **Déplacement** | 4 directions, 1 PM par case ; on ne traverse pas une unité |
+| **Zones** | Cercle de rayon r = losange (rayon 1 = 5 cases en croix, rayon 2 = 13 cases) ; ligne et cône suivent l'axe dominant vers la cible ; la croix reste sur les 2 axes |
+| **Charges / lignes** | Ligne droite : même ligne ou même colonne |
+| **Poussée / attraction** | Selon l'axe dominant (jamais en diagonale) |
+| **Adjacence** (ex. Réflexe du grimpeur de Crux) | Les 4 cases qui touchent |
 | **Terrain** | Plat, sans obstacles |
 
-> ⚠️ **À aligner (question ouverte, voir `GDD_Main.md`)** : l'Excel suppose une grille carrée **8 directions** (cercle rayon 1 = 9 cases, rayon 2 = 25 cases, distance de Chebyshev). Avec la distance de Manhattan du code, ces « cercles » font 5 et 13 cases. La Roadmap de l'Excel parle encore d'une grille hexagonale : à corriger.
+> ⚠️ Côté Excel : le budget des cartes suppose des zones de 9 / 25 cases (8 directions) ; en 4 directions elles font 5 / 13 cases, le coût des cartes à zone est à revoir. La Roadmap parle encore d'une grille hexagonale : à corriger.
 
 Le reste de ce document décrit la **conception hexagonale d'origine** (coordonnées cubiques, 6 directions), **non implémentée**. Elle est conservée pour référence : terrains, ligne de vue, déplacement forcé et optimisations restent valables sur une grille carrée en adaptant les formules.
 
@@ -22,7 +27,7 @@ Le reste de ce document décrit la **conception hexagonale d'origine** (coordonn
 
 ## 🎯 Vue d'Ensemble
 
-La grille est la fondation tactique du jeu : positionnement, portée et contrôle de zone (retrait de PM, poussée/tirage de la Peur, grappin de l'Alpiniste).
+La grille est la fondation tactique du jeu : positionnement, portée et contrôle de zone (retrait de PM, poussée/tirage de la Peur, grappin de Crux).
 
 ### Portée MVP
 
@@ -123,7 +128,7 @@ int HexDistance(Vector3Int a, Vector3Int b)
 - **Ennemis :** 1 boss + 2-4 adds
 - **Alliés :** 1-3
 
-> Les donjons sont prévus pour une **équipe de 3** (Excel) ; l'aventure est jouable en solo. Coop ou un seul joueur qui contrôle les 3 : question ouverte (`GDD_Main.md`).
+> Un joueur = un champion (24/09/2026). Les donjons prévus pour une **équipe de 3** (Excel) viendront avec le multijoueur (V2) ; pour le MVP, voir « Donjon en solo » dans `GDD_Main.md`.
 
 ### Zones de Départ
 

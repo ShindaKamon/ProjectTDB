@@ -260,7 +260,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
 | Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |
 | Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer | 24/09 |
-| Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`) | 24/09 |
+| Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`), style simple : 1-2 phrases courtes, verbe + cible + chiffre (+ contrepartie), sans conseil ni parenthèse (ex. « Inflige 11 dégâts à un ennemi au contact. ») | 24/09 |
 | Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 8 directions ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
 
 ## Questions ouvertes

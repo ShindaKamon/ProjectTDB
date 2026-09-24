@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Ombre_rampante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Ombre rampante
-  description: "Attaque un ennemi \xE0 1-3 cases pour 9 d\xE9g\xE2ts. Petit coup
-    \xE0 distance, pour presque rien."
+  description: "Inflige 9 d\xE9g\xE2ts \xE0 un ennemi \xE0 1-3 cases."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

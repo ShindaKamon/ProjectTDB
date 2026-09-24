@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: Tapis
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Tapis
-  description: "Choisis jusqu'\xE0 2 ennemis au contact : 72 d\xE9g\xE2ts de base,
-    +10 par PA d\xE9j\xE0 d\xE9pens\xE9 ce tour avant cette carte. Joue-la en dernier
-    pour un maximum de d\xE9g\xE2ts."
+  description: "Inflige 72 d\xE9g\xE2ts \xE0 2 ennemis au contact, +10 par PA d\xE9j\xE0
+    d\xE9pens\xE9 ce tour."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2

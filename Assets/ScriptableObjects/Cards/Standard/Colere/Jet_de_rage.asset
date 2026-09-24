@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Jet_de_rage
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Jet de rage
-  description: "Frappe un ennemi jusqu'\xE0 6 cases de distance pour 23 d\xE9g\xE2ts.
-    Ligne de vue requise."
+  description: "Inflige 23 d\xE9g\xE2ts \xE0 un ennemi \xE0 1-6 cases."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

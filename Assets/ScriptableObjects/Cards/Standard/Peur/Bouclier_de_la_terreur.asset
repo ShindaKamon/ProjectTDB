@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Bouclier_de_la_terreur
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Bouclier de la terreur
-  description: "Se joue sur toi. Tu gagnes un gros bouclier de 27 PV pendant 1 tour.
-    En contrepartie, tu perds 1 PM \xE0 ton prochain tour."
+  description: Gagne un bouclier de 27 PV pendant 1 tour. Tu perds 1 PM au prochain
+    tour.
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

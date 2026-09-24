@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Vision_cauchemardesque
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Vision cauchemardesque
-  description: "Frappe un ennemi \xE0 1-5 cases pour 25 d\xE9g\xE2ts et le repousse
-    de 2 cases. Id\xE9al pour l'\xE9loigner de tes alli\xE9s."
+  description: "Inflige 25 d\xE9g\xE2ts \xE0 un ennemi \xE0 1-5 cases et repousse-le
+    de 2 cases."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Renfort_du_c_ur
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Renfort du c\u0153ur"
-  description: "Soigne 2 alli\xE9s diff\xE9rents au contact de 17 PV chacun."
+  description: "Soigne 2 alli\xE9s au contact de 17 PV."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

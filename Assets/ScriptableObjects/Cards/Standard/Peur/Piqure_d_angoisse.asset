@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Piqure_d_angoisse
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Piq\xFBre d'angoisse"
-  description: "Frappe un ennemi au contact pour 10 d\xE9g\xE2ts. Il perd 1 PM \xE0
-    son prochain tour."
+  description: "Inflige 10 d\xE9g\xE2ts \xE0 un ennemi au contact. Il perd 1 PM au
+    prochain tour."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

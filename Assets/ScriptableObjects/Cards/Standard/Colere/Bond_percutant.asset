@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: Bond_percutant
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Bond percutant
-  description: "Bondis jusqu'\xE0 3 cases dans la direction de ton choix (pour charger
-    ou pour te replier). \xC0 l'atterrissage, tous les ennemis dans la zone 3\xD73
-    autour de toi subissent 17 d\xE9g\xE2ts."
+  description: "Bondis jusqu'\xE0 3 cases, puis inflige 17 d\xE9g\xE2ts aux ennemis
+    autour de toi."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Reflexe_de_survie
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "R\xE9flexe de survie"
-  description: "Se joue sur toi. Si un ennemi te cible ce tour-ci, les d\xE9g\xE2ts
-    que tu subis sont r\xE9duits (puissance 23)."
+  description: Si un ennemi t'attaque ce tour, tu gagnes un bouclier de 23 PV.
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

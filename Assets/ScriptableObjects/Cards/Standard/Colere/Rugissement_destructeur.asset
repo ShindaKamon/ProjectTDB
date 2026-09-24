@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Rugissement_destructeur
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Rugissement destructeur
-  description: "Choisis un ennemi au contact : lui et tous les ennemis dans la zone
-    3\xD73 autour de lui voient leur armure r\xE9duite (puissance 7). Aucun d\xE9g\xE2t,
-    mais pr\xE9pare tes attaques suivantes."
+  description: Les ennemis autour de toi perdent 7 d'armure pendant 1 tour.
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

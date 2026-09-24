@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Onde_radieuse
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Onde radieuse
-  description: "Vise jusqu'\xE0 3 cases : les ennemis touch\xE9s sur une ligne de
-    2-3 cases subissent 33 d\xE9g\xE2ts."
+  description: "Inflige 33 d\xE9g\xE2ts aux ennemis align\xE9s sur 3 cases, jusqu'\xE0
+    3 cases de toi."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Terreur_paralysante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Terreur paralysante
-  description: "Choisis un ennemi au contact : aucun d\xE9g\xE2t, mais il perd tous
-    ses PM \xE0 son prochain tour. Contr\xF4le pur pour l'immobiliser."
+  description: Un ennemi au contact perd tous ses PM au prochain tour.
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

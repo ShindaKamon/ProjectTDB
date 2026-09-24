@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Sang_bouillonnant
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Sang bouillonnant
-  description: "Frappe un ennemi au contact pour 18 d\xE9g\xE2ts et r\xE9cup\xE8re
+  description: "Inflige 18 d\xE9g\xE2ts \xE0 un ennemi au contact et r\xE9cup\xE8re
     autant de PV."
   artwork: {fileID: 0}
   emotionType: 1

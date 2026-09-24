@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: Piolet_d_ascension
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Piolet d'ascension
-  description: "Choisis une unit\xE9 (alli\xE9e ou ennemie) \xE0 1-5 cases : tu te
-    propulses \xE0 c\xF4t\xE9 d'elle. Atterri pr\xE8s d'un alli\xE9, tu gagnes un
-    bouclier (-15 % de d\xE9g\xE2ts subis) ; pr\xE8s d'un ennemi, ta prochaine carte
-    fait +15 % de d\xE9g\xE2ts."
+  description: "Propulse-toi \xE0 c\xF4t\xE9 d'une unit\xE9 \xE0 1-5 cases. Pr\xE8s
+    d'un alli\xE9 : -15 % de d\xE9g\xE2ts subis. Pr\xE8s d'un ennemi : +15 % de d\xE9g\xE2ts
+    sur ta prochaine carte."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2

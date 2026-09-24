@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Flamme_de_l_espoir
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Flamme de l'espoir
-  description: "Frappe un ennemi au contact pour 38 d\xE9g\xE2ts. Un coup solide
-    quand tu n'as pas de soin \xE0 donner."
+  description: "Inflige 38 d\xE9g\xE2ts \xE0 un ennemi au contact."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

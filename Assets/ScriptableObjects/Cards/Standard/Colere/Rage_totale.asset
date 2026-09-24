@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Rage_totale
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Rage totale
-  description: "Frappe un ennemi au contact pour 117 d\xE9g\xE2ts, mais tu subis
-    23 d\xE9g\xE2ts de recul. Finisher ultime : \xE0 jouer quand la partie est en
-    jeu."
+  description: "Inflige 117 d\xE9g\xE2ts \xE0 un ennemi au contact. Tu subis 23 d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Euphorie_aveuglante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Euphorie aveuglante
-  description: "Soigne-toi de 57 PV. Contrepartie : tu deviens vuln\xE9rable et subis
-    plus de d\xE9g\xE2ts. \xC0 jouer quand tu es \xE0 l'abri."
+  description: "Soigne-toi de 57 PV. Ensuite, tu subis plus de d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

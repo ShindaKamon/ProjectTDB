@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: Fuite_panique
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Fuite panique
-  description: "Frappe un ennemi au contact pour 22 d\xE9g\xE2ts, le repousse d'1
-    case et lui retire 2 PM \xE0 son prochain tour. Ensuite, tu recules automatiquement
-    de 2 cases."
+  description: "Inflige 22 d\xE9g\xE2ts \xE0 un ennemi au contact, repousse-le d'1
+    case et retire-lui 2 PM. Tu recules ensuite de 2 cases."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

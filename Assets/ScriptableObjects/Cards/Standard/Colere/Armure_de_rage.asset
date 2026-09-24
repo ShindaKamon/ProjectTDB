@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Armure_de_rage
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Armure de rage
-  description: Gagnes un bouclier de 23 PV pendant 1 tour.
+  description: Gagne un bouclier de 23 PV pendant 1 tour.
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

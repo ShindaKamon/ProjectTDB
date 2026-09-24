@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Voile_d_ombre
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Voile d'ombre
-  description: "Se joue sur toi. Tu gagnes une protection (puissance 11) qui r\xE9duit
-    les d\xE9g\xE2ts que tu subis."
+  description: Gagne un bouclier de 11 PV pendant 1 tour.
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

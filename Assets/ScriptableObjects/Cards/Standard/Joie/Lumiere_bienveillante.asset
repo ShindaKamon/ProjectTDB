@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Lumiere_bienveillante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Lumi\xE8re bienveillante"
-  description: "Soigne un alli\xE9 \xE0 1-5 cases de 23 PV. Ligne de vue requise."
+  description: "Soigne un alli\xE9 \xE0 1-5 cases de 23 PV."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

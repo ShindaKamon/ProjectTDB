@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Eclat_de_joie
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "\xC9clat de joie"
-  description: "Soigne un alli\xE9 au contact de 10 PV. Un ennemi adjacent \xE0 cet
-    alli\xE9 subit autant de d\xE9g\xE2ts."
+  description: "Soigne un alli\xE9 au contact de 10 PV. Un ennemi \xE0 c\xF4t\xE9
+    de lui subit 10 d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

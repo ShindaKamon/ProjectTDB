@@ -13,10 +13,8 @@ MonoBehaviour:
   m_Name: Triche
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Triche
-  description: "Clique sur Triche, puis sur une autre carte de ta main : son co\xFBt
-    change de -1 PA (+1 en maintenant Maj), minimum 1 PA. Vise un motif pour ton
-    passif Main gagnante : Paire (2 cartes de m\xEAme co\xFBt), Suite (co\xFBts N
-    puis N+1) ou Bluff (2 \xE9motions diff\xE9rentes)."
+  description: "Change de 1 PA le co\xFBt d'une autre carte de ta main : -1, ou +1
+    en maintenant Maj. Minimum 1 PA."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2

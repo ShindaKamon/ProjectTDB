@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Coup_de_colere
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Coup de col\xE8re"
-  description: "Frappe un ennemi au contact et lui inflige 11 d\xE9g\xE2ts. Peu co\xFBteuse
-    : id\xE9ale pour finir un ennemi ou encha\xEEner avec d'autres cartes."
+  description: "Inflige 11 d\xE9g\xE2ts \xE0 un ennemi au contact."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

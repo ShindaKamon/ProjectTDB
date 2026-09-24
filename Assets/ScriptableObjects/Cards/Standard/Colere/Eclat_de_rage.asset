@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Eclat_de_rage
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "\xC9clat de rage"
-  description: "Vise jusqu'\xE0 5 cases : les ennemis touch\xE9s sur une ligne de
-    2-3 cases subissent 27 d\xE9g\xE2ts. Aligne tes cibles avant de jouer."
+  description: "Inflige 27 d\xE9g\xE2ts aux ennemis align\xE9s sur 3 cases, jusqu'\xE0
+    5 cases de toi."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

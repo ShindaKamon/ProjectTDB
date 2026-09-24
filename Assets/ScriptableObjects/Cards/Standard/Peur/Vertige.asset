@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Vertige
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Vertige
-  description: "Frappe les ennemis align\xE9s sur une ligne de 2-3 cases depuis le
-    contact : ils subissent 25 d\xE9g\xE2ts et perdent 1 PM \xE0 leur prochain tour."
+  description: "Inflige 25 d\xE9g\xE2ts aux ennemis align\xE9s sur 3 cases depuis
+    le contact. Ils perdent 1 PM au prochain tour."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

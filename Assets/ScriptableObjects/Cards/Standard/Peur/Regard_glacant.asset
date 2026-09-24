@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Regard_glacant
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Regard gla\xE7ant"
-  description: "Choisis une case \xE0 1-6 cases : tous les ennemis dans la zone 5\xD75
-    autour perdent 2 PM \xE0 leur prochain tour. Aucun d\xE9g\xE2t."
+  description: "Les ennemis dans une zone 5\xD75 \xE0 1-6 cases perdent 2 PM au prochain
+    tour."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

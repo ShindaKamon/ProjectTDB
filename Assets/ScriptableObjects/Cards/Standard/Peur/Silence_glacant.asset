@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Silence_glacant
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Silence gla\xE7ant"
-  description: "Frappe un ennemi au contact pour 36 d\xE9g\xE2ts. Il perd 2 PM \xE0
-    son prochain tour."
+  description: "Inflige 36 d\xE9g\xE2ts \xE0 un ennemi au contact. Il perd 2 PM au
+    prochain tour."
   artwork: {fileID: 0}
   emotionType: 5
   category: 0

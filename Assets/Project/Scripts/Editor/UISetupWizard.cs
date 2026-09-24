@@ -26,7 +26,6 @@ public class UISetupWizard : EditorWindow
         CreateDeckListRowPrefab();
         CreateDeckSlotPrefab();
         CreateCardPoolItemPrefab();
-        CreateDeckCardSlotPrefab();
 
         AssetDatabase.Refresh();
         Debug.Log("Tous les prefabs UI ont ete generes avec succes!");
@@ -53,9 +52,6 @@ public class UISetupWizard : EditorWindow
 
         if (GUILayout.Button("CardPoolItem (pool d'edition)"))
             CreateCardPoolItemPrefab();
-
-        if (GUILayout.Button("DeckCardSlot (slot d'edition)"))
-            CreateDeckCardSlotPrefab();
 
         GUILayout.Space(20);
 
@@ -378,102 +374,6 @@ public class UISetupWizard : EditorWindow
         tmp.color = color;
         tmp.raycastTarget = false;
         return tmp;
-    }
-
-    /// <summary>
-    /// Cree le prefab DeckCardSlot pour l'edition de deck
-    /// </summary>
-    [MenuItem("Tools/UI/Prefabs/DeckCardSlot")]
-    public static void CreateDeckCardSlotPrefab()
-    {
-        EnsureFolderExists(PrefabPath);
-
-        // Root
-        GameObject root = new GameObject("DeckCardSlot");
-        RectTransform rootRT = root.AddComponent<RectTransform>();
-        rootRT.sizeDelta = new Vector2(80, 100);
-
-        Image rootImage = root.AddComponent<Image>();
-        rootImage.color = new Color(0.2f, 0.2f, 0.25f);
-
-        DeckCardSlotUI slotUI = root.AddComponent<DeckCardSlotUI>();
-
-        // Empty State Background
-        GameObject emptyBg = CreateChild(root, "EmptyBackground");
-        Image emptyBgImg = emptyBg.AddComponent<Image>();
-        emptyBgImg.color = new Color(0.1f, 0.1f, 0.15f, 0.5f);
-        SetAnchors(emptyBg, new Vector2(0.1f, 0.1f), new Vector2(0.9f, 0.9f), Vector2.zero, Vector2.zero);
-
-        // Card Image
-        GameObject cardImage = CreateChild(root, "CardImage");
-        Image cardImg = cardImage.AddComponent<Image>();
-        cardImg.color = new Color(0.3f, 0.3f, 0.3f);
-        SetAnchors(cardImage, new Vector2(0.05f, 0.2f), new Vector2(0.95f, 0.95f), Vector2.zero, Vector2.zero);
-
-        // Card Name
-        GameObject nameText = CreateChild(root, "CardNameText");
-        TextMeshProUGUI nameTMP = nameText.AddComponent<TextMeshProUGUI>();
-        nameTMP.text = "";
-        nameTMP.fontSize = 9;
-        nameTMP.alignment = TextAlignmentOptions.Center;
-        nameTMP.color = Color.white;
-        nameTMP.enableWordWrapping = true;
-        SetAnchors(nameText, new Vector2(0, 0), new Vector2(1, 0.2f), Vector2.zero, Vector2.zero);
-
-        // Cost Text
-        GameObject costText = CreateChild(root, "CostText");
-        TextMeshProUGUI costTMP = costText.AddComponent<TextMeshProUGUI>();
-        costTMP.text = "";
-        costTMP.fontSize = 12;
-        costTMP.fontStyle = FontStyles.Bold;
-        costTMP.alignment = TextAlignmentOptions.Center;
-        costTMP.color = new Color(1f, 0.8f, 0.2f);
-        RectTransform costRT = costText.GetComponent<RectTransform>();
-        costRT.anchorMin = new Vector2(0, 1);
-        costRT.anchorMax = new Vector2(0, 1);
-        costRT.pivot = new Vector2(0, 1);
-        costRT.anchoredPosition = new Vector2(5, -5);
-        costRT.sizeDelta = new Vector2(20, 20);
-
-        // Remove Button
-        GameObject removeBtn = CreateChild(root, "RemoveButton");
-        Image removeBtnImg = removeBtn.AddComponent<Image>();
-        removeBtnImg.color = new Color(0.8f, 0.2f, 0.2f);
-        Button removeBtnComp = removeBtn.AddComponent<Button>();
-        removeBtnComp.targetGraphic = removeBtnImg;
-        RectTransform removeBtnRT = removeBtn.GetComponent<RectTransform>();
-        removeBtnRT.anchorMin = new Vector2(1, 1);
-        removeBtnRT.anchorMax = new Vector2(1, 1);
-        removeBtnRT.pivot = new Vector2(1, 1);
-        removeBtnRT.anchoredPosition = new Vector2(-2, -2);
-        removeBtnRT.sizeDelta = new Vector2(20, 20);
-
-        // Remove Button Text (X)
-        GameObject removeText = CreateChild(removeBtn, "Text");
-        TextMeshProUGUI removeTMP = removeText.AddComponent<TextMeshProUGUI>();
-        removeTMP.text = "X";
-        removeTMP.fontSize = 12;
-        removeTMP.fontStyle = FontStyles.Bold;
-        removeTMP.alignment = TextAlignmentOptions.Center;
-        removeTMP.color = Color.white;
-        SetAnchors(removeText, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-
-        // Assigner les references
-        SerializedObject so = new SerializedObject(slotUI);
-        so.FindProperty("_backgroundImage").objectReferenceValue = rootImage;
-        so.FindProperty("_cardImage").objectReferenceValue = cardImg;
-        so.FindProperty("_cardNameText").objectReferenceValue = nameTMP;
-        so.FindProperty("_costText").objectReferenceValue = costTMP;
-        so.FindProperty("_removeButton").objectReferenceValue = removeBtnComp;
-        so.FindProperty("_emptyStateImage").objectReferenceValue = emptyBgImg;
-        so.ApplyModifiedProperties();
-
-        // Sauvegarder
-        string path = $"{PrefabPath}/DeckCardSlot.prefab";
-        PrefabUtility.SaveAsPrefabAsset(root, path);
-        DestroyImmediate(root);
-
-        Debug.Log($"Prefab cree: {path}");
     }
 
     /// <summary>

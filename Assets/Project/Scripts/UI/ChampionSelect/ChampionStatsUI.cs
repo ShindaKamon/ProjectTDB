@@ -67,7 +67,7 @@ public class ChampionStatsUI : MonoBehaviour
             _championTitleText.text = champion.title ?? "";
 
         if (_familyText != null)
-            _familyText.text = CardVisualHelper.GetEmotionName(champion.emotionType);
+            _familyText.text = CodexCardVisual.EmotionName(champion.emotionType);
 
         // Stats - Ligne 1
         if (_healthStat != null)

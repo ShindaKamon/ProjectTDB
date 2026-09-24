@@ -100,7 +100,7 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
             foreach (var emotion in _colors)
             {
                 string hex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.EmotionColor(emotion));
-                names.Add($"<color=#{hex}>{CardVisualHelper.GetEmotionName(emotion)}</color>");
+                names.Add($"<color=#{hex}>{CodexCardVisual.EmotionName(emotion)}</color>");
             }
             _colorsText.text = names.Count > 0 ? string.Join("  ·  ", names) : "Toutes les couleurs";
         }

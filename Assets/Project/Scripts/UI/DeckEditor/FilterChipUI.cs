@@ -51,7 +51,7 @@ public class FilterChipUI : MonoBehaviour
 
         _label.text = _kind switch
         {
-            FilterChipKind.Emotion => CardVisualHelper.GetEmotionName(_emotion),
+            FilterChipKind.Emotion => CodexCardVisual.EmotionName(_emotion),
             FilterChipKind.Category => _category == CardCategory.Eveil ? "Éveil" : _category.ToString(),
             _ => _orMore ? $"{_cost}+" : _cost.ToString(),
         };
@@ -60,7 +60,7 @@ public class FilterChipUI : MonoBehaviour
     public void SetActive(bool active)
     {
         // Émotion : couleur de l'émotion quand active, pour que le filtre se lise d'un coup d'œil
-        Color on = _kind == FilterChipKind.Emotion ? CardVisualHelper.GetEmotionColor(_emotion) : _activeColor;
+        Color on = _kind == FilterChipKind.Emotion ? CodexCardVisual.EmotionColor(_emotion) : _activeColor;
 
         if (_background != null)
             _background.color = active ? on : _inactiveColor;

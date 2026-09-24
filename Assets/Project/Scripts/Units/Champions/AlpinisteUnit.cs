@@ -8,7 +8,7 @@ using UnityEngine;
 /// dégâts sur la prochaine carte de dégâts jouée. Le joueur choisit tank ou assassin à
 /// chaque déplacement, selon la cible visée.
 /// </summary>
-public class AlpinisteUnit : Champion, IActionPointsUser, IChargeLandingReactor, IOutgoingDamageModifier
+public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageModifier
 {
     [Header("=== Réflexe du grimpeur ===")]
     [Tooltip("Réduction des dégâts subis quand le bouclier est actif (0.15 = -15%)")]
@@ -22,13 +22,6 @@ public class AlpinisteUnit : Champion, IActionPointsUser, IChargeLandingReactor,
 
     // Bonus de dégâts à usage unique sur la prochaine carte de dégâts (atterrissage près d'un ennemi)
     private bool _hasNextCardBonus = false;
-
-    public new void Initialize(ChampionData data, Vector2Int initialGridPos)
-    {
-        base.Initialize(data, initialGridPos);
-
-        GameLog.Log($"{name} (L'Alpiniste) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, ATK: {GetAttack()}");
-    }
 
     protected override void Start()
     {

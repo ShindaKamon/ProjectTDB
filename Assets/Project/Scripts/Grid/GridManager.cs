@@ -41,10 +41,6 @@ public class GridManager : MonoBehaviour, IGridService
     // TurnStateMachine gère les états explicites du système de tours
     private TurnStateMachine _turnStateMachine;
 
-    // ===== UI CACHE =====
-    // Cache pour éviter FindFirstObjectByType à chaque tour
-    private UnitStatsUI _cachedStatsUI;
-
     // ===== AWAKE & INIT =====
 
     private void Awake()
@@ -306,7 +302,6 @@ public class GridManager : MonoBehaviour, IGridService
             RefreshActiveUnitTurn();
 
             // Affichage initial
-            UpdateUnitUI();
             DisplayMovementRange(_activeUnit);
 
             // Démarre la battle avec la TurnStateMachine (Phase 3.4)
@@ -432,7 +427,6 @@ public class GridManager : MonoBehaviour, IGridService
         _activeUnit.OnMovementStepCompleted += HandleUnitMovementStep;
 
         // Met à jour l'affichage
-        UpdateUnitUI();
         DisplayMovementRange(_activeUnit);
 
         // Phase 3.4: Transition vers le nouvel état (PlayerTurn ou EnemyTurn)
@@ -513,7 +507,6 @@ public class GridManager : MonoBehaviour, IGridService
         }
         else
         {
-            UpdateUnitUI();
             DisplayMovementRange(GetActiveUnit());
         }
     }
@@ -521,29 +514,7 @@ public class GridManager : MonoBehaviour, IGridService
     private void HandleUnitMovementStep()
     {
         ResetAllTileColors();
-        UpdateUnitUI();
         DisplayMovementRange(GetActiveUnit());
-    }
-    
-    // ===== UI =====
-    
-    public void UpdateUnitUI()
-    {
-        Unit activeUnit = GetActiveUnit();
-        if (activeUnit == null) return;
-
-        // Utilise le cache pour éviter FindFirstObjectByType à chaque tour (OPTIMISATION)
-        if (_cachedStatsUI == null)
-        {
-            _cachedStatsUI = FindFirstObjectByType<UnitStatsUI>();
-            if (_cachedStatsUI == null)
-            {
-                GameLog.LogWarning("UnitStatsUI introuvable ! Ajoute le script sur le Canvas.");
-                return;
-            }
-        }
-
-        _cachedStatsUI.SetUnit(activeUnit);
     }
     
     // ===== AFFICHAGE PORTÉES =====

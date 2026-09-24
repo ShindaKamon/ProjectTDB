@@ -5,17 +5,10 @@ using UnityEngine;
 /// Passif : Miroir fraternel — géré côté carte (voir CardData.TryTriggerSummonEcho), qui
 /// consulte l'invocation active de Soren via ISummonOwner.
 /// </summary>
-public class SorenUnit : Champion, IActionPointsUser, ISummonOwner
+public class SorenUnit : Champion, ISummonOwner
 {
     private SummonUnit _activeSummon;
     public SummonUnit ActiveSummon => _activeSummon;
-
-    public new void Initialize(ChampionData data, Vector2Int initialGridPos)
-    {
-        base.Initialize(data, initialGridPos);
-
-        GameLog.Log($"{name} (Soren) initialisé - PA: {GetCurrentPA()}/{GetMaxPA()}, ATK: {GetAttack()}");
-    }
 
     protected override void Start()
     {

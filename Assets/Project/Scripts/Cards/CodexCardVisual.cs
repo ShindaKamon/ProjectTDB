@@ -76,6 +76,20 @@ public static class CodexCardVisual
         _ => Hex("#8b859e"),
     };
 
+    /// <summary>Nom français de l'émotion (« Neutre » si aucune).</summary>
+    public static string EmotionName(EmotionType emotion) => emotion switch
+    {
+        EmotionType.Colere => "Colère",
+        EmotionType.Degout => "Dégoût",
+        EmotionType.Tristesse => "Tristesse",
+        EmotionType.Surprise => "Surprise",
+        EmotionType.Peur => "Peur",
+        EmotionType.Confiance => "Confiance",
+        EmotionType.Joie => "Joie",
+        EmotionType.Anticipation => "Anticipation",
+        _ => "Neutre",
+    };
+
     /// <summary>
     /// Couleur du coût d'une carte : celle de son émotion (Colère rouge, Peur vert, Joie jaune),
     /// blanc pour une Signature.
@@ -106,7 +120,7 @@ public static class CodexCardVisual
     /// <summary>« Colère · Standard » ou « Neutre · Signature · Evan ».</summary>
     public static string Subtitle(CardData card)
     {
-        string emotion = CardVisualHelper.GetEmotionName(card.emotionType);
+        string emotion = CodexCardVisual.EmotionName(card.emotionType);
         string kind = card.category switch
         {
             CardCategory.Signature => "Signature" + (card.signatureOwner != null ? " · " + card.signatureOwner.championName : ""),

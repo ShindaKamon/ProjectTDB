@@ -4,14 +4,14 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 /// <summary>
-/// Ligne de la liste du deck (façon MTG Arena) : bande de couleur de l'émotion, coût PA, nom
-/// et quantité. Un clic retire un exemplaire de la carte (désactivable via SetInteractable,
-/// utilisé pour le deck de base en lecture seule).
+/// Ligne de la liste du deck (façon MTG Arena) : coût PA dans un rond à la couleur de l'émotion
+/// (blanc pour une Signature), nom et quantité. Un clic retire un exemplaire de la carte, sauf si
+/// la ligne est en lecture seule (deck de base, SetInteractable) ou verrouillée (Signature
+/// obligatoire, SetLocked).
 /// </summary>
 public class DeckListRowUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image _background;
-    [SerializeField] private Image _emotionStrip;     // Bande verticale à gauche : couleur de l'émotion
     [SerializeField] private Image _costBadge;
     [SerializeField] private TextMeshProUGUI _costText;
     [SerializeField] private TextMeshProUGUI _nameText;
@@ -25,17 +25,21 @@ public class DeckListRowUI : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     private CardData _cardData;
     private int _count;
     private bool _interactable = true;
+    private bool _locked;
 
     public CardData CardData => _cardData;
     public int Count => _count;
 
-    /// <summary>Émis au clic (si interactable) pour retirer un exemplaire de cette carte.</summary>
+    /// <summary>Émis au clic (si la ligne peut être retirée) pour retirer un exemplaire de la carte.</summary>
     public System.Action<CardData> OnCardClicked;
+
+    private bool CanRemove => _interactable && !_locked;
 
     public void Setup(CardData card, int count)
     {
         _cardData = card;
         _count = count;
+        _locked = false;
         SetInteractable(true);
 
         if (_nameText != null)
@@ -44,14 +48,15 @@ public class DeckListRowUI : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         if (_countText != null)
             _countText.text = $"×{count}";
 
-        if (_costText != null)
-            _costText.text = card.costPA.ToString();
-
+        Color costColor = CodexCardVisual.CostColor(card);
         if (_costBadge != null)
-            _costBadge.color = CardVisualHelper.GetCostColor(card.costPA);
+            _costBadge.color = costColor;
 
-        if (_emotionStrip != null)
-            _emotionStrip.color = CodexCardVisual.EmotionColor(card.emotionType); // Signatures : gris « Neutre »
+        if (_costText != null)
+        {
+            _costText.text = card.costPA.ToString();
+            _costText.color = CodexCardVisual.ReadableTextOn(costColor);
+        }
 
         if (_background != null)
             _background.color = _normalColor;
@@ -65,15 +70,21 @@ public class DeckListRowUI : MonoBehaviour, IPointerClickHandler, IPointerEnterH
             _canvasGroup.alpha = interactable ? 1f : 0.6f;
     }
 
+    /// <summary>Carte obligatoire (Signature du champion) : affichée normalement, mais non retirable.</summary>
+    public void SetLocked(bool locked)
+    {
+        _locked = locked;
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!_interactable) return;
+        if (!CanRemove) return;
         OnCardClicked?.Invoke(_cardData);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (_interactable && _background != null)
+        if (CanRemove && _background != null)
             _background.color = _hoverColor;
     }
 

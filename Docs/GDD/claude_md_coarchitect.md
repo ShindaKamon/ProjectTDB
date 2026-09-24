@@ -129,7 +129,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 ### Émotions
 **Vision long terme : 8 émotions** (roue de Plutchik) — détail dans `SYSTEME_EMOTIONS.md`.
-**MVP : Colère (agressif), Peur (contrôle), Joie (soin/valeur).** Decks mono ou bi-émotion.
+**MVP : Colère (agressif), Peur (contrôle), Joie (soin/valeur).** Un champion peut jouer toutes les émotions ; chaque deck en choisit 1 ou 2.
 
 ### Pas de système de classe
 - Pas de système de classe transversal (décision du 10/09/2026, anciennes nomenclatures archivées).

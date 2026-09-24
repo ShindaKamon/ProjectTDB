@@ -11,7 +11,7 @@
 
 ## 📊 VUE D'ENSEMBLE
 
-Le système d'émotions repose sur **8 émotions** (roue de Plutchik), chacune avec sa **couleur**. Dans le jeu, l'émotion est avant tout une **identité de carte** : un deck se construit autour d'1 ou 2 émotions (mono ou bi-émotion), comme les couleurs dans Magic. Le gameplay propre à chaque champion vient de sa **mécanique signature** (passif + cartes Signature), pas d'une classe.
+Le système d'émotions repose sur **8 émotions** (roue de Plutchik), chacune avec sa **couleur**. Dans le jeu, l'émotion est avant tout une **identité de carte** : un champion peut jouer toutes les émotions, et chaque deck en choisit 1 ou 2 (mono ou bi-émotion), comme les couleurs dans Magic. Le gameplay propre à chaque champion vient de sa **mécanique signature** (passif + cartes Signature), pas d'une classe.
 
 Ce document est la **référence** pour les noms, émotions et couleurs des familles (les autres documents renvoient ici).
 

@@ -76,6 +76,20 @@ public static class CodexCardVisual
         _ => Hex("#8b859e"),
     };
 
+    /// <summary>
+    /// Couleur du coût d'une carte : celle de son émotion (Colère rouge, Peur vert, Joie jaune),
+    /// blanc pour une Signature.
+    /// </summary>
+    public static Color CostColor(CardData card) =>
+        card != null && card.category == CardCategory.Signature ? Color.white : EmotionColor(card != null ? card.emotionType : EmotionType.None);
+
+    /// <summary>Texte noir sur fond clair (Joie, Signature), blanc sur fond sombre.</summary>
+    public static Color ReadableTextOn(Color background)
+    {
+        float luminance = 0.299f * background.r + 0.587f * background.g + 0.114f * background.b;
+        return luminance > 0.6f ? Hex("#1e1c29") : Color.white;
+    }
+
     public static Color ChipColor(ChipKind kind) => kind switch
     {
         ChipKind.Damage => Hex("#f08383"),

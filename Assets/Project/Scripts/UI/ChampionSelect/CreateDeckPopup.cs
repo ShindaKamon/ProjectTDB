@@ -127,9 +127,9 @@ public class CreateDeckPopup : MonoBehaviour
     {
         if (_createButton != null)
         {
-            // Un deck peut être créé avec 1 OU 2 émotions (voir DeckData.HasEmotions /
-            // CardMatchesDeckEmotions qui supportent les deux cas) : exiger exactement
-            // MAX_EMOTIONS empêchait à tort la création d'un deck mono-émotion.
+            // Un deck peut être créé avec 1 OU 2 émotions. Depuis le 24/09/2026 elles ne limitent plus
+            // les cartes (toutes les émotions sont autorisées, voir DeckRules) : elles ne servent qu'à
+            // la couleur de l'onglet du deck.
             bool isValid = !string.IsNullOrWhiteSpace(_nameInput?.text) &&
                            _selectedEmotions.Count >= 1 && _selectedEmotions.Count <= MAX_EMOTIONS;
             _createButton.interactable = isValid;

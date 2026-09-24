@@ -22,9 +22,6 @@ public class PoolFilterBarUI : MonoBehaviour
     [Header("Réinitialisation")]
     [SerializeField] private Button _resetButton; // visible seulement si un filtre est actif
 
-    [Tooltip("Groupe masqué quand le deck n'a qu'une émotion (filtrer n'aurait aucun effet).")]
-    [SerializeField] private GameObject _emotionGroup;
-
     private readonly List<FilterChipUI> _chips = new List<FilterChipUI>();
     private CardPoolQuery _query;
     private bool _initialized;
@@ -61,10 +58,11 @@ public class PoolFilterBarUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Associe le panneau à la requête du pool pour le deck affiché : filtres remis à zéro,
-    /// seules les émotions du deck sont proposées. Le tri choisi est conservé entre les decks.
+    /// Associe le panneau à la requête du pool pour le deck affiché : filtres remis à zéro, seules
+    /// les couleurs du deck sont proposées (aucune si le deck n'en a qu'une : filtrer ne servirait
+    /// à rien). Le tri choisi est conservé.
     /// </summary>
-    public void Bind(CardPoolQuery query, DeckData deck)
+    public void Bind(CardPoolQuery query, ICollection<EmotionType> deckColors)
     {
         EnsureInitialized();
         _query = query;
@@ -73,19 +71,13 @@ public class PoolFilterBarUI : MonoBehaviour
         if (_searchInput != null)
             _searchInput.SetTextWithoutNotify("");
 
-        int visibleEmotions = 0;
+        bool severalColors = deckColors == null || deckColors.Count != 1;
         foreach (var chip in _chips)
         {
             if (chip.Kind != FilterChipKind.Emotion) continue;
-
-            bool offered = deck == null || !deck.HasEmotions
-                           || chip.Emotion == deck.Emotion1 || chip.Emotion == deck.Emotion2;
-            chip.gameObject.SetActive(offered);
-            if (offered) visibleEmotions++;
+            bool offered = deckColors == null || deckColors.Count == 0 || deckColors.Contains(chip.Emotion);
+            chip.gameObject.SetActive(offered && severalColors);
         }
-
-        if (_emotionGroup != null)
-            _emotionGroup.SetActive(visibleEmotions > 1);
 
         RefreshVisuals();
     }

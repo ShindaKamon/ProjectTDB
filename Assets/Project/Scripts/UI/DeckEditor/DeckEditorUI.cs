@@ -62,6 +62,7 @@ public class DeckEditorUI : MonoBehaviour
     private List<CardData> _filteredCards = new List<CardData>(); // Cartes filtrées pour la pagination
 
     private readonly CardPoolQuery _poolQuery = new CardPoolQuery(); // filtres + tri du pool
+    private List<EmotionType> _deckColors = new List<EmotionType>();  // couleurs du deck affiché (DeckRules.DeckColors)
     private int _currentPage = 0;
     private Coroutine _autosaveRoutine;
 
@@ -92,6 +93,13 @@ public class DeckEditorUI : MonoBehaviour
             _nextPageButton.onClick.AddListener(OnNextPageClicked);
     }
 
+    // Quitter l'écran (Retour vers le choix du deck) le désactive, ce qui arrête la coroutine
+    // d'autosave : la dernière modification doit être écrite tout de suite.
+    void OnDisable()
+    {
+        FlushPendingAutosave();
+    }
+
     void OnDestroy()
     {
         FlushPendingAutosave();
@@ -110,9 +118,10 @@ public class DeckEditorUI : MonoBehaviour
         _currentDeckData = deckData;
         _cardCollection = collection;
         _currentDeckCards = new List<CardData>(cards);
+        _deckColors = DeckRules.DeckColors(deckData, cards);
 
         if (_filterBar != null)
-            _filterBar.Bind(_poolQuery, deckData);
+            _filterBar.Bind(_poolQuery, _deckColors);
         else
             _poolQuery.ResetFilters();
 
@@ -216,6 +225,7 @@ public class DeckEditorUI : MonoBehaviour
             {
                 row.Setup(entry.card, entry.count);
                 row.SetInteractable(!isReadOnly);
+                row.SetLocked(DeckRules.IsOwnSignature(entry.card, _currentChampion)); // Signature obligatoire
                 row.OnCardClicked += OnDeckCardGroupClicked;
                 _deckRows.Add(row);
             }
@@ -228,6 +238,14 @@ public class DeckEditorUI : MonoBehaviour
     {
         if (card == null) return;
         if (_currentDeckData != null && _currentDeckData.isDefault) return; // lecture seule
+
+        // Les Signatures du champion sont obligatoires (DeckRules)
+        ValidationResult canRemove = DeckRules.CanRemoveCard(card, _currentChampion);
+        if (!canRemove.IsValid)
+        {
+            GameLog.Log($"Retrait refusé : {canRemove.ErrorMessage}");
+            return;
+        }
 
         int indexToRemove = _currentDeckCards.FindLastIndex(c => c != null && c.cardName == card.cardName);
         if (indexToRemove < 0) return;
@@ -283,24 +301,11 @@ public class DeckEditorUI : MonoBehaviour
         if (card == null) return;
         if (_currentDeckData != null && _currentDeckData.isDefault) return; // deck de base : lecture seule
 
-        // Limite par catégorie (2 Signature + 16 Standard ; Éveil différé, 0 slot pour l'instant)
-        int categoryLimit = card.category switch
+        // Règles de construction : exemplaires max, emplacements, Signatures réservées (DeckRules)
+        ValidationResult canAdd = DeckRules.CanAddCard(_currentDeckCards, card, _currentChampion, _deckColors);
+        if (!canAdd.IsValid)
         {
-            CardCategory.Signature => DeckData.SIGNATURE_SLOTS,
-            CardCategory.Standard => DeckData.STANDARD_SLOTS,
-            _ => 0,
-        };
-
-        int categoryCount = 0;
-        foreach (var c in _currentDeckCards)
-        {
-            if (c != null && c.category == card.category)
-                categoryCount++;
-        }
-
-        if (categoryCount >= categoryLimit)
-        {
-            GameLog.Log($"Limite atteinte pour la catégorie {card.category} ({categoryLimit}).");
+            GameLog.Log($"Ajout refusé : {canAdd.ErrorMessage}");
             return;
         }
 
@@ -316,7 +321,7 @@ public class DeckEditorUI : MonoBehaviour
 
     private void ApplyFiltersAndRefreshPool()
     {
-        _filteredCards = _poolQuery.Apply(_cardCollection?.AllCards, _currentChampion, _currentDeckData);
+        _filteredCards = _poolQuery.Apply(_cardCollection?.AllCards, _currentChampion, _deckColors);
 
         RefreshPoolDisplay();
         UpdatePaginationUI();

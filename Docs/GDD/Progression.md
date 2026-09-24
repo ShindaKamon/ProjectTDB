@@ -112,7 +112,7 @@ Souffle apaisant (1 PA) → Souffle apaisant+ (1 PA, +30 % soin)
 
 **Stratégie :**
 - Supprimer les cartes de départ faibles au fil de la campagne
-- Affiner le deck autour de son émotion (mono ou bi-émotion)
+- Affiner le deck autour de ses couleurs (1 ou 2 émotions)
 - Respecter le format 24 cartes (2 Signature + 6 Éveil + 16 Standard)
 
 ### Transformation de Cartes

@@ -18,7 +18,7 @@ Chaque champion =
 3. **2 cartes Signature** : un « cœur de gameplay » et un « coup de maître » ou utilitaire
 4. **Un profil PA/PM** (budget total de 9 points, voir `Combat_System.md`)
 
-Les cartes Signature ont l'identité **Neutre** : un champion peut jouer un deck de n'importe quelle émotion (mono ou bi-émotion). Chaque champion doit jouer sur **un axe de gameplay distinct** des autres.
+Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'importe quelle émotion ; chaque deck en choisit 1 ou 2. Chaque champion doit jouer sur **un axe de gameplay distinct** des autres.
 
 ---
 
@@ -66,7 +66,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer un deck
 **Passif — Main gagnante (provisoire) :** analyse les coûts en PA et les émotions des cartes jouées ce tour :
 - **Paire** (2 cartes de même coût) → la 2ᵉ carte ignore les réductions de dégâts en pourcentage de la cible (boucliers)
 - **Suite** (coûts N puis N+1) → +1 PA immédiat
-- **Bluff** (2 cartes d'émotions différentes — decks bi-émotion uniquement) → -10 % aux prochains dégâts subis jusqu'à son prochain tour
+- **Bluff** (2 cartes d'émotions différentes) → -10 % aux prochains dégâts subis jusqu'à son prochain tour
 - Un seul motif par tour, le plus exigeant l'emporte (Bluff > Suite > Paire)
 
 | Carte Signature | PA | Effet |

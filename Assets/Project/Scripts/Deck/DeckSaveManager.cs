@@ -414,7 +414,27 @@ public static class DeckSaveManager
         }
 
         // Pour les decks custom, utiliser la recherche par nom
-        return GetCardsFromNames(deck.cardNames, collection);
+        var cards = GetCardsFromNames(deck.cardNames, collection);
+
+        // Mise en conformité avec les règles de construction (DeckRules), sauvegardée si besoin :
+        // cartes hors des couleurs du deck et exemplaires en trop retirés, Signatures ajoutées.
+        int removed = DeckRules.EnforceColors(cards, DeckRules.DeckColors(deck, cards));
+        removed += DeckRules.EnforceCopyLimits(cards);
+        int added = 0;
+        if (collection != null)
+        {
+            var missing = DeckRules.MissingSignatures(cards, champion, collection.AllCards);
+            cards.AddRange(missing);
+            added = missing.Count;
+        }
+
+        if (removed > 0 || added > 0)
+        {
+            deck.cardNames = cards.ConvertAll(c => c.cardName);
+            SaveAllDecks();
+            GameLog.Log($"Deck « {deck.deckName} » mis en conformité : {removed} carte(s) hors couleurs ou en trop retirée(s), {added} Signature(s) ajoutée(s).");
+        }
+        return cards;
     }
 
     /// <summary>

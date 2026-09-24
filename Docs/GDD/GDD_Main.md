@@ -93,7 +93,7 @@ Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPI
 | **Peur** | Réprouvés | Contrôle (retrait de PM, poussée/tirage) | Contrôle / tempo |
 | **Joie** | Éveillés | Soin / valeur | Survie, mais lent |
 
-Un deck est **mono ou bi-émotion**. Les cartes Signature sont **Neutres** (jouables quelles que soient les émotions du deck).
+Un champion peut jouer **toutes les émotions**, mais **chaque deck a 1 ou 2 couleurs**, choisies à sa création, et ne contient que des cartes de ces couleurs (décision du 24/09/2026). **4 exemplaires maximum** par carte. Les cartes Signature sont **Neutres**, réservées à leur champion et **obligatoires** dans son deck (1 exemplaire chacune).
 
 ## Roster MVP *(Excel, 23/09/2026)*
 
@@ -182,7 +182,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 **Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
 **Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Ilya, Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
 **Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) + Signatures des 3 champions.
-**Decks :** 18 cartes (2 Signature + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), mono/bi-émotion, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
+**Decks :** 18 cartes (2 Signature + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
 **Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
 **UI :** écran de sélection de champion, éditeur de deck façon MTG Arena, HUD de combat, main en arc, ciblage (courbe + réticule), barre de vie de boss, preview des cartes ennemies, pop-ups de dégâts.
 **Pas encore dans le code :** jauge d'Éveil, cartes d'Éveil, profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), désaturation des donjons.
@@ -250,7 +250,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Référence MVP** | **`TCG_Tactique_Systeme_de_calcul.xlsx`** | **23/09** |
 | **Roster MVP** | **Evan, Crux, Raze** (Ilya et Jumeaux hors MVP) | **23/09** |
 | **Émotions de lancement** | **Colère, Peur, Joie** | Excel |
-| **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; mono ou bi-émotion ; plusieurs decks par champion** | Excel |
+| **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; 1 ou 2 couleurs par deck, choisies à sa création ; plusieurs decks par champion** | Excel |
 | **Ressources** | **Budget PA+PM = 9 par profil, fixe quel que soit le niveau** | Excel |
 | **Progression** | **Le niveau n'augmente que PV, passifs, slots ; XP = 100 × niveau ; XP monstre = 15 % de ses PV** | Excel |
 | **Budget de cartes** | **Baseline par PA × (1 + modificateurs)** | Excel |
@@ -262,6 +262,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer | 24/09 |
 | Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`), style simple : 1-2 phrases courtes, verbe + cible + chiffre (+ contrepartie), sans conseil ni parenthèse (ex. « Inflige 11 dégâts à un ennemi au contact. ») | 24/09 |
 | Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 8 directions ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
+| Construction de deck | Un champion peut jouer toutes les émotions, mais chaque deck a 1 ou 2 couleurs (choisies à la création) et ne contient que ces couleurs ; 4 exemplaires max par carte ; Signatures du champion obligatoires, 1 exemplaire chacune (nombre à redéfinir plus tard) ; Signatures des autres champions interdites | 24/09 |
 
 ## Questions ouvertes
 

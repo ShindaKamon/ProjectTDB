@@ -73,8 +73,13 @@ public class CardPoolItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnter
         SetBorder(false);
 
         if (_background != null) _background.color = CodexCardVisual.CardBackground;
-        if (_costCircle != null) _costCircle.color = CodexCardVisual.EmotionColor(card.emotionType);
-        if (_costText != null) _costText.text = card.costPA.ToString();
+        Color costColor = CodexCardVisual.CostColor(card); // couleur de l'émotion, blanc pour une Signature
+        if (_costCircle != null) _costCircle.color = costColor;
+        if (_costText != null)
+        {
+            _costText.text = card.costPA.ToString();
+            _costText.color = CodexCardVisual.ReadableTextOn(costColor);
+        }
         if (_nameText != null) _nameText.text = card.cardName;
         if (_subtitleText != null) _subtitleText.text = CodexCardVisual.Subtitle(card);
         if (_captionText != null) _captionText.text = CodexCardVisual.Caption(card);

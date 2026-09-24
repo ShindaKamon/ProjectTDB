@@ -54,7 +54,7 @@ namespace ProjectTDB.Tests
                 NewCard("Éclat", 1, EmotionType.Joie),
             };
 
-            var result = new CardPoolQuery().Apply(pool, null, null);
+            var result = new CardPoolQuery().Apply(pool, null);
 
             Assert.AreEqual(new[] { "Éclat", "Accroche", "Brasier" }, Names(result));
         }
@@ -70,26 +70,44 @@ namespace ProjectTDB.Tests
                 NewCard("A lui", 1, EmotionType.None, CardCategory.Signature, other),
             };
 
-            var result = new CardPoolQuery().Apply(pool, mine, null);
+            var result = new CardPoolQuery().Apply(pool, mine);
 
             Assert.AreEqual(new[] { "A moi" }, Names(result));
         }
 
         [Test]
-        public void Apply_DeckEmotions_RestrictStandardButKeepSignature()
+        public void Apply_AllEmotionsAvailable_PlusOwnSignatures()
         {
+            // Toutes les émotions sont autorisées dans un deck : le pool les propose toutes
             var champion = NewChampion();
-            var deck = new DeckData("Test", EmotionType.Colere, EmotionType.None, new List<string>());
             var pool = new[]
             {
                 NewCard("Rouge", 1, EmotionType.Colere),
                 NewCard("Vert", 1, EmotionType.Peur),
+                NewCard("Jaune", 1, EmotionType.Joie),
                 NewCard("Sig", 1, EmotionType.None, CardCategory.Signature, champion),
             };
 
-            var result = new CardPoolQuery().Apply(pool, champion, deck);
+            var result = new CardPoolQuery().Apply(pool, champion);
 
-            CollectionAssert.AreEquivalent(new[] { "Rouge", "Sig" }, Names(result));
+            CollectionAssert.AreEquivalent(new[] { "Rouge", "Vert", "Jaune", "Sig" }, Names(result));
+        }
+
+        [Test]
+        public void Apply_DeckColors_KeepOnlyThoseColorsPlusSignatures()
+        {
+            var champion = NewChampion();
+            var pool = new[]
+            {
+                NewCard("Rouge", 1, EmotionType.Colere),
+                NewCard("Vert", 1, EmotionType.Peur),
+                NewCard("Jaune", 1, EmotionType.Joie),
+                NewCard("Sig", 1, EmotionType.None, CardCategory.Signature, champion),
+            };
+
+            var result = new CardPoolQuery().Apply(pool, champion, new List<EmotionType> { EmotionType.Colere, EmotionType.Joie });
+
+            CollectionAssert.AreEquivalent(new[] { "Rouge", "Jaune", "Sig" }, Names(result));
         }
 
         [Test]
@@ -105,7 +123,7 @@ namespace ProjectTDB.Tests
             query.Emotions.Add(EmotionType.Colere);
             query.Emotions.Add(EmotionType.Joie);
 
-            var result = query.Apply(pool, null, null);
+            var result = query.Apply(pool, null);
 
             CollectionAssert.AreEquivalent(new[] { "Rouge", "Jaune" }, Names(result));
         }
@@ -122,7 +140,7 @@ namespace ProjectTDB.Tests
             var query = new CardPoolQuery();
             query.Categories.Add(CardCategory.Signature);
 
-            Assert.AreEqual(new[] { "Sig" }, Names(query.Apply(pool, champion, null)));
+            Assert.AreEqual(new[] { "Sig" }, Names(query.Apply(pool, champion)));
         }
 
         [Test]
@@ -137,7 +155,7 @@ namespace ProjectTDB.Tests
             };
             var query = new CardPoolQuery { MinCost = 1, MaxCost = 2 };
 
-            Assert.AreEqual(new[] { "Un", "Deux" }, Names(query.Apply(pool, null, null)));
+            Assert.AreEqual(new[] { "Un", "Deux" }, Names(query.Apply(pool, null)));
         }
 
         [Test]
@@ -150,8 +168,8 @@ namespace ProjectTDB.Tests
                 NewCard("Rire", 1, EmotionType.Joie, description: "Soigne un allié."),
             };
 
-            var byName = new CardPoolQuery { Search = "COLERE" }.Apply(pool, null, null);
-            var byDescription = new CardPoolQuery { Search = "degats" }.Apply(pool, null, null);
+            var byName = new CardPoolQuery { Search = "COLERE" }.Apply(pool, null);
+            var byDescription = new CardPoolQuery { Search = "degats" }.Apply(pool, null);
 
             Assert.AreEqual(new[] { "Élan de Colère" }, Names(byName));
             Assert.AreEqual(new[] { "Frisson" }, Names(byDescription));
@@ -169,7 +187,7 @@ namespace ProjectTDB.Tests
             var query = new CardPoolQuery { SortKey = CardSortKey.Cost, Descending = true };
 
             // Coût décroissant, mais départage par nom toujours croissant
-            Assert.AreEqual(new[] { "Cri", "Assaut", "Bravade" }, Names(query.Apply(pool, null, null)));
+            Assert.AreEqual(new[] { "Cri", "Assaut", "Bravade" }, Names(query.Apply(pool, null)));
         }
 
         [Test]
@@ -183,7 +201,7 @@ namespace ProjectTDB.Tests
             };
             var query = new CardPoolQuery { SortKey = CardSortKey.Emotion };
 
-            Assert.AreEqual(new[] { "Colere1", "Colere3", "Peur2" }, Names(query.Apply(pool, null, null)));
+            Assert.AreEqual(new[] { "Colere1", "Colere3", "Peur2" }, Names(query.Apply(pool, null)));
         }
 
         [Test]
@@ -227,9 +245,9 @@ namespace ProjectTDB.Tests
         {
             var query = new CardPoolQuery();
 
-            Assert.IsEmpty(query.Apply(null, null, null));
+            Assert.IsEmpty(query.Apply(null, null));
             Assert.AreEqual(new[] { "A" },
-                Names(query.Apply(new[] { null, NewCard("A", 1, EmotionType.Joie) }, null, null)));
+                Names(query.Apply(new[] { null, NewCard("A", 1, EmotionType.Joie) }, null)));
         }
     }
 }

@@ -88,25 +88,6 @@ public class DeckData
     }
 
     /// <summary>
-    /// Vérifie si une carte appartient à l'une des émotions du deck.
-    /// Les cartes Signature (liées à un champion, pas à une émotion) matchent toujours.
-    /// </summary>
-    public bool CardMatchesDeckEmotions(CardData card)
-    {
-        if (card == null) return false;
-
-        if (card.category == CardCategory.Signature)
-            return true;
-
-        // Si le deck n'a pas d'émotion définie, toutes les cartes sont acceptées
-        if (Emotion1 == EmotionType.None && Emotion2 == EmotionType.None)
-            return true;
-
-        // Vérifie si la carte appartient à l'une des deux émotions
-        return card.emotionType == Emotion1 || card.emotionType == Emotion2;
-    }
-
-    /// <summary>
     /// Compte les cartes du deck appartenant à une catégorie donnée (nécessite la collection
     /// pour résoudre les noms en CardData).
     /// </summary>

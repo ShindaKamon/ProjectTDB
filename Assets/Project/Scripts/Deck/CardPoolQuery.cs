@@ -13,8 +13,8 @@ public enum CardSortKey
 /// <summary>
 /// Filtre et tri du pool de cartes de l'éditeur de deck (façon SpamDex), en C# pur :
 /// l'UI ne fait que modifier les critères puis appeler Apply. Testable en EditMode.
-/// Règles de contexte toujours appliquées : cartes Signature limitées au champion actif,
-/// cartes limitées aux émotions du deck (DeckData.CardMatchesDeckEmotions).
+/// Règles de contexte toujours appliquées : cartes Signature limitées au champion actif, cartes
+/// limitées aux couleurs du deck (DeckRules.DeckColors).
 /// </summary>
 public class CardPoolQuery
 {
@@ -49,7 +49,8 @@ public class CardPoolQuery
         Search = "";
     }
 
-    public List<CardData> Apply(IEnumerable<CardData> pool, ChampionData champion, DeckData deck)
+    /// <param name="deckColors">Couleurs du deck ; null ou vide = toutes les couleurs.</param>
+    public List<CardData> Apply(IEnumerable<CardData> pool, ChampionData champion, ICollection<EmotionType> deckColors = null)
     {
         var result = new List<CardData>();
         if (pool == null) return result;
@@ -64,7 +65,7 @@ public class CardPoolQuery
             if (card.category == CardCategory.Signature && card.signatureOwner != champion)
                 continue;
 
-            if (deck != null && !deck.CardMatchesDeckEmotions(card))
+            if (!DeckRules.MatchesColors(card, deckColors))
                 continue;
 
             if (Emotions.Count > 0 && !Emotions.Contains(card.emotionType))

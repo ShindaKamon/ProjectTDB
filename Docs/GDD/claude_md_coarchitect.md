@@ -124,7 +124,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 - **Genre** : Tactics + Deck-building
 - **Plateforme** : PC ; Mobile mentionné à l'origine — **à confirmer** (question ouverte dans `GDD_Main.md`)
 - **Engine** : Unity + C# (Visual Studio)
-- **Format** : **Campagne façon Waven** (donjons fixes enchaînés, progression persistante — décision du 23/09/2026). Donjons prévus pour une équipe de 3 champions (coop ou un joueur qui contrôle les 3 : à trancher)
+- **Format** : **Campagne façon Waven** (donjons fixes enchaînés, progression persistante — décision du 23/09/2026). Un joueur = un champion (24/09/2026) ; les donjons en équipe de 3 viendront avec le multijoueur (V2)
 - **Monétisation** : à définir. **Pas de gacha** (décision du 10/09/2026).
 
 ### Émotions
@@ -160,10 +160,10 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 
 - **PA + PM = 9 points par tour**, répartis selon le profil du champion (min 3 PA, 2 PM) — fixe quel que soit le niveau
 - **Mouvement** : 1 PM par case, fractionnable
-- **Ordre des tours** : code actuel = un tour par unité (champion puis chaque ennemi) ; tours individuels ou phases à confirmer
-- **Main** : règle définitive à trancher (code : départ 5, max 5, pioche 1/tour ; playtest : main de 3, repioche à 3)
+- **Ordre des tours** : chaque unité joue à son tour (champion puis chaque ennemi) — acté le 24/09/2026
+- **Main** : départ 5, max 5, pioche 1/tour — acté le 24/09/2026
 - **Contrôle** (Peur) : retrait de PM au prochain tour, poussée/tirage ; **anti-lock** : un monstre bloqué fait son Attaque de base
-- **Grille** : carrée 10×10 dans le code (Manhattan, 4 directions) ; l'Excel suppose 8 directions — à aligner
+- **Grille** : carrée 10×10 en **8 directions** (une diagonale vaut 1 case) — actée et codée le 24/09/2026
 
 ---
 
@@ -219,7 +219,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 ### Phase 0 : Design ✅ en grande partie fait
 - GDD réorganisé et remis en cohérence
 - Excel MVP : budget de cartes, 49 cartes Standard, 3 champions, progression, barème monstres, playtest papier
-- Reste à faire : cartes d'Éveil, règle de main, grille 4 ou 8 directions, monstres de l'Orphelinat
+- Reste à faire : monstres de l'Orphelinat (barème à 1 joueur, faiblesse émotionnelle) ; cartes d'Éveil plus tard
 
 ### Phase 1 : Prototype Combat — en grande partie réalisée
 - Grille fonctionnelle ✅
@@ -310,10 +310,9 @@ Décisions actées et questions ouvertes : **voir `GDD_Main.md`** (sections « D
 **Ce qui existe réellement dans le code** (roster jouable, deck 18 cartes, grille carrée, écrans construits…) : **`Technical_Specs.md`, section « État du code »**. Elle remplace l'ancienne section « Mise à jour implémentation » de ce document. En cas de conflit entre le design et le code, cette section dit ce qui est implémenté ; le GDD dit ce qui est visé.
 
 ### Prochaines étapes 🔄
-1. Trancher : grille 4 ou 8 directions, et ordre des tours (tours individuels ou phases)
-2. Trancher : règle de main/pioche définitive
-3. Concevoir la mise en œuvre de l'Éveil et les cartes d'Éveil
-4. Designer les monstres de l'Orphelinat à partir du barème
+1. Designer les monstres de l'Orphelinat : barème à 1 joueur (PV et dégâts montent avec le nombre de joueurs) et une faiblesse émotionnelle chacun
+2. Corriger la Roadmap de l'Excel (grille « hexagonale », anciens noms des champions)
+3. (Plus tard) Éveil : mis de côté pour l'instant
 
 ---
 

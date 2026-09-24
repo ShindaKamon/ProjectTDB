@@ -264,7 +264,7 @@ Bouclier → Contre-Attaque (rare)
 ## 📈 Courbe de Progression
 
 - **20 niveaux** ; les PV des monstres suivent ceux des joueurs (barème de l'Excel : aventure solo = 1× PV joueur, groupe de donjon = 3× PV joueur, boss = 1.33× PV de l'équipe, superboss = 3.3× PV de l'équipe)
-- Les donjons sont prévus pour une **équipe de 3**
+- Les donjons sont prévus pour une **équipe de 3**, qui viendra avec le multijoueur (V2) : un joueur = un champion (24/09/2026). Pour le MVP solo, voir « Donjon en solo » dans `GDD_Main.md`
 - Découpage en Actes et estimation de temps de jeu : à refaire sur cette base
 
 ---

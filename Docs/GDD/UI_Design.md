@@ -500,7 +500,7 @@ Décision de lore (voir `GDD_Main.md`) : le monde du jeu « grisonne » quand le
 
 ### Portée MVP
 
-Pour la version Alpha, l'objectif minimal est : donjon visiblement désaturé à l'entrée → couleur de la famille restaurée en un fondu à la victoire. Pour l'Orphelinat (Peur, famille Réprouvés), la couleur qui revient est le **vert foncé `#006600`**. Les effets de propagation progressive pendant le combat peuvent attendre la Bêta.
+Pour la version Alpha, l'objectif minimal est : donjon visiblement désaturé à l'entrée → couleur de la famille restaurée en un fondu à la victoire. Pour l'Orphelinat (Peur), la couleur qui revient est le **vert foncé `#006600`**. Les effets de propagation progressive pendant le combat peuvent attendre la Bêta.
 
 ---
 
@@ -586,7 +586,7 @@ Canvas Scaler Settings:
 
 **Implémentation :** shaders de post-processing ou palette alternative
 
-> Point d'attention (11/09/2026) : le mécanisme de désaturation narrative des donjons doit rester lisible et cohérent avec ces modes daltonisme — la distinction « gris vs couleur de famille » ne doit pas dépendre uniquement de la teinte, prévoir un indicateur secondaire (texture, icône) pour les joueurs concernés. À noter : plusieurs couleurs de familles sont proches pour les daltoniens rouge-vert (Déchaînés rouge / Réprouvés vert foncé / Gardiens vert clair).
+> Point d'attention (11/09/2026) : le mécanisme de désaturation narrative des donjons doit rester lisible et cohérent avec ces modes daltonisme — la distinction « gris vs couleur de famille » ne doit pas dépendre uniquement de la teinte, prévoir un indicateur secondaire (texture, icône) pour les joueurs concernés. À noter : plusieurs couleurs de familles sont proches pour les daltoniens rouge-vert (Colère rouge / Peur vert foncé / Confiance vert clair).
 
 ### Contraste Élevé
 

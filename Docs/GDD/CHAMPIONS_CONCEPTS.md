@@ -39,7 +39,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 | Carte Signature | PA | Effet |
 |-----------------|----|-------|
 | **Invocation de Lyse** (cœur de gameplay) | 2 | Invoque le fantôme de Lyse sur une case, portée 2-3 |
-| **Écho évanescent** (utilitaire) | 1 | Choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) : elle s'y déplace. Injouable sans invocation sur le terrain |
+| **Écho évanescent** (utilitaire) | 1 | Choisir une invocation, puis une case libre à 1-3 cases d'elle (8 directions) : elle s'y déplace. Injouable sans invocation sur le terrain |
 
 **Gameplay :** bien placer le fantôme par rapport aux cibles probables. Mécanique d'écho réutilisable pour d'autres invocateurs.
 **À trancher en playtest :** choix de cible quand plusieurs sont valides ; complexité globale.

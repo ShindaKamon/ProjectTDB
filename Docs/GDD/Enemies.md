@@ -1,9 +1,9 @@
 # Ennemis - Émotions Tactics (Project TDB)
 
-**Version:** 3.0
-**Date:** 23 Septembre 2026
+**Version:** 3.1
+**Date:** 24 Septembre 2026
 **Statut:** Reflète la structure actuelle (EnemyData)
-**Changements :** v2.1 (23/09/2026) encodage réparé, ennemis replacés dans le lore. **v3.0 (23/09/2026)** : réalignement sur l'Excel MVP (onglet « Barème monstres ») — monstres de donjon vs d'aventure, PV et dégâts en ratio des PV joueur, XP = 15 % des PV, cycle de boss Zone / Basique / Heal, règle anti-lock. Les anciennes formules de PV (tiers, chapitres) sont archivées.
+**Changements :** v2.1 (23/09/2026) encodage réparé, ennemis replacés dans le lore. **v3.0 (23/09/2026)** : réalignement sur l'Excel MVP (onglet « Barème monstres ») — monstres de donjon vs d'aventure, PV et dégâts en ratio des PV joueur, XP = 15 % des PV, cycle de boss Zone / Basique / Heal, règle anti-lock. Les anciennes formules de PV (tiers, chapitres) sont archivées. **v3.1 (24/09/2026)** : stats des monstres selon le nombre de joueurs, faiblesse émotionnelle.
 
 > **Chiffres de référence : l'Excel.** Ce document explique les règles.
 
@@ -25,6 +25,18 @@ Côté mécanique, les ennemis utilisent un système de **deck pattern** : leurs
 - **XP d'un monstre = 15 % de ses PV**
 - Barème complet par niveau (1 à 20) : onglet « Barème monstres » de l'Excel
 - Ratios validés par playtest
+
+### Monstres selon le nombre de joueurs *(acté le 24/09/2026)*
+
+Un joueur contrôle un seul champion. Un même donjon doit donc marcher à 1 joueur (MVP) comme à 3 (multijoueur, V2) : **les stats des monstres augmentent avec le nombre de joueurs**. Le barème de base est celui d'**un joueur** (monstre d'aventure : 1× PV joueur, ≈ 15 % de ses PV en dégâts par tour).
+
+| Stat | Évolution avec N joueurs | À 3 joueurs | Pourquoi |
+|------|--------------------------|-------------|----------|
+| **PV** | × N | × 3 (= barème « groupe de donjon » de l'Excel) | Plus de joueurs, plus de dégâts entrants : durée de combat constante |
+| **Dégâts (ATK et dégâts des cartes)** | × (1 + 0,5 × (N − 1)) *(à valider)* | × 2 | Un coup ne touche en général qu'un joueur : l'augmenter × 3 rendrait chaque coup mortel. À 3 joueurs, un monstre fait ≈ 30 % des PV d'un joueur par tour, moins que les 45 % du barème de groupe de l'Excel : facteur à régler en playtest |
+| **PA, PM, portée, contrôle, pattern** | Inchangés | Inchangés | Le monstre se comporte pareil quel que soit le nombre de joueurs : on apprend son pattern une fois |
+
+Pour le MVP (1 joueur), le multiplicateur vaut 1 : **rien à coder tout de suite**. Le jour du multijoueur, il suffira d'appliquer ces facteurs à l'apparition du monstre (`Enemy.InitializeEnemy`), sans toucher aux assets `EnemyData`.
 
 ### Règle anti-lock
 
@@ -63,7 +75,15 @@ Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 | **Attaque de base**   | Action de repli insensible au contrôle (anti-lock) |
 | **Physical / Magical Defense** | Champs présents dans le code ; **aucune stat de défense n'est définie** dans le design actuel (question ouverte « système de stats ») |
 
-**Faiblesse émotionnelle** (un monstre vulnérable ou résistant à une émotion précise) : à trancher.
+### Faiblesse émotionnelle *(actée le 24/09/2026)*
+
+- Chaque monstre peut avoir **une faiblesse** : une émotion (Colère, Peur ou Joie pour le MVP).
+- Les cartes de cette émotion lui infligent **+25 % de dégâts** (valeur de départ, à valider en playtest). Les Signatures, sans émotion, ne la déclenchent jamais.
+- Pas de résistance pour le MVP (une faiblesse seule suffit à orienter le deck, sans punir un deck mono-couleur).
+- La faiblesse est **visible** sur le monstre (icône de la couleur de l'émotion), pour que le joueur puisse choisir son deck en connaissance de cause.
+- Le choix de la faiblesse d'un monstre se fait en le concevant (ex. : un monstre de l'Orphelinat, donjon de la Peur, pourrait être faible à la Joie).
+
+À implémenter : un champ `weakness` (EmotionType) dans `EnemyData` et le bonus dans le calcul des dégâts de `CardData`.
 
 ### Deck Pattern (Combat Deck)
 

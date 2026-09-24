@@ -86,7 +86,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 - Cellule rouge dans l'Excel = la carte cumule trop de modificateurs négatifs.
 - **Cartes Buff/Debuff** : la valeur finale est un nombre de points à répartir entre intensité et durée (repère : ~10 points ≈ +10 % d'un effet pendant 1 tour).
 
-> ⚠️ **Grille** : les tailles de zone (cercle rayon 1 = 9 cases, rayon 2 = 25 cases) supposent une grille carrée **8 directions** (distance de Chebyshev). Le code utilise une grille carrée **4 directions** (distance de Manhattan), où un « cercle » de rayon 1 fait 5 cases et de rayon 2, 13 cases. À aligner (voir `GDD_Main.md`).
+> ✅ **Grille** (24/09/2026) : carrée en **8 directions** (distance de Chebyshev), comme le suppose le budget : un cercle de rayon 1 fait 9 cases, de rayon 2, 25 cases. Voir `Grid_System.md`.
 
 ---
 
@@ -109,7 +109,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 
 ### Portée
 
-Portées utilisées par les cartes MVP : **1 (mêlée)**, **1-3**, **1-5**, **1-6** cases. Distance mesurée sur la grille (code actuel : Manhattan).
+Portées utilisées par les cartes MVP : **1 (mêlée)**, **1-3**, **1-5**, **1-6** cases. Distance mesurée sur la grille en 8 directions (une diagonale vaut 1 case).
 
 ### Zones d'Effet
 

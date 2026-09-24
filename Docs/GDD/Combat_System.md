@@ -15,7 +15,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 
 ### Machine à États (TurnStateMachine)
 
-**Code actuel :** **un tour par unité**, dans l'ordre de la liste des unités (le champion, puis chaque ennemi ; les invocations comme Lyse sont sautées). Les états `PlayerTurn` / `EnemyTurn` indiquent à qui appartient l'unité active. Pas de barre d'initiative. Tours individuels ou phases : à confirmer.
+**Code actuel :** **un tour par unité**, dans l'ordre de la liste des unités (le champion, puis chaque ennemi ; les invocations comme Lyse sont sautées). Les états `PlayerTurn` / `EnemyTurn` indiquent à qui appartient l'unité active. Pas de barre d'initiative. ✅ Acté le 24/09/2026 : chaque unité joue à son tour (pas de phases « tous les champions puis tous les monstres »).
 
 | État                  | Description              | Transitions               |
 |-----------------------|--------------------------|---------------------------|
@@ -47,16 +47,15 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 
 | Action              | Description                                        |
 |---------------------|----------------------------------------------------|
-| **Pioche**          | Selon la règle de main (à trancher)                |
+| **Pioche**          | 1 carte (si la main n'est pas pleine)             |
 | **Restauration PA** | PA restaurés selon le profil du champion           |
 | **Restauration PM** | PM restaurés selon le profil du champion (moins les retraits de PM subis) |
 | **Effets de début** | Résolution des effets en cours                     |
 
-**Règles de main — ⚠️ à trancher :**
+**Règles de main — ✅ actée le 24/09/2026 : celle du code**
 - **Code actuel** (`DeckManager`) : main de départ **5**, maximum **5**, **1 carte piochée** au début de chaque tour, pioche sautée si la main est pleine
-- Hypothèse de travail utilisée en playtest (Excel) : **main de 3 cartes, repioche jusqu'à 3 à chaque tour**
+- Écartée : main de 3, repioche jusqu'à 3 à chaque tour (hypothèse du playtest papier de l'Excel)
 - Ancienne règle (conçue pour Ilya) : main de départ 5, 7 max, pioche 1 carte/tour, pioche bloquée si main pleine — archivée
-- La règle définitive doit être validée en playtest (Roadmap de l'Excel)
 
 **Actions Disponibles (Ordre Libre) :**
 

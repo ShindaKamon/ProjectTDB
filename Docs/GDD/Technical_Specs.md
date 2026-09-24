@@ -8,7 +8,7 @@
 - v2.2 (23/09/2026) : section Système d'Émotions mise à jour (la jauge universelle -100/+100 existe dans le code mais n'est pas utilisée par le design pour l'instant ; les mécaniques signatures comme la Rage d'Ilya sont la cible) ; plateforme mobile signalée comme question ouverte.
 - v2.3 (23/09/2026) : écarts entre le code et l'Excel MVP listés (section « Adaptations à prévoir »).
 - v2.4 (24/09/2026) : nettoyage hors MVP — code d'Ilya (Rage) et de Vylos (Stigmate) retiré, assets morts supprimés, prefabs champions sortis des dossiers de familles ; pool de l'éditeur de deck façon SpamDex.
-- v2.5 (24/09/2026) : grille en 8 directions (`GridGeometry` : distance de Chebyshev, déplacement, portée, zones, charges, poussées, adjacence ; IA ennemie sans contrainte d'alignement).
+- v2.5 (24/09/2026) : règle de grille unifiée dans `GridGeometry` : 4 directions (Manhattan) partout, la portée euclidienne de certaines validations est supprimée ; IA ennemie sans contrainte d'alignement ; écho du Miroir fraternel compris.
 
 ---
 
@@ -103,7 +103,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 - `GridManager` (Core) : génère une **grille carrée 10×10**, instancie le champion sélectionné et les ennemis, orchestre la rotation des tours ; enregistré comme `IGridService`.
 - `GridRepository` : accès aux tuiles et unités par `Vector2Int`.
 - `Tile` : une case.
-- Distances : 8 directions, une diagonale vaut 1 case, via `GridGeometry` (voir `Grid_System.md`).
+- Distances : 4 directions (Manhattan), via `GridGeometry`, écho du Miroir fraternel compris (voir `Grid_System.md`).
 
 ### 2. Cartes et decks
 
@@ -140,7 +140,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **Deck :** 18 cartes (2 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) . Règles (`DeckRules`) : cartes des couleurs du deck uniquement (1 ou 2, choisies à sa création ; le deck de base prend celles de ses cartes), 4 exemplaires max par carte, les 2 Signatures du champion obligatoires (1 exemplaire chacune) ; les Signatures des autres champions sont interdites ; un deck existant non conforme est corrigé à son chargement (cartes hors couleurs et exemplaires en trop retirés, Signatures ajoutées).
 
-**Combat :** grille carrée 10×10 en 8 directions (diagonale = 1 case, pour le déplacement, la portée, les zones et les charges) ; un tour par unité ; main de départ 5, max 5, 1 carte piochée par tour ; 1 ennemi (UnderBed, 500 PV, cartes « Attaque Range » et « Heal Self »).
+**Combat :** grille carrée 10×10 en 4 directions (Manhattan, pour le déplacement, la portée, les zones et les charges) ; un tour par unité ; main de départ 5, max 5, 1 carte piochée par tour ; 1 ennemi (UnderBed, 500 PV, cartes « Attaque Range » et « Heal Self »).
 
 **Écrans construits :**
 - Sélection de champion (`Screen_ChampionSelect`) : roster à gauche, illustration au centre (`ChampionData.fullBodyArt`, art provisoire), panneau de droite (`ChampionStatsUI`) avec nom, titre, histoire (`ChampionData.description`, reprise du trauma de `CHAMPIONS_CONCEPTS.md`), statistiques et bouton « Choisir ce champion ».
@@ -169,7 +169,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 | Champions | Sous-classes `AceUnit`, `AlpinisteUnit`, `SorenUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
 | Main | Départ 5, max 5, pioche 1/tour | Idem (acté le 24/09) |
 | Stats | `attackDamage` et `defense` dans `ChampionData` (ATK non utilisé par les champions MVP) | Pas de stats au-delà de PV/PA/PM (à trancher) |
-| Grille | Carrée 10×10, 8 directions (`GridGeometry`) | Idem (acté le 24/09) |
+| Grille | Carrée 10×10, 4 directions (`GridGeometry`) | Idem (acté le 24/09) ; budget des zones de l'Excel (9 / 25 cases) à revoir |
 
 ---
 

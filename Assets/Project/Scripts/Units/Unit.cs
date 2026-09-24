@@ -242,8 +242,8 @@ public class Unit : MonoBehaviour, IMarkable
             direction.y = 0; // On ignore la hauteur pour la rotation
 
             // Applique la rotation seulement si on a une direction horizontale significative.
-            // Snap immédiat sur la plus proche des 8 directions de la grille : pas de Slerp, donc pas
-            // d'angle transitoire pendant les virages (les pas en diagonale font face à la diagonale).
+            // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp, donc pas
+            // de passage transitoire par un angle en diagonale pendant les virages.
             if (direction.sqrMagnitude > 0.001f)
             {
                 Vector2Int snapped = GridGeometry.SnapDirection(new Vector2(direction.x, direction.z));
@@ -748,7 +748,7 @@ public class Unit : MonoBehaviour, IMarkable
         Vector2Int currentPos = GetCurrentGridPos();
         Vector2Int finalPos = currentPos;
 
-        // Direction de grille la plus proche (8 directions, diagonales incluses), 1 case à la fois
+        // Direction cardinale dominante (4 directions), 1 case à la fois
         Vector2Int stepDirection = GridGeometry.SnapDirection(direction);
         if (stepDirection == Vector2Int.zero) return currentPos;
 

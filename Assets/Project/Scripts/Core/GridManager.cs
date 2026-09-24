@@ -767,8 +767,8 @@ public class GridManager : MonoBehaviour, IGridService
     /// </summary>
     private void ShowChargeTargets(Vector2Int sourcePos, int range, Unit source)
     {
-        // 8 directions : lignes, colonnes et diagonales
-        foreach (Vector2Int dir in GridGeometry.Directions8)
+        // 4 directions : haut, bas, gauche, droite
+        foreach (Vector2Int dir in GridGeometry.Directions4)
         {
             for (int i = 1; i <= range; i++)
             {

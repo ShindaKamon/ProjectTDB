@@ -134,7 +134,7 @@ Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 Valeur finale d'une carte = **Baseline(coût en PA) × (1 + somme des modificateurs)**. Baseline : 1 PA = 12, 2 PA = 26, 3 PA = 42, 4 PA = 60, 5 PA = 80, 6 PA = 102. Plus une carte a de portée, de zone, de contrôle ou de déplacement forcé, moins elle fait de dégâts bruts. Détail : `Card_System.md` et l'Excel.
 
 ### 5. Positionnement Tactique sur Grille
-- **Grille carrée en 8 directions** *(24/09/2026)* : 10×10, une diagonale vaut 1 case (distance de Chebyshev) pour le déplacement, la portée, les zones, les charges et l'adjacence ; un cercle de rayon 1 = 9 cases, comme le budget de l'Excel. ⚠️ La Roadmap de l'Excel parle encore d'une grille hexagonale façon Waven : à corriger. Détail : `Grid_System.md`
+- **Grille carrée en 4 directions** *(24/09/2026)* : 10×10, pas de diagonales (distance de Manhattan) pour le déplacement, la portée, les zones, les charges et l'adjacence ; un cercle de rayon 1 = 5 cases, de rayon 2 = 13 cases. ⚠️ Le budget de l'Excel suppose des zones de 9 et 25 cases (8 directions) : le coût des cartes à zone est à revoir dans l'Excel. La Roadmap parle encore d'une grille hexagonale : à corriger. Détail : `Grid_System.md`
 - Portées de 1 (mêlée) à 6 cases
 - Zones : ligne, cône, cercle, cibles multiples, contagion, équipe entière
 
@@ -200,7 +200,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 ### Reste à faire pour le MVP
 - [ ] Cartes d'Éveil (6 par deck) — mise en œuvre de l'Éveil
 - [x] Règle de main/pioche : celle du code (départ 5, max 5, pioche 1/tour) — 24/09
-- [x] Grille carrée 8 directions, code aligné (24/09) — reste à corriger la Roadmap de l'Excel (« hexagonale »)
+- [x] Grille carrée 4 directions (24/09) — reste à corriger la Roadmap de l'Excel (« hexagonale ») et le budget des zones (5 / 13 cases au lieu de 9 / 25)
 - [ ] Monstres de l'Orphelinat (stats selon le barème, patterns)
 - [ ] Adapter le code : Éveil (jauge + 6 slots de deck), statuts de contrôle, anti-lock, cycle de boss
 - [ ] Désaturation visuelle des donjons
@@ -258,7 +258,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Budget de cartes** | **Baseline par PA × (1 + modificateurs)** | Excel |
 | **Anti-lock** | **Un monstre bloqué fait une Attaque de base** | Excel |
 | **Monstres** | **Donjon (groupe obligatoire) vs Aventure (solo-friendly)** | Excel |
-| **Grille** | **Carrée, 8 directions** : une diagonale vaut 1 case pour le déplacement, la portée, les zones, les charges et l'adjacence (la Roadmap de l'Excel dit encore hex, à corriger) | 24/09 |
+| **Grille** | **Carrée, 4 directions** (pas de diagonales, distance de Manhattan) pour le déplacement, la portée, les zones, les charges et l'adjacence, écho du Miroir fraternel compris. Le budget de l'Excel (zones de 9 / 25 cases) est à revoir | 24/09 |
 | **Main et pioche** | **Règle du code** : main de départ 5, 5 cartes max, 1 carte piochée par tour | 24/09 |
 | **Ordre des tours** | **Chaque unité joue à son tour** (pas de phases) | 24/09 |
 | **Joueurs** | **Un seul champion par joueur** ; les équipes de 3 viendront avec le multijoueur (V2) | 24/09 |
@@ -266,13 +266,12 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Faiblesse émotionnelle** | **Une émotion par monstre, +25 % de dégâts des cartes de cette émotion** (à valider), visible sur le monstre ; pas de résistance au MVP | 24/09 |
 | **Pool Standard** | **49 cartes** (17 Colère, 17 Peur, 15 Joie) pour l'instant — la Roadmap de l'Excel dit 36, à corriger | 24/09 |
 | **Noms de familles** | **Abandonnés** (Déchaînés, Réprouvés, Éveillés…) : on parle directement des émotions | 24/09 |
-| **Diagonales** | **Passage en diagonale autorisé**, même entre deux unités qui se touchent par un coin | 24/09 |
 | Éveil | Mis de côté pour l'instant, à réfléchir plus tard | 24/09 |
 | Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
-| Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (8 directions) ; injouable sans invocation | 24/09 |
+| Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |
 | Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer | 24/09 |
 | Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`), style simple : 1-2 phrases courtes, verbe + cible + chiffre (+ contrepartie), sans conseil ni parenthèse (ex. « Inflige 11 dégâts à un ennemi au contact. ») | 24/09 |
-| Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 8 directions ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
+| Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 4 directions (comme toute la grille) ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
 | Construction de deck | Un champion peut jouer toutes les émotions, mais chaque deck a 1 ou 2 couleurs (choisies à la création) et ne contient que ces couleurs ; 4 exemplaires max par carte ; Signatures du champion obligatoires, 1 exemplaire chacune (nombre à redéfinir plus tard) ; Signatures des autres champions interdites | 24/09 |
 
 ## Questions ouvertes

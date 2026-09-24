@@ -250,8 +250,8 @@ public class GridRepository
                 reachableTilesWithCost.Add(currentTile, currentCost);
             }
 
-            // 8 directions : une diagonale coûte 1 case (voir GridGeometry)
-            foreach (Vector2Int offset in GridGeometry.Directions8)
+            // 4 directions, pas de diagonales (voir GridGeometry)
+            foreach (Vector2Int offset in GridGeometry.Directions4)
             {
                 Vector2Int neighborPos = currentPos + offset;
                 Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);
@@ -302,8 +302,8 @@ public class GridRepository
                 reachableTiles.Add(currentTile);
             }
 
-            // 8 directions : une diagonale coûte 1 case (voir GridGeometry)
-            foreach (Vector2Int offset in GridGeometry.Directions8)
+            // 4 directions, pas de diagonales (voir GridGeometry)
+            foreach (Vector2Int offset in GridGeometry.Directions4)
             {
                 Vector2Int neighborPos = currentPos + offset;
                 if (_tiles.ContainsKey(neighborPos) &&
@@ -357,8 +357,8 @@ public class GridRepository
                 break;
             }
 
-            // 8 directions : une diagonale coûte 1 case (voir GridGeometry)
-            foreach (Vector2Int offset in GridGeometry.Directions8)
+            // 4 directions, pas de diagonales (voir GridGeometry)
+            foreach (Vector2Int offset in GridGeometry.Directions4)
             {
                 Vector2Int neighborPos = currentPos + offset;
                 Unit unitAtNeighbor = GetUnitAtGridPos(neighborPos);

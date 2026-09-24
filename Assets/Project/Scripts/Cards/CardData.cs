@@ -26,7 +26,7 @@ public static class ChargeHelper
     /// <returns>La direction normalisée ou Vector2.zero si pas en ligne droite</returns>
     public static bool TryGetChargeDirection(Vector2Int sourcePos, Vector2Int targetPos, out Vector2Int direction, out int distance)
     {
-        // Ligne, colonne ou diagonale (grille en 8 directions)
+        // Même ligne ou même colonne (grille en 4 directions)
         return GridGeometry.TryGetLine(sourcePos, targetPos, out direction, out distance);
     }
 
@@ -572,7 +572,7 @@ public class CardData : ScriptableObject
     /// <summary>
     /// Détermine si une case donnée est couverte par la forme de zone de la carte
     /// (Circle/OneTile centrés sur l'épicentre ; Line/Cone tracés depuis le lanceur en
-    /// direction de l'épicentre, sur 8 directions ; WholeTeam ignore position/épicentre).
+    /// direction de l'épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
     /// </summary>
     private bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
     {
@@ -582,7 +582,7 @@ public class CardData : ScriptableObject
                 return tilePos == epicenter;
 
             case CardAreaEffect.Circle:
-                // 8 directions : un « cercle » de rayon r est un carré de (2r+1) cases de côté
+                // 4 directions : un « cercle » de rayon r est un losange (rayon 1 = 5 cases, rayon 2 = 13)
                 return GridGeometry.Distance(epicenter, tilePos) <= aoeRadius;
 
             case CardAreaEffect.Cross:
@@ -638,7 +638,7 @@ public class CardData : ScriptableObject
     }
 
     /// <summary>
-    /// Direction (8 cases possibles, diagonales incluses) la plus proche entre deux positions.
+    /// Direction (parmi les 4) la plus proche entre deux positions : l'axe dominant.
     /// </summary>
     private static Vector2Int GetSnappedDirection(Vector2Int from, Vector2Int to) =>
         GridGeometry.SnapDirection(from, to);
@@ -647,8 +647,8 @@ public class CardData : ScriptableObject
     /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active avec un ennemi à
     /// portée, elle inflige un écho à 40% des dégâts réellement infligés (après réduction/boucliers).
     /// Règles (décision du 24/09/2026) :
-    /// - portée = celle de la carte jouée, mesurée depuis l'invocation, dans les 8 directions
-    ///   (une diagonale compte pour 1 case) : on place Lyse selon la carte qu'on veut jouer ;
+    /// - portée = celle de la carte jouée, mesurée depuis l'invocation, en 4 directions comme toute
+    ///   la grille : on place Lyse selon la carte qu'on veut jouer ;
     /// - cible : l'ennemi visé par le lanceur s'il est à portée de l'invocation (et encore en vie),
     ///   sinon l'ennemi le plus proche de l'invocation ;
     /// - déclenchement automatique (le choix manuel de la cible est prévu pour la V2).

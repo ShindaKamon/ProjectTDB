@@ -48,15 +48,15 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void Circle_Radius1_Draws3x3Zone()
+        public void Circle_Radius1_DrawsDiamondOf5Cells()
         {
             var card = NewCard(CardTargetType.Enemy, 1, CardAreaEffect.Circle, 1);
             var cells = CodexCardVisual.BuildDiagram(card);
 
-            // Au contact, la zone 3×3 recouvre la case du lanceur, dessiné par-dessus (comme le codex)
-            Assert.AreEqual(8, Count(cells, DiagramCell.Area));
+            // Au contact, le losange de 5 cases recouvre la case du lanceur, dessiné par-dessus
+            Assert.AreEqual(4, Count(cells, DiagramCell.Area));
             Assert.AreEqual(DiagramCell.Caster, cells[1, 4]);
-            Assert.AreEqual("au contact · zone 3×3", CodexCardVisual.Caption(card));
+            Assert.AreEqual("au contact · zone rayon 1", CodexCardVisual.Caption(card));
         }
 
         [Test]

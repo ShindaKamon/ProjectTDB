@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Rayonnement_de_joie
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Rayonnement de joie
-  description: "Inflige 41 d\xE9g\xE2ts dans une zone 5\xD75 autour d'un ennemi au
-    contact."
+  description: "Inflige 41 d\xE9g\xE2ts dans une zone de rayon 2 autour d'un ennemi
+    au contact."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0

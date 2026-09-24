@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Poing_ardent
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Poing ardent
-  description: "Inflige 22 d\xE9g\xE2ts dans une zone 3\xD73 autour d'un ennemi au
-    contact. Touche aussi tes alli\xE9s."
+  description: "Inflige 22 d\xE9g\xE2ts dans une zone de rayon 1 autour d'un ennemi
+    au contact. Touche aussi tes alli\xE9s."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0

@@ -31,7 +31,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 **Passif — Miroir fraternel :** quand Evan joue une carte offensive, si une de ses invocations actives (Lyse, ou toute autre invocation future) a une cible valide à sa propre portée — n'importe quel ennemi — le joueur peut lui faire rejouer un **écho de la carte à ~40 % de puissance**, gratuitement. L'invocation peut viser une autre cible qu'Evan (répartition des dégâts plutôt que doublement). Les PV de Lyse = **moitié des PV actuels d'Evan**, recalculés en continu : elle peut mourir sans être ciblée.
 
 > **Règles de l'écho (actées le 24/09/2026, implémentées) :**
-> - **Portée** = celle de la carte jouée par Evan, **mesurée depuis Lyse**, dans les **8 directions** (une diagonale compte pour 1 case). Ex. : Coup de colère (portée 1) → Lyse fait son écho si un ennemi est sur l'une des 8 cases autour d'elle. On place donc Lyse en fonction de la carte qu'on veut jouer.
+> - **Portée** = celle de la carte jouée par Evan, **mesurée depuis Lyse**, en **4 directions** comme toute la grille (une case en diagonale est à 2 cases). Ex. : Coup de colère (portée 1) → Lyse fait son écho si un ennemi est sur l'une des 4 cases qui la touchent. On place donc Lyse en fonction de la carte qu'on veut jouer.
 > - **Cible** : l'ennemi attaqué par Evan s'il est à portée de Lyse (et encore en vie) ; sinon l'ennemi le plus proche de Lyse.
 > - **Déclenchement automatique** pour le MVP (choix manuel de la cible prévu pour la V2). Dégâts = 40 % des dégâts réellement infligés par Evan.
 > - **Retour visuel** : Lyse bondit vers sa cible, le chiffre de l'écho apparaît en cyan, décalé de celui d'Evan.
@@ -39,7 +39,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 | Carte Signature | PA | Effet |
 |-----------------|----|-------|
 | **Invocation de Lyse** (cœur de gameplay) | 2 | Invoque le fantôme de Lyse sur une case, portée 2-3 |
-| **Écho évanescent** (utilitaire) | 1 | Choisir une invocation, puis une case libre à 1-3 cases d'elle (8 directions) : elle s'y déplace. Injouable sans invocation sur le terrain |
+| **Écho évanescent** (utilitaire) | 1 | Choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) : elle s'y déplace. Injouable sans invocation sur le terrain |
 
 **Gameplay :** bien placer le fantôme par rapport aux cibles probables. Mécanique d'écho réutilisable pour d'autres invocateurs.
 **À trancher en playtest :** choix de cible quand plusieurs sont valides ; complexité globale.

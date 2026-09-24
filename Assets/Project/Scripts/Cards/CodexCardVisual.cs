@@ -117,7 +117,7 @@ public static class CodexCardVisual
         return card.costHP > 0 ? subtitle + " · " + card.costHP + " PV" : subtitle;
     }
 
-    /// <summary>Légende du schéma, ex. « au contact · zone 3×3 » ou « portée 1-3 ».</summary>
+    /// <summary>Légende du schéma, ex. « au contact · zone rayon 1 » ou « portée 1-3 ».</summary>
     public static string Caption(CardData card)
     {
         var bits = new List<string>();
@@ -134,7 +134,7 @@ public static class CodexCardVisual
             CardAreaEffect.Cone => "cône",
             CardAreaEffect.Cross => "croix",
             CardAreaEffect.WholeTeam => "équipe entière",
-            CardAreaEffect.Circle => "zone " + (2 * radius + 1) + "×" + (2 * radius + 1),
+            CardAreaEffect.Circle => "zone rayon " + radius,
             _ => "",
         };
         if (zone != "") bits.Add(zone);
@@ -163,7 +163,8 @@ public static class CodexCardVisual
 
         var area = new List<Vector2Int>();
         void Add(int x, int y) { if (x >= 0 && x < DiagramSize && y >= 0 && y < DiagramSize) area.Add(new Vector2Int(x, y)); }
-        void Box(int x0, int y0, int n) { for (int a = -n; a <= n; a++) for (int b = -n; b <= n; b++) Add(x0 + a, y0 + b); }
+        // Zone « cercle » en 4 directions : losange de rayon n (distance de Manhattan, comme la grille)
+        void Box(int x0, int y0, int n) { for (int a = -n; a <= n; a++) for (int b = -n; b <= n; b++) if (Mathf.Abs(a) + Mathf.Abs(b) <= n) Add(x0 + a, y0 + b); }
         void Team() { Add(2, 2); Add(6, 3); Add(3, 6); Add(7, 7); }
 
         if (card.isChargeCard)
@@ -197,11 +198,11 @@ public static class CodexCardVisual
             }
         }
 
-        // Portée : carré autour du lanceur (distance de Tchebychev, comme le schéma du codex)
+        // Portée : losange autour du lanceur (4 directions, distance de Manhattan, comme la grille)
         for (int x = 0; x < DiagramSize; x++)
             for (int y = 0; y < DiagramSize; y++)
             {
-                int d = Mathf.Max(Mathf.Abs(x - cx), Mathf.Abs(y - cy));
+                int d = Mathf.Abs(x - cx) + Mathf.Abs(y - cy);
                 if (d >= 1 && d <= range) cells[x, y] = DiagramCell.Range;
             }
 

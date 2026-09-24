@@ -163,7 +163,7 @@ Tu es mon co-architecte pour la conception et le développement de mon jeu vidé
 - **Ordre des tours** : chaque unité joue à son tour (champion puis chaque ennemi) — acté le 24/09/2026
 - **Main** : départ 5, max 5, pioche 1/tour — acté le 24/09/2026
 - **Contrôle** (Peur) : retrait de PM au prochain tour, poussée/tirage ; **anti-lock** : un monstre bloqué fait son Attaque de base
-- **Grille** : carrée 10×10 en **8 directions** (une diagonale vaut 1 case) — actée et codée le 24/09/2026
+- **Grille** : carrée 10×10 en **4 directions** (pas de diagonales) — actée le 24/09/2026 ; le budget des zones de l'Excel (9 / 25 cases) est à revoir (5 / 13 en 4 directions)
 
 ---
 
@@ -311,7 +311,7 @@ Décisions actées et questions ouvertes : **voir `GDD_Main.md`** (sections « D
 
 ### Prochaines étapes 🔄
 1. Designer les monstres de l'Orphelinat : barème à 1 joueur (PV et dégâts montent avec le nombre de joueurs) et une faiblesse émotionnelle chacun
-2. Corriger la Roadmap de l'Excel (grille « hexagonale », anciens noms des champions)
+2. Excel : corriger la Roadmap (grille « hexagonale », anciens noms des champions) et revoir le coût des cartes à zone (5 / 13 cases en 4 directions)
 3. (Plus tard) Éveil : mis de côté pour l'instant
 
 ---

@@ -71,7 +71,7 @@ public class EnemyAI : MonoBehaviour
                 int maxCardRange = nextCard.targetRange;
                 int currentDistance = GridGeometry.Distance(_enemyUnit.GetCurrentGridPos(), closestPlayerUnit.GetCurrentGridPos());
 
-                // Même règle que le joueur : portée en 8 directions, sans contrainte d'alignement
+                // Même règle que le joueur : portée en 4 directions (Manhattan), sans contrainte d'alignement
                 if (currentDistance > maxCardRange)
                 {
                     needsToMoveCloser = true;
@@ -213,7 +213,7 @@ public class EnemyAI : MonoBehaviour
         return nextCard.targetRange;
     }
 
-    // Trouve le meilleur mouvement depuis une position donnée vers une cible (8 directions) :
+    // Trouve le meilleur mouvement depuis une position donnée vers une cible (4 directions) :
     // la case libre la plus proche en cases, départagée par la distance réelle (trajet plus droit).
     private Vector2Int FindBestMoveFrom(Vector2Int fromPos, Vector2Int targetPos)
     {
@@ -221,7 +221,7 @@ public class EnemyAI : MonoBehaviour
         int bestDistance = GridGeometry.Distance(fromPos, targetPos);
         float bestTieBreak = float.MaxValue;
 
-        foreach (Vector2Int dir in GridGeometry.Directions8)
+        foreach (Vector2Int dir in GridGeometry.Directions4)
         {
             Vector2Int nextPos = fromPos + dir;
 
@@ -252,7 +252,7 @@ public class EnemyAI : MonoBehaviour
 
         foreach (Unit playerUnit in playerUnits)
         {
-            // Distance en cases (8 directions), départagée par la distance réelle
+            // Distance en cases (4 directions), départagée par la distance réelle
             float distance = GridGeometry.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos())
                              + 0.001f * Vector2.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos());
             if (distance < minDistance)
@@ -290,7 +290,7 @@ public class EnemyAI : MonoBehaviour
             return false;
         }
 
-        // Vérifie la portée pour les cartes ciblant l'ennemi (8 directions, comme le joueur)
+        // Vérifie la portée pour les cartes ciblant l'ennemi (4 directions, comme le joueur)
         if (card.targetType == CardTargetType.Enemy)
         {
             int distance = GridGeometry.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
@@ -328,7 +328,7 @@ public class EnemyAI : MonoBehaviour
                 // Carte offensive contre joueur
                 if (card.targetType == CardTargetType.Enemy)
                 {
-                    // Vérifie la portée (8 directions)
+                    // Vérifie la portée (4 directions)
                     int distance = GridGeometry.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
                     if (distance <= card.targetRange)
                     {

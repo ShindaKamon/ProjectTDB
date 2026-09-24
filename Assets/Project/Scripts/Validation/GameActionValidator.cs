@@ -80,7 +80,7 @@ public static class GameActionValidator
         if (target == null)
             return ValidationResult.Fail($"{card.cardName} nécessite une cible");
 
-        // Validation de la portée (8 directions, voir GridGeometry)
+        // Validation de la portée (4 directions, voir GridGeometry)
         int distance = GridGeometry.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
         if (distance > card.targetRange)
         {
@@ -155,13 +155,13 @@ public static class GameActionValidator
 
         Vector2Int sourcePos = source.GetCurrentGridPos();
 
-        // Charge : ligne droite uniquement (ligne, colonne ou diagonale)
+        // Charge : ligne droite uniquement (même ligne ou même colonne)
         if (card.isChargeCard && !GridGeometry.TryGetLine(sourcePos, targetTilePos, out _, out _))
         {
             return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
         }
 
-        // Portée en 8 directions (voir GridGeometry)
+        // Portée en 4 directions (voir GridGeometry)
         int distance = GridGeometry.Distance(sourcePos, targetTilePos);
         if (distance > card.targetRange)
         {
@@ -200,7 +200,7 @@ public static class GameActionValidator
     }
 
     /// <summary>
-    /// Étape 2 : la case d'arrivée est-elle valide ? Distance en cases (8 directions, comme toute
+    /// Étape 2 : la case d'arrivée est-elle valide ? Distance en cases (4 directions, comme toute
     /// la grille) entre 1 et la portée de la carte, mesurée depuis l'invocation. L'existence et
     /// la disponibilité de la case sont fournies par l'appelant (la grille), pour garder la règle testable.
     /// </summary>

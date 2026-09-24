@@ -103,7 +103,7 @@ public class InputManager : MonoBehaviour
                     Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
                     Vector2Int targetPos = hoveredUnit.GetCurrentGridPos();
 
-                    // Pour les cartes de charge, vérifie la ligne droite (8 directions) et la portée
+                    // Pour les cartes de charge, vérifie la ligne droite (4 directions) et la portée
                     if (currentSelectedCard.isChargeCard)
                     {
                         Tile unitTile = Services.Grid.GetTileAtPosition(targetPos);
@@ -472,7 +472,7 @@ public class InputManager : MonoBehaviour
                 return;
             }
 
-            // Vérifie la portée (8 directions, voir GridGeometry)
+            // Vérifie la portée (4 directions, voir GridGeometry)
             int lineDistance = GridGeometry.Distance(sourcePos, enemyPos);
             if (lineDistance > selectedCard.targetRange)
             {
@@ -492,7 +492,7 @@ public class InputManager : MonoBehaviour
         {
             Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
 
-            // Portée en 8 directions (voir GridGeometry), charge comprise
+            // Portée en 4 directions (voir GridGeometry), charge comprise
             if (GridGeometry.Distance(sourcePos, targetTilePos) > selectedCard.targetRange)
             {
                 // Hors de portée, désélectionne la carte

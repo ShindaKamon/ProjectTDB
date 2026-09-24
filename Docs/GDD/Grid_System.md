@@ -1,25 +1,25 @@
 # 🗺️ Système de Grille - Émotions Tactics (Project TDB)
 
-**Version:** 1.4
+**Version:** 1.5
 **Date:** 24 Septembre 2026
-**Changements :** v1.1 (23/09/2026) encodage réparé, portée MVP. v1.3 (23/09/2026) : alignement sur le code réel — la grille implémentée est carrée. **v1.4 (24/09/2026)** : **grille en 8 directions** (décision actée, code aligné).
+**Changements :** v1.1 (23/09/2026) encodage réparé, portée MVP. v1.3 (23/09/2026) : alignement sur le code réel — la grille implémentée est carrée. v1.4 (24/09/2026) : essai en 8 directions. **v1.5 (24/09/2026)** : **retour aux 4 directions** (décision actée), règle unifiée dans le code.
 
 ## ✅ Grille implémentée (code, 24/09/2026)
 
-**Règle unique : une diagonale vaut 1 case** (distance de Chebyshev, `max(|dx|, |dy|)`), partout. Elle est codée une seule fois dans `GridGeometry` (`Scripts/Core/GridGeometry.cs`) ; ne pas recalculer une distance à la main.
+**Règle unique : 4 directions, pas de diagonales** (distance de Manhattan, `|dx| + |dy|`), partout. Elle est codée une seule fois dans `GridGeometry` (`Scripts/Core/GridGeometry.cs`) ; ne pas recalculer une distance à la main.
 
 | Élément | Règle |
 |---------|-------|
 | **Forme** | Grille **carrée** 10 × 10 (`GridManager._width/_height`), tuiles `Vector2Int` |
-| **Distance / portée** | 8 directions : portée 1 = les 8 cases autour du lanceur ; joueur et monstres suivent la même règle, sans contrainte d'alignement |
-| **Déplacement** | 8 directions, 1 PM par case (diagonale comprise) ; on ne traverse pas une unité, mais on peut passer en diagonale entre deux unités qui se touchent par un coin (acté le 24/09/2026) |
-| **Zones** | Cercle de rayon r = carré de (2r+1) cases de côté (rayon 1 = 9 cases, rayon 2 = 25 cases, comme l'Excel) ; ligne et cône suivent la direction la plus proche parmi les 8 ; la croix reste sur les 2 axes |
-| **Charges / lignes** | Ligne droite en ligne, colonne **ou diagonale** |
-| **Poussée / attraction** | Selon la plus proche des 8 directions (une poussée en diagonale est possible) |
-| **Adjacence** (ex. Réflexe du grimpeur de Crux) | Les 8 cases autour |
+| **Distance / portée** | 4 directions : une case en diagonale est à 2 cases ; portée 1 = les 4 cases qui touchent le lanceur ; joueur et monstres suivent la même règle, sans contrainte d'alignement |
+| **Déplacement** | 4 directions, 1 PM par case ; on ne traverse pas une unité |
+| **Zones** | Cercle de rayon r = losange (rayon 1 = 5 cases en croix, rayon 2 = 13 cases) ; ligne et cône suivent l'axe dominant vers la cible ; la croix reste sur les 2 axes |
+| **Charges / lignes** | Ligne droite : même ligne ou même colonne |
+| **Poussée / attraction** | Selon l'axe dominant (jamais en diagonale) |
+| **Adjacence** (ex. Réflexe du grimpeur de Crux) | Les 4 cases qui touchent |
 | **Terrain** | Plat, sans obstacles |
 
-> ⚠️ Reste à corriger côté Excel : la Roadmap parle encore d'une grille hexagonale.
+> ⚠️ Côté Excel : le budget des cartes suppose des zones de 9 / 25 cases (8 directions) ; en 4 directions elles font 5 / 13 cases, le coût des cartes à zone est à revoir. La Roadmap parle encore d'une grille hexagonale : à corriger.
 
 Le reste de ce document décrit la **conception hexagonale d'origine** (coordonnées cubiques, 6 directions), **non implémentée**. Elle est conservée pour référence : terrains, ligne de vue, déplacement forcé et optimisations restent valables sur une grille carrée en adaptant les formules.
 

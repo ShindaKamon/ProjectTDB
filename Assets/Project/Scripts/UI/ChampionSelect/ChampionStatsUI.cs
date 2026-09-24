@@ -71,7 +71,7 @@ public class ChampionStatsUI : MonoBehaviour
 
         // Stats - Ligne 1
         if (_healthStat != null)
-            _healthStat.SetValue(champion.maxHealth, "HP");
+            _healthStat.SetValue(champion.maxHealth, "PV");
 
         if (_movementStat != null)
             _movementStat.SetValue(champion.movementRange, "PM");
@@ -81,7 +81,7 @@ public class ChampionStatsUI : MonoBehaviour
 
         // Stats - Ligne 2
         if (_attackStat != null)
-            _attackStat.SetValue(champion.attackDamage, "ATK");
+            _attackStat.SetValue(champion.attackDamage, "ATQ");
 
         if (_defenseStat != null)
             _defenseStat.SetValue(champion.defense, "DEF");

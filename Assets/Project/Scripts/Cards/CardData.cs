@@ -278,7 +278,7 @@ public class CardData : ScriptableObject
     public CardAffectedTarget affectedTarget = CardAffectedTarget.None;
 
     [Space(5)]
-    [Tooltip("Si true, cette carte cible une autre carte de la main du lanceur (ex: Il triche) au lieu d'une unité/tuile de la grille")]
+    [Tooltip("Si true, cette carte cible une autre carte de la main du lanceur (ex: Triche) au lieu d'une unité/tuile de la grille")]
     public bool targetsHandCard = false;
 
     [Space(5)]
@@ -356,7 +356,7 @@ public class CardData : ScriptableObject
     [Tooltip("Distance de knockback/recul")]
     public int knockbackDistance = 0;
 
-    [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel forcé)")]
+    [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel)")]
     public bool pullsTowardCaster = false;
 
     [Space(5)]
@@ -669,45 +669,65 @@ public class CardData : ScriptableObject
     }
 
     /// <summary>
-    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active et que cette
-    /// invocation a un ennemi à portée (même portée que la carte jouée, mesurée depuis sa
-    /// propre position), inflige un écho à 40% des dégâts réellement infligés (après réduction/
-    /// boucliers) sur l'ennemi le plus proche de l'invocation. Choix de cible (le plus proche) et déclenchement automatique (plutôt
-    /// qu'un choix du joueur) sont des simplifications de première passe, à retravailler en
-    /// playtest si besoin (cf. notes de design du classeur source).
+    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active avec un ennemi à
+    /// portée, elle inflige un écho à 40% des dégâts réellement infligés (après réduction/boucliers).
+    /// Règles (décision du 24/09/2026) :
+    /// - portée = celle de la carte jouée, mesurée depuis l'invocation, dans les 8 directions
+    ///   (une diagonale compte pour 1 case) : on place Lyse selon la carte qu'on veut jouer ;
+    /// - cible : l'ennemi visé par le lanceur s'il est à portée de l'invocation (et encore en vie),
+    ///   sinon l'ennemi le plus proche de l'invocation ;
+    /// - déclenchement automatique (le choix manuel de la cible est prévu pour la V2).
     /// </summary>
-    private void TryTriggerSummonEcho(Unit source, int appliedDamage)
+    private void TryTriggerSummonEcho(Unit source, int appliedDamage, Unit sourceTarget)
     {
         if (appliedDamage <= 0) return;
         if (!(source is ISummonOwner summonOwner)) return;
 
         SummonUnit summon = summonOwner.ActiveSummon;
-        if (summon == null) return;
+        if (summon == null || IsDead(summon)) return;
 
-        UnitState summonState = summon.GetUnitState();
-        if (summonState != null && summonState.IsDead()) return;
+        Vector2Int summonPos = summon.GetCurrentGridPos();
+        bool IsValidEchoTarget(Unit unit) =>
+            unit != null && unit != source && unit != summon && !IsDead(unit)
+            && unit.GetFaction() != summon.GetFaction() // uniquement les ennemis de l'invocation
+            && SummonEchoDistance(summonPos, unit.GetCurrentGridPos()) <= targetRange;
 
-        Unit echoTarget = null;
-        float bestDist = float.MaxValue;
+        Unit echoTarget = IsValidEchoTarget(sourceTarget) ? sourceTarget : null;
 
-        foreach (Unit unit in Services.Grid.GetAllUnits())
+        if (echoTarget == null)
         {
-            if (unit == null || unit == source || unit == summon) continue;
-            if (unit.GetFaction() == summon.GetFaction()) continue; // uniquement les ennemis de l'invocation
-
-            float dist = Vector2.Distance(summon.GetCurrentGridPos(), unit.GetCurrentGridPos());
-            if (dist <= targetRange && dist < bestDist)
+            int bestDist = int.MaxValue;
+            foreach (Unit unit in Services.Grid.GetAllUnits())
             {
-                bestDist = dist;
-                echoTarget = unit;
+                if (!IsValidEchoTarget(unit)) continue;
+
+                int dist = SummonEchoDistance(summonPos, unit.GetCurrentGridPos());
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    echoTarget = unit;
+                }
             }
         }
 
         if (echoTarget == null) return;
 
         int echoDamage = Mathf.Max(1, Mathf.RoundToInt(appliedDamage * 0.4f));
-        echoTarget.TakeDamage(echoDamage);
+        echoTarget.TakeDamageFrom(echoDamage, summon);
         GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
+    }
+
+    /// <summary>
+    /// Distance de portée de l'écho : 8 directions, une diagonale vaut 1 case (distance de
+    /// Tchebychev). Propre au Miroir fraternel, le reste de la grille reste en 4 directions.
+    /// </summary>
+    public static int SummonEchoDistance(Vector2Int a, Vector2Int b) =>
+        Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
+
+    private static bool IsDead(Unit unit)
+    {
+        UnitState state = unit.GetUnitState();
+        return state != null && state.IsDead();
     }
 
     // Méthode pour exécuter l'effet de la carte
@@ -777,7 +797,7 @@ public class CardData : ScriptableObject
             }
         }
 
-        // --- INVOCATION / REPOSITIONNEMENT (ex: Invocation de Lyse, Écho de Lyse) ---
+        // --- INVOCATION / REPOSITIONNEMENT (ex: Invocation de Lyse, Écho évanescent) ---
         // Une seule fois par carte jouée (pas une fois par cible d'une carte à cibles multiples).
         if (!isAdditionalMultiTargetHit)
         {
@@ -805,7 +825,11 @@ public class CardData : ScriptableObject
             }
             else if (isRepositionSummonCard && targetsTile && source is ISummonOwner repositionOwner)
             {
-                repositionOwner.RepositionSummon(targetTile);
+                // Invocation choisie à la 1re étape du ciblage (targetUnit) ; à défaut (IA, appel
+                // direct), l'invocation active du lanceur.
+                SummonUnit summonToMove = targetUnit as SummonUnit;
+                if (summonToMove == null) summonToMove = repositionOwner.ActiveSummon;
+                repositionOwner.RepositionSummon(summonToMove, targetTile);
             }
         }
 
@@ -938,7 +962,7 @@ public class CardData : ScriptableObject
         // Une seule fois par carte jouée (pas une fois par cible).
         if (!isAdditionalMultiTargetHit)
         {
-            TryTriggerSummonEcho(source, actualDamageDealt);
+            TryTriggerSummonEcho(source, actualDamageDealt, targetUnit);
         }
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)

@@ -311,6 +311,26 @@ public class Unit : MonoBehaviour, IMarkable
         transform.rotation = targetRotation; // Snap final pour la précision
     }
 
+    // Origine des dégâts en cours d'application (voir TakeDamageFrom), relayée dans UnitDamagedEvent
+    private Unit _incomingDamageSource;
+
+    /// <summary>
+    /// Inflige des dégâts en précisant leur origine (ex: écho de Lyse), pour que les retours
+    /// visuels puissent les distinguer. Passe par TakeDamage, surcharges comprises (boucliers).
+    /// </summary>
+    public void TakeDamageFrom(int damage, Unit source)
+    {
+        _incomingDamageSource = source;
+        try
+        {
+            TakeDamage(damage);
+        }
+        finally
+        {
+            _incomingDamageSource = null;
+        }
+    }
+
     // Méthode pour infliger des dégâts à cette unité.
     public virtual void TakeDamage(int damage)
     {
@@ -340,8 +360,8 @@ public class Unit : MonoBehaviour, IMarkable
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        // Note: On ne connaît pas forcément la source des dégâts ici, donc on passe null
-        EventBus.Publish(new UnitDamagedEvent(this, null, damage));
+        // Source connue seulement via TakeDamageFrom (null sinon)
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -386,7 +406,7 @@ public class Unit : MonoBehaviour, IMarkable
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        EventBus.Publish(new UnitDamagedEvent(this, null, damage));
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
 
         // Met à jour la barre de vie
         if (healthBar != null)

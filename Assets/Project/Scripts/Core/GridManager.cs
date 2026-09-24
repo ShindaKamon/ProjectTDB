@@ -703,6 +703,18 @@ public class GridManager : MonoBehaviour, IGridService
 
         ResetAllTileColors();
 
+        // Carte de déplacement d'invocation (ex: Écho évanescent), ciblage en 2 étapes :
+        // source = lanceur -> étape 1, on montre ses invocations ; source = l'invocation choisie
+        // -> étape 2, on montre les cases d'arrivée autour d'elle.
+        if (card.isRepositionSummonCard)
+        {
+            if (source is SummonUnit chosenSummon)
+                ShowSummonMoveTargets(card, chosenSummon);
+            else
+                ShowSummonsToMove(card, source);
+            return;
+        }
+
         Vector2Int sourcePos = source.GetCurrentGridPos();
         int range = card.targetRange;
 
@@ -723,6 +735,29 @@ public class GridManager : MonoBehaviour, IGridService
         }
 
         GameLog.Log($"Portée affichée pour {card.cardName} (portée: {range})");
+    }
+
+    /// <summary>Étape 1 d'une carte de déplacement d'invocation : surligne les invocations du lanceur.</summary>
+    private void ShowSummonsToMove(CardData card, Unit caster)
+    {
+        foreach (Unit unit in _units)
+        {
+            if (!GameActionValidator.CanSelectSummonToMove(card, caster, unit).IsValid) continue;
+
+            Tile tile = GetTileAtPosition(unit.GetCurrentGridPos());
+            if (tile != null) tile.SetColor(_cardTargetColor);
+        }
+    }
+
+    /// <summary>Étape 2 : surligne les cases d'arrivée valides autour de l'invocation choisie.</summary>
+    private void ShowSummonMoveTargets(CardData card, SummonUnit summon)
+    {
+        foreach (var pair in _tiles)
+        {
+            bool isFree = GetUnitAtGridPos(pair.Key) == null;
+            if (GameActionValidator.CanMoveSummonTo(card, summon, pair.Key, isFree).IsValid)
+                pair.Value.SetColor(_cardTargetColor);
+        }
     }
 
     /// <summary>

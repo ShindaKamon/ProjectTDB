@@ -813,5 +813,102 @@ namespace ProjectTDB.Tests
 
             Assert.IsFalse(card.isMultiTarget);
         }
+
+        // ==================== Déplacement d'invocation (Écho évanescent) ====================
+
+        private CardData NewRepositionCard(int range = 3)
+        {
+            var card = NewCard("Écho évanescent");
+            card.targetType = CardTargetType.EmptyTile;
+            card.targetRange = range;
+            card.isRepositionSummonCard = true;
+            card.costPA = 0;
+            return card;
+        }
+
+        private (SorenUnit soren, SummonUnit summon) NewSorenWithSummon(Vector2Int summonPos)
+        {
+            var soren = NewUnit<SorenUnit>(new Vector2Int(0, 0));
+            var summon = NewUnit<SummonUnit>(summonPos);
+            summon.SetOwner(soren);
+            SetField(soren, "_activeSummon", summon);
+            return (soren, summon);
+        }
+
+        [Test]
+        public void CanPlayCard_RepositionWithoutSummon_Fails()
+        {
+            var soren = NewUnit<SorenUnit>();
+
+            var result = GameActionValidator.CanPlayCard(soren, NewRepositionCard());
+
+            Assert.IsFalse(result.IsValid);
+            StringAssert.Contains("Aucune invocation", result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanPlayCard_RepositionWithSummon_Succeeds()
+        {
+            var (soren, _) = NewSorenWithSummon(new Vector2Int(2, 2));
+
+            var result = GameActionValidator.CanPlayCard(soren, NewRepositionCard());
+
+            Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanSelectSummonToMove_OwnSummon_Succeeds()
+        {
+            var (soren, summon) = NewSorenWithSummon(new Vector2Int(2, 2));
+
+            Assert.IsTrue(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, summon).IsValid);
+        }
+
+        [Test]
+        public void CanSelectSummonToMove_NotASummon_Fails()
+        {
+            var (soren, _) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var enemy = NewUnit<Enemy>(new Vector2Int(3, 3));
+
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, enemy).IsValid);
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, soren).IsValid);
+        }
+
+        [Test]
+        public void CanSelectSummonToMove_SomeoneElsesSummon_Fails()
+        {
+            var (_, summon) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var otherCaster = NewUnit<SorenUnit>(new Vector2Int(5, 5));
+
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), otherCaster, summon).IsValid);
+        }
+
+        [Test]
+        public void CanMoveSummonTo_RangeMeasuredFromSummon_NotFromCaster()
+        {
+            // Soren en (0,0), invocation en (6,6) : (6,9) est à 3 cases de l'invocation, 15 de Soren
+            var (_, summon) = NewSorenWithSummon(new Vector2Int(6, 6));
+
+            Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(3), summon, new Vector2Int(6, 9), true).IsValid);
+            Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(3), summon, new Vector2Int(1, 0), true).IsValid);
+        }
+
+        [Test]
+        public void CanMoveSummonTo_DiagonalCountsAsTwo()
+        {
+            var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
+
+            Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(2), summon, new Vector2Int(6, 6), true).IsValid);
+            Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(1), summon, new Vector2Int(6, 6), true).IsValid);
+        }
+
+        [Test]
+        public void CanMoveSummonTo_SameTileOrOccupied_Fails()
+        {
+            var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
+
+            Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 5), true).IsValid);
+            Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 6), false).IsValid);
+        }
     }
 }

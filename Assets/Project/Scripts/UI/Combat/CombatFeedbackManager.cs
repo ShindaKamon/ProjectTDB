@@ -36,6 +36,11 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
     [Header("Critical Hit")]
     [SerializeField] private int _criticalDamageThreshold = 15; // TODO: Implémenter système de critiques
 
+    [Header("Écho d'invocation (Miroir fraternel)")]
+    [SerializeField] private float _echoLungeDuration = 0.12f;  // durée de l'aller (et du retour)
+    [SerializeField, Range(0f, 1f)] private float _echoLungeRatio = 0.4f; // part du trajet parcourue vers la cible
+    [SerializeField] private Vector3 _echoNumberExtraOffset = new Vector3(0.6f, 0.5f, 0f); // décale le chiffre de celui du lanceur
+
     // ========== ÉTAT ==========
 
     private Transform _damageNumberParent;
@@ -103,6 +108,13 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
     private void OnUnitDamaged(UnitDamagedEvent evt)
     {
         if (evt.Target == null) return;
+
+        // Écho d'une invocation (Miroir fraternel) : retour visuel dédié, distinct du coup du lanceur
+        if (evt.Source is SummonUnit summon)
+        {
+            StartCoroutine(PlaySummonEcho(summon.transform, evt.Target.transform, evt.Damage));
+            return;
+        }
 
         // Détermine si c'est un coup critique (pour l'instant, détection simple)
         bool isCritical = evt.Damage > _criticalDamageThreshold;
@@ -202,6 +214,42 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
     /// <summary>
     /// Fait trembler une unité (shake effect)
     /// </summary>
+    /// <summary>
+    /// Écho d'une invocation : elle bondit vers sa cible puis revient ; le chiffre (cyan) apparaît
+    /// à l'impact, décalé de celui du coup du lanceur qui tombe au même moment sur la même cible.
+    /// Purement visuel : les dégâts sont déjà appliqués.
+    /// </summary>
+    private IEnumerator PlaySummonEcho(Transform summon, Transform target, int damage)
+    {
+        if (summon == null || target == null) yield break;
+
+        Vector3 origin = summon.position;
+        Vector3 lungeTo = Vector3.Lerp(origin, new Vector3(target.position.x, origin.y, target.position.z), _echoLungeRatio);
+
+        yield return MoveTransform(summon, origin, lungeTo, _echoLungeDuration);
+
+        if (target != null)
+        {
+            ShowDamageNumber(damage, DamageNumberPopup.PopupType.Echo, target.position + _echoNumberExtraOffset);
+            StartCoroutine(ShakeUnit(target, _damageShakeDuration, _damageShakeIntensity));
+        }
+
+        yield return MoveTransform(summon, lungeTo, origin, _echoLungeDuration);
+    }
+
+    private IEnumerator MoveTransform(Transform t, Vector3 from, Vector3 to, float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (t == null) yield break;
+            elapsed += Time.deltaTime;
+            t.position = Vector3.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
+            yield return null;
+        }
+        if (t != null) t.position = to;
+    }
+
     private IEnumerator ShakeUnit(Transform target, float duration, float intensity)
     {
         if (target == null) yield break;
@@ -211,6 +259,8 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
 
         while (elapsed < duration)
         {
+            if (target == null) yield break; // unité détruite pendant le shake (coup fatal)
+
             elapsed += Time.deltaTime;
 
             // Décroissance de l'intensité
@@ -226,7 +276,7 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
         }
 
         // Remet à la position originale
-        target.localPosition = originalPosition;
+        if (target != null) target.localPosition = originalPosition;
     }
 
     /// <summary>
@@ -248,7 +298,7 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
 
             yield return new WaitForSeconds(duration);
 
-            spriteRenderer.color = originalColor;
+            if (spriteRenderer != null) spriteRenderer.color = originalColor;
         }
         else if (renderer != null)
         {
@@ -260,7 +310,7 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
 
             yield return new WaitForSeconds(duration);
 
-            material.color = originalColor;
+            if (material != null) material.color = originalColor;
         }
         else
         {

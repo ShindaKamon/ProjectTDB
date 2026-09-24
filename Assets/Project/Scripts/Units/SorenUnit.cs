@@ -41,11 +41,11 @@ public class SorenUnit : Champion, IActionPointsUser, ISummonOwner
         GameLog.Log($"{name}: invocation active enregistrée -> {summon.name}");
     }
 
-    public void RepositionSummon(Vector2Int newPos)
+    public void RepositionSummon(SummonUnit summon, Vector2Int newPos)
     {
-        if (_activeSummon == null)
+        if (summon == null || summon.Owner != this)
         {
-            GameLog.LogWarning($"{name}: aucune invocation active à repositionner.");
+            GameLog.LogWarning($"{name}: aucune de ses invocations à repositionner.");
             return;
         }
 
@@ -55,8 +55,8 @@ public class SorenUnit : Champion, IActionPointsUser, ISummonOwner
             return;
         }
 
-        _activeSummon.TeleportTo(newPos);
-        GameLog.Log($"{name}: {_activeSummon.name} repositionnée à {newPos}");
+        summon.TeleportTo(newPos);
+        GameLog.Log($"{name}: {summon.name} repositionnée à {newPos}");
     }
 
     private void HandleSummonDied(Unit diedUnit)

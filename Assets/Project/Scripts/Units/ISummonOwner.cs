@@ -7,5 +7,6 @@ public interface ISummonOwner
 {
     SummonUnit ActiveSummon { get; }
     void RegisterSummon(SummonUnit summon);
-    void RepositionSummon(UnityEngine.Vector2Int newPos);
+    /// <summary>Téléporte une invocation de ce lanceur (choisie par le joueur) sur une case libre.</summary>
+    void RepositionSummon(SummonUnit summon, UnityEngine.Vector2Int newPos);
 }

@@ -21,7 +21,11 @@ public static class GameActionValidator
         if (card == null)
             return ValidationResult.Fail("Carte null - aucune carte sélectionnée");
 
-        // Coût effectif (tient compte d'un éventuel override, ex: Il triche)
+        // Carte de déplacement d'invocation (ex: Écho évanescent) : il faut une invocation à déplacer
+        if (card.isRepositionSummonCard && !HasSummonToMove(player))
+            return ValidationResult.Fail("Aucune invocation à déplacer");
+
+        // Coût effectif (tient compte d'un éventuel override, ex: Triche)
         int effectiveCostPA = card.costPA;
         if (player.TryGetComponentSafe(out DeckManager deckManager))
         {
@@ -179,6 +183,65 @@ public static class GameActionValidator
         }
 
         return ValidationResult.Success();
+    }
+
+    // ========== CARTES DE DÉPLACEMENT D'INVOCATION (ex: Écho évanescent) ==========
+    // Ciblage en 2 étapes : 1) choisir une invocation du lanceur, 2) choisir la case d'arrivée,
+    // à portée de l'INVOCATION (pas du lanceur).
+
+    /// <summary>Le lanceur a-t-il au moins une invocation vivante à déplacer ?</summary>
+    public static bool HasSummonToMove(Unit caster)
+    {
+        return caster is ISummonOwner owner && owner.ActiveSummon != null && !IsDead(owner.ActiveSummon);
+    }
+
+    /// <summary>Étape 1 : la cible cliquée est-elle une invocation vivante du lanceur ?</summary>
+    public static ValidationResult CanSelectSummonToMove(CardData card, Unit caster, Unit target)
+    {
+        if (card == null || !card.isRepositionSummonCard)
+            return ValidationResult.Fail("Cette carte ne déplace pas d'invocation");
+
+        if (!(target is SummonUnit summon))
+            return ValidationResult.Fail("Choisis d'abord une de tes invocations");
+
+        if (summon.Owner != caster)
+            return ValidationResult.Fail($"{summon.name} n'est pas une de tes invocations");
+
+        if (IsDead(summon))
+            return ValidationResult.Fail($"{summon.name} est morte");
+
+        return ValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Étape 2 : la case d'arrivée est-elle valide ? Distance en cases (4 directions, comme les
+    /// déplacements) entre 1 et la portée de la carte, mesurée depuis l'invocation. L'existence et
+    /// la disponibilité de la case sont fournies par l'appelant (la grille), pour garder la règle testable.
+    /// </summary>
+    public static ValidationResult CanMoveSummonTo(CardData card, SummonUnit summon, Vector2Int destination, bool destinationIsFree)
+    {
+        if (card == null || summon == null)
+            return ValidationResult.Fail("Carte ou invocation manquante");
+
+        Vector2Int from = summon.GetCurrentGridPos();
+        int distance = Mathf.Abs(destination.x - from.x) + Mathf.Abs(destination.y - from.y);
+
+        if (distance < 1)
+            return ValidationResult.Fail($"{summon.name} est déjà sur cette case");
+
+        if (distance > card.targetRange)
+            return ValidationResult.Fail($"Case trop loin de {summon.name} : {distance}/{card.targetRange}");
+
+        if (!destinationIsFree)
+            return ValidationResult.Fail("La case d'arrivée doit être libre");
+
+        return ValidationResult.Success();
+    }
+
+    private static bool IsDead(Unit unit)
+    {
+        UnitState state = unit.GetUnitState();
+        return state != null && state.IsDead();
     }
 
     // ========== VALIDATION DES DÉPLACEMENTS ==========

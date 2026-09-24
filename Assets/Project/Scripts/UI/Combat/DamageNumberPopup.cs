@@ -31,6 +31,7 @@ public class DamageNumberPopup : MonoBehaviour
     [SerializeField] private Color _healColor = new Color(0.2f, 1f, 0.2f);        // Vert pour soins
     [SerializeField] private Color _criticalColor = new Color(1f, 0.5f, 0f);      // Orange pour critiques
     [SerializeField] private Color _immuneColor = new Color(0.7f, 0.7f, 0.7f);    // Gris pour immunité
+    [SerializeField] private Color _echoColor = new Color(0.4f, 0.9f, 1f);        // Cyan pour l'écho d'une invocation (Lyse)
 
     // ========== COMPOSANTS ==========
 
@@ -51,7 +52,8 @@ public class DamageNumberPopup : MonoBehaviour
         Damage,
         Heal,
         Critical,
-        Immune
+        Immune,
+        Echo        // Dégâts d'écho d'une invocation (Miroir fraternel)
     }
 
     // ========== INITIALISATION ==========
@@ -102,6 +104,11 @@ public class DamageNumberPopup : MonoBehaviour
             case PopupType.Immune:
                 _text.text = "IMMUNE";
                 _text.color = _immuneColor;
+                break;
+
+            case PopupType.Echo:
+                _text.text = $"-{value}";
+                _text.color = _echoColor;
                 break;
         }
 

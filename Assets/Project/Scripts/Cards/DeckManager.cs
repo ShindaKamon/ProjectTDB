@@ -11,7 +11,7 @@ public class DeckManager : MonoBehaviour
     private List<CardData> _hand = new List<CardData>();
     private List<CardData> _discardPile = new List<CardData>();
 
-    // Surcouche de coût par carte (ex: "Il triche" d'Ace, ±1 PA). CardData est un
+    // Surcouche de coût par carte (ex: "Triche" d'Ace, ±1 PA). CardData est un
     // ScriptableObject partagé : si la main contient 2 exemplaires de la même carte, les deux
     // partagent le même override (limitation connue, acceptable tant qu'aucune UI de ciblage
     // "carte de la main" n'existe pour choisir un exemplaire précis).
@@ -111,7 +111,7 @@ public class DeckManager : MonoBehaviour
         {
             _hand.Remove(cardToPlay);
             _discardPile.Add(cardToPlay);
-            // Un override de coût (ex: Il triche) ne vaut que tant que la carte reste en main ;
+            // Un override de coût (ex: Triche) ne vaut que tant que la carte reste en main ;
             // on le retire à la défausse (voir doc de ClearCostOverride) pour éviter qu'il ne
             // persiste indéfiniment si la carte est rebattue et repiochée plus tard.
             ClearCostOverride(cardToPlay);
@@ -126,7 +126,7 @@ public class DeckManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Coût effectif d'une carte, après application d'un éventuel override (ex: Il triche).
+    /// Coût effectif d'une carte, après application d'un éventuel override (ex: Triche).
     /// Le plancher de 1 PA ne s'applique que si un override est actif : une carte à coût de
     /// base 0 PA sans override reste gratuite (bug corrigé : le plancher
     /// s'appliquait auparavant même sans override, rendant les cartes à 0 PA injouables dès
@@ -140,7 +140,7 @@ public class DeckManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Modifie le coût d'une carte de ±delta PA (ex: Il triche modifie de ±1).
+    /// Modifie le coût d'une carte de ±delta PA (ex: Triche modifie de ±1).
     /// </summary>
     public void ModifyCardCost(CardData card, int delta)
     {

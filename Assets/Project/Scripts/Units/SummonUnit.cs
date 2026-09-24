@@ -41,7 +41,7 @@ public class SummonUnit : Unit
 
     /// <summary>
     /// Téléporte l'invocation directement sur une nouvelle case (pas de pathfinding/animation —
-    /// utilisé par les cartes de repositionnement comme Écho de Lyse).
+    /// utilisé par les cartes de repositionnement comme Écho évanescent).
     /// </summary>
     public virtual void TeleportTo(Vector2Int newPos)
     {

@@ -10,11 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Echo_de_Lyse
+  m_Name: Echo_Evanescent
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: "\xC9cho de Lyse"
-  description: "Signature Soren - repositionne Lyse jusqu'\xE0 3 cases \xE0 distance
-    (m\xE9canique d'invocation = Phase 3, pas encore active)."
+  cardName: "\xC9cho \xE9vanescent"
+  description: "D\xE9place une invocation de 1-3 cases."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
@@ -27,6 +26,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 0
   damageSelf: 0
   healAmount: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -55,12 +57,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 1
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

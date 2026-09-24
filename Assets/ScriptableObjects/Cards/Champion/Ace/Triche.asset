@@ -10,25 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Corde_de_rappel_force
+  m_Name: Triche
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: "Corde de rappel forc\xE9"
-  description: "Signature L'Alpiniste - sur un ennemi : d\xE9g\xE2ts + tir\xE9 de
-    2 cases vers le lanceur (contr\xF4le offensif)."
+  cardName: Triche
+  description: "Clique sur Triche, puis sur une autre carte de ta main : son co\xFBt
+    change de -1 PA (+1 en maintenant Maj), minimum 1 PA. Vise un motif pour ton
+    passif Main gagnante : Paire (2 cartes de m\xEAme co\xFBt), Suite (co\xFBts N
+    puis N+1) ou Bluff (2 \xE9motions diff\xE9rentes)."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
-  signatureOwner: {fileID: 11400000, guid: d174dce2ba30a3c4994a68bb64a79176, type: 2}
-  costPA: 4
+  signatureOwner: {fileID: 11400000, guid: da96a074e88a56a4a9cef20aa023f665, type: 2}
+  costPA: 1
   costHP: 0
   costOther: 0
-  targetType: 2
-  targetRange: 3
+  targetType: 0
+  targetRange: 1
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
-  targetsHandCard: 0
-  damageAmount: 35
+  targetsHandCard: 1
+  targetCount: 1
+  damageAmount: 0
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
@@ -38,16 +41,16 @@ MonoBehaviour:
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 3
+  effectType: 0
   isChargeCard: 0
-  knockbackDistance: 2
-  pullsTowardCaster: 1
+  knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
   markDuration: 0
   markBonusValue: 0
-  consumeMarks: 0
+  consumeMarks: 1
   markToConsume: 0
   consumeMarkTarget: 0
   damagePerMarkStack: 0
@@ -57,11 +60,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

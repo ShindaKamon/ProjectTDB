@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Renfort_du_c_ur
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Renfort du c\u0153ur"
-  description: "Soigne 2 alli\xE9s s\xE9par\xE9s."
+  description: "Soigne 2 alli\xE9s diff\xE9rents au contact de 17 PV chacun."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
@@ -57,11 +57,6 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

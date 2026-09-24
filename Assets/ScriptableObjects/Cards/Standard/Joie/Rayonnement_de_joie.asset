@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Rayonnement_de_joie
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Rayonnement de joie
-  description: "Gros d\xE9g\xE2ts de zone, donne un vrai 6 PA offensif."
+  description: "Choisis un ennemi au contact : tous les ennemis dans la grande zone
+    5\xD75 autour de lui subissent 41 d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
@@ -26,6 +27,8 @@ MonoBehaviour:
   areaEffect: 4
   aoeRadius: 2
   affectedTarget: 2
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 41
   damageSelf: 0
   healAmount: 0
@@ -39,6 +42,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -54,9 +58,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

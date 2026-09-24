@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Explosion_de_rage
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Explosion de rage
-  description: "Zone \xE0 distance."
+  description: "Choisis un ennemi ou une case \xE0 1-3 cases : tous les ennemis dans
+    la zone 3\xD73 autour subissent 32 d\xE9g\xE2ts."
   artwork: {fileID: 0}
   emotionType: 1
   category: 0
@@ -26,6 +27,8 @@ MonoBehaviour:
   areaEffect: 4
   aoeRadius: 1
   affectedTarget: 2
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 32
   damageSelf: 0
   healAmount: 0
@@ -39,6 +42,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -54,9 +58,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

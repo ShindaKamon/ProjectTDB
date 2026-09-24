@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Flamme_de_l_espoir
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Flamme de l'espoir
-  description: "D\xE9g\xE2ts milieu de courbe pour tenir un rythme solo."
+  description: "Frappe un ennemi au contact pour 38 d\xE9g\xE2ts. Un coup solide
+    quand tu n'as pas de soin \xE0 donner."
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
@@ -26,6 +27,8 @@ MonoBehaviour:
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
   damageAmount: 38
   damageSelf: 0
   healAmount: 0
@@ -39,6 +42,7 @@ MonoBehaviour:
   effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
+  pullsTowardCaster: 0
   damageSharePercent: 50
   markToApply: 0
   markStacks: 1
@@ -54,9 +58,9 @@ MonoBehaviour:
   fetchAmount: 0
   cardToAddToDeck: {fileID: 0}
   cardsToAddCount: 0
-  isRageCard: 0
-  rageMode: 0
-  rageCost: 0
-  rageScaling: 0
-  rageBonus: 0
   damagePerDebuff: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0

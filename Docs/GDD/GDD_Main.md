@@ -18,7 +18,7 @@
 
 **Vision et cadrage**
 - `GDD_Main.md` *(ce document)* — vision globale, décisions actées, questions ouvertes. Point de départ.
-- `claude_md_coarchitect.md` — le « contrat de collaboration » avec Claude + résumé court de l'état du jeu.
+- `claude_md_coarchitect.md` — le « contrat de collaboration » avec Claude (rôle et façon de travailler, sans résumé du jeu).
 
 **Émotions et personnages**
 - `SYSTEME_EMOTIONS.md` — les 8 émotions/familles (Plutchik), les 3 émotions de lancement, le système d'Éveil.

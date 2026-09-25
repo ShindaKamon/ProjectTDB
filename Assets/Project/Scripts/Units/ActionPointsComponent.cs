@@ -73,14 +73,6 @@ public class ActionPointsComponent : IActionPointsUser
     // ========== MÉTHODES UTILITAIRES ==========
 
     /// <summary>
-    /// Met à jour le nom de l'unité (utile si le nom change après construction)
-    /// </summary>
-    public void SetUnitName(string unitName)
-    {
-        _unitName = unitName;
-    }
-
-    /// <summary>
     /// Initialise les PA avec de nouvelles valeurs
     /// </summary>
     public void Initialize(int maxPA, string unitName)

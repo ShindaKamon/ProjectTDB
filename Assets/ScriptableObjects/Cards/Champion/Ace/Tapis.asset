@@ -15,13 +15,13 @@ MonoBehaviour:
   cardName: Tapis
   description: "Inflige 72 d\xE9g\xE2ts \xE0 2 ennemis au contact, +10 par PA d\xE9j\xE0
     d\xE9pens\xE9 ce tour."
+  specialText: 
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
   signatureOwner: {fileID: 11400000, guid: da96a074e88a56a4a9cef20aa023f665, type: 2}
   costPA: 5
   costHP: 0
-  costOther: 0
   targetType: 2
   targetRange: 1
   areaEffect: 0
@@ -30,35 +30,21 @@ MonoBehaviour:
   targetsHandCard: 0
   targetCount: 1
   damageAmount: 72
+  damageType: 0
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
   atkIncreased: 0
   defenseAmount: 0
-  movementAmount: 0
+  armorAmount: 0
+  barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
-  damageSharePercent: 50
-  markToApply: 0
-  markStacks: 1
-  markDuration: 0
-  markBonusValue: 0
-  consumeMarks: 0
-  markToConsume: 0
-  consumeMarkTarget: 0
-  damagePerMarkStack: 0
-  healSelfPerMarkOnTarget: 0
   drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
-  damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Renfort du c\u0153ur"
   description: "Soigne 2 alli\xE9s au contact de 17 PV."
+  specialText: 
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
   signatureOwner: {fileID: 0}
   costPA: 2
   costHP: 0
-  costOther: 0
   targetType: 3
   targetRange: 1
   areaEffect: 0
@@ -29,35 +29,21 @@ MonoBehaviour:
   targetsHandCard: 0
   targetCount: 2
   damageAmount: 0
+  damageType: 0
   damageSelf: 0
   healAmount: 17
   lifestealFixedAmount: 0
   atkIncreased: 0
   defenseAmount: 0
-  movementAmount: 0
+  armorAmount: 0
+  barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
-  damageSharePercent: 50
-  markToApply: 0
-  markStacks: 1
-  markDuration: 0
-  markBonusValue: 0
-  consumeMarks: 0
-  markToConsume: 0
-  consumeMarkTarget: 0
-  damagePerMarkStack: 0
-  healSelfPerMarkOnTarget: 0
   drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
-  damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

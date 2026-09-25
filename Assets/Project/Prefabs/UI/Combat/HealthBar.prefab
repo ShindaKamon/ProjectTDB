@@ -227,12 +227,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fb050ee389778940a786d3d419fb4d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthBar
-  healthSlider: {fileID: 1997248396049521001}
-  followTarget: {fileID: 0}
-  healthText: {fileID: 7432544247095764406}
-  offset: {x: 0, y: 2, z: 0}
-  smoothFollow: 1
-  followSpeed: 10
+  _healthSlider: {fileID: 1997248396049521001}
+  _followTarget: {fileID: 0}
+  _healthText: {fileID: 7432544247095764406}
+  _offset: {x: 0, y: 2, z: 0}
+  _smoothFollow: 1
+  _followSpeed: 10
 --- !u!1 &6343336715189439417
 GameObject:
   m_ObjectHideFlags: 0

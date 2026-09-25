@@ -26,7 +26,8 @@ MonoBehaviour:
   movementRange: 4
   maxActionPoints: 5
   attackDamage: 15
-  defense: 10
+  armor: 0
+  barrier: 0
   startingDeck:
   - {fileID: 11400000, guid: f7c7130d65c15434191037a6e9963c36, type: 2}
   - {fileID: 11400000, guid: fa2f779e99488bd469da83dd8c160015, type: 2}

@@ -5730,7 +5730,6 @@ RectTransform:
   - {fileID: 463091224985530055}
   - {fileID: 7717286982270340584}
   - {fileID: 4780811732132755855}
-  - {fileID: 2696269569769094220}
   - {fileID: 8770087566485030299}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5812,23 +5811,6 @@ MonoBehaviour:
   _subtitleText: {fileID: 9186658486284182214}
   _diagramGrid: {fileID: 7717286982270340584}
   _captionText: {fileID: 8480842639126862026}
-  _chipsContainer: {fileID: 2696269569769094220}
-  _chipBackground: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  _chipIcons:
-  - {fileID: 21300000, guid: e8c14fc4b96bb94458036377a9b71cd3, type: 3}
-  - {fileID: 21300000, guid: 71337fef0e96feb4c8525c9a899b73ef, type: 3}
-  - {fileID: 21300000, guid: 83143a9b24d0ce546abcf3f8336ab17e, type: 3}
-  - {fileID: 21300000, guid: 887b5131ee2bd82448d32e75536f7133, type: 3}
-  - {fileID: 21300000, guid: aea17bdf9ca73594fb79233d3ad7419e, type: 3}
-  - {fileID: 21300000, guid: c5562ce28f72b9341b043d8c6bd77b04, type: 3}
-  - {fileID: 21300000, guid: 9f7c98e04b5040a46ae7c2a8b61468eb, type: 3}
-  - {fileID: 21300000, guid: ad63ae4917acb8045a000c714c8297f0, type: 3}
-  - {fileID: 21300000, guid: 08fa33336c786d4469f1fb308a314a8d, type: 3}
-  - {fileID: 21300000, guid: 6c02dd28c4438724e8f129bb91ddeea5, type: 3}
-  - {fileID: 21300000, guid: 376719212a64ad447813968365e66afb, type: 3}
-  - {fileID: 21300000, guid: cb565d3aee9824140b24498bbc8ae94b, type: 3}
-  - {fileID: 21300000, guid: 6edbaeaf1066c05448021c40295637d3, type: 3}
-  - {fileID: 21300000, guid: 3424f3820e97d864bb68df3587b68c82, type: 3}
   _descriptionText: {fileID: 766152047105765928}
   _hoverScale: 1.02
   _animDuration: 0.1
@@ -7156,65 +7138,3 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &9180273067622347286
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2696269569769094220}
-  - component: {fileID: 3200654414041166370}
-  m_Layer: 0
-  m_Name: Chips
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &2696269569769094220
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9180273067622347286}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2991864366692234773}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 53, y: -104}
-  m_SizeDelta: {x: -126, y: 92}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3200654414041166370
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9180273067622347286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
-  m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_Spacing: 5
-  m_ChildForceExpandWidth: 0
-  m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0

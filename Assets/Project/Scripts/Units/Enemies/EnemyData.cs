@@ -22,7 +22,8 @@ public class EnemyData : ScriptableObject
     public int movementRange = 2;              // PM (Points de Mouvement) maximum
     public int maxActionPoints = 2;            // PA (Points d'Action) maximum
     public int attackDamage = 5;               // ATK (Attaque) - dégâts de base
-    public int defense = 10;                   // Défense (réduit les dégâts reçus)
+    public int armor = 0;                      // Armure : réduit les dégâts physiques reçus (soustraction fixe)
+    public int barrier = 0;                    // Barrière : réduit les dégâts magiques reçus (soustraction fixe)
 
     [Header("Deck Pattern")]
     [Tooltip("Le deck définit le pattern de combat de l'ennemi. Les cartes sont jouées dans l'ordre (pas de mélange).")]

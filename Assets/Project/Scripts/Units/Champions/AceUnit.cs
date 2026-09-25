@@ -25,16 +25,6 @@ public class AceUnit : Champion, IComboTracker
     public int PASpentThisTurn => _paSpentThisTurn;
     public bool ShouldIgnoreDamageReduction => _ignoreReductionThisCard;
 
-    protected override void Start()
-    {
-        base.Start();
-
-        if (Services.IsBattleUIServiceAvailable())
-        {
-            Services.BattleUI.RegisterPlayer(this);
-        }
-    }
-
     // ========== IComboTracker ==========
 
     public void OnCardAboutToExecute(CardData card)

@@ -24,6 +24,9 @@ public class CardPoolQuery
     /// <summary>Catégories retenues ; vide = toutes.</summary>
     public HashSet<CardCategory> Categories = new HashSet<CardCategory>();
 
+    /// <summary>Types de dégâts retenus ; vide = tous. Un filtre actif écarte les cartes sans dégâts.</summary>
+    public HashSet<DamageType> DamageTypes = new HashSet<DamageType>();
+
     /// <summary>Bornes de coût PA, incluses.</summary>
     public int MinCost = 0;
     public int MaxCost = int.MaxValue;
@@ -36,7 +39,7 @@ public class CardPoolQuery
 
     /// <summary>Vrai si au moins un filtre restreint le pool (le tri ne compte pas).</summary>
     public bool HasActiveFilters =>
-        Emotions.Count > 0 || Categories.Count > 0 || MinCost > 0 || MaxCost != int.MaxValue
+        Emotions.Count > 0 || Categories.Count > 0 || DamageTypes.Count > 0 || MinCost > 0 || MaxCost != int.MaxValue
         || !string.IsNullOrWhiteSpace(Search);
 
     /// <summary>Remet tous les critères de filtre à zéro (le tri est conservé).</summary>
@@ -44,6 +47,7 @@ public class CardPoolQuery
     {
         Emotions.Clear();
         Categories.Clear();
+        DamageTypes.Clear();
         MinCost = 0;
         MaxCost = int.MaxValue;
         Search = "";
@@ -69,6 +73,9 @@ public class CardPoolQuery
                 continue;
 
             if (Emotions.Count > 0 && !Emotions.Contains(card.emotionType))
+                continue;
+
+            if (DamageTypes.Count > 0 && (card.damageAmount <= 0 || !DamageTypes.Contains(card.damageType)))
                 continue;
 
             if (Categories.Count > 0 && !Categories.Contains(card.category))

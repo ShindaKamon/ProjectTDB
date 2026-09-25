@@ -115,32 +115,7 @@ public class ServiceLocator
 
     // ========== LIFECYCLE ==========
 
-    /// <summary>
-    /// Efface tous les services (utile pour tests ou changement de scène)
-    /// </summary>
-    public void ClearAll()
-    {
-        GameLog.Log("ServiceLocator: Tous les services effacés");
-        _services.Clear();
-    }
-
-    /// <summary>
-    /// Retourne le nombre de services enregistrés
-    /// </summary>
-    public int GetServiceCount()
-    {
-        return _services.Count;
-    }
-
     // ========== RESET (pour tests) ==========
-
-    /// <summary>
-    /// Reset complet du ServiceLocator (utile pour tests unitaires)
-    /// </summary>
-    public static void ResetInstance()
-    {
-        _instance = null;
-    }
 
     // ========== INITIALISATION AUTOMATIQUE ==========
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

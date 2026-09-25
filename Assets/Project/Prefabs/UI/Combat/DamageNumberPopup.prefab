@@ -184,3 +184,4 @@ MonoBehaviour:
   _healColor: {r: 0.2, g: 1, b: 0.2, a: 1}
   _criticalColor: {r: 1, g: 0.5, b: 0, a: 1}
   _immuneColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  _echoColor: {r: 0.4, g: 0.9, b: 1, a: 1}

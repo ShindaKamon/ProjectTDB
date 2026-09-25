@@ -265,6 +265,7 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardClicked += HandleCardClicked; // S'abonner à l'événement de clic sur les cartes
         CardUIElement.OnCardHoverEnter += HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit += HandleCardHoverExit;
+        EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
     }
 
     void OnDisable()
@@ -272,9 +273,11 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardClicked -= HandleCardClicked; // Se désabonner pour éviter les fuites de mémoire
         CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
     }
 
     private bool _isInitialized = false;
+    private Champion _boundChampion; // Champion dont la main est affichée
 
     void Start()
     {
@@ -287,28 +290,59 @@ public class HandUIController : MonoBehaviour
         // Trouver le DeckManager du joueur actif
         if (Services.Grid != null && Services.Grid.GetActiveUnit() != null)
         {
-            // OPTIMISATION Phase 3.3: ComponentLocator
-            Services.Grid.GetActiveUnit().TryGetComponentSafe(out _playerDeckManager);
-            if (_playerDeckManager != null)
-            {
-                _playerDeckManager.OnHandChanged += UpdateHandUI; // S'abonner à l'événement de changement de main
-                UpdateHandUI(); // Mettre à jour l'UI immédiatement après l'abonnement
-                GameLog.Log("HandUIController: Initialisé avec succès!");
-            }
-            else
-            {
-                GameLog.LogWarning("DeckManager introuvable sur l'unité active du joueur.");
-                return;
-            }
+            BindToUnit(Services.Grid.GetActiveUnit());
+        }
+    }
 
-            // S'abonner aux changements de PA si c'est un Champion
-            Champion champion = Services.Grid.GetActiveUnit() as Champion;
-            if (champion != null)
-            {
-                champion.OnActionPointsChanged += HandlePAChanged;
-            }
+    /// <summary>
+    /// Coop : la main affichée suit le champion dont c'est le tour. Pendant le tour d'un
+    /// ennemi, on garde la main du dernier champion.
+    /// </summary>
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (!(e.NewActiveUnit is Champion) || e.NewActiveUnit == _boundChampion) return;
 
-            _isInitialized = true;
+        if (_selectedCard != null) DeselectCard();
+        Unbind();
+        BindToUnit(e.NewActiveUnit);
+    }
+
+    private void BindToUnit(Unit unit)
+    {
+        // OPTIMISATION Phase 3.3: ComponentLocator
+        unit.TryGetComponentSafe(out _playerDeckManager);
+        if (_playerDeckManager != null)
+        {
+            _playerDeckManager.OnHandChanged += UpdateHandUI; // S'abonner à l'événement de changement de main
+            UpdateHandUI(); // Mettre à jour l'UI immédiatement après l'abonnement
+            GameLog.Log($"HandUIController: main de {unit.name} affichée");
+        }
+        else
+        {
+            GameLog.LogWarning("DeckManager introuvable sur l'unité active du joueur.");
+            return;
+        }
+
+        // S'abonner aux changements de PA si c'est un Champion
+        _boundChampion = unit as Champion;
+        if (_boundChampion != null)
+        {
+            _boundChampion.OnActionPointsChanged += HandlePAChanged;
+        }
+
+        _isInitialized = true;
+    }
+
+    private void Unbind()
+    {
+        if (_playerDeckManager != null)
+        {
+            _playerDeckManager.OnHandChanged -= UpdateHandUI; // Se désabonner pour éviter les fuites de mémoire
+        }
+
+        if (_boundChampion != null)
+        {
+            _boundChampion.OnActionPointsChanged -= HandlePAChanged;
         }
     }
 
@@ -319,25 +353,7 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
 
-        if (_playerDeckManager != null)
-        {
-            _playerDeckManager.OnHandChanged -= UpdateHandUI; // Se désabonner pour éviter les fuites de mémoire
-        }
-
-        // Se désabonner des changements de PA
-        // Vérifie que le service est disponible avant d'y accéder (évite erreurs lors de la destruction de scène)
-        if (Services.IsGridServiceAvailable())
-        {
-            Unit activeUnit = Services.Grid.GetActiveUnit();
-            if (activeUnit != null)
-            {
-                // Désabonnement PA (tous les champions)
-                if (activeUnit is Champion champion)
-                {
-                    champion.OnActionPointsChanged -= HandlePAChanged;
-                }
-            }
-        }
+        Unbind();
     }
 
     /// <summary>

@@ -94,20 +94,58 @@ public class HealthBar : MonoBehaviour
     }
     
     /// <summary>
-    /// Met à jour la barre de vie (0-1)
+    /// Met à jour la barre de vie (0-1). Le bouclier s'affiche en bleu à la suite des PV ;
+    /// si PV + bouclier dépassent le max, la barre est rééchelonnée pour tout montrer.
     /// </summary>
-    public void UpdateHealth(float currentHP, float maxHP)
+    public void UpdateHealth(float currentHP, float maxHP, float shield = 0f)
     {
+        float scale = Mathf.Max(maxHP, currentHP + shield);
+
         if (_healthSlider != null)
         {
-            _healthSlider.value = Mathf.Clamp01(currentHP / maxHP);
+            _healthSlider.value = Mathf.Clamp01(currentHP / scale);
+            UpdateShieldFill(currentHP / scale, (currentHP + shield) / scale, shield > 0f);
         }
 
         // Met à jour le texte (optionnel)
         if (_healthText != null)
         {
-            _healthText.text = $"{(int)currentHP}/{(int)maxHP}";
+            _healthText.text = shield > 0f
+                ? $"{(int)currentHP}/{(int)maxHP} <color={ShieldColorHex}>+{(int)shield}</color>"
+                : $"{(int)currentHP}/{(int)maxHP}";
         }
+    }
+
+    // ========== BOUCLIER ==========
+
+    private static readonly Color ShieldColor = new Color(0.30f, 0.60f, 1f);
+    private const string ShieldColorHex = "#4D99FF";
+    private RectTransform _shieldFill;
+
+    /// <summary>
+    /// Segment bleu entre la fin des PV (from) et PV + bouclier (to), en fraction de la barre.
+    /// Créé à la volée à côté du remplissage du slider, pour ne pas toucher au prefab.
+    /// </summary>
+    private void UpdateShieldFill(float from, float to, bool visible)
+    {
+        if (_shieldFill == null)
+        {
+            if (!visible || _healthSlider.fillRect == null) return;
+
+            var go = new GameObject("ShieldFill", typeof(RectTransform), typeof(Image));
+            _shieldFill = go.GetComponent<RectTransform>();
+            _shieldFill.SetParent(_healthSlider.fillRect.parent, false);
+            go.GetComponent<Image>().color = ShieldColor;
+            go.GetComponent<Image>().raycastTarget = false;
+        }
+
+        _shieldFill.gameObject.SetActive(visible);
+        if (!visible) return;
+
+        _shieldFill.anchorMin = new Vector2(Mathf.Clamp01(from), 0f);
+        _shieldFill.anchorMax = new Vector2(Mathf.Clamp01(to), 1f);
+        _shieldFill.offsetMin = Vector2.zero;
+        _shieldFill.offsetMax = Vector2.zero;
     }
 
     /// <summary>

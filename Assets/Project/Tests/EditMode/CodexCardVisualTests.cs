@@ -89,31 +89,72 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void Chips_DamageShieldPushAndSelfDamage()
+        public void RulesText_DamageTargetZone()
         {
             var card = NewCard(CardTargetType.Enemy, 1);
             card.damageAmount = 33;
-            card.defenseAmount = 10;
-            card.knockbackDistance = 2;
-            card.damageSelf = 5;
+            card.areaEffect = CardAreaEffect.Circle;
+            card.aoeRadius = 1;
+            card.affectedTarget = CardAffectedTarget.Enemies;
 
-            var chips = CodexCardVisual.Chips(card);
+            string text = CardRulesText.Build(card);
 
-            Assert.AreEqual("dmg", chips[0].Icon);
-            Assert.AreEqual("33", chips[0].Text);
-            Assert.IsTrue(chips.Exists(c => c.Icon == "shield" && c.Text == "10"));
-            Assert.IsTrue(chips.Exists(c => c.Icon == "push" && c.Text == "2"));
-            Assert.IsTrue(chips.Exists(c => c.Icon == "self" && c.Kind == ChipKind.Warn));
+            StringAssert.Contains("<sprite name=\"dmg\"", text);
+            StringAssert.Contains("Inflige 33", text);
+            StringAssert.Contains("<b>Cible :</b> 1 ennemi · au contact", text);
+            StringAssert.Contains("<b>Zone :</b> cercle de 1 (ennemis)", text);
         }
 
         [Test]
-        public void Chips_PullWhenPullsTowardCaster()
+        public void RulesText_ShieldPushSelfDamageAndSpecial()
         {
             var card = NewCard(CardTargetType.AllyorEnemy, 3);
+            card.defenseAmount = 10;
             card.knockbackDistance = 2;
             card.pullsTowardCaster = true;
+            card.damageSelf = 5;
+            card.specialText = "Règle maison.";
 
-            Assert.IsTrue(CodexCardVisual.Chips(card).Exists(c => c.Icon == "pull"));
+            string text = CardRulesText.Build(card);
+
+            StringAssert.Contains("Bouclier 10", text);
+            StringAssert.Contains("<sprite name=\"pull\"", text);
+            StringAssert.Contains("Tire de 2 cases", text);
+            StringAssert.Contains("portée 1-3", text);
+            StringAssert.Contains("Contrecoup : tu subis 5", text);
+            StringAssert.Contains("<i>Spécial :</i> Règle maison.", text);
+        }
+
+        [Test]
+        public void RulesText_SelfCardWithZone_SaysAroundYou()
+        {
+            var card = NewCard(CardTargetType.Self, 0);
+            card.armorAmount = -7;
+            card.effectDuration = 1;
+            card.areaEffect = CardAreaEffect.Circle;
+            card.aoeRadius = 1;
+            card.affectedTarget = CardAffectedTarget.Enemies;
+
+            string text = CardRulesText.Build(card);
+
+            StringAssert.Contains("Armure −7 (1 tour)", text);
+            StringAssert.DoesNotContain("Cible", text);
+            StringAssert.Contains("<b>Zone :</b> autour de toi, cercle de 1 (ennemis)", text);
+        }
+
+        [Test]
+        public void RulesText_MultiTargetAndMagicDamage()
+        {
+            var card = NewCard(CardTargetType.Enemy, 3);
+            card.damageAmount = 16;
+            card.damageType = DamageType.Magique;
+            card.targetCount = 2;
+
+            string text = CardRulesText.Build(card);
+
+            StringAssert.Contains("<sprite name=\"magic\"", text);
+            StringAssert.Contains("Inflige 16 (magique)", text);
+            StringAssert.Contains("2 ennemis distincts · portée 1-3", text);
         }
     }
 }

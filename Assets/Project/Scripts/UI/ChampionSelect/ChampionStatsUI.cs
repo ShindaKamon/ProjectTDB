@@ -17,14 +17,10 @@ public class ChampionStatsUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _championTitleText;
     [SerializeField] private TextMeshProUGUI _familyText;
 
-    [Header("Stats - Ligne 1")]
-    [SerializeField] private StatDisplayUI _healthStat;
-    [SerializeField] private StatDisplayUI _movementStat;
-    [SerializeField] private StatDisplayUI _actionPointsStat;
-
-    [Header("Stats - Ligne 2")]
-    [SerializeField] private StatDisplayUI _attackStat;
-    [SerializeField] private StatDisplayUI _defenseStat;
+    [Header("Pastilles PV / PM / PA et ATQ / armure / barrière (icônes du codex)")]
+    [SerializeField] private Transform _resourceChipsContainer;
+    [SerializeField] private Transform _statChipsContainer;
+    [SerializeField] private Sprite _chipBackground;
 
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI _descriptionText;
@@ -69,22 +65,11 @@ public class ChampionStatsUI : MonoBehaviour
         if (_familyText != null)
             _familyText.text = CodexCardVisual.EmotionName(champion.emotionType);
 
-        // Stats - Ligne 1
-        if (_healthStat != null)
-            _healthStat.SetValue(champion.maxHealth, "PV");
-
-        if (_movementStat != null)
-            _movementStat.SetValue(champion.movementRange, "PM");
-
-        if (_actionPointsStat != null)
-            _actionPointsStat.SetValue(champion.maxActionPoints, "PA");
-
-        // Stats - Ligne 2
-        if (_attackStat != null)
-            _attackStat.SetValue(champion.attackDamage, "ATQ");
-
-        if (_defenseStat != null)
-            _defenseStat.SetValue(champion.defense, "DEF");
+        // Stats en pastilles : PV / PM / PA, puis ATQ / armure / barrière
+        TMPro.TMP_FontAsset chipFont = _championNameText != null ? _championNameText.font : null;
+        CardChipsView.Build(_resourceChipsContainer, CodexCardVisual.ChampionResourceChips(champion), _chipBackground, chipFont, 28f, 32f);
+        CardChipsView.Build(_statChipsContainer, CodexCardVisual.ChampionChips(champion), _chipBackground,
+            chipFont, 28f, 32f);
 
         // Description
         if (_descriptionText != null)

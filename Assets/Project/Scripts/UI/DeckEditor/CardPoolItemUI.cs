@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -25,9 +24,6 @@ public class CardPoolItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnter
     [Header("Schéma et effets")]
     [SerializeField] private Transform _diagramGrid;          // 81 Images (9×9), ligne par ligne depuis le haut
     [SerializeField] private TextMeshProUGUI _captionText;
-    [SerializeField] private Transform _chipsContainer;
-    [SerializeField] private Sprite _chipBackground;
-    [SerializeField] private Sprite[] _chipIcons;             // nommés « icon_<nom> » (icônes du codex)
 
     [Header("Texte")]
     [SerializeField] private TextMeshProUGUI _descriptionText;
@@ -39,7 +35,6 @@ public class CardPoolItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnter
     private CardData _cardData;
     private Vector3 _originalScale = Vector3.one;
     private RectTransform _rectTransform;
-    private readonly Dictionary<string, Sprite> _iconsByName = new Dictionary<string, Sprite>();
 
     public System.Action<CardData> OnCardClicked;
     public CardData CardData => _cardData;
@@ -49,18 +44,6 @@ public class CardPoolItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnter
         _rectTransform = GetComponent<RectTransform>();
         if (_rectTransform != null)
             _originalScale = _rectTransform.localScale;
-    }
-
-    // Setup peut précéder Awake (carte créée alors que l'écran de deck est encore inactif) :
-    // le dictionnaire d'icônes est donc construit à la demande.
-    private bool TryGetIcon(string name, out Sprite sprite)
-    {
-        if (_iconsByName.Count == 0 && _chipIcons != null)
-        {
-            foreach (var icon in _chipIcons)
-                if (icon != null) _iconsByName[icon.name.Replace("icon_", "")] = icon;
-        }
-        return _iconsByName.TryGetValue(name, out sprite);
     }
 
     public void Setup(CardData card)
@@ -83,10 +66,9 @@ public class CardPoolItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnter
         if (_nameText != null) _nameText.text = card.cardName;
         if (_subtitleText != null) _subtitleText.text = CodexCardVisual.Subtitle(card);
         if (_captionText != null) _captionText.text = CodexCardVisual.Caption(card);
-        if (_descriptionText != null) _descriptionText.text = card.description;
+        CardTextView.Apply(_descriptionText, card); // texte généré depuis les champs
 
         PaintDiagram(card);
-        BuildChips(card);
     }
 
     private void PaintDiagram(CardData card)
@@ -109,72 +91,6 @@ public class CardPoolItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnter
                 DiagramCell.Caster => CodexCardVisual.Ink,
                 _ => CodexCardVisual.GridCell,
             };
-        }
-    }
-
-    private void BuildChips(CardData card)
-    {
-        if (_chipsContainer == null) return;
-
-        for (int i = _chipsContainer.childCount - 1; i >= 0; i--)
-            Destroy(_chipsContainer.GetChild(i).gameObject);
-
-        foreach (CardChip chip in CodexCardVisual.Chips(card))
-            CreateChip(chip);
-    }
-
-    /// <summary>Pastille : fond arrondi, icône colorée selon l'effet, valeur (ex. « ↗ 33 »).</summary>
-    private void CreateChip(CardChip chip)
-    {
-        bool warn = chip.Kind == ChipKind.Warn;
-        Color accent = CodexCardVisual.ChipColor(chip.Kind);
-
-        var go = new GameObject("Chip_" + chip.Icon, typeof(RectTransform));
-        go.transform.SetParent(_chipsContainer, false);
-
-        var bg = go.AddComponent<Image>();
-        bg.sprite = _chipBackground;
-        bg.type = Image.Type.Sliced;
-        bg.color = warn ? CodexCardVisual.WarnBackground : CodexCardVisual.CardBorder;
-        bg.raycastTarget = false;
-
-        var layout = go.AddComponent<HorizontalLayoutGroup>();
-        layout.padding = new RectOffset(5, 7, 2, 2);
-        layout.spacing = 4;
-        layout.childAlignment = TextAnchor.MiddleLeft;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = false;
-
-        var fitter = go.AddComponent<ContentSizeFitter>();
-        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        if (TryGetIcon(chip.Icon, out Sprite sprite))
-        {
-            var iconGO = new GameObject("Icon", typeof(RectTransform));
-            iconGO.transform.SetParent(go.transform, false);
-            var icon = iconGO.AddComponent<Image>();
-            icon.sprite = sprite;
-            icon.color = accent;
-            icon.raycastTarget = false;
-            var iconSize = iconGO.AddComponent<LayoutElement>();
-            iconSize.preferredWidth = iconSize.minWidth = 14;
-            iconSize.preferredHeight = iconSize.minHeight = 14;
-        }
-
-        if (!string.IsNullOrEmpty(chip.Text))
-        {
-            var textGO = new GameObject("Text", typeof(RectTransform));
-            textGO.transform.SetParent(go.transform, false);
-            var text = textGO.AddComponent<TextMeshProUGUI>();
-            if (_nameText != null) text.font = _nameText.font;
-            text.text = chip.Text;
-            text.fontSize = 12;
-            text.color = warn ? accent : CodexCardVisual.Ink;
-            text.textWrappingMode = TextWrappingModes.NoWrap;
-            text.raycastTarget = false;
         }
     }
 

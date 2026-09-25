@@ -16,13 +16,14 @@ MonoBehaviour:
   description: "Propulse-toi \xE0 c\xF4t\xE9 d'une unit\xE9 \xE0 1-5 cases. Pr\xE8s
     d'un alli\xE9 : -15 % de d\xE9g\xE2ts subis. Pr\xE8s d'un ennemi : +15 % de d\xE9g\xE2ts
     sur ta prochaine carte."
+  specialText: "R\xE9flexe du grimpeur : pr\xE8s d'un alli\xE9, \u221215 % de d\xE9g\xE2ts
+    subis ; pr\xE8s d'un ennemi, +15 % de d\xE9g\xE2ts sur ta prochaine carte."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
   signatureOwner: {fileID: 11400000, guid: d174dce2ba30a3c4994a68bb64a79176, type: 2}
   costPA: 2
   costHP: 0
-  costOther: 0
   targetType: 8
   targetRange: 5
   areaEffect: 0
@@ -31,35 +32,21 @@ MonoBehaviour:
   targetsHandCard: 0
   targetCount: 1
   damageAmount: 0
+  damageType: 0
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
   atkIncreased: 0
   defenseAmount: 0
-  movementAmount: 0
+  armorAmount: 0
+  barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
   isChargeCard: 1
   knockbackDistance: 0
   pullsTowardCaster: 0
-  damageSharePercent: 50
-  markToApply: 0
-  markStacks: 1
-  markDuration: 0
-  markBonusValue: 0
-  consumeMarks: 0
-  markToConsume: 0
-  consumeMarkTarget: 0
-  damagePerMarkStack: 0
-  healSelfPerMarkOnTarget: 0
   drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
-  damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

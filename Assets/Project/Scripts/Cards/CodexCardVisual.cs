@@ -227,37 +227,55 @@ public static class CodexCardVisual
 
     // ===== Pastilles d'effets =====
 
-    public static List<CardChip> Chips(CardData card)
+    /// <summary>
+    /// Pastilles des stats d'une unité (attaque, armure, barrière, bouclier), affichées sous la
+    /// barre de vie du boss. Seules les valeurs non nulles apparaissent.
+    /// </summary>
+    public static List<CardChip> UnitChips(Unit unit)
     {
         var chips = new List<CardChip>();
-        if (card.damageAmount > 0) chips.Add(new CardChip("dmg", card.damageAmount.ToString(), ChipKind.Damage));
-        if (card.healAmount > 0) chips.Add(new CardChip("heal", card.healAmount.ToString(), ChipKind.Heal));
-        if (card.defenseAmount > 0) chips.Add(new CardChip("shield", card.defenseAmount.ToString(), ChipKind.Shield));
-        if (card.atkIncreased > 0) chips.Add(new CardChip("buff", "+" + card.atkIncreased, ChipKind.Shield));
-        if (card.lifestealFixedAmount > 0) chips.Add(new CardChip("drain", "vol de vie", ChipKind.Heal));
+        if (unit == null) return chips;
 
-        if (card.pmReduction >= 5) chips.Add(new CardChip("lock", "tous les PM", ChipKind.Move));
-        else if (card.pmReduction > 0) chips.Add(new CardChip("pm", "−" + card.pmReduction + " PM", ChipKind.Move));
-        if (card.paReduction > 0) chips.Add(new CardChip("pa", "−" + card.paReduction + " PA", ChipKind.Move));
+        if (unit.GetAttack() != 0) chips.Add(new CardChip("dmg", unit.GetAttack().ToString(), ChipKind.Damage));
 
-        if (card.knockbackDistance > 0)
-            chips.Add(card.pullsTowardCaster
-                ? new CardChip("pull", card.knockbackDistance.ToString(), ChipKind.Push)
-                : new CardChip("push", card.knockbackDistance.ToString(), ChipKind.Push));
+        if (unit.GetArmor() != 0) chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Shield));
+        if (unit.GetBarrier() != 0) chips.Add(new CardChip("barrier", unit.GetBarrier().ToString(), ChipKind.Shield));
+        if (unit.GetShield() > 0) chips.Add(new CardChip("shield", unit.GetShield().ToString(), ChipKind.Shield));
+        return chips;
+    }
 
-        if (card.isChargeCard) chips.Add(new CardChip("bond", "bond", ChipKind.Move));
-        if (card.scalesWithPASpentThisTurn && card.comboDamagePerPASpent > 0)
-            chips.Add(new CardChip("pa", "+" + card.comboDamagePerPASpent + "/PA", ChipKind.Move));
-        if (card.isSummonCard) chips.Add(new CardChip("summon", "invoque", ChipKind.Mute));
-        if (card.isRepositionSummonCard) chips.Add(new CardChip("summon", "déplace", ChipKind.Mute));
-        if (card.targetsHandCard) chips.Add(new CardChip("hand", "carte en main", ChipKind.Mute));
-        if (card.damageSelf > 0) chips.Add(new CardChip("self", "−" + card.damageSelf, ChipKind.Warn));
+    /// <summary>
+    /// Pastilles de ressources de la fiche d'un champion (écran de sélection) : PV, PM, PA.
+    /// </summary>
+    public static List<CardChip> ChampionResourceChips(ChampionData champion)
+    {
+        var chips = new List<CardChip>();
+        if (champion == null) return chips;
+
+        chips.Add(new CardChip("heal", champion.maxHealth.ToString(), ChipKind.Heal));
+        chips.Add(new CardChip("pm", champion.movementRange.ToString(), ChipKind.Move));
+        chips.Add(new CardChip("pa", champion.maxActionPoints.ToString(), ChipKind.Move));
+        return chips;
+    }
+
+    /// <summary>
+    /// Pastilles de combat de la fiche d'un champion (écran de sélection) : attaque, armure,
+    /// barrière, valeurs nulles comprises.
+    /// </summary>
+    public static List<CardChip> ChampionChips(ChampionData champion)
+    {
+        var chips = new List<CardChip>();
+        if (champion == null) return chips;
+
+        chips.Add(new CardChip("dmg", champion.attackDamage.ToString(), ChipKind.Damage));
+        chips.Add(new CardChip("armor", champion.armor.ToString(), ChipKind.Shield));
+        chips.Add(new CardChip("barrier", champion.barrier.ToString(), ChipKind.Shield));
         return chips;
     }
 
     // ===== Utilitaires =====
 
-    static int Range(CardData card) => Mathf.Max(1, card.targetRange);
+    internal static int Range(CardData card) => Mathf.Max(1, card.targetRange);
 
     static int ZoneRadius(CardData card) => card.areaEffect == CardAreaEffect.Circle ? Mathf.Max(1, card.aoeRadius) : 0;
 

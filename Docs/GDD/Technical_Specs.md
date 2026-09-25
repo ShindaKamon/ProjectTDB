@@ -44,7 +44,7 @@
 |---------|---------|
 | **Assets/Project/Scripts/Core/** | Infrastructure seulement : `ServiceLocator`/`Services`, `EventBus`/`GameEvent`, `GameLog`/`GameLogConfig`, `ComponentLocator` |
 | **Assets/Project/Scripts/Grid/** | `GridManager` (grille, spawn, rotation des tours), `GridRepository`, `GridGeometry` (distance en 4 directions), `IGridService`, `Tile` |
-| **Assets/Project/Scripts/Combat/** | `TurnStateMachine`, `ResourceDebuffManager` (retraits de PA/PM), `Marks/` (`IMarkable`, `UnitMark`, `MarkType` : Poison, AllMarks) |
+| **Assets/Project/Scripts/Combat/** | `TurnStateMachine`, `ResourceDebuffManager` (retraits de PA/PM) |
 | **Assets/Project/Scripts/Cards/** | `CardData` (ScriptableObject data-driven + enums de cartes), `ChargeHelper`, `CodexCardVisual` (visuels et palette des émotions), `DeckManager` (pioche/main/défausse en combat) |
 | **Assets/Project/Scripts/Deck/** | Construction et sauvegarde des decks : `DeckData`, `DeckRules`, `DeckSaveManager`, `CardPoolQuery`, `ChampionDecksData`, `AllDecksData`, `CardCollection` |
 | **Assets/Project/Scripts/Units/** | `Unit`, `UnitState`, `ActionPointsComponent`, interfaces (`IActionPointsUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) ; `Champions/` (`Champion`, `ChampionData`, `AceUnit`, `AlpinisteUnit`, `SorenUnit`), `Enemies/` (`Enemy`, `EnemyAI`, `EnemyData`), `Summons/` (`SummonUnit`, `LyseUnit`) |
@@ -107,7 +107,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 ### 2. Cartes et decks
 
-- `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, effets `CardEffectType`, marques, charge, émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
+- `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, type de dégâts `DamageType`, poussée/tirage (`knockbackDistance`), charge, émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
 - `DeckManager` (sur l'unité) : pioche, main, défausse, coûts effectifs (`GetEffectiveCost`, overrides de coût pour Raze).
 - `DeckData` : 2 slots Signature + 16 Standard (les 6 slots Éveil ne sont pas encore ajoutés) ; `DeckSaveManager` : sauvegarde JSON, 1 deck de base + 3 decks perso par champion. Les decks référencent les cartes **par nom**.
 
@@ -136,6 +136,9 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **Ilya, Vylos, Calyx (hors MVP) : retirés du code le 24/09/2026.** Ilya y avait une version différente de `ilya_deck_simple.md` (carte Rage ajoutée à la main tous les 10 dégâts subis, stock max 5) ; Vylos portait la marque Stigmate. Le code reste consultable dans l'historique git (commit `00afe5d`, dernier état avant le nettoyage) si Ilya revient, sa Rage étant à réadapter à l'Éveil.
 
+**Marques (poison…), partage de dégâts, recherche/ajout de cartes (hors MVP) : retirés du code le 25/09/2026**, aucune carte ne les utilisait. Récupérables dans l'historique git (dernier état : commit `d169a9d`) le jour où les statuts arriveront (voir « Statuts prévus hors MVP » dans `Combat_System.md`).
+**Nettoyage du 25/09/2026** : retirés aussi l'état « étourdi » et l'état « en action » de `UnitState` (statuts hors MVP), `CardEffectType` (la poussée dépend seulement de `knockbackDistance`), `movementAmount` (sans effet), les anciennes lignes de stats de la sélection (`StatDisplayUI`), une trentaine de méthodes jamais appelées, et les packages inutilisés (AI Navigation, Rider, modules Terrain, Cloth, Vehicles, Wind, VR/XR, Video, Tilemap, Physics 2D, Umbra, Vector Graphics, Adaptive Performance, Analytics, Android JNI). Gardés volontairement : `TurnStateMachine.EndBattle` / `IsBattleOver` (victoire et défaite à venir) et `costHP` (mécanique fonctionnelle, aucune carte ne l'utilise encore). Corrigé au passage : les retraits de PA/PM n'étaient jamais appliqués.
+
 **Cartes :** 49 cartes Standard (17 Colère, 17 Peur, 15 Joie), mêmes noms que la bibliothèque de l'Excel ; Signatures des 3 champions (les anciens assets « Family » ont été supprimés).
 
 **Deck :** 18 cartes (2 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) . Règles (`DeckRules`) : cartes des couleurs du deck uniquement (1 ou 2, choisies à sa création parmi `DeckRules.AvailableEmotions` = Colère, Peur, Joie pour le MVP ; le deck de base prend celles de ses cartes), 4 exemplaires max par carte, les 2 Signatures du champion obligatoires (1 exemplaire chacune) ; les Signatures des autres champions sont interdites ; un deck existant non conforme est corrigé à son chargement (cartes hors couleurs et exemplaires en trop retirés, Signatures ajoutées).
@@ -150,8 +153,10 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **À savoir :**
 - `ChampionData.portrait` (buste) existe mais n'est assigné à aucun champion.
-- Pool de cartes façon SpamDex : filtre et tri dans `CardPoolQuery` (C# pur, `Scripts/Deck/`, testé en EditMode), piloté par le panneau `PoolFilterBarUI` (ligne `FiltersRow` de la zone pool) : recherche nom/effet insensible aux accents, pastilles `FilterChipUI` d'émotion (seulement celles du deck, masquées si une seule) et de catégorie en multi-sélection, coût PA 0/1/2/3/4+ (un à la fois), tri au clic coût → nom → émotion avec ordre réversible, bouton « Réinitialiser » visible si un filtre est actif, message si aucun résultat. Le panneau reste utilisable sur le deck de base (lecture seule). Tout le pool est affiché dans la zone de défilement ; la pagination reste optionnelle (active seulement si les boutons de page sont câblés). À venir : zoom de la grille, fiche détaillée de carte.
-- Connu : Rugissement destructeur (cible `Self`) donne +7 DEF au lanceur via `ModifyStats`, alors que sa description annonce une armure réduite pour les ennemis autour (données ou code à corriger).
+- Pool de cartes façon SpamDex : filtre et tri dans `CardPoolQuery` (C# pur, `Scripts/Deck/`, testé en EditMode), piloté par le panneau `PoolFilterBarUI` (ligne `FiltersRow` de la zone pool) : recherche nom/effet insensible aux accents, pastilles `FilterChipUI` d'émotion (seulement celles du deck, masquées si une seule), de catégorie et de type de dégâts (Physique / Magique : cartes à dégâts de ce type seulement) en multi-sélection, coût PA 0/1/2/3/4+ (un à la fois), tri au clic coût → nom → émotion avec ordre réversible, bouton « Réinitialiser » visible si un filtre est actif, message si aucun résultat. Le panneau reste utilisable sur le deck de base (lecture seule). Tout le pool est affiché dans la zone de défilement ; la pagination reste optionnelle (active seulement si les boutons de page sont câblés). À venir : zoom de la grille, fiche détaillée de carte.
+- Texte des cartes : généré par `CardRulesText.Build` et affiché par `CardTextView` (icônes en ligne via le Sprite Asset TMP `Resources/CodexIcons/CodexIcons`, atlas des icônes du codex, qui sert aussi aux pastilles) sur les cartes du pool, les cartes en main et l'aperçu de la carte ennemie ; `specialText` pour les règles hors champs (Triche, Piolet d'ascension).
+- Pastilles d'effets : calculées par `CodexCardVisual.UnitChips` (armure, barrière, bouclier d'une unité), construites par `CardChipsView` avec les sprites du même atlas (dont armure, barrière et magique, ajoutées le 25/09/2026). Ajouter une icône : la dessiner dans `CodexIcons.png` (64×64, blanc sur transparent), la découper et la nommer dans le Sprite Editor, puis mettre à jour le Sprite Asset TMP. Affichées sous la barre de vie du boss (`UnitChips` : attaque, armure, barrière, bouclier non nuls) et sur la fiche de champion de l'écran de sélection (deux rangées, zéros compris : `ChampionResourceChips` PV/PM/PA et `ChampionChips` attaque/armure/barrière ; remplacent les anciennes lignes de stats `StatsRow1`/`StatsRow2`, désactivées dans la scène).
+- Rugissement destructeur : retire 7 d'armure aux ennemis autour (champ `armorAmount`), corrigé le 25/09/2026.
 - L'écran de sélection affiche encore ATK et DEF, alors que le design ne définit que PV / PA / PM.
 
 ---
@@ -164,7 +169,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 | Émotion | Identité de carte (`EmotionType`), pas de jauge | Jauges d'Éveil par émotion, paliers |
 | Cartes | `CardData` avec émotion et catégorie | + génération/consommation d'Éveil |
 | Deck | 18 cartes (2 Signature + 16 Standard), 1 base + 3 perso | 24 cartes (2 / 6 / 16) |
-| Statuts | Non implémentés | Retrait de PM (le plus fort remplace le plus faible), poussée/tirage, boucliers %, vulnérabilité |
+| Statuts | Bouclier en PV (`Unit.AddShield`, `defenseAmount` des cartes, jauge bleue de `HealthBar`) ; armure/barrière (`Unit.ReduceByDefense`, `CardData.damageType`, `armorAmount`/`barrierAmount`) ; retraits de PA/PM ; le reste non implémenté | Retrait de PM (le plus fort remplace le plus faible), poussée/tirage, boucliers en PV, vulnérabilité |
 | IA ennemie | Deck pattern | + Attaque de base anti-lock, cycle de boss Zone/Basique/Heal |
 | Champions | Sous-classes `AceUnit`, `AlpinisteUnit`, `SorenUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
 | Main | Départ 5, max 5, pioche 1/tour | Idem (acté le 24/09) |

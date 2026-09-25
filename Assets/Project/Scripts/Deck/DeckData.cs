@@ -34,26 +34,6 @@ public class DeckData
     }
 
     /// <summary>
-    /// Retourne la couleur principale du deck (basée sur Emotion1)
-    /// </summary>
-    public Color GetPrimaryColor()
-    {
-        if (Emotion1 == EmotionType.None)
-            return new Color(0.3f, 0.3f, 0.4f); // Gris-bleu par défaut
-        return CodexCardVisual.EmotionColor(Emotion1);
-    }
-
-    /// <summary>
-    /// Retourne la couleur secondaire du deck (basée sur Emotion2)
-    /// </summary>
-    public Color GetSecondaryColor()
-    {
-        if (Emotion2 == EmotionType.None)
-            return new Color(0.25f, 0.25f, 0.35f); // Gris-bleu foncé par défaut
-        return CodexCardVisual.EmotionColor(Emotion2);
-    }
-
-    /// <summary>
     /// Vérifie si le deck a des émotions définies
     /// </summary>
     public bool HasEmotions => Emotion1 != EmotionType.None || Emotion2 != EmotionType.None;
@@ -85,24 +65,6 @@ public class DeckData
         emotionType2 = emotion2.ToString();
         cardNames = new List<string>(cards);
         isDefault = isDefaultDeck;
-    }
-
-    /// <summary>
-    /// Compte les cartes du deck appartenant à une catégorie donnée (nécessite la collection
-    /// pour résoudre les noms en CardData).
-    /// </summary>
-    public int CountByCategory(CardCategory category, CardCollection collection)
-    {
-        if (cardNames == null || collection == null) return 0;
-
-        int count = 0;
-        foreach (var name in cardNames)
-        {
-            var card = collection.GetCardByName(name);
-            if (card != null && card.category == category)
-                count++;
-        }
-        return count;
     }
 
     /// <summary>

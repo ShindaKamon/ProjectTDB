@@ -29,28 +29,6 @@ public class CardCollection : ScriptableObject
     }
 
     /// <summary>
-    /// Récupère toutes les cartes d'une émotion spécifique
-    /// </summary>
-    public List<CardData> GetCardsByEmotion(EmotionType emotion)
-    {
-        var result = new List<CardData>();
-        foreach (var card in _allCards)
-        {
-            if (card != null && card.emotionType == emotion)
-                result.Add(card);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Vérifie si une carte existe dans la collection
-    /// </summary>
-    public bool HasCard(string cardName)
-    {
-        return GetCardByName(cardName) != null;
-    }
-
-    /// <summary>
     /// Retourne le nombre total de cartes
     /// </summary>
     public int Count => _allCards.Count;

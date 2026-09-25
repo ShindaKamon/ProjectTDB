@@ -8,13 +8,13 @@ public class ChampionSelectManager : MonoBehaviour
 {
     public static ChampionData SelectedChampion { get; private set; }
     public static List<CardData> SelectedDeck { get; private set; }
+    // Coop : second champion du combat (joué avec son deck de départ), null en solo
+    public static ChampionData SecondChampion { get; private set; }
 
     [Header("References UI - Zone Champion (Gauche)")]
     [SerializeField] private Transform _championButtonParent;
     [SerializeField] private GameObject _championButtonPrefab;
-    [SerializeField] private TextMeshProUGUI _selectedChampionNameText;
-    [SerializeField] private TextMeshProUGUI _selectedChampionStatsText;
-    [SerializeField] private ChampionStatsUI _championStatsUI;  // Nouveau composant moderne (optionnel)
+    [SerializeField] private ChampionStatsUI _championStatsUI;
 
     [Header("Références UI - Zone Deck (Droite)")]
     [SerializeField] private LoadoutTabsUI _deckListUI;
@@ -39,6 +39,11 @@ public class ChampionSelectManager : MonoBehaviour
     [SerializeField] private Color _selectedButtonColor = new Color(0.95f, 0.85f, 0.55f); // Doré/bronze, cohérent avec la palette parchemin
     [SerializeField] private Color _normalButtonColor = Color.white;
 
+    [Header("Test coop (2 champions sur un seul PC)")]
+    [Tooltip("Si renseigné, ce champion rejoint le combat avec son deck de départ ; " +
+             "les deux champions se jouent à tour de rôle sur ce PC. Vide = solo.")]
+    [SerializeField] private ChampionData _testSecondChampion;
+
     private ChampionData _currentSelectedChampion;
     private Button _selectedChampionButton;
     private Dictionary<ChampionData, Button> _championButtons = new Dictionary<ChampionData, Button>();
@@ -48,6 +53,7 @@ public class ChampionSelectManager : MonoBehaviour
         // Réinitialiser les données statiques
         SelectedChampion = null;
         SelectedDeck = null;
+        SecondChampion = _testSecondChampion;
 
         if (_allChampions == null || _allChampions.Count == 0)
         {
@@ -226,7 +232,6 @@ public class ChampionSelectManager : MonoBehaviour
     {
         if (_currentSelectedChampion == null) return;
 
-        // Nouveau systeme: utiliser ChampionStatsUI si disponible
         if (_championStatsUI != null)
         {
             _championStatsUI.ShowChampion(_currentSelectedChampion);
@@ -235,20 +240,6 @@ public class ChampionSelectManager : MonoBehaviour
         // Illustration en pied (fond plein écran / bandeau / badge selon l'écran actif)
         if (_flowController != null)
             _flowController.UpdateCharacterArt(_currentSelectedChampion);
-
-        // Ancien systeme (fallback): textes simples
-        if (_selectedChampionNameText != null)
-            _selectedChampionNameText.text = _currentSelectedChampion.championName;
-
-        if (_selectedChampionStatsText != null)
-        {
-            string stats = $"PV : {_currentSelectedChampion.maxHealth}\n";
-            stats += $"PM : {_currentSelectedChampion.movementRange}\n";
-            stats += $"PA : {_currentSelectedChampion.maxActionPoints}\n";
-            stats += $"ATQ : {_currentSelectedChampion.attackDamage}\n";
-            stats += $"DEF : {_currentSelectedChampion.defense}";
-            _selectedChampionStatsText.text = stats;
-        }
     }
 
     private void OnDeckSelected(List<CardData> deckCards)

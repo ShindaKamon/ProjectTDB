@@ -96,6 +96,10 @@ public class PoolFilterBarUI : MonoBehaviour
                 Toggle(_query.Categories, chip.Category);
                 break;
 
+            case FilterChipKind.DamageType:
+                Toggle(_query.DamageTypes, chip.DamageType);
+                break;
+
             case FilterChipKind.Cost:
                 // Un seul coût à la fois ; recliquer sur le coût actif enlève le filtre
                 if (IsCostSelected(chip))
@@ -174,6 +178,7 @@ public class PoolFilterBarUI : MonoBehaviour
             {
                 FilterChipKind.Emotion => _query.Emotions.Contains(chip.Emotion),
                 FilterChipKind.Category => _query.Categories.Contains(chip.Category),
+                FilterChipKind.DamageType => _query.DamageTypes.Contains(chip.DamageType),
                 _ => IsCostSelected(chip),
             };
             chip.SetActive(active);

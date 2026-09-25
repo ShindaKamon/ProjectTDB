@@ -278,21 +278,6 @@ public static class DeckSaveManager
     }
 
     /// <summary>
-    /// Change les émotions d'un deck
-    /// </summary>
-    public static void SetDeckEmotions(ChampionData champion, int deckIndex, EmotionType emotion1, EmotionType emotion2)
-    {
-        var championDecks = GetDecksForChampion(champion);
-
-        if (deckIndex < 0 || deckIndex >= championDecks.decks.Count)
-            return;
-
-        championDecks.decks[deckIndex].Emotion1 = emotion1;
-        championDecks.decks[deckIndex].Emotion2 = emotion2;
-        SaveAllDecks();
-    }
-
-    /// <summary>
     /// Sélectionne un deck pour un champion
     /// </summary>
     public static void SelectDeck(ChampionData champion, int deckIndex)
@@ -448,30 +433,6 @@ public static class DeckSaveManager
             GameLog.Log($"Fichier de sauvegarde supprimé: {SaveFilePath}");
         }
         InvalidateCache();
-    }
-
-    /// <summary>
-    /// Réinitialise les decks d'un champion spécifique
-    /// </summary>
-    public static void ResetChampionDecks(ChampionData champion)
-    {
-        var allDecks = LoadAllDecks();
-
-        // Supprimer les données existantes pour ce champion
-        for (int i = allDecks.champions.Count - 1; i >= 0; i--)
-        {
-            if (allDecks.champions[i].championName == champion.championName)
-            {
-                allDecks.champions.RemoveAt(i);
-            }
-        }
-
-        // Recréer les données par défaut
-        var newData = CreateDefaultDecksForChampion(champion);
-        allDecks.SetChampionDecks(newData);
-        SaveAllDecks();
-
-        GameLog.Log($"Decks réinitialisés pour {champion.championName}");
     }
 
     /// <summary>

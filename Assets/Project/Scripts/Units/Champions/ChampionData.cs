@@ -23,7 +23,8 @@ public class ChampionData : ScriptableObject
     public int movementRange = 3;              // PM (Points de Mouvement) maximum
     public int maxActionPoints = 5;            // PA (Points d'Action) maximum
     public int attackDamage = 10;              // ATK (Attaque) - degats de base
-    public int defense = 10;                   // Defense (reduit les degats recus)
+    public int armor = 0;                      // Armure : réduit les dégâts physiques reçus (soustraction fixe)
+    public int barrier = 0;                    // Barrière : réduit les dégâts magiques reçus (soustraction fixe)
 
     [Header("Deck de Depart")]
     public List<CardData> startingDeck = new List<CardData>();

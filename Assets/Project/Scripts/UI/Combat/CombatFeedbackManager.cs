@@ -10,7 +10,7 @@ using System.Collections;
 /// - Déclencher effets visuels (shake, flash, etc.)
 /// - Gérer le prefab de DamageNumberPopup
 /// </summary>
-public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
+public class CombatFeedbackManager : MonoBehaviour
 {
     // ========== CONFIGURATION ==========
 
@@ -49,13 +49,6 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
 
     void Awake()
     {
-        if (ServiceLocator.Instance.IsRegistered<ICombatFeedbackService>())
-        {
-            Destroy(gameObject);
-            return;
-        }
-        ServiceLocator.Instance.Register<ICombatFeedbackService>(this);
-
         // Trouve le canvas automatiquement si non assigné
         if (_damageNumberCanvas == null)
         {
@@ -95,10 +88,6 @@ public class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackService
         EventBus.Unsubscribe<UnitDiedEvent>(OnUnitDied);
     }
 
-    void OnDestroy()
-    {
-        ServiceLocator.Instance.Unregister<ICombatFeedbackService>();
-    }
 
     // ========== EVENT HANDLERS ==========
 

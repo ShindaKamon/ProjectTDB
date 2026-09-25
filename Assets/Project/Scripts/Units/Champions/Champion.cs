@@ -93,15 +93,6 @@ public abstract class Champion : Unit, IActionPointsUser
 
     // ========== GETTERS PUBLICS ==========
 
-    /// <summary>
-    /// Retourne la défense de base depuis ChampionData (pour l'affichage UI)
-    /// Note: Cette valeur peut ne pas être utilisée par tous les champions (aucun champion MVP n'a de défense active)
-    /// </summary>
-    public int GetBaseDefense()
-    {
-        return championData != null ? championData.defense : 0;
-    }
-
     // ========== INITIALISATION ==========
 
     /// <summary>
@@ -118,7 +109,7 @@ public abstract class Champion : Unit, IActionPointsUser
         gameObject.name = data.championName;
 
         // Initialise les stats de base (HP, Movement, ATK) via Unit
-        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage);
+        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.barrier);
 
         // Initialise le component PA depuis ChampionData
         _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{name} (Champion)");

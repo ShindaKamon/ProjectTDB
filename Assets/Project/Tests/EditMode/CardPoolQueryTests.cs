@@ -241,6 +241,26 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void Apply_DamageTypeFilter_KeepsOnlyDamagingCardsOfThatType()
+        {
+            var physical = NewCard("Coup", 1, EmotionType.Colere);
+            physical.damageAmount = 10;
+            var magical = NewCard("Sort", 1, EmotionType.Peur);
+            magical.damageAmount = 10;
+            magical.damageType = DamageType.Magique;
+            var heal = NewCard("Soin", 1, EmotionType.Joie); // pas de dégâts : écartée par le filtre
+
+            var query = new CardPoolQuery();
+            query.DamageTypes.Add(DamageType.Magique);
+
+            Assert.AreEqual(new[] { "Sort" }, Names(query.Apply(new[] { physical, magical, heal }, null)));
+            Assert.IsTrue(query.HasActiveFilters);
+
+            query.ResetFilters();
+            Assert.AreEqual(3, query.Apply(new[] { physical, magical, heal }, null).Count);
+        }
+
+        [Test]
         public void Apply_NullPoolOrNullCards_AreIgnored()
         {
             var query = new CardPoolQuery();

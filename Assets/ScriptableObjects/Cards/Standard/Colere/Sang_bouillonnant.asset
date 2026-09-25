@@ -15,13 +15,13 @@ MonoBehaviour:
   cardName: Sang bouillonnant
   description: "Inflige 18 d\xE9g\xE2ts \xE0 un ennemi au contact et r\xE9cup\xE8re
     autant de PV."
+  specialText: 
   artwork: {fileID: 0}
   emotionType: 1
   category: 0
   signatureOwner: {fileID: 0}
   costPA: 2
   costHP: 0
-  costOther: 0
   targetType: 2
   targetRange: 1
   areaEffect: 0
@@ -30,35 +30,21 @@ MonoBehaviour:
   targetsHandCard: 0
   targetCount: 1
   damageAmount: 18
+  damageType: 0
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 18
   atkIncreased: 0
   defenseAmount: 0
-  movementAmount: 0
+  armorAmount: 0
+  barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
-  damageSharePercent: 50
-  markToApply: 0
-  markStacks: 1
-  markDuration: 0
-  markBonusValue: 0
-  consumeMarks: 0
-  markToConsume: 0
-  consumeMarkTarget: 0
-  damagePerMarkStack: 0
-  healSelfPerMarkOnTarget: 0
   drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
-  damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

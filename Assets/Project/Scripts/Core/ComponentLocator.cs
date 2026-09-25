@@ -196,24 +196,4 @@ public static class ComponentLocator
         return true;
     }
 
-    /// <summary>
-    /// Vérifie qu'un GameObject n'est pas null et log une erreur si c'est le cas.
-    /// Retourne true si le GameObject est valide.
-    /// </summary>
-    public static bool ValidateGameObject(GameObject obj, string objectName, Object context = null)
-    {
-        if (obj == null)
-        {
-            if (context != null)
-            {
-                Debug.LogError($"ComponentLocator: GameObject {objectName} est null", context);
-            }
-            else
-            {
-                Debug.LogError($"ComponentLocator: GameObject {objectName} est null");
-            }
-            return false;
-        }
-        return true;
-    }
 }

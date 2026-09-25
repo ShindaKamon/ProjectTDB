@@ -7,7 +7,8 @@ public enum FilterChipKind
 {
     Emotion,
     Category,
-    Cost
+    Cost,
+    DamageType // valeurs sérialisées dans la scène : ajouter à la fin
 }
 
 /// <summary>
@@ -22,6 +23,7 @@ public class FilterChipUI : MonoBehaviour
     [SerializeField] private FilterChipKind _kind;
     [SerializeField] private EmotionType _emotion;
     [SerializeField] private CardCategory _category;
+    [SerializeField] private DamageType _damageType;
     [Tooltip("Coût PA filtré ; avec 'Or More', toutes les cartes de ce coût ou plus (ex. 4+).")]
     [SerializeField] private int _cost;
     [SerializeField] private bool _orMore;
@@ -35,6 +37,7 @@ public class FilterChipUI : MonoBehaviour
     public FilterChipKind Kind => _kind;
     public EmotionType Emotion => _emotion;
     public CardCategory Category => _category;
+    public DamageType DamageType => _damageType;
     public int Cost => _cost;
     public bool OrMore => _orMore;
     public Button Button { get; private set; }
@@ -55,6 +58,7 @@ public class FilterChipUI : MonoBehaviour
         {
             FilterChipKind.Emotion => "",
             FilterChipKind.Category => _category == CardCategory.Eveil ? "Éveil" : _category.ToString(),
+            FilterChipKind.DamageType => _damageType.ToString(),
             _ => _orMore ? $"{_cost}+" : _cost.ToString(),
         };
     }

@@ -17,6 +17,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     [SerializeField] private CanvasGroup _canvasGroup; // Pour griser la carte
     [SerializeField] private Image _cardBackground; // Fond de la carte (pour color tint)
 
+
     [Header("Visual Feedback Settings (Phase 4.3)")]
     [SerializeField] private float _hoverScale = 1.1f;
     [SerializeField] private float _selectScale = 1.05f;
@@ -112,7 +113,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         if (_cardData != null)
         {
             if (_cardNameText != null) _cardNameText.text = _cardData.cardName;
-            if (_cardDescriptionText != null) _cardDescriptionText.text = _cardData.description;
+            CardTextView.Apply(_cardDescriptionText, _cardData); // texte généré depuis les champs
 
             // Afficher le coût en PA, sur une pastille à la couleur de l'émotion (comme l'écran de deck)
             _costDiskColor = CodexCardVisual.CostColor(_cardData);
@@ -190,14 +191,6 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
                     }
                 }
             }
-        }
-    }
-
-    public void SetFollowMouse(bool follow)
-    {
-        _isFollowingMouse = follow;
-        if (!follow) {
-            transform.position = _originalPosition; // Restaurer la position originale quand on arrête de suivre la souris
         }
     }
 

@@ -112,7 +112,8 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **PA + PM** | **Budget de 9 points**, réparti par profil (min 3 PA, min 2 PM) | 2-4 PA, 2-4 PM | Complète par tour | PA pour jouer des cartes, PM pour se déplacer (1 PM = 1 case) |
 | **PV** | 100 au niveau 1, +15 par niveau | Selon le barème (`Enemies.md`) | Via cartes/effets | Tombe à 0 = vaincu |
 | **Éveil** | Une jauge par émotion | — | Générée en jouant des cartes | Débloque les cartes d'Éveil (voir `SYSTEME_EMOTIONS.md`) |
-| **Autres stats** (armure, résistances, critique) | **Non définies** — à trancher | | | |
+| **Armure / Barrière** | 0 par défaut (fiche champion) | Selon la fiche monstre | Buffs/malus de cartes (durée `effectDuration`) | Soustraction fixe : l'armure réduit les dégâts **physiques**, la barrière les **magiques** (type choisi par carte) ; minimum 1 dégât ; une valeur négative augmente les dégâts. Ordre : armure/barrière → réductions en % → bouclier → PV |
+| **Autres stats** (résistances, critique) | **Non définies** — à trancher | | | |
 
 **Profils PA/PM (exemples de l'Excel) :** brutal 6 PA / 3 PM · équilibré 5 PA / 4 PM · mobile 4 PA / 5 PM. Le profil est fixé par le personnage et **ne change pas avec le niveau**.
 
@@ -202,7 +203,8 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 |-------|--------|-------|
 | **Retrait de PM** | Peur | -1 / -2 / -3 PM ou perte totale au **prochain tour** de la cible. Ne se cumulent pas : un retrait plus fort remplace un plus faible ; un plus faible n'écrase jamais un plus fort en cours |
 | **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
-| **Bouclier (% de réduction)** | Colère (Armure de rage), Peur, Joie, Crux | Réduit les prochains dégâts subis d'un pourcentage ; ignoré par la Paire de Raze |
+| **Bouclier (PV)** | Colère (Armure de rage), Peur, Joie | Absorbe les dégâts avant les PV (jauge bleue sur la barre de vie) ; cumulable ; dure jusqu'au début du prochain tour du lanceur ; ignoré par la Paire de Raze |
+| **Réduction de dégâts (%)** | Passifs de Crux et de Raze (Bluff) | Réduit les prochains dégâts subis d'un pourcentage |
 | **Vulnérabilité** | Contrepartie (Joie) | Le lanceur subit plus de dégâts |
 | **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour) |
 | **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour |

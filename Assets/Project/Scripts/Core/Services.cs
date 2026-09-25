@@ -85,32 +85,6 @@ public static class Services
         return ServiceLocator.Instance.IsRegistered<IHealthBarService>();
     }
 
-    // ========== COMBAT FEEDBACK SERVICE ==========
-
-    /// <summary>
-    /// Accès rapide au service de feedbacks visuels de combat
-    /// </summary>
-    public static ICombatFeedbackService CombatFeedback
-    {
-        get
-        {
-            ICombatFeedbackService service = ServiceLocator.Instance.Get<ICombatFeedbackService>();
-            if (service == null)
-            {
-                Debug.LogError("Services: ICombatFeedbackService non enregistré ! CombatFeedbackManager a-t-il été initialisé?");
-            }
-            return service;
-        }
-    }
-
-    /// <summary>
-    /// Vérifie si le service de feedback de combat est disponible
-    /// </summary>
-    public static bool IsCombatFeedbackServiceAvailable()
-    {
-        return ServiceLocator.Instance.IsRegistered<ICombatFeedbackService>();
-    }
-
     // NOTE: Futurs services à ajouter ici
     // public static IAudioService Audio => ServiceLocator.Instance.Get<IAudioService>();
     // public static ISaveService Save => ServiceLocator.Instance.Get<ISaveService>();

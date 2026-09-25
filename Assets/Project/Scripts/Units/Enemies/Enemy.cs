@@ -96,7 +96,7 @@ public class Enemy : Unit, IActionPointsUser
         _enemyData = data;
 
         // Initialise les stats de base via la classe Unit (HP, PM, ATK)
-        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage);
+        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.barrier);
 
         // Initialise le component PA depuis EnemyData
         _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{gameObject.name} (Enemy)");
@@ -226,25 +226,6 @@ public class Enemy : Unit, IActionPointsUser
         OnNextCardChanged?.Invoke(GetNextCard());
 
         return nextCard;
-    }
-
-    /// <summary>
-    /// Réinitialise le deck au début (utilisé si on veut forcer un reset)
-    /// </summary>
-    public void ResetDeckIndex()
-    {
-        _currentCardIndex = 0;
-        OnNextCardChanged?.Invoke(GetNextCard());
-        GameLog.Log($"{name} (Enemy): Index du deck réinitialisé");
-    }
-
-    /// <summary>
-    /// Retourne le nombre de cartes restantes avant la boucle
-    /// </summary>
-    public int GetRemainingCardsInCycle()
-    {
-        if (_combatDeck == null || _combatDeck.Count == 0) return 0;
-        return _combatDeck.Count - _currentCardIndex;
     }
 
     /// <summary>

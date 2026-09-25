@@ -17,6 +17,7 @@ public class GridManager : MonoBehaviour, IGridService
     [SerializeField] private int _height = 10;
     [SerializeField] private GameObject _tilePrefab;
     [SerializeField] private Vector2Int _playerSpawnGridPos = new Vector2Int(0,0); // Position de la grille où le joueur apparaîtra
+    [SerializeField] private Vector2Int _secondPlayerSpawnGridPos = new Vector2Int(1,0); // Coop : position du second champion
     
     [Header("=== Couleurs Portées ===")]
     [SerializeField] private Color _moveColor = Color.blue;
@@ -172,49 +173,21 @@ public class GridManager : MonoBehaviour, IGridService
     private void InitUnits()
     {
         // _units est déjà initialisé dans Awake() et partagé avec GridRepository
-        Unit instantiatedPlayerUnit = null;
 
         // 1. Instancie le champion sélectionné (si disponible)
         if (ChampionSelectManager.SelectedChampion != null)
         {
-            GameObject playerUnitGO = Instantiate(ChampionSelectManager.SelectedChampion.prefab);
-            
-            // On récupère le composant Champion pour appeler son initialisation.
-            // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (SorenUnit, AlpinisteUnit, AceUnit)
-            Champion instantiatedChampion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
-            instantiatedPlayerUnit = instantiatedChampion;
+            // Utiliser le deck personnalisé s'il existe, sinon le startingDeck
+            var deckToUse = ChampionSelectManager.SelectedDeck != null && ChampionSelectManager.SelectedDeck.Count > 0
+                ? ChampionSelectManager.SelectedDeck
+                : ChampionSelectManager.SelectedChampion.startingDeck;
 
-            if (instantiatedChampion != null)
+            _activeUnit = SpawnChampion(ChampionSelectManager.SelectedChampion, deckToUse, _playerSpawnGridPos);
+
+            // Coop : le second champion joue juste après le premier (ordre de _units)
+            if (ChampionSelectManager.SecondChampion != null)
             {
-                // Initialise le champion du joueur avec ses données et la position de départ
-                instantiatedChampion.Initialize(ChampionSelectManager.SelectedChampion, _playerSpawnGridPos);
-
-                // Initialise le DeckManager de l'unité joueur (OPTIMISATION Phase 3.3: ComponentLocator)
-                DeckManager playerDeckManager = instantiatedPlayerUnit.GetRequiredComponent<DeckManager>("DeckManager du champion");
-                if (playerDeckManager != null && ChampionSelectManager.SelectedChampion != null)
-                {
-                    // Utiliser le deck personnalisé s'il existe, sinon le startingDeck
-                    var deckToUse = ChampionSelectManager.SelectedDeck != null && ChampionSelectManager.SelectedDeck.Count > 0
-                        ? ChampionSelectManager.SelectedDeck
-                        : ChampionSelectManager.SelectedChampion.startingDeck;
-
-                    if (deckToUse != null && deckToUse.Count > 0)
-                    {
-                        playerDeckManager.InitializeDeck(deckToUse);
-                        GameLog.Log($"Deck de {instantiatedPlayerUnit.name} initialisé avec {deckToUse.Count} cartes.");
-                    }
-                    else
-                    {
-                        GameLog.LogWarning($"Le champion {instantiatedPlayerUnit.name} n'a pas de deck valide.");
-                    }
-                }
-                else
-                {
-                    GameLog.LogWarning($"L'unité {instantiatedPlayerUnit.name} n'a pas de composant DeckManager.");
-                }
-                _units.Add(instantiatedPlayerUnit);
-                _activeUnit = instantiatedPlayerUnit;
-                GameLog.Log($"Champion sélectionné instancié : {instantiatedPlayerUnit.name} à {_playerSpawnGridPos}");
+                SpawnChampion(ChampionSelectManager.SecondChampion, ChampionSelectManager.SecondChampion.startingDeck, _secondPlayerSpawnGridPos);
             }
         }
         else
@@ -229,14 +202,6 @@ public class GridManager : MonoBehaviour, IGridService
         {
             if (!_units.Contains(unit)) // Évite d'ajouter le joueur si déjà instancié
             {
-                // Si un champion a été instancié, on désactive les unités "placeholder" (Unit de base)
-                // pour éviter d'avoir un cube qui traîne (le cube "Player" de la scène).
-                if (instantiatedPlayerUnit != null && unit.GetType() == typeof(Unit))
-                {
-                    GameLog.Log($"Unité placeholder ignorée: {unit.name}");
-                    unit.gameObject.SetActive(false);
-                    continue;
-                }
 
                 // Vérifie si c'est un Enemy avec EnemyData
                 Enemy enemy = unit as Enemy;
@@ -318,6 +283,9 @@ public class GridManager : MonoBehaviour, IGridService
                 GameLog.LogWarning($"GridManager.InitUnits: {_activeUnit.name} n'a pas de UnitState!");
             }
 
+            // Les UI qui suivent le champion actif (main, HUD, orbe…) se branchent sur le premier tour
+            EventBus.Publish(new TurnChangedEvent(_activeUnit, null));
+
             // Gère le premier tour
             HandleTurnStart(_activeUnit);
         }
@@ -327,6 +295,45 @@ public class GridManager : MonoBehaviour, IGridService
         }
     }
     
+    /// <summary>
+    /// Instancie un champion joueur, l'initialise avec son deck et l'ajoute à _units.
+    /// </summary>
+    private Champion SpawnChampion(ChampionData data, List<CardData> deck, Vector2Int gridPos)
+    {
+        GameObject playerUnitGO = Instantiate(data.prefab);
+
+        // On récupère le composant Champion pour appeler son initialisation.
+        // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (SorenUnit, AlpinisteUnit, AceUnit)
+        Champion champion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
+        if (champion == null) return null;
+
+        // Initialise le champion du joueur avec ses données et la position de départ
+        champion.Initialize(data, gridPos);
+
+        // Initialise le DeckManager de l'unité joueur (OPTIMISATION Phase 3.3: ComponentLocator)
+        DeckManager playerDeckManager = champion.GetRequiredComponent<DeckManager>("DeckManager du champion");
+        if (playerDeckManager != null)
+        {
+            if (deck != null && deck.Count > 0)
+            {
+                playerDeckManager.InitializeDeck(deck);
+                GameLog.Log($"Deck de {champion.name} initialisé avec {deck.Count} cartes.");
+            }
+            else
+            {
+                GameLog.LogWarning($"Le champion {champion.name} n'a pas de deck valide.");
+            }
+        }
+        else
+        {
+            GameLog.LogWarning($"L'unité {champion.name} n'a pas de composant DeckManager.");
+        }
+
+        _units.Add(champion);
+        GameLog.Log($"Champion instancié : {champion.name} à {gridPos}");
+        return champion;
+    }
+
     /// <summary>
     /// Rafraîchit le tour de l'unité active (PA, Mouvement, et Pioche)
     /// </summary>
@@ -371,12 +378,12 @@ public class GridManager : MonoBehaviour, IGridService
         int currentIndex = _units.IndexOf(_activeUnit);
         int nextIndex = (currentIndex + 1) % _units.Count;
 
-        // Les invocations (SummonUnit, ex: Lyse) ne jouent pas de tour propre (PA/PM = 0,
+        // Les unités sans tour propre (invocations comme Lyse : PA/PM = 0,
         // aucun DeckManager) : elles sont enregistrées dans _units pour les requêtes de grille
         // mais doivent être sautées dans la rotation des tours, sous peine de bloquer le joueur
         // sur un tour vide qu'il ne peut que passer.
         int skipGuard = 0;
-        while (_units[nextIndex] is SummonUnit && skipGuard < _units.Count)
+        while (!_units[nextIndex].TakesTurns && skipGuard < _units.Count)
         {
             nextIndex = (nextIndex + 1) % _units.Count;
             skipGuard++;
@@ -456,9 +463,15 @@ public class GridManager : MonoBehaviour, IGridService
     {
         // Traite les buffs temporaires (décrémente durée, retire les expirés)
         unit.ProcessBuffsOnTurnStart();
-        
-        // Traite les marques au début du tour (dégâts de poison, etc.)
-        unit.ProcessMarksOnTurnStart();
+
+        // Les boucliers donnés par cette unité expirent au début de son tour
+        foreach (Unit u in _units)
+        {
+            u.ExpireShieldOnTurnStartOf(unit);
+        }
+
+        // Retraits de PA/PM programmés contre cette unité (après la remise à niveau de ses PA/PM)
+        ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
@@ -600,7 +613,6 @@ public class GridManager : MonoBehaviour, IGridService
     /// <summary>
     /// Retourne le GridRepository pour injection de dépendances (Phase 2)
     /// </summary>
-    public GridRepository GetGridRepository() => _gridRepository;
 
     /// <summary>
     /// Invalide le cache d'attaque (appelé quand une carte est sélectionnée/désélectionnée)

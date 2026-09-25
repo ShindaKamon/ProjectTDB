@@ -15,13 +15,13 @@ MonoBehaviour:
   cardName: Invocation de Lyse
   description: "Invoque Lyse \xE0 1-3 cases. Si elle est d\xE9j\xE0 sur le terrain,
     elle est soign\xE9e de 15 PV \xE0 la place."
+  specialText: 
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
   signatureOwner: {fileID: 11400000, guid: c11befcf30483e042a9507a3c3c90e26, type: 2}
   costPA: 2
   costHP: 0
-  costOther: 0
   targetType: 7
   targetRange: 3
   areaEffect: 0
@@ -30,35 +30,21 @@ MonoBehaviour:
   targetsHandCard: 0
   targetCount: 1
   damageAmount: 0
+  damageType: 0
   damageSelf: 0
   healAmount: 15
   lifestealFixedAmount: 0
   atkIncreased: 0
   defenseAmount: 0
-  movementAmount: 0
+  armorAmount: 0
+  barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
-  damageSharePercent: 50
-  markToApply: 0
-  markStacks: 1
-  markDuration: 0
-  markBonusValue: 0
-  consumeMarks: 0
-  markToConsume: 0
-  consumeMarkTarget: 0
-  damagePerMarkStack: 0
-  healSelfPerMarkOnTarget: 0
   drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
-  damagePerDebuff: 0
   isSummonCard: 1
   summonPrefab: {fileID: 6726855022100611391, guid: 1dc6c5e2b46bad34487c7fc86ab1fe94, type: 3}
   isRepositionSummonCard: 0

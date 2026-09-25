@@ -23,16 +23,6 @@ public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageMod
     // Bonus de dégâts à usage unique sur la prochaine carte de dégâts (atterrissage près d'un ennemi)
     private bool _hasNextCardBonus = false;
 
-    protected override void Start()
-    {
-        base.Start();
-
-        if (Services.IsBattleUIServiceAvailable())
-        {
-            Services.BattleUI.RegisterPlayer(this);
-        }
-    }
-
     // ========== IChargeLandingReactor ==========
 
     /// <summary>

@@ -197,26 +197,4 @@ public class TurnStateMachine
         // Publie événement global via EventBus
         EventBus.Publish(new TurnStateChangedEvent(oldState, newState, _activeUnit));
     }
-
-    /// <summary>
-    /// Retourne une description de l'état actuel
-    /// </summary>
-    public string GetStateDescription()
-    {
-        switch (_currentState)
-        {
-            case TurnState.Initializing:
-                return "Initialisation du combat...";
-            case TurnState.PlayerTurn:
-                return $"Tour du joueur ({_activeUnit?.name ?? "Unknown"})";
-            case TurnState.EnemyTurn:
-                return $"Tour de l'ennemi ({_activeUnit?.name ?? "Unknown"})";
-            case TurnState.TransitioningTurn:
-                return "Transition entre tours...";
-            case TurnState.BattleEnd:
-                return "Combat terminé";
-            default:
-                return "État inconnu";
-        }
-    }
 }

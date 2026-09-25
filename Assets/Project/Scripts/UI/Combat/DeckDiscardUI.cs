@@ -13,6 +13,9 @@ public class DeckDiscardUI : MonoBehaviour
     private DeckManager _currentDeckManager;
     private bool _isInitialized = false;
 
+    void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+    void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+
     void Update()
     {
         if (!_isInitialized)
@@ -29,21 +32,44 @@ public class DeckDiscardUI : MonoBehaviour
             Unit activeUnit = Services.Grid.GetActiveUnit();
             if (activeUnit != null)
             {
-                // On cherche le DeckManager sur l'unité active
-                if (activeUnit.TryGetComponentSafe(out _currentDeckManager))
-                {
-                    // Abonnement aux événements
-                    _currentDeckManager.OnDeckChanged += UpdateDeckUI;
-                    _currentDeckManager.OnDiscardChanged += UpdateDiscardUI;
-                    
-                    // Mise à jour initiale
-                    UpdateDeckUI(_currentDeckManager.GetDeckCount());
-                    UpdateDiscardUI(_currentDeckManager.GetDiscardCount());
-                    
-                    _isInitialized = true;
-                    GameLog.Log("DeckDiscardUI: Initialisé avec succès.");
-                }
+                BindToUnit(activeUnit);
             }
+        }
+    }
+
+    // Coop : la pioche et la défausse affichées suivent le champion dont c'est le tour.
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (!(e.NewActiveUnit is Champion)) return;
+
+        Unbind();
+        BindToUnit(e.NewActiveUnit);
+    }
+
+    private void BindToUnit(Unit unit)
+    {
+        // On cherche le DeckManager sur l'unité active
+        if (unit.TryGetComponentSafe(out _currentDeckManager))
+        {
+            // Abonnement aux événements
+            _currentDeckManager.OnDeckChanged += UpdateDeckUI;
+            _currentDeckManager.OnDiscardChanged += UpdateDiscardUI;
+
+            // Mise à jour initiale
+            UpdateDeckUI(_currentDeckManager.GetDeckCount());
+            UpdateDiscardUI(_currentDeckManager.GetDiscardCount());
+
+            _isInitialized = true;
+            GameLog.Log($"DeckDiscardUI: connecté à {unit.name}.");
+        }
+    }
+
+    private void Unbind()
+    {
+        if (_currentDeckManager != null)
+        {
+            _currentDeckManager.OnDeckChanged -= UpdateDeckUI;
+            _currentDeckManager.OnDiscardChanged -= UpdateDiscardUI;
         }
     }
 
@@ -77,10 +103,6 @@ public class DeckDiscardUI : MonoBehaviour
 
     void OnDestroy()
     {
-        if (_currentDeckManager != null)
-        {
-            _currentDeckManager.OnDeckChanged -= UpdateDeckUI;
-            _currentDeckManager.OnDiscardChanged -= UpdateDiscardUI;
-        }
+        Unbind();
     }
 }

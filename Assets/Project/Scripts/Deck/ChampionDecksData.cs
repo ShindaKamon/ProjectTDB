@@ -29,17 +29,6 @@ public class ChampionDecksData
     }
 
     /// <summary>
-    /// Retourne le deck actuellement sélectionné
-    /// </summary>
-    public DeckData GetSelectedDeck()
-    {
-        if (decks.Count == 0) return null;
-        if (selectedDeckIndex < 0 || selectedDeckIndex >= decks.Count)
-            selectedDeckIndex = 0;
-        return decks[selectedDeckIndex];
-    }
-
-    /// <summary>
     /// Vérifie si on peut ajouter un nouveau deck custom
     /// </summary>
     public bool CanAddCustomDeck()
@@ -52,16 +41,4 @@ public class ChampionDecksData
         return customCount < MAX_CUSTOM_DECKS;
     }
 
-    /// <summary>
-    /// Compte le nombre de decks custom
-    /// </summary>
-    public int GetCustomDeckCount()
-    {
-        int count = 0;
-        foreach (var deck in decks)
-        {
-            if (!deck.isDefault) count++;
-        }
-        return count;
-    }
 }

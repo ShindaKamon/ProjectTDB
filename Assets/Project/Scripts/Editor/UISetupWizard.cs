@@ -232,8 +232,8 @@ public class UISetupWizard : EditorWindow
 
     /// <summary>
     /// Cree le prefab CardPoolItem (carte du pool d'edition) au design du codex emotionnel :
-    /// en-tete (rond de cout, nom, sous-titre), schema de portee 9x9 + legende, pastilles
-    /// d'effets (icones du codex dans Textures/UI/CodexIcons), description.
+    /// en-tete (rond de cout, nom, sous-titre), schema de portee 9x9 + legende,
+    /// texte de regles genere avec icones (CardTextView, Sprite Asset Resources/CodexIcons).
     /// </summary>
     [MenuItem("Tools/UI/Prefabs/CardPoolItem")]
     public static void CreateCardPoolItemPrefab()
@@ -313,15 +313,6 @@ public class UISetupWizard : EditorWindow
         SetAnchors(captionTMP.gameObject, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -178), new Vector2(112, -152));
 
         // --- Pastilles d'effets (a droite du schema, une par ligne) ---
-        GameObject chips = CreateChild(root, "Chips");
-        SetAnchors(chips, new Vector2(0, 1), new Vector2(1, 1), new Vector2(116, -150), new Vector2(-10, -58));
-        VerticalLayoutGroup chipsLayout = chips.AddComponent<VerticalLayoutGroup>();
-        chipsLayout.spacing = 5;
-        chipsLayout.childAlignment = TextAnchor.UpperLeft;
-        chipsLayout.childControlWidth = false;
-        chipsLayout.childControlHeight = false;
-        chipsLayout.childForceExpandWidth = false;
-        chipsLayout.childForceExpandHeight = false;
 
         // --- Description ---
         TextMeshProUGUI descTMP = AddText(root, "DescriptionText", "Description de la carte.", 12.5f, FontStyles.Normal, TextAlignmentOptions.TopLeft, CodexCardVisual.Ink);
@@ -331,10 +322,6 @@ public class UISetupWizard : EditorWindow
         descTMP.overflowMode = TextOverflowModes.Ellipsis;
         SetAnchors(descTMP.gameObject, new Vector2(0, 0), new Vector2(1, 1), new Vector2(12, 10), new Vector2(-12, -182));
 
-        // Icones du codex (generees depuis ses SVG)
-        var icons = new System.Collections.Generic.List<Sprite>();
-        foreach (string guid in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Project/Textures/UI/CodexIcons" }))
-            icons.Add(AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guid)));
 
         // Assigner les references au script
         SerializedObject so = new SerializedObject(ui);
@@ -346,13 +333,7 @@ public class UISetupWizard : EditorWindow
         so.FindProperty("_subtitleText").objectReferenceValue = subTMP;
         so.FindProperty("_diagramGrid").objectReferenceValue = diagram.transform;
         so.FindProperty("_captionText").objectReferenceValue = captionTMP;
-        so.FindProperty("_chipsContainer").objectReferenceValue = chips.transform;
-        so.FindProperty("_chipBackground").objectReferenceValue = rounded;
         so.FindProperty("_descriptionText").objectReferenceValue = descTMP;
-        SerializedProperty iconsProp = so.FindProperty("_chipIcons");
-        iconsProp.arraySize = icons.Count;
-        for (int i = 0; i < icons.Count; i++)
-            iconsProp.GetArrayElementAtIndex(i).objectReferenceValue = icons[i];
         so.ApplyModifiedProperties();
 
         // Sauvegarder le prefab
@@ -360,7 +341,7 @@ public class UISetupWizard : EditorWindow
         PrefabUtility.SaveAsPrefabAsset(root, path);
         DestroyImmediate(root);
 
-        Debug.Log($"Prefab cree: {path} ({icons.Count} icones)");
+        Debug.Log($"Prefab cree: {path}");
     }
 
     private static TextMeshProUGUI AddText(GameObject parent, string name, string text, float size, FontStyles style, TextAlignmentOptions align, Color color)

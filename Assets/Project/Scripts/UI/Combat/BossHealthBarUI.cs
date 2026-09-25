@@ -18,7 +18,7 @@ public class BossHealthBarUI : MonoBehaviour
     [SerializeField] private Image _bossPortrait; // Portrait du boss (optionnel)
     [SerializeField] private Image _fillImage; // Image de remplissage de la barre
 
-    [Header("Stats du boss (PM, PA, attaque, armure, barrière, bouclier)")]
+    [Header("Stats du boss (PM, PA, attaque, armure, résistance magique, bouclier)")]
     [SerializeField] private Transform _statChipsContainer;
     [SerializeField] private Sprite _chipBackground;
 
@@ -155,7 +155,7 @@ public class BossHealthBarUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Pastilles PM / PA / attaque / armure / barrière / bouclier sous la barre (valeurs courantes)
+    /// Pastilles PM / PA / attaque / armure / résistance magique / bouclier sous la barre (valeurs courantes)
     /// </summary>
     private void RefreshStatChips()
     {

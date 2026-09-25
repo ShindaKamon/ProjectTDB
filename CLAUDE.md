@@ -73,8 +73,8 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 
 ### Combat
 - `TurnStateMachine` (classe C# pure, pas MonoBehaviour) porte l'état du tour ; `GridManager` orchestre la grille (**carrée** 10×10, positions `Vector2Int`, **4 directions**, distance de Manhattan — toute distance, voisinage ou direction passe par `GridGeometry`, ne pas recalculer à la main, écho du Miroir fraternel compris), le spawn et la rotation des tours (un tour par unité dans l'ordre de `_units`, les unités dont `TakesTurns` est faux — les invocations — sont sautées), avec `GridRepository` pour les données de grille.
-- Unités : `Unit` (base MonoBehaviour, PV, bouclier, armure/barrière, buffs) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion qui porte ses passifs (voir « Noms des champions » ci-dessous). Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
-- Ennemis : `Enemy` + `EnemyAI` (un monstre = un `EnemyData` + un prefab, ex. `UnderBed`), qui joue aussi des `CardData`.
+- Unités : `Unit` (base MonoBehaviour, PV, bouclier, armure/résistance magique, buffs) → `Champion` (abstrait, PA via `IActionPointsUser`) → une sous-classe par champion qui porte ses passifs (voir « Noms des champions » ci-dessous). Les mécaniques transverses passent par des interfaces opt-in dans `Scripts/Units/` (`IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) : le code générique teste `if (unit is IXxx)` plutôt que de connaître les champions.
+- Ennemis : `Enemy` + `EnemyAI` (un monstre = un `EnemyData` + un prefab, ex. `UnderBed`), qui joue aussi des `CardData` ; contrôlé et incapable de jouer sa carte, il joue son attaque de base (`EnemyData.basicAttack`, règle anti-lock). PA et PM de toute unité sont remis à niveau par `GridManager` au début de son tour, **avant** les retraits de PA/PM (ne pas les rafraîchir ailleurs, sinon les retraits sont annulés).
 - Invocations : `SummonUnit : Unit` (pas de tour propre, PA/PM = 0, pilotée par les cartes de l'invocateur `ISummonOwner`) ; `LyseUnit` en dérive, avec des PV recalculés en continu depuis ceux d'Evan.
 - États transverses gérés par des classes statiques plutôt que par les unités : `ResourceDebuffManager` (retraits de PA/PM appliqués au début du prochain tour de la cible, sans cumul : le plus fort l'emporte). Les enums sérialisés dans les assets (`DamageType`, `CardTargetType`, `CardAreaEffect`, `FilterChipKind`…) : ajouter les nouvelles valeurs à la fin, ne jamais renuméroter.
 
@@ -92,7 +92,7 @@ Points relevés par l'auteur ; le détail des règles fait foi dans « Décision
 | Communion joyeuse : subit plus de dégâts (baisse d'armure) | ✅ `casterArmorAmount = -5` (vulnérabilité du lanceur, 1 tour) — valeur à équilibrer |
 | Éclat de joie | ✅ `damageAroundTarget = 10` : tous les ennemis au contact de l'allié soigné |
 | Euphorie aveuglante | ✅ `casterArmorAmount = -5` |
-| PA + durée | ✅ Durées en tours du lanceur (`Unit.TickEffectsOnTurnStartOf`) ; ⚠️ Aura de terreur n'a toujours aucun retrait de PA |
+| PA + durée | ✅ Durées en tours du lanceur (`Unit.TickEffectsOnTurnStartOf`) ; Aura de terreur retire 1 PA (calcul Excel) ; Bouclier de la terreur : −1 PM au prochain tour du lanceur (`casterMovementLoss`) ; règle anti-lock (attaque de base, `EnemyData.basicAttack`) et Ténacité codées |
 | PM et PA visibles sur les boss | ✅ Pastilles sous la barre du boss (restants pendant son tour, sinon ceux de son prochain tour) |
 | Fuite panique : recul | ✅ `casterRetreat = 2` |
 | Onde de terreur : poussée sur tous les ennemis | ✅ Une carte à zone pousse toutes les unités touchées |

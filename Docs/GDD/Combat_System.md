@@ -112,7 +112,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **PA + PM** | **Budget de 9 points**, réparti par profil (min 3 PA, min 2 PM) | 2-4 PA, 2-4 PM | Complète par tour | PA pour jouer des cartes, PM pour se déplacer (1 PM = 1 case) |
 | **PV** | 100 au niveau 1, +15 par niveau | Selon le barème (`Enemies.md`) | Via cartes/effets | Tombe à 0 = vaincu |
 | **Éveil** | Une jauge par émotion | — | Générée en jouant des cartes | Débloque les cartes d'Éveil (voir `SYSTEME_EMOTIONS.md`) |
-| **Armure / Barrière** | 0 par défaut (fiche champion) | Selon la fiche monstre | Buffs/malus de cartes (durée `effectDuration`) | Soustraction fixe : l'armure réduit les dégâts **physiques**, la barrière les **magiques** (type choisi par carte) ; minimum 1 dégât ; une valeur négative augmente les dégâts. Ordre : armure/barrière → réductions en % → bouclier → PV |
+| **Armure / Résistance magique** | 0 par défaut (fiche champion) | Selon la fiche monstre | Buffs/malus de cartes (durée `effectDuration`) | Soustraction fixe : l'armure réduit les dégâts **physiques**, la résistance magique les **magiques** (type choisi par carte) ; minimum 1 dégât ; une valeur négative augmente les dégâts. Ordre : armure/résistance magique → réductions en % → bouclier → PV |
 | **Autres stats** (résistances, critique) | **Non définies** — à trancher | | | |
 
 **Profils PA/PM (exemples de l'Excel) :** brutal 6 PA / 3 PM · équilibré 5 PA / 4 PM · mobile 4 PA / 5 PM. Le profil est fixé par le personnage et **ne change pas avec le niveau**.
@@ -209,9 +209,11 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | **Bouclier réactif** | Peur (Réflexe de survie) | Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup |
 | **Recul et élan** | Peur (Fuite panique, Piège et recul) | Le lanceur recule de N cases à l'opposé de sa cible ; gain de PM (ou de PA) pour le tour en cours |
 | **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour). Durée comptée en tours du lanceur (voir « Décisions actées » de `GDD_Main.md`) |
-| **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour |
+| **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour : −1 PA pour Aura de terreur (calcul Excel : 26 × (1 − 0,15 portée − 0,10 Éveil) ≈ 20 pts ≈ −20 % des PA pendant 1 tour ≈ 1 PA) |
 
-**Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**.
+**Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**. Codée (25/09/2026) : si le monstre a perdu des PA ou des PM ce tour et ne peut pas jouer sa carte prévue, il joue la carte `EnemyData.basicAttack` (0 PA, sans avancer son pattern), s'il a une cible à portée.
+
+**Ténacité** : un monstre qui perd **tous** ses PM ignore les retraits de PM à son tour suivant (pastille « tenace » sous la barre du boss). On peut l'immobiliser, mais pas indéfiniment, même à plusieurs joueurs.
 
 ### Statuts prévus hors MVP
 

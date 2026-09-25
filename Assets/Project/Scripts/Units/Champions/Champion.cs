@@ -109,7 +109,7 @@ public abstract class Champion : Unit, IActionPointsUser
         gameObject.name = data.championName;
 
         // Initialise les stats de base (HP, Movement, ATK) via Unit
-        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.barrier);
+        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.magicResistance);
 
         // Initialise le component PA depuis ChampionData
         _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{name} (Champion)");

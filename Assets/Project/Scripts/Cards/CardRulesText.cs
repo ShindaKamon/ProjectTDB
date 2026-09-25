@@ -33,11 +33,11 @@ public static class CardRulesText
         if (card.defenseAmount > 0)
             Effect("shield", ChipKind.Shield, "Bouclier " + card.defenseAmount + (card.reactiveShield ? " au premier coup ennemi reçu" : ""));
         if (card.atkIncreased != 0) Effect("buff", ChipKind.Shield, "ATQ " + card.atkIncreased.ToString("+#;−#") + Turns());
-        if (card.armorAmount != 0) Effect("armor", ChipKind.Shield, "Armure " + card.armorAmount.ToString("+#;−#") + Turns());
-        if (card.barrierAmount != 0) Effect("barrier", ChipKind.Shield, "Barrière " + card.barrierAmount.ToString("+#;−#") + Turns());
-        if (card.removeAllMovement) Effect("lock", ChipKind.Move, "Retire tous les PM au prochain tour");
-        else if (card.pmReduction > 0) Effect("pm", ChipKind.Move, $"Retire {card.pmReduction} PM au prochain tour");
-        if (card.paReduction > 0) Effect("pa", ChipKind.Move, $"Retire {card.paReduction} PA au prochain tour");
+        if (card.armorAmount != 0) Effect("armor", ChipKind.Defense, "Armure " + card.armorAmount.ToString("+#;−#") + Turns());
+        if (card.magicResistanceAmount != 0) Effect("magicresist", ChipKind.Defense, "Résistance magique " + card.magicResistanceAmount.ToString("+#;−#") + Turns());
+        if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Retire tous les PM au prochain tour");
+        else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Retire {card.pmReduction} PM au prochain tour");
+        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Retire {card.paReduction} PA au prochain tour");
         if (card.knockbackDistance > 0)
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));
@@ -50,9 +50,9 @@ public static class CardRulesText
         if (card.isRepositionSummonCard) Effect("summon", ChipKind.Mute, "Déplace ton invocation");
         if (card.targetsHandCard) Effect("hand", ChipKind.Mute, "Cible une carte de ta main");
         if (card.drawAmount > 0) Effect("hand", ChipKind.Mute, "Pioche " + card.drawAmount);
-        if (card.casterMovementGain > 0) Effect("pm", ChipKind.Move, $"+{card.casterMovementGain} PM ce tour");
-        if (card.casterActionGain > 0) Effect("pa", ChipKind.Move, $"+{card.casterActionGain} PA ce tour");
-        if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Shield, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));
+        if (card.casterMovementGain > 0) Effect("pm", ChipKind.MovementPoints, $"+{card.casterMovementGain} PM ce tour");
+        if (card.casterActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.casterActionGain} PA ce tour");
+        if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Defense, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));
         if (card.casterRetreat > 0) Effect("push", ChipKind.Move, "Tu recules de " + Cases(card.casterRetreat));
 
         // Carte sur soi avec une zone : « Zone : autour de toi, … » suffit
@@ -69,6 +69,7 @@ public static class CardRulesText
 
         if (card.damageSelf > 0) Warn("self", $"Contrecoup : tu subis {card.damageSelf}");
         if (card.casterArmorAmount < 0) Warn("armor", $"Contrecoup : ton armure {card.casterArmorAmount.ToString("+#;−#")}" + CasterTurns(card));
+        if (card.casterMovementLoss > 0) Warn("pm", $"Contrecoup : tu perds {card.casterMovementLoss} PM au prochain tour");
 
         if (!string.IsNullOrWhiteSpace(card.specialText))
             lines.Add("<i>Spécial :</i> " + card.specialText.Trim());

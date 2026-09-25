@@ -132,7 +132,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: barrier
+      name: magicresist
       rect:
         serializedVersion: 2
         x: 64
@@ -487,7 +487,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: a6b327f33f750f5459ecf696b75fbd00
     internalID: 0
     vertices: []
     indices: 
@@ -498,7 +498,6 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       armor: -5556603633244325958
-      barrier: 1325130045217690283
       bond: 4198063798290393336
       buff: 4523485957204160012
       dmg: -3286933388600849850
@@ -507,6 +506,7 @@ TextureImporter:
       heal: 3553399709606440032
       lock: 8464627282614862601
       magic: -2419890120036268456
+      magicresist: 1325130045217690283
       pa: -5266880177822794492
       pm: 8564363206179905556
       pull: -1121410199219561379

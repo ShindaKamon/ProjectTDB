@@ -10,26 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Bouclier_de_la_terreur
+  m_Name: Attaque_de_base
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: Bouclier de la terreur
-  description: Gagne un bouclier de 27 PV pendant 1 tour. Tu perds 1 PM au prochain
-    tour.
+  cardName: Attaque de base
+  description: "Inflige 10 d\xE9g\xE2ts \xE0 un ennemi \xE0 1-2 cases. Jou\xE9e quand
+    un contr\xF4le bloque l'action du monstre."
   specialText: 
   artwork: {fileID: 0}
-  emotionType: 5
+  emotionType: 0
   category: 0
   signatureOwner: {fileID: 0}
-  costPA: 2
+  costPA: 0
   costHP: 0
-  targetType: 1
-  targetRange: 1
+  targetType: 2
+  targetRange: 2
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 0
+  damageAmount: 10
   damageType: 0
   damageSelf: 0
   healAmount: 0
@@ -38,9 +38,9 @@ MonoBehaviour:
   atkIncreased: 0
   defenseAmount: 0
   reactiveShield: 0
-  armorAmount: 27
+  armorAmount: 0
   barrierAmount: 0
-  effectDuration: 1
+  effectDuration: 0
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 0
@@ -51,7 +51,7 @@ MonoBehaviour:
   casterMovementGain: 0
   casterActionGain: 0
   casterArmorAmount: 0
-  casterMovementLoss: 1
+  casterMovementLoss: 0
   drawAmount: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

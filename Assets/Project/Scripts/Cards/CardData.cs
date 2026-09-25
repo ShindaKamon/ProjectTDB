@@ -55,12 +55,12 @@ public enum EmotionType
 }
 
 /// <summary>
-/// Type de dégâts d'une carte : l'armure réduit les dégâts physiques, la barrière les magiques.
+/// Type de dégâts d'une carte : l'armure réduit les dégâts physiques, la résistance magique les magiques.
 /// </summary>
 public enum DamageType
 {
     Physical,   // Physique : réduit par l'armure
-    Magical     // Magique : réduit par la barrière
+    Magical     // Magique : réduit par la résistance magique
 }
 
 /// <summary>
@@ -167,7 +167,7 @@ public class CardData : ScriptableObject
     [Tooltip("Dégâts infligés à la cible")]
     public int damageAmount = 0;
 
-    [Tooltip("Physique : réduit par l'armure de la cible. Magique : réduit par sa barrière.")]
+    [Tooltip("Physique : réduit par l'armure de la cible. Magique : réduit par sa résistance magique.")]
     public DamageType damageType = DamageType.Physical;
 
     [Tooltip("Dégâts infligés au lanceur après l'effet (contrecoup)")]
@@ -200,10 +200,11 @@ public class CardData : ScriptableObject
     [Tooltip("Armure ajoutée à la cible (négatif = armure retirée) pendant effectDuration tours")]
     public int armorAmount = 0;
 
-    [Tooltip("Barrière ajoutée à la cible (négatif = barrière retirée) pendant effectDuration tours")]
-    public int barrierAmount = 0;
+    [Tooltip("Résistance magique ajoutée à la cible (négatif = résistance magique retirée) pendant effectDuration tours")]
+    [UnityEngine.Serialization.FormerlySerializedAs("barrierAmount")]
+    public int magicResistanceAmount = 0;
 
-    [Tooltip("Durée des modifications d'ATQ, d'armure et de barrière (cible et lanceur), en tours du lanceur : 1 = jusqu'au début de son prochain tour")]
+    [Tooltip("Durée des modifications d'ATQ, d'armure et de résistance magique (cible et lanceur), en tours du lanceur : 1 = jusqu'au début de son prochain tour")]
     public int effectDuration = 0;
 
     [Space(5)]
@@ -242,6 +243,9 @@ public class CardData : ScriptableObject
 
     [Tooltip("Armure du lanceur pendant effectDuration tours (négatif = vulnérabilité, ex: Communion joyeuse)")]
     public int casterArmorAmount = 0;
+
+    [Tooltip("PM perdus par le lanceur au début de son prochain tour (contrepartie « Perd 1 PM », ex: Bouclier de la terreur)")]
+    public int casterMovementLoss = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         8. GESTION DU DECK                                 ║
@@ -671,7 +675,7 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = unit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/barrière
+                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
                         unit.TakeDamage(unit.ReduceByDefense(totalUnitDamage, damageType));
                     int hpAfter = unit.GetHealth();
@@ -703,7 +707,7 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = targetUnit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/barrière
+                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
                         targetUnit.TakeDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType));
                     int hpAfter = targetUnit.GetHealth();
@@ -759,8 +763,8 @@ public class CardData : ScriptableObject
             }
         }
 
-        // 4. Gain de Stats (Force / Armure / Barrière / Bouclier)
-        if (finalAtk != 0 || finalDefense != 0 || armorAmount != 0 || barrierAmount != 0)
+        // 4. Gain de Stats (Force / Armure / Résistance magique / Bouclier)
+        if (finalAtk != 0 || finalDefense != 0 || armorAmount != 0 || magicResistanceAmount != 0)
         {
             // Zone : toutes les unités affectées (ex: Rugissement destructeur) ; sinon la cible
             // définie, ou le lanceur pour Self/None
@@ -771,8 +775,8 @@ public class CardData : ScriptableObject
             foreach (Unit statTarget in statTargets)
             {
                 // Applique les stats (nécessite la méthode ModifyStats sur Unit)
-                if (finalAtk != 0 || armorAmount != 0 || barrierAmount != 0)
-                    statTarget.ModifyStats(finalAtk, armorAmount, barrierAmount, effectDuration, source);
+                if (finalAtk != 0 || armorAmount != 0 || magicResistanceAmount != 0)
+                    statTarget.ModifyStats(finalAtk, armorAmount, magicResistanceAmount, effectDuration, source);
 
                 // Bouclier en PV (jusqu'au début du prochain tour du lanceur), ou bouclier
                 // réactif qui ne se déclenche qu'au premier coup ennemi (ex: Réflexe de survie)
@@ -846,12 +850,14 @@ public class CardData : ScriptableObject
         }
 
         // 8. Effets sur le lanceur, une fois par carte : gains de PM/PA, armure (vulnérabilité si
-        // négative), puis recul à l'opposé de la cible
+        // négative), perte de PM au prochain tour,
+        // puis recul à l'opposé de la cible
         if (!isAdditionalMultiTargetHit)
         {
             if (casterMovementGain > 0) source.GainMovement(casterMovementGain);
             if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain);
             if (casterArmorAmount != 0) source.ModifyStats(0, casterArmorAmount, 0, Mathf.Max(1, effectDuration), source);
+            if (casterMovementLoss > 0) ResourceDebuffManager.ApplyDebuff(source, 0, casterMovementLoss, source);
 
             if (casterRetreat > 0)
             {

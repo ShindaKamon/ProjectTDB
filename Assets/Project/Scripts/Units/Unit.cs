@@ -38,15 +38,15 @@ public class Unit : MonoBehaviour
     {
         public int atkModifier;
         public int armorModifier;
-        public int barrierModifier;
+        public int magicResistanceModifier;
         public int remainingTurns; // en tours du lanceur (voir TickEffectsOnTurnStartOf)
         public Unit source;        // lanceur ; null = compté en tours du porteur
 
-        public StatBuff(int atk, int armor, int barrier, int duration, Unit source)
+        public StatBuff(int atk, int armor, int magicResistance, int duration, Unit source)
         {
             atkModifier = atk;
             armorModifier = armor;
-            barrierModifier = barrier;
+            magicResistanceModifier = magicResistance;
             remainingTurns = duration;
             this.source = source;
         }
@@ -60,7 +60,7 @@ public class Unit : MonoBehaviour
     protected int _health;
     protected int _attackDamage;
     protected int _armor;   // Réduit les dégâts physiques reçus (valeur fixe, buffs compris)
-    protected int _barrier; // Réduit les dégâts magiques reçus (valeur fixe, buffs compris)
+    protected int _magicResistance; // Réduit les dégâts magiques reçus (valeur fixe, buffs compris)
     protected int _maxMovementPoints; // PM (Points de Mouvement) maximum
 
     // PM (Points de Mouvement) restants pour le tour actuel.
@@ -176,14 +176,14 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Initialise les stats de base de l'unité. Doit être appelée par les classes dérivées.
     /// </summary>
-    protected virtual void InitUnitStats(int maxHealth, int movementRange, int attackDamage = 0, int armor = 0, int barrier = 0)
+    protected virtual void InitUnitStats(int maxHealth, int movementRange, int attackDamage = 0, int armor = 0, int magicResistance = 0)
     {
         _maxHealth = maxHealth;
         _health = _maxHealth;
         _maxMovementPoints = movementRange;
         _attackDamage = attackDamage;
         _armor = armor;
-        _barrier = barrier;
+        _magicResistance = magicResistance;
     }
 
     // Méthode pour déplacer l'unité vers une tuile spécifique de la grille.
@@ -358,7 +358,7 @@ public class Unit : MonoBehaviour
 
     /// <summary>
     /// Inflige des dégâts qui ignorent le bouclier et les réductions en % (Paire de Raze).
-    /// L'armure et la barrière sont déjà déduites par l'appelant (voir ReduceByDefense).
+    /// L'armure et la résistance magique sont déjà déduites par l'appelant (voir ReduceByDefense).
     /// </summary>
     public void TakeRawDamage(int damage)
     {
@@ -441,20 +441,20 @@ public class Unit : MonoBehaviour
         }
     }
 
-    // ========== ARMURE / BARRIÈRE ==========
+    // ========== ARMURE / RÉSISTANCE MAGIQUE ==========
 
     public int GetArmor() => _armor;
-    public int GetBarrier() => _barrier;
+    public int GetMagicResistance() => _magicResistance;
 
     /// <summary>
-    /// Dégâts restants après l'armure (physique) ou la barrière (magique) : soustraction fixe,
+    /// Dégâts restants après l'armure (physique) ou la résistance magique (magique) : soustraction fixe,
     /// minimum 1 si le coup fait des dégâts. Une valeur négative (débuff) augmente les dégâts.
     /// </summary>
     public int ReduceByDefense(int damage, DamageType type)
     {
         if (damage <= 0) return damage;
 
-        int defense = type == DamageType.Magical ? _barrier : _armor;
+        int defense = type == DamageType.Magical ? _magicResistance : _armor;
         return Mathf.Max(1, damage - defense);
     }
 
@@ -740,26 +740,26 @@ public class Unit : MonoBehaviour
     // ont été déplacées vers les classes Champion et Enemy
 
     /// <summary>
-    /// Modifie les stats de l'unité (ATK, armure, barrière).
+    /// Modifie les stats de l'unité (ATK, armure, résistance magique).
     /// Si duration > 0, crée un buff temporaire qui dure `duration` tours du lanceur (source) :
     /// « 1 tour » = jusqu'au début du prochain tour du lanceur. Si duration == 0, c'est permanent.
     /// </summary>
-    public virtual void ModifyStats(int atk, int armor, int barrier, int duration, Unit source = null)
+    public virtual void ModifyStats(int atk, int armor, int magicResistance, int duration, Unit source = null)
     {
         // Applique immédiatement les modifications
         _attackDamage += atk;
         _armor += armor;
-        _barrier += barrier;
+        _magicResistance += magicResistance;
 
         // Si duration > 0, enregistre le buff pour le retirer plus tard
-        if (duration > 0 && (atk != 0 || armor != 0 || barrier != 0))
+        if (duration > 0 && (atk != 0 || armor != 0 || magicResistance != 0))
         {
-            _activeBuffs.Add(new StatBuff(atk, armor, barrier, duration, source));
-            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, armure: {armor}, barrière: {barrier} pour {duration} tour(s) de {source?.name ?? name}");
+            _activeBuffs.Add(new StatBuff(atk, armor, magicResistance, duration, source));
+            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, armure: {armor}, résistance magique: {magicResistance} pour {duration} tour(s) de {source?.name ?? name}");
         }
-        else if (atk != 0 || armor != 0 || barrier != 0)
+        else if (atk != 0 || armor != 0 || magicResistance != 0)
         {
-            GameLog.Log($"{name}: stats modifiées de façon permanente - ATK {_attackDamage}, armure {_armor}, barrière {_barrier}");
+            GameLog.Log($"{name}: stats modifiées de façon permanente - ATK {_attackDamage}, armure {_armor}, résistance magique {_magicResistance}");
         }
 
         OnStatsModified?.Invoke();
@@ -808,9 +808,9 @@ public class Unit : MonoBehaviour
                 // Retire les effets du buff
                 _attackDamage -= buff.atkModifier;
                 _armor -= buff.armorModifier;
-                _barrier -= buff.barrierModifier;
+                _magicResistance -= buff.magicResistanceModifier;
 
-                GameLog.Log($"{name}: Buff expiré - ATK {-buff.atkModifier:+#;-#;0}, armure {-buff.armorModifier:+#;-#;0}, barrière {-buff.barrierModifier:+#;-#;0}");
+                GameLog.Log($"{name}: Buff expiré - ATK {-buff.atkModifier:+#;-#;0}, armure {-buff.armorModifier:+#;-#;0}, résistance magique {-buff.magicResistanceModifier:+#;-#;0}");
                 _activeBuffs.RemoveAt(i);
                 statsChanged = true;
             }

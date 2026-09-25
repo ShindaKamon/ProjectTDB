@@ -23,11 +23,15 @@ public class EnemyData : ScriptableObject
     public int maxActionPoints = 2;            // PA (Points d'Action) maximum
     public int attackDamage = 5;               // ATK (Attaque) - dégâts de base
     public int armor = 0;                      // Armure : réduit les dégâts physiques reçus (soustraction fixe)
-    public int barrier = 0;                    // Barrière : réduit les dégâts magiques reçus (soustraction fixe)
+    [UnityEngine.Serialization.FormerlySerializedAs("barrier")]
+    public int magicResistance = 0;            // Résistance magique : réduit les dégâts magiques reçus (soustraction fixe)
 
     [Header("Deck Pattern")]
     [Tooltip("Le deck définit le pattern de combat de l'ennemi. Les cartes sont jouées dans l'ordre (pas de mélange).")]
     public List<CardData> combatDeck = new List<CardData>();
+
+    [Tooltip("Attaque de base (0 PA), jouée à la place de la carte prévue quand un contrôle (retrait de PA/PM) l'empêche de la jouer : règle anti-lock")]
+    public CardData basicAttack;
 
     [Header("Visual Settings")]
     public Vector3 healthBarOffset = new Vector3(0, 2f, 0);

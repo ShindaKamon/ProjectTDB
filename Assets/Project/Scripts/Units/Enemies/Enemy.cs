@@ -96,7 +96,7 @@ public class Enemy : Unit, IActionPointsUser
         _enemyData = data;
 
         // Initialise les stats de base via la classe Unit (HP, PM, ATK)
-        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.barrier);
+        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.magicResistance);
 
         // Initialise le component PA depuis EnemyData
         _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{gameObject.name} (Enemy)");

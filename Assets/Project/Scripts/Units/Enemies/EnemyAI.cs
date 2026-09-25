@@ -31,11 +31,10 @@ public class EnemyAI : MonoBehaviour
     {
         GameLog.Log($"=== {_enemyUnit.name} (Ennemi) prend son tour ===");
 
-        // PHASE 0: Rafraîchit les PA au début du tour
-        if (_enemy != null)
-        {
-            _enemy.RefreshPA(); // Rafraîchit les PA au début du tour
-        }
+        // PHASE 0 : les PA ont été remis à niveau par GridManager, puis les retraits appliqués.
+        // Contrôlé = a perdu des PA ou des PM ce tour (règle anti-lock, voir TryBasicAttack)
+        bool controlled = _enemy != null
+            && (_enemy.GetCurrentPA() < _enemy.GetMaxPA() || _enemyUnit.GetCurrentMovementPoints() < _enemyUnit.GetMaxMovementPoints());
 
         // 1. Trouver le joueur le plus proche
         List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
@@ -117,6 +116,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         // 3. PHASE CARTES: Tente de jouer une carte APRÈS le déplacement (si Enemy avec cartes)
+        bool cardPlayed = false;
         if (_enemy != null)
         {
             CardData nextCard = _enemy.GetNextCard();
@@ -140,6 +140,7 @@ public class EnemyAI : MonoBehaviour
 
                         // Exécute l'effet de la carte
                         yield return StartCoroutine(ExecuteEnemyCard(playedCard));
+                        cardPlayed = true;
                     }
                 }
                 else
@@ -153,8 +154,38 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // 4. Fin du tour (plus d'attaque de base, tout passe par les cartes)
+        // 4. Règle anti-lock : bloqué par un contrôle (PA ou PM retirés), le monstre fait son
+        // attaque de base (0 PA) ; sa carte prévue reste pour le prochain tour
+        if (!cardPlayed && controlled)
+        {
+            yield return StartCoroutine(TryBasicAttack());
+        }
+
+        // 5. Fin du tour
         EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
+    }
+
+    /// <summary>
+    /// Joue l'attaque de base du monstre (EnemyData.basicAttack) : gratuite, insensible au contrôle,
+    /// sans avancer son pattern de cartes. Rien si elle n'est pas définie ou sans cible à portée.
+    /// </summary>
+    private IEnumerator TryBasicAttack()
+    {
+        CardData basicAttack = _enemy.GetEnemyData()?.basicAttack;
+        if (basicAttack == null)
+        {
+            GameLog.LogWarning($"{_enemy.name}: bloqué par un contrôle mais aucune attaque de base définie (EnemyData.basicAttack)");
+            yield break;
+        }
+
+        if (!CanPlayCard(basicAttack))
+        {
+            GameLog.Log($"{_enemy.name}: attaque de base impossible (pas de cible à portée)");
+            yield break;
+        }
+
+        GameLog.Log($"{_enemy.name} est bloqué par un contrôle : attaque de base ({basicAttack.cardName})");
+        yield return StartCoroutine(ExecuteEnemyCard(basicAttack));
     }
 
     // Calcule un chemin complet vers la cible en utilisant tous les points de mouvement disponibles

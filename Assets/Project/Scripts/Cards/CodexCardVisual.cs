@@ -20,7 +20,10 @@ public enum ChipKind
     Move,
     Push,
     Mute,
-    Warn
+    Warn,
+    Defense,         // Armure et résistance magique (gris)
+    ActionPoints,    // PA (bleu)
+    MovementPoints   // PM (vert)
 }
 
 /// <summary>Pastille d'effet : icône (nom d'icône du codex), texte, famille de couleur.</summary>
@@ -123,6 +126,9 @@ public static class CodexCardVisual
         ChipKind.Move => Hex("#e3b154"),
         ChipKind.Push => Hex("#b59cf5"),
         ChipKind.Warn => Hex("#e3b154"),
+        ChipKind.Defense => Hex("#b8b8c4"),
+        ChipKind.ActionPoints => Hex("#5b8def"),
+        ChipKind.MovementPoints => Hex("#9be15d"),
         _ => Hex("#9c97b5"),
     };
 
@@ -235,8 +241,8 @@ public static class CodexCardVisual
     // ===== Pastilles d'effets =====
 
     /// <summary>
-    /// Pastilles des stats d'une unité, affichées sous la barre de vie du boss : PM et PA (toujours,
-    /// pour voir les retraits), puis attaque, armure, barrière et bouclier s'ils sont non nuls.
+    /// Pastilles des stats d'une unité, affichées sous la barre de vie du boss : ATQ, armure, résistance
+    /// magique et bouclier s'ils sont non nuls, puis PA et PM (toujours, pour voir les retraits).
     /// PM/PA : ce qui reste pendant son tour ; hors de son tour, ce qu'elle aura à son prochain tour
     /// (maximum moins les retraits en attente).
     /// </summary>
@@ -248,18 +254,24 @@ public static class CodexCardVisual
         bool acting = Services.IsGridServiceAvailable() && Services.Grid.GetActiveUnit() == unit;
         var pending = ResourceDebuffManager.GetPending(unit);
 
-        int pm = acting ? unit.GetCurrentMovementPoints() : Mathf.Max(0, unit.GetMaxMovementPoints() - pending.pm);
-        chips.Add(new CardChip("pm", pm.ToString(), ChipKind.Move));
+        // Ordre : ATQ, armure (DEFP), résistance magique (DEFM), bouclier, PA, PM, Ténacité
+        if (unit.GetAttack() != 0) chips.Add(new CardChip("dmg", unit.GetAttack().ToString(), ChipKind.Damage));
+        if (unit.GetArmor() != 0) chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Defense));
+        if (unit.GetMagicResistance() != 0) chips.Add(new CardChip("magicresist", unit.GetMagicResistance().ToString(), ChipKind.Defense));
+        if (unit.GetShield() > 0) chips.Add(new CardChip("shield", unit.GetShield().ToString(), ChipKind.Shield));
+
         if (unit is IActionPointsUser paUser)
         {
             int pa = acting ? paUser.GetCurrentPA() : Mathf.Max(0, paUser.GetMaxPA() - pending.pa);
-            chips.Add(new CardChip("pa", pa.ToString(), ChipKind.Move));
+            chips.Add(new CardChip("pa", pa.ToString(), ChipKind.ActionPoints));
         }
-        if (unit.GetAttack() != 0) chips.Add(new CardChip("dmg", unit.GetAttack().ToString(), ChipKind.Damage));
+        int pm = acting ? unit.GetCurrentMovementPoints() : Mathf.Max(0, unit.GetMaxMovementPoints() - pending.pm);
+        chips.Add(new CardChip("pm", pm.ToString(), ChipKind.MovementPoints));
 
-        if (unit.GetArmor() != 0) chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Shield));
-        if (unit.GetBarrier() != 0) chips.Add(new CardChip("barrier", unit.GetBarrier().ToString(), ChipKind.Shield));
-        if (unit.GetShield() > 0) chips.Add(new CardChip("shield", unit.GetShield().ToString(), ChipKind.Shield));
+        if (ResourceDebuffManager.IsPmImmune(unit))
+        {
+            chips.Add(new CardChip("lock", "tenace", ChipKind.Mute)); // Ténacité : retraits de PM ignorés à son prochain tour
+        }
         return chips;
     }
 
@@ -272,14 +284,14 @@ public static class CodexCardVisual
         if (champion == null) return chips;
 
         chips.Add(new CardChip("heal", champion.maxHealth.ToString(), ChipKind.Heal));
-        chips.Add(new CardChip("pm", champion.movementRange.ToString(), ChipKind.Move));
-        chips.Add(new CardChip("pa", champion.maxActionPoints.ToString(), ChipKind.Move));
+        chips.Add(new CardChip("pm", champion.movementRange.ToString(), ChipKind.MovementPoints));
+        chips.Add(new CardChip("pa", champion.maxActionPoints.ToString(), ChipKind.ActionPoints));
         return chips;
     }
 
     /// <summary>
     /// Pastilles de combat de la fiche d'un champion (écran de sélection) : attaque, armure,
-    /// barrière, valeurs nulles comprises.
+    /// résistance magique, valeurs nulles comprises.
     /// </summary>
     public static List<CardChip> ChampionChips(ChampionData champion)
     {
@@ -287,8 +299,8 @@ public static class CodexCardVisual
         if (champion == null) return chips;
 
         chips.Add(new CardChip("dmg", champion.attackDamage.ToString(), ChipKind.Damage));
-        chips.Add(new CardChip("armor", champion.armor.ToString(), ChipKind.Shield));
-        chips.Add(new CardChip("barrier", champion.barrier.ToString(), ChipKind.Shield));
+        chips.Add(new CardChip("armor", champion.armor.ToString(), ChipKind.Defense));
+        chips.Add(new CardChip("magicresist", champion.magicResistance.ToString(), ChipKind.Defense));
         return chips;
     }
 

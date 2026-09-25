@@ -24,7 +24,8 @@ public class ChampionData : ScriptableObject
     public int maxActionPoints = 5;            // PA (Points d'Action) maximum
     public int attackDamage = 10;              // ATK (Attaque) - degats de base
     public int armor = 0;                      // Armure : réduit les dégâts physiques reçus (soustraction fixe)
-    public int barrier = 0;                    // Barrière : réduit les dégâts magiques reçus (soustraction fixe)
+    [UnityEngine.Serialization.FormerlySerializedAs("barrier")]
+    public int magicResistance = 0;            // Résistance magique : réduit les dégâts magiques reçus (soustraction fixe)
 
     [Header("Deck de Depart")]
     public List<CardData> startingDeck = new List<CardData>();

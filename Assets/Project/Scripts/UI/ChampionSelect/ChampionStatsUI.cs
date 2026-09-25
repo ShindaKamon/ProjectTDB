@@ -17,7 +17,7 @@ public class ChampionStatsUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _championTitleText;
     [SerializeField] private TextMeshProUGUI _familyText;
 
-    [Header("Pastilles PV / PM / PA et ATQ / armure / barrière (icônes du codex)")]
+    [Header("Pastilles PV / PM / PA et ATQ / armure / résistance magique (icônes du codex)")]
     [SerializeField] private Transform _resourceChipsContainer;
     [SerializeField] private Transform _statChipsContainer;
     [SerializeField] private Sprite _chipBackground;
@@ -65,7 +65,7 @@ public class ChampionStatsUI : MonoBehaviour
         if (_familyText != null)
             _familyText.text = CodexCardVisual.EmotionName(champion.emotionType);
 
-        // Stats en pastilles : PV / PM / PA, puis ATQ / armure / barrière
+        // Stats en pastilles : PV / PM / PA, puis ATQ / armure / résistance magique
         TMPro.TMP_FontAsset chipFont = _championNameText != null ? _championNameText.font : null;
         CardChipsView.Build(_resourceChipsContainer, CodexCardVisual.ChampionResourceChips(champion), _chipBackground, chipFont, 28f, 32f);
         CardChipsView.Build(_statChipsContainer, CodexCardVisual.ChampionChips(champion), _chipBackground,

@@ -345,12 +345,12 @@ public class GridManager : MonoBehaviour, IGridService
         _activeUnit.RefreshMovement();
         GameLog.Log($"{_activeUnit.name} : PM rafraîchis ({_activeUnit.GetCurrentMovementPoints()}/{_activeUnit.GetMaxMovementPoints()})");
 
-        // Si c'est un Champion, rafraîchit aussi les PA
-        Champion champion = _activeUnit as Champion;
-        if (champion != null)
+        // Rafraîchit les PA de toute unité qui en a (champions et monstres), avant les retraits de
+        // PA/PM appliqués ensuite dans HandleTurnStart
+        if (_activeUnit is IActionPointsUser paUser)
         {
-            champion.RefreshPA();
-            GameLog.Log($"{champion.name} : PA rafraîchis ({champion.GetCurrentPA()}/{champion.GetMaxPA()})");
+            paUser.RefreshPA();
+            GameLog.Log($"{_activeUnit.name} : PA rafraîchis ({paUser.GetCurrentPA()}/{paUser.GetMaxPA()})");
         }
 
         // Pioche une carte si l'unité a un DeckManager (unités joueur uniquement)

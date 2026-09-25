@@ -48,6 +48,27 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void CasterMovementLoss_AppliesAtCastersNextTurn()
+        {
+            // Bouclier de la terreur : bouclier tout de suite, 1 PM de moins au prochain tour du lanceur
+            Unit caster = NewUnit(4);
+            caster.SetMaxHealth(100);
+            var card = ScriptableObject.CreateInstance<CardData>();
+            card.targetType = CardTargetType.Self;
+            card.defenseAmount = 27;
+            card.casterMovementLoss = 1;
+
+            card.ExecuteEffect(caster, caster);
+            Object.DestroyImmediate(card);
+            Assert.AreEqual(27, caster.GetShield());
+            Assert.AreEqual(4, caster.GetCurrentMovementPoints(), "Rien ce tour-ci");
+
+            caster.RefreshMovement();
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(caster);
+            Assert.AreEqual(3, caster.GetCurrentMovementPoints());
+        }
+
+        [Test]
         public void RemoveAllMovement_EmptiesPm()
         {
             Unit unit = NewUnit(4);
@@ -56,6 +77,47 @@ namespace ProjectTDB.Tests
             ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);
 
             Assert.AreEqual(0, unit.GetCurrentMovementPoints());
+        }
+
+        [Test]
+        public void Tenacity_MonsterIgnoresPmRemovalTheTurnAfterLosingAll()
+        {
+            var go = new GameObject("TestEnemy");
+            _createdGameObjects.Add(go);
+            Enemy monster = go.AddComponent<Enemy>();
+            monster.SetMaxMovementPoints(3);
+            monster.RefreshMovement();
+
+            // Tour 1 : perte totale -> devient tenace
+            ResourceDebuffManager.ApplyDebuff(monster, 0, int.MaxValue, null);
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(monster);
+            Assert.AreEqual(0, monster.GetCurrentMovementPoints());
+            Assert.IsTrue(ResourceDebuffManager.IsPmImmune(monster));
+
+            // Tour 2 : le nouveau retrait est ignoré, la Ténacité s'arrête
+            monster.RefreshMovement();
+            ResourceDebuffManager.ApplyDebuff(monster, 0, int.MaxValue, null);
+            Assert.AreEqual(0, ResourceDebuffManager.GetPending(monster).pm, "Affichage : le retrait ne compte pas");
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(monster);
+            Assert.AreEqual(3, monster.GetCurrentMovementPoints());
+            Assert.IsFalse(ResourceDebuffManager.IsPmImmune(monster));
+
+            // Tour 3 : de nouveau vulnérable
+            monster.RefreshMovement();
+            ResourceDebuffManager.ApplyDebuff(monster, 0, 1, null);
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(monster);
+            Assert.AreEqual(2, monster.GetCurrentMovementPoints());
+        }
+
+        [Test]
+        public void Tenacity_DoesNotApplyToChampions()
+        {
+            Unit champion = NewUnit(4); // faction Joueur
+
+            ResourceDebuffManager.ApplyDebuff(champion, 0, int.MaxValue, null);
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(champion);
+
+            Assert.IsFalse(ResourceDebuffManager.IsPmImmune(champion));
         }
 
         [Test]

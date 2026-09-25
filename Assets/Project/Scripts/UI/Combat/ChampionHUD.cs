@@ -205,8 +205,8 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_defText != null && _champion != null)
         {
-            // Armure (physique) / barrière (magique), buffs compris
-            _defText.text = $"ARM : {_champion.GetArmor()}  BAR : {_champion.GetBarrier()}";
+            // Armure (physique) / résistance magique (magique), buffs compris
+            _defText.text = $"ARM : {_champion.GetArmor()}  RM : {_champion.GetMagicResistance()}";
         }
     }
 }

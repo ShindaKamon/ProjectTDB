@@ -35,7 +35,7 @@ namespace ProjectTDB.Tests
         {
             var all = new AllDecksData();
             var old = new ChampionDecksData(oldName);
-            old.decks.Add(new DeckData("Mon deck", EmotionType.Colere, EmotionType.None, new System.Collections.Generic.List<string> { "Coup de colère" }));
+            old.decks.Add(new DeckData("Mon deck", EmotionType.Anger, EmotionType.None, new System.Collections.Generic.List<string> { "Coup de colère" }));
             all.SetChampionDecks(old);
 
             var migrated = DeckSaveManager.MigrateRenamedChampion(all, newName);

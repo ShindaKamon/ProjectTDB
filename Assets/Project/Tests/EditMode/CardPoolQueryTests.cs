@@ -49,9 +49,9 @@ namespace ProjectTDB.Tests
         {
             var pool = new[]
             {
-                NewCard("Brasier", 2, EmotionType.Colere),
-                NewCard("Accroche", 2, EmotionType.Peur),
-                NewCard("Éclat", 1, EmotionType.Joie),
+                NewCard("Brasier", 2, EmotionType.Anger),
+                NewCard("Accroche", 2, EmotionType.Fear),
+                NewCard("Éclat", 1, EmotionType.Joy),
             };
 
             var result = new CardPoolQuery().Apply(pool, null);
@@ -82,9 +82,9 @@ namespace ProjectTDB.Tests
             var champion = NewChampion();
             var pool = new[]
             {
-                NewCard("Rouge", 1, EmotionType.Colere),
-                NewCard("Vert", 1, EmotionType.Peur),
-                NewCard("Jaune", 1, EmotionType.Joie),
+                NewCard("Rouge", 1, EmotionType.Anger),
+                NewCard("Vert", 1, EmotionType.Fear),
+                NewCard("Jaune", 1, EmotionType.Joy),
                 NewCard("Sig", 1, EmotionType.None, CardCategory.Signature, champion),
             };
 
@@ -99,13 +99,13 @@ namespace ProjectTDB.Tests
             var champion = NewChampion();
             var pool = new[]
             {
-                NewCard("Rouge", 1, EmotionType.Colere),
-                NewCard("Vert", 1, EmotionType.Peur),
-                NewCard("Jaune", 1, EmotionType.Joie),
+                NewCard("Rouge", 1, EmotionType.Anger),
+                NewCard("Vert", 1, EmotionType.Fear),
+                NewCard("Jaune", 1, EmotionType.Joy),
                 NewCard("Sig", 1, EmotionType.None, CardCategory.Signature, champion),
             };
 
-            var result = new CardPoolQuery().Apply(pool, champion, new List<EmotionType> { EmotionType.Colere, EmotionType.Joie });
+            var result = new CardPoolQuery().Apply(pool, champion, new List<EmotionType> { EmotionType.Anger, EmotionType.Joy });
 
             CollectionAssert.AreEquivalent(new[] { "Rouge", "Jaune", "Sig" }, Names(result));
         }
@@ -115,13 +115,13 @@ namespace ProjectTDB.Tests
         {
             var pool = new[]
             {
-                NewCard("Rouge", 1, EmotionType.Colere),
-                NewCard("Vert", 1, EmotionType.Peur),
-                NewCard("Jaune", 1, EmotionType.Joie),
+                NewCard("Rouge", 1, EmotionType.Anger),
+                NewCard("Vert", 1, EmotionType.Fear),
+                NewCard("Jaune", 1, EmotionType.Joy),
             };
             var query = new CardPoolQuery();
-            query.Emotions.Add(EmotionType.Colere);
-            query.Emotions.Add(EmotionType.Joie);
+            query.Emotions.Add(EmotionType.Anger);
+            query.Emotions.Add(EmotionType.Joy);
 
             var result = query.Apply(pool, null);
 
@@ -134,7 +134,7 @@ namespace ProjectTDB.Tests
             var champion = NewChampion();
             var pool = new[]
             {
-                NewCard("Std", 1, EmotionType.Colere),
+                NewCard("Std", 1, EmotionType.Anger),
                 NewCard("Sig", 1, EmotionType.None, CardCategory.Signature, champion),
             };
             var query = new CardPoolQuery();
@@ -148,10 +148,10 @@ namespace ProjectTDB.Tests
         {
             var pool = new[]
             {
-                NewCard("Zero", 0, EmotionType.Joie),
-                NewCard("Un", 1, EmotionType.Joie),
-                NewCard("Deux", 2, EmotionType.Joie),
-                NewCard("Trois", 3, EmotionType.Joie),
+                NewCard("Zero", 0, EmotionType.Joy),
+                NewCard("Un", 1, EmotionType.Joy),
+                NewCard("Deux", 2, EmotionType.Joy),
+                NewCard("Trois", 3, EmotionType.Joy),
             };
             var query = new CardPoolQuery { MinCost = 1, MaxCost = 2 };
 
@@ -163,9 +163,9 @@ namespace ProjectTDB.Tests
         {
             var pool = new[]
             {
-                NewCard("Élan de Colère", 1, EmotionType.Colere),
-                NewCard("Frisson", 1, EmotionType.Peur, description: "Inflige des dégâts."),
-                NewCard("Rire", 1, EmotionType.Joie, description: "Soigne un allié."),
+                NewCard("Élan de Colère", 1, EmotionType.Anger),
+                NewCard("Frisson", 1, EmotionType.Fear, description: "Inflige des dégâts."),
+                NewCard("Rire", 1, EmotionType.Joy, description: "Soigne un allié."),
             };
 
             var byName = new CardPoolQuery { Search = "COLERE" }.Apply(pool, null);
@@ -180,9 +180,9 @@ namespace ProjectTDB.Tests
         {
             var pool = new[]
             {
-                NewCard("Bravade", 1, EmotionType.Colere),
-                NewCard("Assaut", 1, EmotionType.Colere),
-                NewCard("Cri", 3, EmotionType.Colere),
+                NewCard("Bravade", 1, EmotionType.Anger),
+                NewCard("Assaut", 1, EmotionType.Anger),
+                NewCard("Cri", 3, EmotionType.Anger),
             };
             var query = new CardPoolQuery { SortKey = CardSortKey.Cost, Descending = true };
 
@@ -195,9 +195,9 @@ namespace ProjectTDB.Tests
         {
             var pool = new[]
             {
-                NewCard("Peur2", 2, EmotionType.Peur),
-                NewCard("Colere3", 3, EmotionType.Colere),
-                NewCard("Colere1", 1, EmotionType.Colere),
+                NewCard("Peur2", 2, EmotionType.Fear),
+                NewCard("Colere3", 3, EmotionType.Anger),
+                NewCard("Colere1", 1, EmotionType.Anger),
             };
             var query = new CardPoolQuery { SortKey = CardSortKey.Emotion };
 
@@ -212,7 +212,7 @@ namespace ProjectTDB.Tests
                 MinCost = 2, MaxCost = 3, Search = "x",
                 SortKey = CardSortKey.Name, Descending = true,
             };
-            query.Emotions.Add(EmotionType.Joie);
+            query.Emotions.Add(EmotionType.Joy);
             query.Categories.Add(CardCategory.Standard);
 
             Assert.IsTrue(query.HasActiveFilters);
@@ -243,15 +243,15 @@ namespace ProjectTDB.Tests
         [Test]
         public void Apply_DamageTypeFilter_KeepsOnlyDamagingCardsOfThatType()
         {
-            var physical = NewCard("Coup", 1, EmotionType.Colere);
+            var physical = NewCard("Coup", 1, EmotionType.Anger);
             physical.damageAmount = 10;
-            var magical = NewCard("Sort", 1, EmotionType.Peur);
+            var magical = NewCard("Sort", 1, EmotionType.Fear);
             magical.damageAmount = 10;
-            magical.damageType = DamageType.Magique;
-            var heal = NewCard("Soin", 1, EmotionType.Joie); // pas de dégâts : écartée par le filtre
+            magical.damageType = DamageType.Magical;
+            var heal = NewCard("Soin", 1, EmotionType.Joy); // pas de dégâts : écartée par le filtre
 
             var query = new CardPoolQuery();
-            query.DamageTypes.Add(DamageType.Magique);
+            query.DamageTypes.Add(DamageType.Magical);
 
             Assert.AreEqual(new[] { "Sort" }, Names(query.Apply(new[] { physical, magical, heal }, null)));
             Assert.IsTrue(query.HasActiveFilters);
@@ -267,7 +267,7 @@ namespace ProjectTDB.Tests
 
             Assert.IsEmpty(query.Apply(null, null));
             Assert.AreEqual(new[] { "A" },
-                Names(query.Apply(new[] { null, NewCard("A", 1, EmotionType.Joie) }, null)));
+                Names(query.Apply(new[] { null, NewCard("A", 1, EmotionType.Joy) }, null)));
         }
     }
 }

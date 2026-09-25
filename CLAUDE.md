@@ -16,7 +16,7 @@ Le reste de ce fichier couvre uniquement le côté technique.
 - Unity **6000.4.0f1** (`ProjectSettings/ProjectVersion.txt`), URP 17.3, uGUI + TextMeshPro, Input System, Test Framework 1.6.
 - Tout le code du jeu est sous `Assets/Project/` ; `Assets/ThirdParty/` et `Assets/TextMesh Pro/` sont des assets importés à ne pas modifier.
 - **Scripts rangés par domaine** : `Core/` (infrastructure seulement), `Grid/`, `Combat/` (tours, retraits de PA/PM), `Cards/`, `Deck/` (construction et sauvegarde), `Units/` (+ `Champions/`, `Enemies/`, `Summons/`), `Validation/` (`GameActionValidator`), `Input/` (`InputManager` : clics/survol → sélection de carte, tuile, cible), `UI/` (`Combat/`, `ChampionSelect/`, `Cards/`, `DeckEditor/`, `Common/`). Un nouveau script va dans le dossier de son domaine, pas dans `Core/`.
-- Code et commentaires en français ; classes dans le namespace global (pas de `namespace` malgré le `rootNamespace` de l'asmdef).
+- **Langues** : noms du code (classes, méthodes, champs, variables, valeurs d'enum) **en anglais** ; commentaires, messages de log et libellés d'Inspector (`Tooltip`/`Header`) **en français** ; texte en jeu **en français**, jamais tiré d'un nom d'enum (passer par les noms d'affichage `CodexCardVisual.EmotionName` / `CategoryName` / `DamageTypeName`). Classes dans le namespace global (pas de `namespace` malgré le `rootNamespace` de l'asmdef).
 - Assemblies : `ProjectTDB` (runtime, `Assets/Project/Scripts`), `ProjectTDB.Editor` (`Scripts/Editor`), `ProjectTDB.Tests.EditMode` (`Assets/Project/Tests/EditMode`, NUnit).
 - Les fichiers `.csproj`/`.sln*` à la racine sont générés par Unity — ne pas les éditer.
 - Tout asset créé/déplacé doit garder son `.meta` (les GUID sont référencés par les scènes, prefabs et ScriptableObjects).
@@ -79,13 +79,31 @@ Sinon : Window > General > Test Runner dans l'éditeur.
 - États transverses gérés par des classes statiques plutôt que par les unités : `ResourceDebuffManager` (retraits de PA/PM appliqués au début du prochain tour de la cible, sans cumul : le plus fort l'emporte). Les enums sérialisés dans les assets (`DamageType`, `CardTargetType`, `CardAreaEffect`, `FilterChipKind`…) : ajouter les nouvelles valeurs à la fin, ne jamais renuméroter.
 
 ### Cartes
-- `CardData` (ScriptableObject, `Cards/CardData.cs`, gros fichier) est **data-driven** : dégâts, ciblage (`CardTargetType`, `CardAreaEffect`), type de dégâts (`DamageType`), poussée/tirage, charge, catégorie de slot (`CardCategory` : Signature / Standard / Eveil). La résolution passe par `CardData.ExecuteEffect(source, target, tile, isAdditionalMultiTargetHit)`, appelée par `HandUIController` (joueur) et `EnemyAI`. Une nouvelle carte = en général un nouvel asset, pas une nouvelle classe ; ajouter un champ/enum seulement si l'effet n'est pas exprimable.
+- `CardData` (ScriptableObject, `Cards/CardData.cs`, gros fichier) est **data-driven** : dégâts, ciblage (`CardTargetType`, `CardAreaEffect`), type de dégâts (`DamageType`), poussée/tirage, charge, catégorie de slot (`CardCategory` : Signature / Standard / Awakening = Éveil). La résolution passe par `CardData.ExecuteEffect(source, target, tile, isAdditionalMultiTargetHit)`, appelée par `HandUIController` (joueur) et `EnemyAI`. Une nouvelle carte = en général un nouvel asset, pas une nouvelle classe ; ajouter un champ/enum seulement si l'effet n'est pas exprimable.
 - `DeckManager` (sur l'unité) gère pioche/main/défausse et les coûts effectifs (`GetEffectiveCost`, overrides de coût).
 - `GameActionValidator` (statique, retourne `ValidationResult`) centralise la validation « peut-on jouer cette carte / se déplacer / cibler » — y ajouter les nouvelles règles plutôt que de disperser les checks dans l'UI. C'est aussi la partie la plus couverte par les tests.
 - Même principe pour la construction de deck : `DeckRules` (statique, C# pur, `Deck/`) porte les règles (couleurs du deck, Signatures, exemplaires max) ; les emplacements par catégorie sont `DeckData.SIGNATURE_SLOTS` / `STANDARD_SLOTS`.
 
+### Revue des cartes Joie / Peur (25/09/2026)
+Points relevés par l'auteur ; le détail des règles fait foi dans « Décisions actées » de `GDD_Main.md` et le tableau des statuts de `Combat_System.md`.
+
+| Point | Statut |
+|---|---|
+| Communion joyeuse : subit plus de dégâts (baisse d'armure) | ✅ `casterArmorAmount = -5` (vulnérabilité du lanceur, 1 tour) — valeur à équilibrer |
+| Éclat de joie | ✅ `damageAroundTarget = 10` : tous les ennemis au contact de l'allié soigné |
+| Euphorie aveuglante | ✅ `casterArmorAmount = -5` |
+| PA + durée | ✅ Durées en tours du lanceur (`Unit.TickEffectsOnTurnStartOf`) ; ⚠️ Aura de terreur n'a toujours aucun retrait de PA |
+| PM et PA visibles sur les boss | ✅ Pastilles sous la barre du boss (restants pendant son tour, sinon ceux de son prochain tour) |
+| Fuite panique : recul | ✅ `casterRetreat = 2` |
+| Onde de terreur : poussée sur tous les ennemis | ✅ Une carte à zone pousse toutes les unités touchées |
+| Piège et recul : gain de PM et de PA | ✅ `casterMovementGain` / `casterActionGain` (+2 PM sur la carte) |
+| Réflexe de survie : bouclier si touché | ✅ `reactiveShield` : le 1er coup ennemi déclenche le bouclier, qui l'absorbe |
+| Terreur paralysante : retirer tous les PM | ✅ `removeAllMovement` |
+| Vertige : s'applique à tous (PM) | ✅ Déjà le cas (retrait de PM sur toute la zone) |
+| Voile d'ombre : bouclier constant | ⚠️ Donne +11 d'armure **permanente, cumulable** à chaque lancer — à confirmer |
+
 ### Données
-ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, `CardCollection`). Les decks sauvegardés sont rangés **par nom de champion** et référencent les cartes **par nom** : renommer un champion (`championName`) ou une carte (`cardName`) exige d'ajouter l'ancien nom dans `RenamedChampions` / `RenamedCards` de `DeckSaveManager`, sinon les decks existants perdent le champion ou la carte.
+ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, `CardCollection`). Les decks sauvegardés sont rangés **par nom de champion** et référencent les cartes **par nom** : renommer un champion (`championName`) ou une carte (`cardName`) exige d'ajouter l'ancien nom dans `RenamedChampions` / `RenamedCards` de `DeckSaveManager`, sinon les decks existants perdent le champion ou la carte. Même piège pour les émotions des decks, sauvegardées **par nom** d'enum : renommer une valeur d'`EmotionType` exige d'ajouter l'ancien nom dans `LegacyEmotionNames` de `DeckData`.
 
 ### Noms des champions
 Le roster a été renommé le 24/09/2026 : seuls les noms affichés (`ChampionData.championName`) ont changé, pas les identifiants internes.

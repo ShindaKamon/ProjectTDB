@@ -57,8 +57,8 @@ public class FilterChipUI : MonoBehaviour
         _label.text = _kind switch
         {
             FilterChipKind.Emotion => "",
-            FilterChipKind.Category => _category == CardCategory.Eveil ? "Éveil" : _category.ToString(),
-            FilterChipKind.DamageType => _damageType.ToString(),
+            FilterChipKind.Category => CodexCardVisual.CategoryName(_category),
+            FilterChipKind.DamageType => CodexCardVisual.DamageTypeName(_damageType),
             _ => _orMore ? $"{_cost}+" : _cost.ToString(),
         };
     }

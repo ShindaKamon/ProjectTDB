@@ -263,7 +263,7 @@ public class UISetupWizard : EditorWindow
         GameObject costCircle = CreateChild(root, "CostCircle");
         Image costImg = costCircle.AddComponent<Image>();
         costImg.sprite = circle;
-        costImg.color = CodexCardVisual.EmotionColor(EmotionType.Colere);
+        costImg.color = CodexCardVisual.EmotionColor(EmotionType.Anger);
         costImg.raycastTarget = false;
         RectTransform costRT = costCircle.GetComponent<RectTransform>();
         costRT.anchorMin = costRT.anchorMax = new Vector2(0, 1);

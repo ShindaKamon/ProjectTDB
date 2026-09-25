@@ -39,14 +39,16 @@ public class Unit : MonoBehaviour
         public int atkModifier;
         public int armorModifier;
         public int barrierModifier;
-        public int remainingTurns;
+        public int remainingTurns; // en tours du lanceur (voir TickEffectsOnTurnStartOf)
+        public Unit source;        // lanceur ; null = compté en tours du porteur
 
-        public StatBuff(int atk, int armor, int barrier, int duration)
+        public StatBuff(int atk, int armor, int barrier, int duration, Unit source)
         {
             atkModifier = atk;
             armorModifier = armor;
             barrierModifier = barrier;
             remainingTurns = duration;
+            this.source = source;
         }
     }
 
@@ -332,6 +334,7 @@ public class Unit : MonoBehaviour
             return;
         }
 
+        TriggerReactiveShield();
         int damageToSelf = AbsorbWithShield(damage);
         _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
         GameLog.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
@@ -451,7 +454,7 @@ public class Unit : MonoBehaviour
     {
         if (damage <= 0) return damage;
 
-        int defense = type == DamageType.Magique ? _barrier : _armor;
+        int defense = type == DamageType.Magical ? _barrier : _armor;
         return Mathf.Max(1, damage - defense);
     }
 
@@ -475,16 +478,50 @@ public class Unit : MonoBehaviour
         NotifyShieldChanged();
     }
 
-    /// <summary>
-    /// Appelé au début du tour de chaque unité : le bouclier expire au début du prochain tour
-    /// de celui qui l'a donné (ou tout de suite si celui-ci est mort).
-    /// </summary>
-    public void ExpireShieldOnTurnStartOf(Unit turnUnit)
-    {
-        if (_shield <= 0) return;
+    // Bouclier réactif (ex: Réflexe de survie) : se déclenche au premier coup reçu d'un ennemi,
+    // juste avant que ce coup soit appliqué ; expire au prochain tour du lanceur s'il n'a pas servi.
+    private int _reactiveShield;
+    private Unit _reactiveShieldSource;
 
-        bool sourceGone = _shieldSource == null || (_shieldSource.GetUnitState()?.IsDead() ?? false);
-        if (_shieldSource != turnUnit && !sourceGone) return;
+    public void ArmReactiveShield(int amount, Unit source)
+    {
+        if (amount <= 0) return;
+
+        _reactiveShield = amount;
+        _reactiveShieldSource = source;
+        GameLog.Log($"{name}: bouclier réactif de {amount} armé (au premier coup ennemi)");
+    }
+
+    // Déclenche le bouclier réactif si le coup vient d'un ennemi (tour d'une unité d'une autre
+    // faction ; sans grille, ex. en test, tout coup compte comme ennemi)
+    private void TriggerReactiveShield()
+    {
+        if (_reactiveShield <= 0) return;
+        if (Services.IsGridServiceAvailable() && Services.Grid.GetActiveUnit()?.GetFaction() == GetFaction()) return;
+
+        int amount = _reactiveShield;
+        Unit source = _reactiveShieldSource;
+        _reactiveShield = 0;
+        _reactiveShieldSource = null;
+        GameLog.Log($"{name}: bouclier réactif déclenché");
+        AddShield(amount, source);
+    }
+
+    /// <summary>
+    /// Le bouclier (et le bouclier réactif non déclenché) expire au début du prochain tour
+    /// de celui qui l'a donné, ou tout de suite si celui-ci est mort.
+    /// </summary>
+    private void ExpireShieldsOf(Unit turnUnit)
+    {
+        if (_reactiveShield > 0 && (_reactiveShieldSource == turnUnit || IsGone(_reactiveShieldSource)))
+        {
+            GameLog.Log($"{name}: bouclier réactif expiré sans avoir servi");
+            _reactiveShield = 0;
+            _reactiveShieldSource = null;
+        }
+
+        if (_shield <= 0) return;
+        if (_shieldSource != turnUnit && !IsGone(_shieldSource)) return;
 
         GameLog.Log($"{name}: bouclier de {_shield} expiré");
         _shield = 0;
@@ -605,6 +642,18 @@ public class Unit : MonoBehaviour
         OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
     }
 
+    /// <summary>
+    /// Gagne des PM pour ce tour (ex: Élan tactique) ; peut dépasser le maximum, remis à niveau au prochain tour.
+    /// </summary>
+    public void GainMovement(int amount)
+    {
+        if (amount <= 0) return;
+
+        _currentMovementPoints += amount;
+        GameLog.Log($"{name} gagne {amount} PM ce tour. Total : {_currentMovementPoints}");
+        OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
+    }
+
     // Méthode pour réinitialiser les PM au début du tour
     public void RefreshMovement()
     {
@@ -692,10 +741,10 @@ public class Unit : MonoBehaviour
 
     /// <summary>
     /// Modifie les stats de l'unité (ATK, armure, barrière).
-    /// Si duration > 0, crée un buff temporaire qui sera retiré après X tours.
-    /// Si duration == 0, le buff est permanent.
+    /// Si duration > 0, crée un buff temporaire qui dure `duration` tours du lanceur (source) :
+    /// « 1 tour » = jusqu'au début du prochain tour du lanceur. Si duration == 0, c'est permanent.
     /// </summary>
-    public virtual void ModifyStats(int atk, int armor, int barrier, int duration)
+    public virtual void ModifyStats(int atk, int armor, int barrier, int duration, Unit source = null)
     {
         // Applique immédiatement les modifications
         _attackDamage += atk;
@@ -705,8 +754,8 @@ public class Unit : MonoBehaviour
         // Si duration > 0, enregistre le buff pour le retirer plus tard
         if (duration > 0 && (atk != 0 || armor != 0 || barrier != 0))
         {
-            _activeBuffs.Add(new StatBuff(atk, armor, barrier, duration));
-            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, armure: {armor}, barrière: {barrier} pour {duration} tour(s)");
+            _activeBuffs.Add(new StatBuff(atk, armor, barrier, duration, source));
+            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, armure: {armor}, barrière: {barrier} pour {duration} tour(s) de {source?.name ?? name}");
         }
         else if (atk != 0 || armor != 0 || barrier != 0)
         {
@@ -717,9 +766,27 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// Appelé au début du tour de l'unité pour décrémenter et retirer les buffs expirés
+    /// Début du tour de cette unité : ses passifs propres (surchargé par les champions).
+    /// Les effets temporaires (buffs, boucliers) avancent dans TickEffectsOnTurnStartOf.
     /// </summary>
-    public virtual void ProcessBuffsOnTurnStart()
+    public virtual void OnOwnTurnStart()
+    {
+    }
+
+    /// <summary>
+    /// Appelé au début du tour de chaque unité : les effets posés sur cette unité par
+    /// `turnUnit` avancent d'un tour (durée comptée en tours du lanceur) ; ceux dont le
+    /// lanceur est mort ou a disparu expirent.
+    /// </summary>
+    public void TickEffectsOnTurnStartOf(Unit turnUnit)
+    {
+        TickBuffs(turnUnit);
+        ExpireShieldsOf(turnUnit);
+    }
+
+    private static bool IsGone(Unit unit) => unit == null || (unit.GetUnitState()?.IsDead() ?? false);
+
+    private void TickBuffs(Unit turnUnit)
     {
         if (_activeBuffs.Count == 0) return;
 
@@ -729,7 +796,12 @@ public class Unit : MonoBehaviour
         for (int i = _activeBuffs.Count - 1; i >= 0; i--)
         {
             StatBuff buff = _activeBuffs[i];
-            buff.remainingTurns--;
+            bool noSource = ReferenceEquals(buff.source, null); // compté en tours du porteur
+            bool sourceGone = !noSource && IsGone(buff.source);
+            bool sourceTurn = noSource ? turnUnit == this : buff.source == turnUnit;
+            if (!sourceTurn && !sourceGone) continue;
+
+            buff.remainingTurns = sourceGone ? 0 : buff.remainingTurns - 1;
 
             if (buff.remainingTurns <= 0)
             {

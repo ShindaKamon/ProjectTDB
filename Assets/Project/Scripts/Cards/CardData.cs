@@ -44,14 +44,14 @@ public enum CardAffectedTarget
 public enum EmotionType
 {
     None,
-    Colere,         // Rouge #D64545
-    Degout,         // Violet #9A4FBF
-    Tristesse,      // Bleu #5A6FD8
-    Surprise,       // Bleu clair #4FA8E8
-    Peur,           // Vert #3F9D5C
-    Confiance,      // Vert clair #5CC98A
-    Joie,           // Jaune #D9A91F
-    Anticipation    // Orange #E08A3A
+    Anger,          // Colère — rouge #D64545
+    Disgust,        // Dégoût — violet #9A4FBF
+    Sadness,        // Tristesse — bleu #5A6FD8
+    Surprise,       // Surprise — bleu clair #4FA8E8
+    Fear,           // Peur — vert #3F9D5C
+    Trust,          // Confiance — vert clair #5CC98A
+    Joy,            // Joie — jaune #D9A91F
+    Anticipation    // Anticipation — orange #E08A3A
 }
 
 /// <summary>
@@ -59,8 +59,8 @@ public enum EmotionType
 /// </summary>
 public enum DamageType
 {
-    Physique,
-    Magique
+    Physical,   // Physique : réduit par l'armure
+    Magical     // Magique : réduit par la barrière
 }
 
 /// <summary>
@@ -69,7 +69,7 @@ public enum DamageType
 public enum CardCategory
 {
     Standard,   // Pioché dans le pool partagé, filtré par les émotions du deck
-    Eveil,      // Nécessite un seuil d'émotion (système pas encore implémenté)
+    Awakening,  // Éveil : nécessite un seuil d'émotion (système pas encore implémenté)
     Signature   // Fixe, liée à un champion précis (voir signatureOwner)
 }
 
@@ -168,7 +168,7 @@ public class CardData : ScriptableObject
     public int damageAmount = 0;
 
     [Tooltip("Physique : réduit par l'armure de la cible. Magique : réduit par sa barrière.")]
-    public DamageType damageType = DamageType.Physique;
+    public DamageType damageType = DamageType.Physical;
 
     [Tooltip("Dégâts infligés au lanceur après l'effet (contrecoup)")]
     public int damageSelf = 0;
@@ -179,6 +179,9 @@ public class CardData : ScriptableObject
 
     [Tooltip("Points de vie volés si dégâts infligés")]
     public int lifestealFixedAmount = 0;
+
+    [Tooltip("Dégâts infligés à chaque ennemi au contact de la cible, du type de la carte (ex: Éclat de joie)")]
+    public int damageAroundTarget = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         5. BUFFS & DÉBUFFS                                 ║
@@ -191,14 +194,16 @@ public class CardData : ScriptableObject
     [Tooltip("Bouclier en PV accordé : absorbe les dégâts avant les PV, jusqu'au début du prochain tour du lanceur")]
     public int defenseAmount = 0;
 
+    [Tooltip("Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup (ex: Réflexe de survie)")]
+    public bool reactiveShield = false;
+
     [Tooltip("Armure ajoutée à la cible (négatif = armure retirée) pendant effectDuration tours")]
     public int armorAmount = 0;
 
     [Tooltip("Barrière ajoutée à la cible (négatif = barrière retirée) pendant effectDuration tours")]
     public int barrierAmount = 0;
 
-
-    [Tooltip("Durée en tours des modifications d'ATQ, d'armure et de barrière")]
+    [Tooltip("Durée des modifications d'ATQ, d'armure et de barrière (cible et lanceur), en tours du lanceur : 1 = jusqu'au début de son prochain tour")]
     public int effectDuration = 0;
 
     [Space(5)]
@@ -208,6 +213,9 @@ public class CardData : ScriptableObject
     [Tooltip("PM retirés à la cible au début de son prochain tour (le plus fort retrait l'emporte, pas de cumul)")]
     public int pmReduction = 0;
 
+    [Tooltip("Retire tous les PM de la cible au début de son prochain tour (ex: Terreur paralysante)")]
+    public bool removeAllMovement = false;
+
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         6. EFFETS SPÉCIAUX                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
@@ -216,11 +224,24 @@ public class CardData : ScriptableObject
     [Tooltip("Si true, le lanceur charge vers la cible")]
     public bool isChargeCard = false;
 
-    [Tooltip("Distance de knockback/recul")]
+    [Tooltip("Distance de poussée/tirage ; une carte à zone pousse toutes les unités touchées")]
     public int knockbackDistance = 0;
 
     [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel)")]
     public bool pullsTowardCaster = false;
+
+    [Space(5)]
+    [Tooltip("Le lanceur recule de N cases à l'opposé de sa cible après l'effet (contrepartie « Repli automatique », ex: Fuite panique)")]
+    public int casterRetreat = 0;
+
+    [Tooltip("PM gagnés par le lanceur pour ce tour (« Élan tactique », ex: Piège et recul)")]
+    public int casterMovementGain = 0;
+
+    [Tooltip("PA gagnés par le lanceur pour ce tour (sans dépasser son maximum)")]
+    public int casterActionGain = 0;
+
+    [Tooltip("Armure du lanceur pendant effectDuration tours (négatif = vulnérabilité, ex: Communion joyeuse)")]
+    public int casterArmorAmount = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         8. GESTION DU DECK                                 ║
@@ -751,26 +772,59 @@ public class CardData : ScriptableObject
             {
                 // Applique les stats (nécessite la méthode ModifyStats sur Unit)
                 if (finalAtk != 0 || armorAmount != 0 || barrierAmount != 0)
-                    statTarget.ModifyStats(finalAtk, armorAmount, barrierAmount, effectDuration);
+                    statTarget.ModifyStats(finalAtk, armorAmount, barrierAmount, effectDuration, source);
 
-                // Bouclier en PV (jusqu'au début du prochain tour du lanceur)
-                if (finalDefense > 0) statTarget.AddShield(finalDefense, source);
+                // Bouclier en PV (jusqu'au début du prochain tour du lanceur), ou bouclier
+                // réactif qui ne se déclenche qu'au premier coup ennemi (ex: Réflexe de survie)
+                if (finalDefense > 0)
+                {
+                    if (reactiveShield) statTarget.ArmReactiveShield(finalDefense, source);
+                    else statTarget.AddShield(finalDefense, source);
+                }
             }
         }
 
-        // 6. Knockback simple (sur la cible) — pousse loin du lanceur, ou tire vers lui si pullsTowardCaster
-        if (!isChargeCard && targetUnit != null && knockbackDistance > 0)
+        // 5. Dégâts aux ennemis au contact de la cible (ex: Éclat de joie), une fois par carte
+        if (damageAroundTarget > 0 && targetUnit != null && !isAdditionalMultiTargetHit)
+        {
+            Vector2Int around = targetUnit.GetCurrentGridPos();
+            foreach (Unit unit in Services.Grid.GetAllUnits())
+            {
+                if (unit == targetUnit || unit.GetFaction() == source.GetFaction() || IsDead(unit)) continue;
+                if (GridGeometry.Distance(around, unit.GetCurrentGridPos()) != 1) continue;
+
+                unit.TakeDamage(unit.ReduceByDefense(damageAroundTarget, damageType));
+                GameLog.Log($"{cardName} : {unit.name} (au contact de {targetUnit.name}) subit {damageAroundTarget} dégâts");
+            }
+        }
+
+        // 6. Poussée / tirage — sur toute la zone pour une carte à zone (ex: Onde de terreur)
+        if (!isChargeCard && knockbackDistance > 0)
         {
             Vector2Int sourcePos = source.GetCurrentGridPos();
-            Vector2Int targetPos = targetUnit.GetCurrentGridPos();
-            Vector2 knockbackDir = pullsTowardCaster
-                ? ((Vector2)sourcePos - (Vector2)targetPos).normalized
-                : ((Vector2)targetPos - (Vector2)sourcePos).normalized;
-            targetUnit.ApplyKnockback(knockbackDir, knockbackDistance);
+            List<Unit> movedUnits = isAOE
+                ? GetAOEAffectedUnits(source, effectEpicenter)
+                : (targetUnit != null ? new List<Unit> { targetUnit } : new List<Unit>());
+            movedUnits.Remove(source);
+
+            // Poussée : les plus éloignés d'abord, pour qu'une unité ne bloque pas celle qui la
+            // suit ; tirage : les plus proches d'abord
+            movedUnits.Sort((a, b) => GridGeometry.Distance(sourcePos, a.GetCurrentGridPos())
+                .CompareTo(GridGeometry.Distance(sourcePos, b.GetCurrentGridPos())));
+            if (!pullsTowardCaster) movedUnits.Reverse();
+
+            foreach (Unit moved in movedUnits)
+            {
+                Vector2Int movedPos = moved.GetCurrentGridPos();
+                Vector2 direction = pullsTowardCaster
+                    ? (Vector2)(sourcePos - movedPos)
+                    : (Vector2)(movedPos - sourcePos);
+                moved.ApplyKnockback(direction, knockbackDistance);
+            }
         }
 
         // 7. Réduction de PA/PM sur la cible
-        if (paReduction > 0 || pmReduction > 0)
+        if (paReduction > 0 || pmReduction > 0 || removeAllMovement)
         {
             // Détermine les cibles pour la réduction
             List<Unit> debuffTargets = new List<Unit>();
@@ -787,7 +841,23 @@ public class CardData : ScriptableObject
             foreach (Unit debuffTarget in debuffTargets)
             {
                 // Retrait appliqué au début du prochain tour de la cible (voir ResourceDebuffManager)
-                ResourceDebuffManager.ApplyDebuff(debuffTarget, paReduction, pmReduction, source);
+                ResourceDebuffManager.ApplyDebuff(debuffTarget, paReduction, removeAllMovement ? int.MaxValue : pmReduction, source);
+            }
+        }
+
+        // 8. Effets sur le lanceur, une fois par carte : gains de PM/PA, armure (vulnérabilité si
+        // négative), puis recul à l'opposé de la cible
+        if (!isAdditionalMultiTargetHit)
+        {
+            if (casterMovementGain > 0) source.GainMovement(casterMovementGain);
+            if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain);
+            if (casterArmorAmount != 0) source.ModifyStats(0, casterArmorAmount, 0, Mathf.Max(1, effectDuration), source);
+
+            if (casterRetreat > 0)
+            {
+                Vector2Int from = targetUnit != null ? targetUnit.GetCurrentGridPos() : effectEpicenter;
+                Vector2Int away = source.GetCurrentGridPos() - from;
+                if (away != Vector2Int.zero) source.ApplyKnockback(away, casterRetreat);
             }
         }
 

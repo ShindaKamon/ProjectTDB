@@ -25,8 +25,8 @@ MonoBehaviour:
   targetType: 3
   targetRange: 1
   areaEffect: 0
-  aoeRadius: 0
-  affectedTarget: 0
+  aoeRadius: 1
+  affectedTarget: 2
   targetsHandCard: 0
   targetCount: 1
   damageAmount: 0
@@ -34,16 +34,23 @@ MonoBehaviour:
   damageSelf: 0
   healAmount: 10
   lifestealFixedAmount: 0
+  damageAroundTarget: 10
   atkIncreased: 0
   defenseAmount: 0
+  reactiveShield: 0
   armorAmount: 0
   barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
+  removeAllMovement: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
+  casterRetreat: 0
+  casterMovementGain: 0
+  casterActionGain: 0
+  casterArmorAmount: 0
   drawAmount: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

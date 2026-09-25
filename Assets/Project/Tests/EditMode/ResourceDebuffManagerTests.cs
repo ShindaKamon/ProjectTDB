@@ -48,6 +48,17 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void RemoveAllMovement_EmptiesPm()
+        {
+            Unit unit = NewUnit(4);
+
+            ResourceDebuffManager.ApplyDebuff(unit, 0, int.MaxValue, null);
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);
+
+            Assert.AreEqual(0, unit.GetCurrentMovementPoints());
+        }
+
+        [Test]
         public void PmReductions_DoNotStack_StrongestWins()
         {
             Unit unit = NewUnit(4);

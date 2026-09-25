@@ -93,10 +93,10 @@ namespace ProjectTDB.Tests
             Unit ally = NewUnit();
             ally.AddShield(20, caster);
 
-            ally.ExpireShieldOnTurnStartOf(ally);
+            ally.TickEffectsOnTurnStartOf(ally);
             Assert.AreEqual(20, ally.GetShield(), "Le tour du porteur ne doit pas retirer un bouclier donné par un autre");
 
-            ally.ExpireShieldOnTurnStartOf(caster);
+            ally.TickEffectsOnTurnStartOf(caster);
             Assert.AreEqual(0, ally.GetShield());
         }
 
@@ -108,9 +108,49 @@ namespace ProjectTDB.Tests
             ally.AddShield(20, caster);
 
             Object.DestroyImmediate(caster.gameObject);
-            ally.ExpireShieldOnTurnStartOf(ally);
+            ally.TickEffectsOnTurnStartOf(ally);
 
             Assert.AreEqual(0, ally.GetShield());
+        }
+
+        [Test]
+        public void ReactiveShield_AbsorbsFirstHitOnly()
+        {
+            Unit unit = NewUnit();
+            unit.ArmReactiveShield(23, unit);
+            Assert.AreEqual(0, unit.GetShield(), "Rien tant qu'on n'est pas touché");
+
+            unit.TakeDamage(20);
+            Assert.AreEqual(100, unit.GetHealth(), "Le bouclier se déclenche juste avant le coup et l'absorbe");
+            Assert.AreEqual(3, unit.GetShield());
+
+            unit.TickEffectsOnTurnStartOf(unit);
+            unit.TakeDamage(10);
+            Assert.AreEqual(90, unit.GetHealth(), "Pas de second déclenchement");
+        }
+
+        [Test]
+        public void ReactiveShield_ExpiresUnusedAtCastersTurn()
+        {
+            Unit unit = NewUnit();
+            unit.ArmReactiveShield(23, unit);
+
+            unit.TickEffectsOnTurnStartOf(unit);
+            unit.TakeDamage(10);
+
+            Assert.AreEqual(90, unit.GetHealth());
+        }
+
+        [Test]
+        public void GainMovement_CanExceedMaximumThisTurn()
+        {
+            Unit unit = NewUnit();
+            unit.SetMaxMovementPoints(4);
+            unit.RefreshMovement();
+
+            unit.GainMovement(2);
+
+            Assert.AreEqual(6, unit.GetCurrentMovementPoints());
         }
     }
 }

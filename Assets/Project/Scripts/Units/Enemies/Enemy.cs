@@ -187,6 +187,16 @@ public class Enemy : Unit, IActionPointsUser
         _actionPointsComponent.ReduceCurrentPA(amount);
     }
 
+    public void AddPA(int amount)
+    {
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.AddPA(amount);
+    }
+
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========
 
     /// <summary>

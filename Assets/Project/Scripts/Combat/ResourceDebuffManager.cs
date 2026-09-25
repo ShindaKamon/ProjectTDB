@@ -31,7 +31,14 @@ public static class ResourceDebuffManager
         _pending.TryGetValue(target, out var current);
         _pending[target] = (Mathf.Max(current.pa, paReduction), Mathf.Max(current.pm, pmReduction));
         GameLog.Log($"[Retrait] {source?.name ?? "Effet"} : {target.name} perdra {_pending[target].pa} PA / {_pending[target].pm} PM à son prochain tour");
+        EventBus.Publish(new ResourceDebuffChangedEvent(target));
     }
+
+    /// <summary>
+    /// Retraits en attente contre une unité (0, 0 si aucun) : ce qu'elle perdra à son prochain tour
+    /// </summary>
+    public static (int pa, int pm) GetPending(Unit unit) =>
+        unit != null && _pending.TryGetValue(unit, out var debuff) ? debuff : (0, 0);
 
     /// <summary>
     /// Appelé au début du tour d'une unité, après la remise à niveau de ses PA/PM

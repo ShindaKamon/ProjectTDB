@@ -21,18 +21,21 @@ public static class CardRulesText
         string Turns() => card.effectDuration > 0 ? $" ({card.effectDuration} tour{(card.effectDuration > 1 ? "s" : "")})" : "";
 
         if (card.damageAmount > 0)
-            Effect(card.damageType == DamageType.Magique ? "magic" : "dmg", ChipKind.Damage,
-                "Inflige " + card.damageAmount + (card.damageType == DamageType.Magique ? " (magique)" : ""));
+            Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage,
+                "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : ""));
         if (card.scalesWithPASpentThisTurn && card.comboDamagePerPASpent > 0)
             Effect("pa", ChipKind.Damage, $"+{card.comboDamagePerPASpent} dégâts par PA déjà dépensé ce tour");
         // Carte d'invocation : le soin ne sert que si l'invocation est déjà sur le terrain (voir ExecuteEffect)
         if (card.healAmount > 0 && !card.isSummonCard) Effect("heal", ChipKind.Heal, "Soigne " + card.healAmount);
         if (card.lifestealFixedAmount > 0) Effect("drain", ChipKind.Heal, "Vol de vie " + card.lifestealFixedAmount);
-        if (card.defenseAmount > 0) Effect("shield", ChipKind.Shield, "Bouclier " + card.defenseAmount);
+        if (card.damageAroundTarget > 0)
+            Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage, $"Inflige {card.damageAroundTarget} aux ennemis au contact de la cible");
+        if (card.defenseAmount > 0)
+            Effect("shield", ChipKind.Shield, "Bouclier " + card.defenseAmount + (card.reactiveShield ? " au premier coup ennemi reçu" : ""));
         if (card.atkIncreased != 0) Effect("buff", ChipKind.Shield, "ATQ " + card.atkIncreased.ToString("+#;−#") + Turns());
         if (card.armorAmount != 0) Effect("armor", ChipKind.Shield, "Armure " + card.armorAmount.ToString("+#;−#") + Turns());
         if (card.barrierAmount != 0) Effect("barrier", ChipKind.Shield, "Barrière " + card.barrierAmount.ToString("+#;−#") + Turns());
-        if (card.pmReduction >= 5) Effect("lock", ChipKind.Move, "Retire tous les PM au prochain tour");
+        if (card.removeAllMovement) Effect("lock", ChipKind.Move, "Retire tous les PM au prochain tour");
         else if (card.pmReduction > 0) Effect("pm", ChipKind.Move, $"Retire {card.pmReduction} PM au prochain tour");
         if (card.paReduction > 0) Effect("pa", ChipKind.Move, $"Retire {card.paReduction} PA au prochain tour");
         if (card.knockbackDistance > 0)
@@ -47,6 +50,10 @@ public static class CardRulesText
         if (card.isRepositionSummonCard) Effect("summon", ChipKind.Mute, "Déplace ton invocation");
         if (card.targetsHandCard) Effect("hand", ChipKind.Mute, "Cible une carte de ta main");
         if (card.drawAmount > 0) Effect("hand", ChipKind.Mute, "Pioche " + card.drawAmount);
+        if (card.casterMovementGain > 0) Effect("pm", ChipKind.Move, $"+{card.casterMovementGain} PM ce tour");
+        if (card.casterActionGain > 0) Effect("pa", ChipKind.Move, $"+{card.casterActionGain} PA ce tour");
+        if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Shield, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));
+        if (card.casterRetreat > 0) Effect("push", ChipKind.Move, "Tu recules de " + Cases(card.casterRetreat));
 
         // Carte sur soi avec une zone : « Zone : autour de toi, … » suffit
         bool selfZone = card.targetType == CardTargetType.Self && ZoneText(card) != "";
@@ -56,8 +63,12 @@ public static class CardRulesText
         string zone = ZoneText(card);
         if (zone != "") lines.Add("<b>Zone :</b> " + (selfZone && card.areaEffect != CardAreaEffect.WholeTeam ? "autour de toi, " : "") + zone);
 
-        if (card.damageSelf > 0)
-            lines.Add($"{Icon("self", ChipKind.Warn)} <color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Warn))}>Contrecoup : tu subis {card.damageSelf}</color>");
+        // Contreparties, en couleur d'avertissement
+        void Warn(string icon, string text) =>
+            lines.Add($"{Icon(icon, ChipKind.Warn)} <color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Warn))}>{text}</color>");
+
+        if (card.damageSelf > 0) Warn("self", $"Contrecoup : tu subis {card.damageSelf}");
+        if (card.casterArmorAmount < 0) Warn("armor", $"Contrecoup : ton armure {card.casterArmorAmount.ToString("+#;−#")}" + CasterTurns(card));
 
         if (!string.IsNullOrWhiteSpace(card.specialText))
             lines.Add("<i>Spécial :</i> " + card.specialText.Trim());
@@ -69,6 +80,13 @@ public static class CardRulesText
         $"<sprite name=\"{name}\" color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(kind))}>";
 
     static string Cases(int n) => n + (n > 1 ? " cases" : " case");
+
+    // Durée d'un effet sur le lanceur (au moins 1 tour : jusqu'à son prochain tour)
+    static string CasterTurns(CardData card)
+    {
+        int turns = Mathf.Max(1, card.effectDuration);
+        return $" ({turns} tour{(turns > 1 ? "s" : "")})";
+    }
 
     // « Lyse_Summon » → « Lyse »
     static string SummonName(string prefabName) => prefabName.Split('_')[0];

@@ -202,11 +202,13 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | Effet | Source | Règle |
 |-------|--------|-------|
 | **Retrait de PM** | Peur | -1 / -2 / -3 PM ou perte totale au **prochain tour** de la cible. Ne se cumulent pas : un retrait plus fort remplace un plus faible ; un plus faible n'écrase jamais un plus fort en cours |
-| **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
+| **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) ; une carte à zone pousse toutes les unités touchées (les plus éloignées d'abord) |
 | **Bouclier (PV)** | Colère (Armure de rage), Peur, Joie | Absorbe les dégâts avant les PV (jauge bleue sur la barre de vie) ; cumulable ; dure jusqu'au début du prochain tour du lanceur ; ignoré par la Paire de Raze |
 | **Réduction de dégâts (%)** | Passifs de Crux et de Raze (Bluff) | Réduit les prochains dégâts subis d'un pourcentage |
-| **Vulnérabilité** | Contrepartie (Joie) | Le lanceur subit plus de dégâts |
-| **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour) |
+| **Vulnérabilité** | Contrepartie (Joie) | Le lanceur perd de l'**armure** (−5 par défaut, à équilibrer) jusqu'à son prochain tour : il subit plus de dégâts physiques |
+| **Bouclier réactif** | Peur (Réflexe de survie) | Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup |
+| **Recul et élan** | Peur (Fuite panique, Piège et recul) | Le lanceur recule de N cases à l'opposé de sa cible ; gain de PM (ou de PA) pour le tour en cours |
+| **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour). Durée comptée en tours du lanceur (voir « Décisions actées » de `GDD_Main.md`) |
 | **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour |
 
 **Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**.

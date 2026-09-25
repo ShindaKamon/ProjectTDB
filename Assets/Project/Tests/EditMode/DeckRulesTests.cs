@@ -19,7 +19,7 @@ namespace ProjectTDB.Tests
         }
 
         private CardData NewCard(string name, CardCategory category = CardCategory.Standard, ChampionData owner = null,
-            EmotionType emotion = EmotionType.Colere)
+            EmotionType emotion = EmotionType.Anger)
         {
             var card = ScriptableObject.CreateInstance<CardData>();
             card.cardName = name;
@@ -81,10 +81,10 @@ namespace ProjectTDB.Tests
         public void CanAdd_AnyEmotion_IsAllowed()
         {
             var champion = NewChampion();
-            var deck = new List<CardData> { NewCard("Rouge", emotion: EmotionType.Colere) };
+            var deck = new List<CardData> { NewCard("Rouge", emotion: EmotionType.Anger) };
 
-            Assert.IsTrue(DeckRules.CanAddCard(deck, NewCard("Vert", emotion: EmotionType.Peur), champion).IsValid);
-            Assert.IsTrue(DeckRules.CanAddCard(deck, NewCard("Jaune", emotion: EmotionType.Joie), champion).IsValid);
+            Assert.IsTrue(DeckRules.CanAddCard(deck, NewCard("Vert", emotion: EmotionType.Fear), champion).IsValid);
+            Assert.IsTrue(DeckRules.CanAddCard(deck, NewCard("Jaune", emotion: EmotionType.Joy), champion).IsValid);
         }
 
         [Test]
@@ -109,23 +109,23 @@ namespace ProjectTDB.Tests
         [Test]
         public void DeckColors_ChosenColors_OrFromCardsWhenNoneChosen()
         {
-            var chosen = new DeckData("Rouge-jaune", EmotionType.Joie, EmotionType.Colere, new List<string>());
+            var chosen = new DeckData("Rouge-jaune", EmotionType.Joy, EmotionType.Anger, new List<string>());
             var baseDeck = new DeckData("Base", EmotionType.None, EmotionType.None, new List<string>());
-            var cards = new[] { NewCard("A", emotion: EmotionType.Peur), NewCard("B", emotion: EmotionType.Colere),
+            var cards = new[] { NewCard("A", emotion: EmotionType.Fear), NewCard("B", emotion: EmotionType.Anger),
                                 NewCard("Sig", CardCategory.Signature, NewChampion(), EmotionType.None) };
 
-            CollectionAssert.AreEqual(new[] { EmotionType.Colere, EmotionType.Joie }, DeckRules.DeckColors(chosen, null));
-            CollectionAssert.AreEquivalent(new[] { EmotionType.Colere, EmotionType.Peur }, DeckRules.DeckColors(baseDeck, cards));
+            CollectionAssert.AreEqual(new[] { EmotionType.Anger, EmotionType.Joy }, DeckRules.DeckColors(chosen, null));
+            CollectionAssert.AreEquivalent(new[] { EmotionType.Anger, EmotionType.Fear }, DeckRules.DeckColors(baseDeck, cards));
         }
 
         [Test]
         public void CanAdd_OffColorCard_Fails_SignatureAlwaysAllowed()
         {
             var champion = NewChampion();
-            var colors = new List<EmotionType> { EmotionType.Colere };
+            var colors = new List<EmotionType> { EmotionType.Anger };
 
-            Assert.IsTrue(DeckRules.CanAddCard(new List<CardData>(), NewCard("Rouge", emotion: EmotionType.Colere), champion, colors).IsValid);
-            Assert.IsFalse(DeckRules.CanAddCard(new List<CardData>(), NewCard("Vert", emotion: EmotionType.Peur), champion, colors).IsValid);
+            Assert.IsTrue(DeckRules.CanAddCard(new List<CardData>(), NewCard("Rouge", emotion: EmotionType.Anger), champion, colors).IsValid);
+            Assert.IsFalse(DeckRules.CanAddCard(new List<CardData>(), NewCard("Vert", emotion: EmotionType.Fear), champion, colors).IsValid);
             Assert.IsTrue(DeckRules.CanAddCard(new List<CardData>(), NewCard("Sig", CardCategory.Signature, champion, EmotionType.None), champion, colors).IsValid);
         }
 
@@ -135,12 +135,12 @@ namespace ProjectTDB.Tests
             var champion = NewChampion();
             var deck = new List<CardData>
             {
-                NewCard("Rouge", emotion: EmotionType.Colere),
-                NewCard("Vert", emotion: EmotionType.Peur),
+                NewCard("Rouge", emotion: EmotionType.Anger),
+                NewCard("Vert", emotion: EmotionType.Fear),
                 NewCard("Sig", CardCategory.Signature, champion, EmotionType.None),
             };
 
-            int removed = DeckRules.EnforceColors(deck, new List<EmotionType> { EmotionType.Colere });
+            int removed = DeckRules.EnforceColors(deck, new List<EmotionType> { EmotionType.Anger });
 
             Assert.AreEqual(1, removed);
             CollectionAssert.AreEquivalent(new[] { "Rouge", "Sig" }, deck.ConvertAll(c => c.cardName));
@@ -150,15 +150,15 @@ namespace ProjectTDB.Tests
         public void EnforceCopyLimits_TrimsExtraCopies()
         {
             var champion = NewChampion();
-            var rugissement = NewCard("Rugissement destructeur");
+            var roar = NewCard("Rugissement destructeur");
             var signature = NewCard("Tapis", CardCategory.Signature, champion);
-            var deck = Copies(rugissement, 9);
+            var deck = Copies(roar, 9);
             deck.AddRange(Copies(signature, 2));
 
             int removed = DeckRules.EnforceCopyLimits(deck);
 
             Assert.AreEqual(6, removed); // 5 Rugissement + 1 Signature en trop
-            Assert.AreEqual(4, deck.FindAll(c => c == rugissement).Count);
+            Assert.AreEqual(4, deck.FindAll(c => c == roar).Count);
             Assert.AreEqual(1, deck.FindAll(c => c == signature).Count);
         }
 
@@ -182,7 +182,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void AvailableEmotions_AreTheThreeLaunchEmotions()
         {
-            CollectionAssert.AreEqual(new[] { EmotionType.Colere, EmotionType.Peur, EmotionType.Joie },
+            CollectionAssert.AreEqual(new[] { EmotionType.Anger, EmotionType.Fear, EmotionType.Joy },
                 DeckRules.AvailableEmotions);
         }
     }

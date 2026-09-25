@@ -147,7 +147,7 @@ namespace ProjectTDB.Tests
         {
             var card = NewCard(CardTargetType.Enemy, 3);
             card.damageAmount = 16;
-            card.damageType = DamageType.Magique;
+            card.damageType = DamageType.Magical;
             card.targetCount = 2;
 
             string text = CardRulesText.Build(card);

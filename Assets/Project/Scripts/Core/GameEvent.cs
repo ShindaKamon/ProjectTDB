@@ -184,3 +184,16 @@ public class ResetTileColorsEvent : GameEvent
 {
     // Événement simple sans données
 }
+
+/// <summary>
+/// Publié quand un retrait de PA/PM est programmé contre une unité (appliqué à son prochain tour)
+/// </summary>
+public class ResourceDebuffChangedEvent : GameEvent
+{
+    public Unit Target { get; private set; }
+
+    public ResourceDebuffChangedEvent(Unit target)
+    {
+        Target = target;
+    }
+}

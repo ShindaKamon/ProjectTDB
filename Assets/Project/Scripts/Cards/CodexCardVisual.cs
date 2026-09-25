@@ -65,13 +65,13 @@ public static class CodexCardVisual
 
     public static Color EmotionColor(EmotionType emotion) => emotion switch
     {
-        EmotionType.Colere => Hex("#d64545"),
-        EmotionType.Degout => Hex("#9a4fbf"),
-        EmotionType.Tristesse => Hex("#5a6fd8"),
+        EmotionType.Anger => Hex("#d64545"),
+        EmotionType.Disgust => Hex("#9a4fbf"),
+        EmotionType.Sadness => Hex("#5a6fd8"),
         EmotionType.Surprise => Hex("#4fa8e8"),
-        EmotionType.Peur => Hex("#3f9d5c"),
-        EmotionType.Confiance => Hex("#5cc98a"),
-        EmotionType.Joie => Hex("#d9a91f"),
+        EmotionType.Fear => Hex("#3f9d5c"),
+        EmotionType.Trust => Hex("#5cc98a"),
+        EmotionType.Joy => Hex("#d9a91f"),
         EmotionType.Anticipation => Hex("#e08a3a"),
         _ => Hex("#8b859e"),
     };
@@ -79,16 +79,27 @@ public static class CodexCardVisual
     /// <summary>Nom français de l'émotion (« Neutre » si aucune).</summary>
     public static string EmotionName(EmotionType emotion) => emotion switch
     {
-        EmotionType.Colere => "Colère",
-        EmotionType.Degout => "Dégoût",
-        EmotionType.Tristesse => "Tristesse",
+        EmotionType.Anger => "Colère",
+        EmotionType.Disgust => "Dégoût",
+        EmotionType.Sadness => "Tristesse",
         EmotionType.Surprise => "Surprise",
-        EmotionType.Peur => "Peur",
-        EmotionType.Confiance => "Confiance",
-        EmotionType.Joie => "Joie",
+        EmotionType.Fear => "Peur",
+        EmotionType.Trust => "Confiance",
+        EmotionType.Joy => "Joie",
         EmotionType.Anticipation => "Anticipation",
         _ => "Neutre",
     };
+
+    /// <summary>Nom affiché en jeu d'une catégorie de carte.</summary>
+    public static string CategoryName(CardCategory category) => category switch
+    {
+        CardCategory.Awakening => "Éveil",
+        CardCategory.Signature => "Signature",
+        _ => "Standard",
+    };
+
+    /// <summary>Nom affiché en jeu d'un type de dégâts.</summary>
+    public static string DamageTypeName(DamageType type) => type == DamageType.Magical ? "Magique" : "Physique";
 
     /// <summary>
     /// Couleur du coût d'une carte : celle de son émotion (Colère rouge, Peur vert, Joie jaune),
@@ -121,12 +132,8 @@ public static class CodexCardVisual
     public static string Subtitle(CardData card)
     {
         string emotion = CodexCardVisual.EmotionName(card.emotionType);
-        string kind = card.category switch
-        {
-            CardCategory.Signature => "Signature" + (card.signatureOwner != null ? " · " + card.signatureOwner.championName : ""),
-            CardCategory.Eveil => "Éveil",
-            _ => "Standard",
-        };
+        string kind = CodexCardVisual.CategoryName(card.category)
+            + (card.category == CardCategory.Signature && card.signatureOwner != null ? " · " + card.signatureOwner.championName : "");
         string subtitle = emotion + " · " + kind;
         return card.costHP > 0 ? subtitle + " · " + card.costHP + " PV" : subtitle;
     }
@@ -228,14 +235,26 @@ public static class CodexCardVisual
     // ===== Pastilles d'effets =====
 
     /// <summary>
-    /// Pastilles des stats d'une unité (attaque, armure, barrière, bouclier), affichées sous la
-    /// barre de vie du boss. Seules les valeurs non nulles apparaissent.
+    /// Pastilles des stats d'une unité, affichées sous la barre de vie du boss : PM et PA (toujours,
+    /// pour voir les retraits), puis attaque, armure, barrière et bouclier s'ils sont non nuls.
+    /// PM/PA : ce qui reste pendant son tour ; hors de son tour, ce qu'elle aura à son prochain tour
+    /// (maximum moins les retraits en attente).
     /// </summary>
     public static List<CardChip> UnitChips(Unit unit)
     {
         var chips = new List<CardChip>();
         if (unit == null) return chips;
 
+        bool acting = Services.IsGridServiceAvailable() && Services.Grid.GetActiveUnit() == unit;
+        var pending = ResourceDebuffManager.GetPending(unit);
+
+        int pm = acting ? unit.GetCurrentMovementPoints() : Mathf.Max(0, unit.GetMaxMovementPoints() - pending.pm);
+        chips.Add(new CardChip("pm", pm.ToString(), ChipKind.Move));
+        if (unit is IActionPointsUser paUser)
+        {
+            int pa = acting ? paUser.GetCurrentPA() : Mathf.Max(0, paUser.GetMaxPA() - pending.pa);
+            chips.Add(new CardChip("pa", pa.ToString(), ChipKind.Move));
+        }
         if (unit.GetAttack() != 0) chips.Add(new CardChip("dmg", unit.GetAttack().ToString(), ChipKind.Damage));
 
         if (unit.GetArmor() != 0) chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Shield));

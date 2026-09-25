@@ -461,13 +461,14 @@ public class GridManager : MonoBehaviour, IGridService
     
     private void HandleTurnStart(Unit unit)
     {
-        // Traite les buffs temporaires (décrémente durée, retire les expirés)
-        unit.ProcessBuffsOnTurnStart();
+        // Passifs de l'unité liés au début de son tour (ex: combo de Raze, bouclier de Crux)
+        unit.OnOwnTurnStart();
 
-        // Les boucliers donnés par cette unité expirent au début de son tour
+        // Effets posés par cette unité (buffs, malus, boucliers) : leur durée est comptée
+        // en tours du lanceur, ils avancent donc au début de son tour
         foreach (Unit u in _units)
         {
-            u.ExpireShieldOnTurnStartOf(unit);
+            u.TickEffectsOnTurnStartOf(unit);
         }
 
         // Retraits de PA/PM programmés contre cette unité (après la remise à niveau de ses PA/PM)

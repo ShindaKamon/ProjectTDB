@@ -33,16 +33,23 @@ MonoBehaviour:
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
+  damageAroundTarget: 0
   atkIncreased: 0
   defenseAmount: 0
+  reactiveShield: 0
   armorAmount: 0
   barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
+  removeAllMovement: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
+  casterRetreat: 0
+  casterMovementGain: 0
+  casterActionGain: 0
+  casterArmorAmount: 0
   drawAmount: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

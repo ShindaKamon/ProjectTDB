@@ -169,7 +169,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 | Émotion | Identité de carte (`EmotionType`), pas de jauge | Jauges d'Éveil par émotion, paliers |
 | Cartes | `CardData` avec émotion et catégorie | + génération/consommation d'Éveil |
 | Deck | 18 cartes (2 Signature + 16 Standard), 1 base + 3 perso | 24 cartes (2 / 6 / 16) |
-| Statuts | Bouclier en PV (`Unit.AddShield`, `defenseAmount` des cartes, jauge bleue de `HealthBar`) ; armure/barrière (`Unit.ReduceByDefense`, `CardData.damageType`, `armorAmount`/`barrierAmount`) ; retraits de PA/PM ; le reste non implémenté | Retrait de PM (le plus fort remplace le plus faible), poussée/tirage, boucliers en PV, vulnérabilité |
+| Statuts | Bouclier en PV (`Unit.AddShield`, `defenseAmount` des cartes, jauge bleue de `HealthBar`) ; armure/barrière (`Unit.ReduceByDefense`, `CardData.damageType`, `armorAmount`/`barrierAmount`) ; bouclier réactif, vulnérabilité (`casterArmorAmount`), recul et élan du lanceur, dégâts autour de la cible ; durées en tours du lanceur (`Unit.TickEffectsOnTurnStartOf`) ; retraits de PA/PM ; le reste non implémenté | Retrait de PM (le plus fort remplace le plus faible), poussée/tirage, boucliers en PV, vulnérabilité |
 | IA ennemie | Deck pattern | + Attaque de base anti-lock, cycle de boss Zone/Basique/Heal |
 | Champions | Sous-classes `AceUnit`, `AlpinisteUnit`, `SorenUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
 | Main | Départ 5, max 5, pioche 1/tour | Idem (acté le 24/09) |

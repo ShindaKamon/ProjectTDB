@@ -18,7 +18,7 @@ public class BossHealthBarUI : MonoBehaviour
     [SerializeField] private Image _bossPortrait; // Portrait du boss (optionnel)
     [SerializeField] private Image _fillImage; // Image de remplissage de la barre
 
-    [Header("Stats du boss (attaque, armure, barrière, bouclier)")]
+    [Header("Stats du boss (PM, PA, attaque, armure, barrière, bouclier)")]
     [SerializeField] private Transform _statChipsContainer;
     [SerializeField] private Sprite _chipBackground;
 
@@ -69,6 +69,8 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnHealthChanged -= UpdateHealth;
             _trackedBoss.OnUnitDied -= OnBossDied;
             _trackedBoss.OnStatsModified -= RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
         }
     }
@@ -84,6 +86,8 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnHealthChanged -= UpdateHealth;
             _trackedBoss.OnUnitDied -= OnBossDied;
             _trackedBoss.OnStatsModified -= RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
         }
 
@@ -95,6 +99,8 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnHealthChanged += UpdateHealth;
             _trackedBoss.OnUnitDied += OnBossDied;
             _trackedBoss.OnStatsModified += RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged += OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged += OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged += OnBossShieldChanged;
 
             // Affiche le container
@@ -149,7 +155,7 @@ public class BossHealthBarUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Pastilles attaque / armure / barrière / bouclier sous la barre (valeurs courantes, buffs compris)
+    /// Pastilles PM / PA / attaque / armure / barrière / bouclier sous la barre (valeurs courantes)
     /// </summary>
     private void RefreshStatChips()
     {
@@ -158,6 +164,30 @@ public class BossHealthBarUI : MonoBehaviour
     }
 
     private void OnBossShieldChanged(int shield) => RefreshStatChips();
+    private void OnBossResourcesChanged(int current, int max) => RefreshStatChips();
+
+    // PM/PA affichés : restants pendant le tour du boss, sinon ceux de son prochain tour (retraits compris)
+    void OnEnable()
+    {
+        EventBus.Subscribe<ResourceDebuffChangedEvent>(OnResourceDebuffChanged);
+        EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+    }
+
+    void OnDisable()
+    {
+        EventBus.Unsubscribe<ResourceDebuffChangedEvent>(OnResourceDebuffChanged);
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+    }
+
+    private void OnResourceDebuffChanged(ResourceDebuffChangedEvent e)
+    {
+        if (e.Target == _trackedBoss) RefreshStatChips();
+    }
+
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (_trackedBoss != null) RefreshStatChips();
+    }
 
     /// <summary>
     /// Appelé quand le boss meurt
@@ -186,6 +216,8 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnHealthChanged -= UpdateHealth;
             _trackedBoss.OnUnitDied -= OnBossDied;
             _trackedBoss.OnStatsModified -= RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
             _trackedBoss = null;
         }

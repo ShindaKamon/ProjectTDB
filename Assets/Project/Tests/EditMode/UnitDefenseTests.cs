@@ -36,8 +36,8 @@ namespace ProjectTDB.Tests
         {
             Unit unit = NewUnit(armor: 7, barrier: 0);
 
-            Assert.AreEqual(33, unit.ReduceByDefense(40, DamageType.Physique));
-            Assert.AreEqual(40, unit.ReduceByDefense(40, DamageType.Magique));
+            Assert.AreEqual(33, unit.ReduceByDefense(40, DamageType.Physical));
+            Assert.AreEqual(40, unit.ReduceByDefense(40, DamageType.Magical));
         }
 
         [Test]
@@ -45,8 +45,8 @@ namespace ProjectTDB.Tests
         {
             Unit unit = NewUnit(armor: 0, barrier: 5);
 
-            Assert.AreEqual(35, unit.ReduceByDefense(40, DamageType.Magique));
-            Assert.AreEqual(40, unit.ReduceByDefense(40, DamageType.Physique));
+            Assert.AreEqual(35, unit.ReduceByDefense(40, DamageType.Magical));
+            Assert.AreEqual(40, unit.ReduceByDefense(40, DamageType.Physical));
         }
 
         [Test]
@@ -54,8 +54,8 @@ namespace ProjectTDB.Tests
         {
             Unit unit = NewUnit(armor: 20, barrier: 0);
 
-            Assert.AreEqual(1, unit.ReduceByDefense(9, DamageType.Physique));
-            Assert.AreEqual(0, unit.ReduceByDefense(0, DamageType.Physique));
+            Assert.AreEqual(1, unit.ReduceByDefense(9, DamageType.Physical));
+            Assert.AreEqual(0, unit.ReduceByDefense(0, DamageType.Physical));
         }
 
         [Test]
@@ -63,19 +63,33 @@ namespace ProjectTDB.Tests
         {
             Unit unit = NewUnit(armor: -7, barrier: 0);
 
-            Assert.AreEqual(47, unit.ReduceByDefense(40, DamageType.Physique));
+            Assert.AreEqual(47, unit.ReduceByDefense(40, DamageType.Physical));
         }
 
         [Test]
-        public void TemporaryArmorBuff_ExpiresAtNextTurnStart()
+        public void TemporaryArmorBuff_LastsUntilCastersNextTurn()
         {
-            Unit unit = NewUnit(armor: 3, barrier: 0);
-            unit.ModifyStats(0, -7, 0, 1);
-            Assert.AreEqual(-4, unit.GetArmor());
+            Unit caster = NewUnit(armor: 0, barrier: 0);
+            Unit target = NewUnit(armor: 3, barrier: 0);
+            target.ModifyStats(0, -7, 0, 1, caster);
+            Assert.AreEqual(-4, target.GetArmor());
 
-            unit.ProcessBuffsOnTurnStart();
+            target.TickEffectsOnTurnStartOf(target);
+            Assert.AreEqual(-4, target.GetArmor(), "Le tour du porteur ne compte pas : durée en tours du lanceur");
 
-            Assert.AreEqual(3, unit.GetArmor());
+            target.TickEffectsOnTurnStartOf(caster);
+            Assert.AreEqual(3, target.GetArmor());
+        }
+
+        [Test]
+        public void BuffWithoutSource_CountsInHolderTurns()
+        {
+            Unit unit = NewUnit(armor: 0, barrier: 0);
+            unit.ModifyStats(0, 5, 0, 1);
+
+            unit.TickEffectsOnTurnStartOf(unit);
+
+            Assert.AreEqual(0, unit.GetArmor());
         }
 
         [Test]
@@ -87,8 +101,8 @@ namespace ProjectTDB.Tests
 
             var chips = CodexCardVisual.UnitChips(unit);
 
-            Assert.AreEqual(new[] { "dmg", "armor", "shield" }, chips.ConvertAll(c => c.Icon));
-            Assert.AreEqual("30", chips[0].Text);
+            Assert.AreEqual(new[] { "pm", "dmg", "armor", "shield" }, chips.ConvertAll(c => c.Icon), "PM toujours affichés (0 compris)");
+            Assert.AreEqual("30", chips[1].Text);
         }
 
         [Test]

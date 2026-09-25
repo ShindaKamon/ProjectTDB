@@ -17,10 +17,9 @@ public enum ChipKind
     Damage,
     Heal,
     Shield,
-    Move,
-    Push,
+    Push,            // Déplacements : bond, recul, poussée, tirage (violet)
     Mute,
-    Warn,
+    Warn,            // Contreparties (orange)
     Defense,         // Armure et résistance magique (gris)
     ActionPoints,    // PA (bleu)
     MovementPoints   // PM (vert)
@@ -32,12 +31,14 @@ public struct CardChip
     public string Icon;
     public string Text;
     public ChipKind Kind;
+    public string Label; // Nom affiché avant l'icône (ex. « PV »), vide = aucun
 
-    public CardChip(string icon, string text, ChipKind kind)
+    public CardChip(string icon, string text, ChipKind kind, string label = "")
     {
         Icon = icon;
         Text = text;
         Kind = kind;
+        Label = label;
     }
 }
 
@@ -121,11 +122,10 @@ public static class CodexCardVisual
     public static Color ChipColor(ChipKind kind) => kind switch
     {
         ChipKind.Damage => Hex("#f08383"),
-        ChipKind.Heal => Hex("#6fd49a"),
-        ChipKind.Shield => Hex("#7fb0f0"),
-        ChipKind.Move => Hex("#e3b154"),
-        ChipKind.Push => Hex("#b59cf5"),
-        ChipKind.Warn => Hex("#e3b154"),
+        ChipKind.Heal => Hex("#ff5c8a"),      // PV et soin : rose-rouge (comme l'orbe de vie)
+        ChipKind.Shield => Hex("#5fd3e6"),    // bouclier : cyan (distinct du bleu des PA)
+        ChipKind.Push => Hex("#b59cf5"),      // déplacements (bond, recul, poussée, tirage) : violet
+        ChipKind.Warn => Hex("#e3b154"),      // contreparties uniquement : orange
         ChipKind.Defense => Hex("#b8b8c4"),
         ChipKind.ActionPoints => Hex("#5b8def"),
         ChipKind.MovementPoints => Hex("#9be15d"),
@@ -283,9 +283,9 @@ public static class CodexCardVisual
         var chips = new List<CardChip>();
         if (champion == null) return chips;
 
-        chips.Add(new CardChip("heal", champion.maxHealth.ToString(), ChipKind.Heal));
-        chips.Add(new CardChip("pm", champion.movementRange.ToString(), ChipKind.MovementPoints));
-        chips.Add(new CardChip("pa", champion.maxActionPoints.ToString(), ChipKind.ActionPoints));
+        chips.Add(new CardChip("heal", champion.maxHealth.ToString(), ChipKind.Heal, "PV"));
+        chips.Add(new CardChip("pm", champion.movementRange.ToString(), ChipKind.MovementPoints, "PM"));
+        chips.Add(new CardChip("pa", champion.maxActionPoints.ToString(), ChipKind.ActionPoints, "PA"));
         return chips;
     }
 
@@ -298,9 +298,9 @@ public static class CodexCardVisual
         var chips = new List<CardChip>();
         if (champion == null) return chips;
 
-        chips.Add(new CardChip("dmg", champion.attackDamage.ToString(), ChipKind.Damage));
-        chips.Add(new CardChip("armor", champion.armor.ToString(), ChipKind.Defense));
-        chips.Add(new CardChip("magicresist", champion.magicResistance.ToString(), ChipKind.Defense));
+        chips.Add(new CardChip("dmg", champion.attackDamage.ToString(), ChipKind.Damage, "ATQ"));
+        chips.Add(new CardChip("armor", champion.armor.ToString(), ChipKind.Defense, "ARM"));
+        chips.Add(new CardChip("magicresist", champion.magicResistance.ToString(), ChipKind.Defense, "RM"));
         return chips;
     }
 

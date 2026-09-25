@@ -67,6 +67,49 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void NextAttackBonus_AddsToNextDamagingCardOnly()
+        {
+            Unit caster = NewUnit(armor: 0, magicResistance: 0);
+            Unit target = NewUnit(armor: 0, magicResistance: 0);
+
+            var adrenaline = ScriptableObject.CreateInstance<CardData>();
+            adrenaline.targetType = CardTargetType.Self;
+            adrenaline.nextAttackBonus = 23;
+            var strike = ScriptableObject.CreateInstance<CardData>();
+            strike.targetType = CardTargetType.Enemy;
+            strike.damageAmount = 11;
+
+            adrenaline.ExecuteEffect(caster, caster);
+            Assert.AreEqual(23, caster.GetNextAttackBonus());
+
+            strike.ExecuteEffect(caster, target);
+            Assert.AreEqual(100 - 34, target.GetHealth(), "11 + 23 de bonus");
+            Assert.AreEqual(0, caster.GetNextAttackBonus(), "Bonus consommé");
+
+            strike.ExecuteEffect(caster, target);
+            Assert.AreEqual(100 - 34 - 11, target.GetHealth(), "Plus de bonus sur la carte suivante");
+
+            Object.DestroyImmediate(adrenaline);
+            Object.DestroyImmediate(strike);
+        }
+
+        [Test]
+        public void NextAttackBonus_StacksAndIsNotUsedByNonDamagingCards()
+        {
+            Unit caster = NewUnit(armor: 0, magicResistance: 0);
+            caster.AddNextAttackBonus(10);
+            caster.AddNextAttackBonus(5);
+
+            var heal = ScriptableObject.CreateInstance<CardData>();
+            heal.targetType = CardTargetType.Self;
+            heal.healAmount = 5;
+            heal.ExecuteEffect(caster, caster);
+            Object.DestroyImmediate(heal);
+
+            Assert.AreEqual(15, caster.GetNextAttackBonus());
+        }
+
+        [Test]
         public void TemporaryArmorBuff_LastsUntilCastersNextTurn()
         {
             Unit caster = NewUnit(armor: 0, magicResistance: 0);

@@ -458,6 +458,37 @@ public class Unit : MonoBehaviour
         return Mathf.Max(1, damage - defense);
     }
 
+    // ========== BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ==========
+
+    // Dégâts ajoutés à la prochaine carte qui inflige des dégâts, puis consommés ; cumulable,
+    // sans expiration (reste jusqu'à ce qu'il serve)
+    private int _nextAttackBonus;
+
+    public int GetNextAttackBonus() => _nextAttackBonus;
+
+    public void AddNextAttackBonus(int amount)
+    {
+        if (amount <= 0) return;
+
+        _nextAttackBonus += amount;
+        GameLog.Log($"{name}: +{amount} dégâts sur sa prochaine carte offensive (total {_nextAttackBonus})");
+        OnStatsModified?.Invoke();
+    }
+
+    /// <summary>
+    /// Renvoie le bonus en attente et le remet à zéro (appelé par la carte offensive qui l'utilise)
+    /// </summary>
+    public int ConsumeNextAttackBonus()
+    {
+        int bonus = _nextAttackBonus;
+        if (bonus <= 0) return 0;
+
+        _nextAttackBonus = 0;
+        GameLog.Log($"{name}: bonus de prochaine attaque consommé (+{bonus})");
+        OnStatsModified?.Invoke();
+        return bonus;
+    }
+
     // ========== BOUCLIER (PV temporaires) ==========
 
     // Absorbe les dégâts avant les PV (pas les dégâts bruts, ex: Paire de Raze).

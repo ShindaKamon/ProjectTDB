@@ -122,11 +122,11 @@ Colonnes : coût PA · portée · zone · statut · déplacement forcé · Évei
 
 | Carte | Champion | PA | Portée | Zone | Effet |
 |-------|----------|----|--------|------|-------|
-| Écho de Lyse | Evan | 1 | 1-3 | Unique | Repositionne Lyse (ou une autre invocation) jusqu'à 3 cases |
+| Écho évanescent | Evan | 1 | 1-3 | Unique | Repositionne Lyse (ou une autre invocation) jusqu'à 3 cases |
 | Invocation de Lyse | Evan | 2 | 1-3 | Unique | Invoque Lyse (PV = moitié des PV actuels d'Evan, recalculés en continu) |
 | Piolet d'ascension | Crux | 2 | 1-5 | Unique | Grappin adjacent à une unité, déclenche le Réflexe du grimpeur |
-| Corde de rappel forcé | Crux | 4 | 1-3 | 2 cibles | Ennemi : 35 dégâts + tiré de 2 cases ; allié : tiré de 2 cases sans dégâts |
-| Il triche | Raze | 1 | Mêlée | Unique | Modifie de ±1 le coût d'une carte en main (min 1) |
+| Corde de rappel | Crux | 4 | 1-3 | 2 cibles | Ennemi : 35 dégâts + tiré de 2 cases ; allié : tiré de 2 cases sans dégâts |
+| Triche | Raze | 1 | Mêlée | Unique | Modifie de ±1 le coût d'une carte en main (min 1) |
 | Tapis | Raze | 5 | Mêlée | 2 cibles | 72 dégâts, +10 par PA déjà dépensé ce tour (à retravailler) |
 
 ---

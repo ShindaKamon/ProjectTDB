@@ -100,7 +100,7 @@ Points relevés par l'auteur ; le détail des règles fait foi dans « Décision
 | Réflexe de survie : bouclier si touché | ✅ `reactiveShield` : le 1er coup ennemi déclenche le bouclier, qui l'absorbe |
 | Terreur paralysante : retirer tous les PM | ✅ `removeAllMovement` |
 | Vertige : s'applique à tous (PM) | ✅ Déjà le cas (retrait de PM sur toute la zone) |
-| Voile d'ombre : bouclier constant | ⚠️ Donne +11 d'armure **permanente, cumulable** à chaque lancer — à confirmer |
+| Voile d'ombre : bouclier constant | ✅ Bouclier de 11 (`shieldAmount`, ex-`defenseAmount`) ; Armure de rage (23) et Bouclier de la terreur (27) remis en bouclier comme le codex |
 
 ### Données
 ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, `CardCollection`). Les decks sauvegardés sont rangés **par nom de champion** et référencent les cartes **par nom** : renommer un champion (`championName`) ou une carte (`cardName`) exige d'ajouter l'ancien nom dans `RenamedChampions` / `RenamedCards` de `DeckSaveManager`, sinon les decks existants perdent le champion ou la carte. Même piège pour les émotions des decks, sauvegardées **par nom** d'enum : renommer une valeur d'`EmotionType` exige d'ajouter l'ancien nom dans `LegacyEmotionNames` de `DeckData`.

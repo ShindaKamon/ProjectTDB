@@ -197,7 +197,9 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_atkText != null && _champion != null)
         {
-            _atkText.text = $"ATQ : {_champion.GetAttack()}";
+            // Bonus de prochaine attaque en attente (ex: Montée d'adrénaline) affiché à côté
+            int bonus = _champion.GetNextAttackBonus();
+            _atkText.text = bonus > 0 ? $"ATQ : {_champion.GetAttack()} (+{bonus})" : $"ATQ : {_champion.GetAttack()}";
         }
     }
 

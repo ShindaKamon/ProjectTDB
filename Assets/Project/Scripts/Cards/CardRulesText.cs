@@ -24,15 +24,15 @@ public static class CardRulesText
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage,
                 "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : ""));
         if (card.scalesWithPASpentThisTurn && card.comboDamagePerPASpent > 0)
-            Effect("pa", ChipKind.Damage, $"+{card.comboDamagePerPASpent} dégâts par PA déjà dépensé ce tour");
+            Effect("dmg", ChipKind.Damage, $"+{card.comboDamagePerPASpent} dégâts par PA déjà dépensé ce tour");
         // Carte d'invocation : le soin ne sert que si l'invocation est déjà sur le terrain (voir ExecuteEffect)
         if (card.healAmount > 0 && !card.isSummonCard) Effect("heal", ChipKind.Heal, "Soigne " + card.healAmount);
         if (card.lifestealFixedAmount > 0) Effect("drain", ChipKind.Heal, "Vol de vie " + card.lifestealFixedAmount);
         if (card.damageAroundTarget > 0)
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage, $"Inflige {card.damageAroundTarget} aux ennemis au contact de la cible");
-        if (card.defenseAmount > 0)
-            Effect("shield", ChipKind.Shield, "Bouclier " + card.defenseAmount + (card.reactiveShield ? " au premier coup ennemi reçu" : ""));
-        if (card.atkIncreased != 0) Effect("buff", ChipKind.Shield, "ATQ " + card.atkIncreased.ToString("+#;−#") + Turns());
+        if (card.shieldAmount > 0)
+            Effect("shield", ChipKind.Shield, "Bouclier " + card.shieldAmount + (card.reactiveShield ? " au premier coup ennemi reçu" : ""));
+        if (card.nextAttackBonus > 0) Effect("buff", ChipKind.Damage, $"+{card.nextAttackBonus} dégâts sur la prochaine carte offensive");
         if (card.armorAmount != 0) Effect("armor", ChipKind.Defense, "Armure " + card.armorAmount.ToString("+#;−#") + Turns());
         if (card.magicResistanceAmount != 0) Effect("magicresist", ChipKind.Defense, "Résistance magique " + card.magicResistanceAmount.ToString("+#;−#") + Turns());
         if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Retire tous les PM au prochain tour");
@@ -41,7 +41,7 @@ public static class CardRulesText
         if (card.knockbackDistance > 0)
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));
-        if (card.isChargeCard) Effect("bond", ChipKind.Move, "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
+        if (card.isChargeCard) Effect("bond", ChipKind.Push, "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
         if (card.isSummonCard)
         {
             Effect("summon", ChipKind.Mute, "Invoque " + (card.summonPrefab != null ? SummonName(card.summonPrefab.name) : "une invocation"));
@@ -53,7 +53,7 @@ public static class CardRulesText
         if (card.casterMovementGain > 0) Effect("pm", ChipKind.MovementPoints, $"+{card.casterMovementGain} PM ce tour");
         if (card.casterActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.casterActionGain} PA ce tour");
         if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Defense, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));
-        if (card.casterRetreat > 0) Effect("push", ChipKind.Move, "Tu recules de " + Cases(card.casterRetreat));
+        if (card.casterRetreat > 0) Effect("push", ChipKind.Push, "Tu recules de " + Cases(card.casterRetreat));
 
         // Carte sur soi avec une zone : « Zone : autour de toi, … » suffit
         bool selfZone = card.targetType == CardTargetType.Self && ZoneText(card) != "";

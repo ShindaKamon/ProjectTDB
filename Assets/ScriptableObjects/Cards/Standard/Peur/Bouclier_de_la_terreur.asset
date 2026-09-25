@@ -35,12 +35,12 @@ MonoBehaviour:
   healAmount: 0
   lifestealFixedAmount: 0
   damageAroundTarget: 0
-  atkIncreased: 0
-  defenseAmount: 0
+  nextAttackBonus: 0
+  shieldAmount: 27
   reactiveShield: 0
-  armorAmount: 27
-  barrierAmount: 0
-  effectDuration: 1
+  armorAmount: 0
+  magicResistanceAmount: 0
+  effectDuration: 0
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 0

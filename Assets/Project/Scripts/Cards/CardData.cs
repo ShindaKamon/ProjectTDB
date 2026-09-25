@@ -188,23 +188,25 @@ public class CardData : ScriptableObject
     // ╚════════════════════════════════════════════════════════════════════════════╝
 
     [Header("═══ BUFFS & DÉBUFFS ═══")]
-    [Tooltip("Bonus d'attaque accordé")]
-    public int atkIncreased = 0;
+    [Tooltip("Dégâts ajoutés à la prochaine carte offensive de la cible (ex: Montée d'adrénaline), consommés par la première carte qui inflige des dégâts ; cumulable")]
+    [UnityEngine.Serialization.FormerlySerializedAs("atkIncreased")]
+    public int nextAttackBonus = 0;
 
-    [Tooltip("Bouclier en PV accordé : absorbe les dégâts avant les PV, jusqu'au début du prochain tour du lanceur")]
-    public int defenseAmount = 0;
+    [Tooltip("Bouclier : réserve de PV qui absorbe les dégâts avant les PV (une seule fois, tous types), jusqu'au début du prochain tour du lanceur. ≠ armure, qui réduit chaque coup physique")]
+    [UnityEngine.Serialization.FormerlySerializedAs("defenseAmount")]
+    public int shieldAmount = 0;
 
     [Tooltip("Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup (ex: Réflexe de survie)")]
     public bool reactiveShield = false;
 
-    [Tooltip("Armure ajoutée à la cible (négatif = armure retirée) pendant effectDuration tours")]
+    [Tooltip("Armure : retire N à CHAQUE coup physique reçu, pendant effectDuration tours du lanceur (négatif = armure retirée). ≠ bouclier, qui absorbe une seule fois")]
     public int armorAmount = 0;
 
     [Tooltip("Résistance magique ajoutée à la cible (négatif = résistance magique retirée) pendant effectDuration tours")]
     [UnityEngine.Serialization.FormerlySerializedAs("barrierAmount")]
     public int magicResistanceAmount = 0;
 
-    [Tooltip("Durée des modifications d'ATQ, d'armure et de résistance magique (cible et lanceur), en tours du lanceur : 1 = jusqu'au début de son prochain tour")]
+    [Tooltip("Durée des effets à durée, en tours du lanceur (1 = jusqu'au début de son prochain tour) : armure, résistance magique, vulnérabilité. Renseignée aussi sur les retraits de PA/PM, en vue de retraits sur plusieurs tours (aujourd'hui un retrait vaut toujours pour le prochain tour de la cible)")]
     public int effectDuration = 0;
 
     [Space(5)]
@@ -573,9 +575,9 @@ public class CardData : ScriptableObject
         // Variables locales pour les valeurs finales (modifiables par boost)
         int finalDamage = damageAmount;
         int finalHeal = healAmount;
-        int finalDefense = defenseAmount;
+        int finalShield = shieldAmount;
         int finalDraw = drawAmount;
-        int finalAtk = atkIncreased;
+        int finalNextAttackBonus = nextAttackBonus;
         int finalLifesteal = lifestealFixedAmount;
 
         // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis d'Ace) ---
@@ -586,6 +588,19 @@ public class CardData : ScriptableObject
             {
                 finalDamage += bonus;
                 GameLog.Log($"[CardData] {cardName}: +{bonus} dégâts (combo, {comboTracker.PASpentThisTurn} PA déjà dépensés ce tour)");
+            }
+        }
+
+        // --- BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ---
+        // Consommé par la première carte qui inflige des dégâts (une fois par carte : sur une
+        // carte à zone il touche toute la zone, sur une carte à cibles multiples la 1re cible)
+        if (finalDamage > 0 && !isAdditionalMultiTargetHit)
+        {
+            int attackBonus = source.ConsumeNextAttackBonus();
+            if (attackBonus > 0)
+            {
+                finalDamage += attackBonus;
+                GameLog.Log($"[CardData] {cardName}: +{attackBonus} dégâts (bonus de prochaine attaque)");
             }
         }
 
@@ -763,8 +778,8 @@ public class CardData : ScriptableObject
             }
         }
 
-        // 4. Gain de Stats (Force / Armure / Résistance magique / Bouclier)
-        if (finalAtk != 0 || finalDefense != 0 || armorAmount != 0 || magicResistanceAmount != 0)
+        // 4. Bonus de prochaine attaque, armure, résistance magique, bouclier
+        if (finalNextAttackBonus > 0 || finalShield != 0 || armorAmount != 0 || magicResistanceAmount != 0)
         {
             // Zone : toutes les unités affectées (ex: Rugissement destructeur) ; sinon la cible
             // définie, ou le lanceur pour Self/None
@@ -774,16 +789,19 @@ public class CardData : ScriptableObject
 
             foreach (Unit statTarget in statTargets)
             {
-                // Applique les stats (nécessite la méthode ModifyStats sur Unit)
-                if (finalAtk != 0 || armorAmount != 0 || magicResistanceAmount != 0)
-                    statTarget.ModifyStats(finalAtk, armorAmount, magicResistanceAmount, effectDuration, source);
+                // Bonus de dégâts sur la prochaine carte offensive de la cible (ex: Chant d'encouragement)
+                if (finalNextAttackBonus > 0) statTarget.AddNextAttackBonus(finalNextAttackBonus);
+
+                // Armure et résistance magique pendant effectDuration tours du lanceur
+                if (armorAmount != 0 || magicResistanceAmount != 0)
+                    statTarget.ModifyStats(0, armorAmount, magicResistanceAmount, effectDuration, source);
 
                 // Bouclier en PV (jusqu'au début du prochain tour du lanceur), ou bouclier
                 // réactif qui ne se déclenche qu'au premier coup ennemi (ex: Réflexe de survie)
-                if (finalDefense > 0)
+                if (finalShield > 0)
                 {
-                    if (reactiveShield) statTarget.ArmReactiveShield(finalDefense, source);
-                    else statTarget.AddShield(finalDefense, source);
+                    if (reactiveShield) statTarget.ArmReactiveShield(finalShield, source);
+                    else statTarget.AddShield(finalShield, source);
                 }
             }
         }
@@ -939,10 +957,20 @@ public class CardData : ScriptableObject
             landingReactor.OnChargeLanded();
         }
 
-        // --- MODIFICATEUR DE DÉGÂTS SORTANTS GÉNÉRIQUE (ex: Réflexe du grimpeur) ---
+        // --- BONUS DE PROCHAINE ATTAQUE puis MODIFICATEUR DE DÉGÂTS SORTANTS ---
         // Même traitement que dans ExecuteEffect, pour que les cartes de charge bénéficient
-        // aussi des modificateurs de dégâts sortants (et les consomment).
+        // aussi de ces bonus (et les consomment).
         int finalChargeDamage = damageAmount;
+        if (finalChargeDamage > 0)
+        {
+            int attackBonus = source.ConsumeNextAttackBonus();
+            if (attackBonus > 0)
+            {
+                finalChargeDamage += attackBonus;
+                GameLog.Log($"[CardData] {cardName}: +{attackBonus} dégâts de charge (bonus de prochaine attaque)");
+            }
+        }
+
         if (finalChargeDamage > 0 && source is IOutgoingDamageModifier dmgMod)
         {
             float multiplier = dmgMod.GetDamageMultiplier();

@@ -74,6 +74,20 @@ public static class CardChipsView
         fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+        // Nom de la stat avant l'icône (ex. « PV »), en encre atténuée
+        if (!string.IsNullOrEmpty(chip.Label))
+        {
+            var labelGO = new GameObject("Label", typeof(RectTransform));
+            labelGO.transform.SetParent(go.transform, false);
+            var label = labelGO.AddComponent<TextMeshProUGUI>();
+            if (font != null) label.font = font;
+            label.text = chip.Label;
+            label.fontSize = fontSize * 0.75f;
+            label.color = CodexCardVisual.InkDim;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.raycastTarget = false;
+        }
+
         if (TryGetIcon(chip.Icon, out Sprite sprite))
         {
             var iconGO = new GameObject("Icon", typeof(RectTransform));

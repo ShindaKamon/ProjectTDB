@@ -118,8 +118,9 @@ public class HealthBar : MonoBehaviour
 
     // ========== BOUCLIER ==========
 
-    private static readonly Color ShieldColor = new Color(0.30f, 0.60f, 1f);
-    private const string ShieldColorHex = "#4D99FF";
+    // Couleur du bouclier : celle de la palette unique des icônes (CodexCardVisual.ChipColor)
+    private static Color ShieldColor => CodexCardVisual.ChipColor(ChipKind.Shield);
+    private static string ShieldColorHex => "#" + ColorUtility.ToHtmlStringRGB(ShieldColor);
     private RectTransform _shieldFill;
 
     /// <summary>

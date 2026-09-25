@@ -34,11 +34,11 @@ MonoBehaviour:
   healAmount: 0
   lifestealFixedAmount: 0
   damageAroundTarget: 0
-  atkIncreased: 0
-  defenseAmount: 0
+  nextAttackBonus: 0
+  shieldAmount: 11
   reactiveShield: 0
-  armorAmount: 11
-  barrierAmount: 0
+  armorAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
@@ -50,6 +50,7 @@ MonoBehaviour:
   casterMovementGain: 0
   casterActionGain: 0
   casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

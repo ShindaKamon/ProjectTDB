@@ -55,7 +55,7 @@ namespace ProjectTDB.Tests
             caster.SetMaxHealth(100);
             var card = ScriptableObject.CreateInstance<CardData>();
             card.targetType = CardTargetType.Self;
-            card.defenseAmount = 27;
+            card.shieldAmount = 27;
             card.casterMovementLoss = 1;
 
             card.ExecuteEffect(caster, caster);

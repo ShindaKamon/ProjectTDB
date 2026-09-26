@@ -1,7 +1,7 @@
 # 🔧 Spécifications Techniques - Émotions Tactics (Project TDB)
 
-**Version:** 2.6
-**Date:** 24 Septembre 2026
+**Version:** 2.7
+**Date:** 26 Septembre 2026
 **Statut:** Reflète l'architecture actuelle.
 **Changements :**
 - v2.1 (10/09/2026) : retrait des mentions Classes et Éléments.
@@ -10,6 +10,7 @@
 - v2.4 (24/09/2026) : nettoyage hors MVP — code d'Ilya (Rage) et de Vylos (Stigmate) retiré, assets morts supprimés, prefabs champions sortis des dossiers de familles ; pool de l'éditeur de deck façon SpamDex.
 - v2.5 (24/09/2026) : règle de grille unifiée dans `GridGeometry` : 4 directions (Manhattan) partout, la portée euclidienne de certaines validations est supprimée ; IA ennemie sans contrainte d'alignement ; écho du Miroir fraternel compris.
 - v2.6 (24/09/2026) : scripts rangés par domaine (Core = infrastructure, Grid, Combat, Units/Champions|Enemies|Summons, UI/Combat…) ; palette des émotions unique (`CodexCardVisual`).
+- v2.7 (26/09/2026) : protections (bouclier en PV, armure / résistance magique, `DamageType`), texte des cartes généré (`CardRulesText`) et pastilles d'icônes, noms du code en anglais, revue Colère / Joie / Peur, anti-lock et Ténacité des monstres, ATQ option B (`nextAttackBonus`), bond (`leapToTarget`, Bond percutant), Tapis à 2 cibles ; écarts restants avec l'Excel dans « Adaptations à prévoir » (ligne Cartes MVP).
 
 ---
 
@@ -173,8 +174,9 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 | IA ennemie | Deck pattern | Attaque de base anti-lock et Ténacité faites (`EnemyAI.TryBasicAttack`, `ResourceDebuffManager`) ; reste le cycle de boss Zone/Basique/Heal |
 | Champions | Sous-classes `AceUnit`, `AlpinisteUnit`, `SorenUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
 | Main | Départ 5, max 5, pioche 1/tour | Idem (acté le 24/09) |
-| Stats | `attackDamage` et `defense` dans `ChampionData` (ATK non utilisé par les champions MVP) | Pas de stats au-delà de PV/PA/PM (à trancher) |
+| Stats | `attackDamage`, `armor`, `magicResistance` dans `ChampionData` ; ATQ descriptive (n'entre dans aucun calcul, bonus de prochaine attaque à part), armure / résistance magique actives | Armure / résistance magique actées le 25/09 ; rôle de l'ATQ à trancher |
 | Grille | Carrée 10×10, 4 directions (`GridGeometry`) | Idem (acté le 24/09) ; budget des zones de l'Excel (9 / 25 cases) à revoir |
+| Cartes MVP | Audit du 25/09 : Standard conformes sauf Effroi partagé ; Bond percutant (bond) et Tapis (2 cibles) corrigés | Corde de rappel : 1 ennemi seulement (Excel : 2 cibles, un allié est tiré sans dégâts) ; Effroi partagé : la « contagion » est approchée par un cercle de rayon 2 (à garder ou à coder) ; Signatures et cartes des monstres pas encore relues |
 
 ---
 

@@ -107,7 +107,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 ### 2. Cartes et decks
 
-- `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, type de dégâts `DamageType`, poussée/tirage (`knockbackDistance`), charge, émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
+- `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, type de dégâts `DamageType`, poussée/tirage (`knockbackDistance`), charge (ligne droite), bond (`leapToTarget` : saut sur une case vide, zone à l'arrivée), émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
 - `DeckManager` (sur l'unité) : pioche, main, défausse, coûts effectifs (`GetEffectiveCost`, overrides de coût pour Raze).
 - `DeckData` : 2 slots Signature + 16 Standard (les 6 slots Éveil ne sont pas encore ajoutés) ; `DeckSaveManager` : sauvegarde JSON, 1 deck de base + 3 decks perso par champion. Les decks référencent les cartes **par nom**.
 

@@ -152,7 +152,7 @@ public static class CodexCardVisual
         int radius = ZoneRadius(card);
 
         if (self) bits.Add(card.areaEffect == CardAreaEffect.None || card.areaEffect == CardAreaEffect.OneTile ? "sur soi" : "autour de soi");
-        else if (card.isChargeCard) bits.Add("bond " + Mathf.Max(1, card.targetRange) + " cases");
+        else if (card.isChargeCard || card.leapToTarget) bits.Add("bond " + Mathf.Max(1, card.targetRange) + " cases");
         else bits.Add(Range(card) <= 1 ? "au contact" : "portée 1-" + Range(card));
 
         string zone = card.areaEffect switch
@@ -194,7 +194,7 @@ public static class CodexCardVisual
         void Box(int x0, int y0, int n) { for (int a = -n; a <= n; a++) for (int b = -n; b <= n; b++) if (Mathf.Abs(a) + Mathf.Abs(b) <= n) Add(x0 + a, y0 + b); }
         void Team() { Add(2, 2); Add(6, 3); Add(3, 6); Add(7, 7); }
 
-        if (card.isChargeCard)
+        if (card.isChargeCard || card.leapToTarget)
         {
             // Bond : zone autour du point d'arrivée, pas de portée affichée
             int landing = Mathf.Min(cx + 3, DiagramSize - 1);

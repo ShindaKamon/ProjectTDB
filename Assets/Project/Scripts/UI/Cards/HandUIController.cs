@@ -781,6 +781,11 @@ public class HandUIController : MonoBehaviour
             Vector2Int chargeTarget = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
             _selectedCard.ExecuteChargeEffect(activeUnit, chargeTarget);
         }
+        else if (_selectedCard.leapToTarget)
+        {
+            // Bond : le lanceur saute sur la case, puis l'effet part de son point d'arrivée
+            _selectedCard.ExecuteLeapEffect(activeUnit, targetTile);
+        }
         else
         {
             _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);

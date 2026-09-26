@@ -42,6 +42,7 @@ public static class CardRulesText
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));
         if (card.isChargeCard) Effect("bond", ChipKind.Push, "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
+        if (card.leapToTarget) Effect("bond", ChipKind.Push, "Bondis sur la case visée");
         if (card.isSummonCard)
         {
             Effect("summon", ChipKind.Mute, "Invoque " + (card.summonPrefab != null ? SummonName(card.summonPrefab.name) : "une invocation"));

@@ -227,6 +227,9 @@ public class CardData : ScriptableObject
     [Tooltip("Si true, le lanceur charge vers la cible")]
     public bool isChargeCard = false;
 
+    [Tooltip("Si true, le lanceur bondit sur la case visée (par-dessus les unités, pas forcément en ligne droite), puis l'effet se déclenche depuis son point d'arrivée (ex: Bond percutant). À utiliser avec une cible « case vide »")]
+    public bool leapToTarget = false;
+
     [Tooltip("Distance de poussée/tirage ; une carte à zone pousse toutes les unités touchées")]
     public int knockbackDistance = 0;
 
@@ -1020,5 +1023,41 @@ public class CardData : ScriptableObject
         comboTracker?.OnCardResolved(this);
 
         onComplete?.Invoke();
+    }
+
+    /// <summary>
+    /// Exécute un bond (ex: Bond percutant) : le lanceur saute sur la case visée, puis l'effet
+    /// de la carte se résout normalement, centré sur son point d'arrivée.
+    /// </summary>
+    public void ExecuteLeapEffect(Unit source, Vector2Int targetTilePos)
+    {
+        source.StartCoroutine(ExecuteLeapEffectCoroutine(source, targetTilePos));
+    }
+
+    private System.Collections.IEnumerator ExecuteLeapEffectCoroutine(Unit source, Vector2Int targetTilePos)
+    {
+        // Chemin d'une seule case : le lanceur va droit sur la case, par-dessus ce qui se trouve entre
+        Tile landing = Services.Grid.GetTileAtPosition(targetTilePos);
+        if (landing != null && Services.Grid.GetUnitAtGridPos(targetTilePos) == null)
+        {
+            GameLog.Log($"🦘 BOND ! {source.name} de {source.GetCurrentGridPos()} vers {targetTilePos}");
+            source.MoveToTile(new List<Tile> { landing });
+            while (source.IsMoving())
+                yield return null;
+
+            // Un bond est un déplacement rapide : il déclenche le Réflexe du grimpeur, comme la charge
+            if (source is IChargeLandingReactor landingReactor)
+                landingReactor.OnChargeLanded();
+        }
+        else
+        {
+            GameLog.LogWarning($"{cardName} : case d'arrivée {targetTilePos} invalide ou occupée, l'effet part de la position actuelle");
+            targetTilePos = source.GetCurrentGridPos();
+        }
+
+        // Case cible = case d'arrivée : la zone se centre sur le lanceur
+        ExecuteEffect(source, null, targetTilePos);
+
+        EventBus.Publish(new ShowMovementRangeEvent(source));
     }
 }

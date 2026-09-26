@@ -152,7 +152,8 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 **Mouvement via Cartes :**
 - Certaines cartes donnent des PM bonus (contrepartie « Élan tactique » : +2 PM)
 - Téléportation possible (ignore obstacles)
-- Déplacement forcé (poussée/tirage), bond offensif, repli automatique
+- Déplacement forcé (poussée/tirage), repli automatique
+- Bond offensif (Bond percutant) : saut sur une case vide à portée, par-dessus les unités, puis zone autour du point d'arrivée ; charge (Piolet d'ascension) : ligne droite, arrêtée par la première unité
 - Grappin (Piolet d'ascension de Crux)
 
 

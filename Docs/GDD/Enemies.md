@@ -40,7 +40,7 @@ Pour le MVP (1 joueur), le multiplicateur vaut 1 : **rien à coder tout de suite
 
 ### Règle anti-lock
 
-Un monstre dont l'action est bloquée par un contrôle (retrait de PM, etc.) fait quand même son **Attaque de base**, insensible au contrôle. Le contrôle de la Peur ralentit donc les monstres sans jamais les neutraliser complètement.
+Un monstre dont l'action est bloquée par un contrôle (retrait de PM, etc.) fait quand même son **Attaque de base**, insensible au contrôle. Le contrôle de la Peur ralentit donc les monstres sans jamais les neutraliser complètement. Codée le 25/09/2026 : chaque monstre référence sa carte d'attaque de base (`EnemyData.basicAttack`, 0 PA) ; UnderBed : 10 dégâts physiques, portée 1-2 (moitié de son attaque normale). Complétée par la **Ténacité** : après une perte totale de PM, le monstre ignore les retraits de PM à son tour suivant.
 
 ## Ennemis du MVP — Donjon Orphelinat (Peur)
 

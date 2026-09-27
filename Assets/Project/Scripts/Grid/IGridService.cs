@@ -89,11 +89,4 @@ public interface IGridService
     /// Retourne la TurnStateMachine
     /// </summary>
     TurnStateMachine GetTurnStateMachine();
-
-    // ========== REPOSITORY ==========
-
-    /// <summary>
-    /// Retourne le GridRepository pour accès bas niveau
-    /// </summary>
-    GridRepository GetGridRepository();
 }

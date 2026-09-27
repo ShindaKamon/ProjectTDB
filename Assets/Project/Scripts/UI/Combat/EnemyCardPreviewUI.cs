@@ -15,6 +15,7 @@ public class EnemyCardPreviewUI : MonoBehaviour
     [SerializeField] private Image _cardIllustrationImage; // Optionnel
     [SerializeField] private GameObject _previewContainer; // Container à masquer quand pas de carte
 
+
     private Enemy _trackedEnemy;
 
     void Start()
@@ -102,13 +103,14 @@ public class EnemyCardPreviewUI : MonoBehaviour
 
         if (_cardDescriptionText != null)
         {
-            _cardDescriptionText.text = nextCard.description;
+            CardTextView.Apply(_cardDescriptionText, nextCard); // texte généré depuis les champs
         }
 
         if (_cardCostText != null)
         {
             _cardCostText.text = nextCard.costPA.ToString();
         }
+
 
         // Met à jour l'illustration si disponible
         if (_cardIllustrationImage != null && nextCard.artwork != null)

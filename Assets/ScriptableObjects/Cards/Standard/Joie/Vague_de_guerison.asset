@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Vague de gu\xE9rison"
   description: "Soigne de 24 PV les alli\xE9s dans une zone de rayon 1 \xE0 1-3 cases."
+  specialText: 
   artwork: {fileID: 0}
   emotionType: 7
   category: 0
   signatureOwner: {fileID: 0}
   costPA: 5
   costHP: 0
-  costOther: 0
   targetType: 3
   targetRange: 3
   areaEffect: 4
@@ -29,35 +29,21 @@ MonoBehaviour:
   targetsHandCard: 0
   targetCount: 1
   damageAmount: 0
+  damageType: 0
   damageSelf: 0
   healAmount: 24
   lifestealFixedAmount: 0
   atkIncreased: 0
   defenseAmount: 0
-  movementAmount: 0
+  armorAmount: 0
+  barrierAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
-  effectType: 0
   isChargeCard: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
-  damageSharePercent: 50
-  markToApply: 0
-  markStacks: 1
-  markDuration: 0
-  markBonusValue: 0
-  consumeMarks: 0
-  markToConsume: 0
-  consumeMarkTarget: 0
-  damagePerMarkStack: 0
-  healSelfPerMarkOnTarget: 0
   drawAmount: 0
-  cardToFetch: {fileID: 0}
-  fetchAmount: 0
-  cardToAddToDeck: {fileID: 0}
-  cardsToAddCount: 0
-  damagePerDebuff: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

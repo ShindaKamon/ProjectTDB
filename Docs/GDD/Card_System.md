@@ -101,11 +101,11 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 | **Enemy** | Un ou plusieurs ennemis | Attaque |
 | **Ally** | Alliés (sauf soi) | Soigner un allié |
 | **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
-| **AllyorEnemy** | Alliés ET ennemis | Corde de rappel (Crux) |
-| **AnyUnit** | N'importe quelle unité | Piolet d'ascension (Crux) |
-| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (Evan) |
-| **AnyTile** | N'importe quelle tuile | Explosion ciblée |
-| **EnemyOrTile** | Un ennemi ou une tuile | Bond, charge |
+| **AllyorEnemy** | Alliés ET ennemis | Aucune carte pour l'instant (prévu pour Corde de rappel, voir `Technical_Specs.md`) |
+| **AnyUnit** | N'importe quelle unité | Aucune carte pour l'instant |
+| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse, Écho évanescent (Evan), Bond percutant (bond) |
+| **AnyTile** | N'importe quelle tuile | Piolet d'ascension (Crux, charge en ligne droite) |
+| **EnemyOrTile** | Un ennemi ou une tuile | Aucune carte pour l'instant |
 
 ### Portée
 

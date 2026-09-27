@@ -20,7 +20,7 @@ public static class DeckRules
     /// </summary>
     public static readonly IReadOnlyList<EmotionType> AvailableEmotions = new[]
     {
-        EmotionType.Colere, EmotionType.Peur, EmotionType.Joie
+        EmotionType.Anger, EmotionType.Fear, EmotionType.Joy
     };
 
     /// <summary>
@@ -90,8 +90,8 @@ public static class DeckRules
         int slots = SlotsFor(card.category);
         if (sameCategory >= slots)
             return ValidationResult.Fail(slots == 0
-                ? $"Les cartes {card.category} ne sont pas encore disponibles"
-                : $"Plus de place pour une carte {card.category} ({slots} maximum)");
+                ? $"Les cartes {CodexCardVisual.CategoryName(card.category)} ne sont pas encore disponibles"
+                : $"Plus de place pour une carte {CodexCardVisual.CategoryName(card.category)} ({slots} maximum)");
 
         return ValidationResult.Success();
     }

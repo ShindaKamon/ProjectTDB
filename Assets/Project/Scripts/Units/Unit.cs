@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Unit : MonoBehaviour, IMarkable
+public class Unit : MonoBehaviour
 {
     // Nouvelle énumération pour les factions (Joueur ou Ennemi).
     public enum UnitFaction { Player, Enemy }
@@ -28,9 +28,6 @@ public class Unit : MonoBehaviour, IMarkable
     public event System.Action<int, int> OnHealthChanged; // Nouveau: (currentHealth, maxHealth)
     public event System.Action<int, int> OnMovementPointsChanged; // (currentPM, maxPM)
     public event System.Action OnStatsModified; // Déclenché quand ATK/DEF changent
-    public event System.Action<UnitMark> OnMarkApplied; // Déclenché quand une marque est appliquée
-    public event System.Action<UnitMark> OnMarkConsumed; // Déclenché quand une marque est consommée
-    public event System.Action<UnitMark> OnMarkExpired; // Déclenché quand une marque expire
 
     // ========== SYSTÈME DE BUFFS TEMPORAIRES ==========
 
@@ -40,34 +37,30 @@ public class Unit : MonoBehaviour, IMarkable
     public struct StatBuff
     {
         public int atkModifier;
-        public int defModifier;
-        public int remainingTurns;
+        public int armorModifier;
+        public int magicResistanceModifier;
+        public int remainingTurns; // en tours du lanceur (voir TickEffectsOnTurnStartOf)
+        public Unit source;        // lanceur ; null = compté en tours du porteur
 
-        public StatBuff(int atk, int def, int duration)
+        public StatBuff(int atk, int armor, int magicResistance, int duration, Unit source)
         {
             atkModifier = atk;
-            defModifier = def;
+            armorModifier = armor;
+            magicResistanceModifier = magicResistance;
             remainingTurns = duration;
+            this.source = source;
         }
     }
 
     // Liste des buffs actifs sur l'unité
     protected List<StatBuff> _activeBuffs = new List<StatBuff>();
 
-    // ========== SYSTÈME DE MARQUES ==========
-
-    // Liste des marques actives sur l'unité
-    protected List<UnitMark> _activeMarks = new List<UnitMark>();
-
-    // ========== SYSTÈME DE PARTAGE DE DÉGÂTS ==========
-    private Unit _damageShareReceiver; // L'unité qui recevra une partie des dégâts
-    private float _damageShareRatio;   // Pourcentage des dégâts transférés (0.0 à 1.0)
-    private int _damageShareDuration;  // Durée en tours
-
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
     protected int _health;
     protected int _attackDamage;
+    protected int _armor;   // Réduit les dégâts physiques reçus (valeur fixe, buffs compris)
+    protected int _magicResistance; // Réduit les dégâts magiques reçus (valeur fixe, buffs compris)
     protected int _maxMovementPoints; // PM (Points de Mouvement) maximum
 
     // PM (Points de Mouvement) restants pour le tour actuel.
@@ -176,19 +169,21 @@ public class Unit : MonoBehaviour, IMarkable
         // Initialise la barre avec la santé actuelle
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
     }
 
     /// <summary>
     /// Initialise les stats de base de l'unité. Doit être appelée par les classes dérivées.
     /// </summary>
-    protected virtual void InitUnitStats(int maxHealth, int movementRange, int attackDamage = 0)
+    protected virtual void InitUnitStats(int maxHealth, int movementRange, int attackDamage = 0, int armor = 0, int magicResistance = 0)
     {
         _maxHealth = maxHealth;
         _health = _maxHealth;
         _maxMovementPoints = movementRange;
         _attackDamage = attackDamage;
+        _armor = armor;
+        _magicResistance = magicResistance;
     }
 
     // Méthode pour déplacer l'unité vers une tuile spécifique de la grille.
@@ -339,20 +334,8 @@ public class Unit : MonoBehaviour, IMarkable
             return;
         }
 
-        // Gestion du partage de dégâts
-        int damageToSelf = damage;
-        if (_damageShareReceiver != null && _damageShareDuration > 0 && !_damageShareReceiver.GetUnitState().IsDead())
-        {
-            int sharedDamage = Mathf.FloorToInt(damage * _damageShareRatio);
-            if (sharedDamage > 0)
-            {
-                damageToSelf -= sharedDamage;
-                GameLog.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
-                // Applique les dégâts partagés au receveur
-                _damageShareReceiver.TakeDamage(sharedDamage);
-            }
-        }
-
+        TriggerReactiveShield();
+        int damageToSelf = AbsorbWithShield(damage);
         _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
         GameLog.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
@@ -364,7 +347,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Met à jour la barre de vie
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
 
         if (_health <= 0)
@@ -374,7 +357,8 @@ public class Unit : MonoBehaviour, IMarkable
     }
 
     /// <summary>
-    /// Inflige des dégâts bruts qui ignorent l'armure et les boucliers (utilisé pour le poison, etc.)
+    /// Inflige des dégâts qui ignorent le bouclier et les réductions en % (Paire de Raze).
+    /// L'armure et la résistance magique sont déjà déduites par l'appelant (voir ReduceByDefense).
     /// </summary>
     public void TakeRawDamage(int damage)
     {
@@ -385,22 +369,8 @@ public class Unit : MonoBehaviour, IMarkable
             return;
         }
 
-        // Gestion du partage de dégâts (même pour les dégâts bruts)
-        int damageToSelf = damage;
-        if (_damageShareReceiver != null && _damageShareDuration > 0 && !_damageShareReceiver.GetUnitState().IsDead())
-        {
-            int sharedDamage = Mathf.FloorToInt(damage * _damageShareRatio);
-            if (sharedDamage > 0)
-            {
-                damageToSelf -= sharedDamage;
-                GameLog.Log($"{name}: Partage de dégâts activé -> {sharedDamage} transférés à {_damageShareReceiver.name}");
-                // Applique les dégâts partagés au receveur (en dégâts bruts aussi)
-                _damageShareReceiver.TakeRawDamage(sharedDamage);
-            }
-        }
-
-        _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
-        GameLog.Log($"{name} a pris {damageToSelf} dégâts bruts (ignore l'armure). PV restants : {_health}/{_maxHealth}");
+        _health = Mathf.Clamp(_health - damage, 0, _maxHealth);
+        GameLog.Log($"{name} a pris {damage} dégâts bruts (ignore bouclier et réductions en %). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
@@ -409,7 +379,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Met à jour la barre de vie
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
 
         if (_health <= 0)
@@ -436,7 +406,7 @@ public class Unit : MonoBehaviour, IMarkable
 
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
 
         Die();
@@ -462,12 +432,154 @@ public class Unit : MonoBehaviour, IMarkable
         // Met à jour la barre de vie
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
 
         if (_health <= 0)
         {
             Die();
+        }
+    }
+
+    // ========== ARMURE / RÉSISTANCE MAGIQUE ==========
+
+    public int GetArmor() => _armor;
+    public int GetMagicResistance() => _magicResistance;
+
+    /// <summary>
+    /// Dégâts restants après l'armure (physique) ou la résistance magique (magique) : soustraction fixe,
+    /// minimum 1 si le coup fait des dégâts. Une valeur négative (débuff) augmente les dégâts.
+    /// </summary>
+    public int ReduceByDefense(int damage, DamageType type)
+    {
+        if (damage <= 0) return damage;
+
+        int defense = type == DamageType.Magical ? _magicResistance : _armor;
+        return Mathf.Max(1, damage - defense);
+    }
+
+    // ========== BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ==========
+
+    // Dégâts ajoutés à la prochaine carte qui inflige des dégâts, puis consommés ; cumulable,
+    // sans expiration (reste jusqu'à ce qu'il serve)
+    private int _nextAttackBonus;
+
+    public int GetNextAttackBonus() => _nextAttackBonus;
+
+    public void AddNextAttackBonus(int amount)
+    {
+        if (amount <= 0) return;
+
+        _nextAttackBonus += amount;
+        GameLog.Log($"{name}: +{amount} dégâts sur sa prochaine carte offensive (total {_nextAttackBonus})");
+        OnStatsModified?.Invoke();
+    }
+
+    /// <summary>
+    /// Renvoie le bonus en attente et le remet à zéro (appelé par la carte offensive qui l'utilise)
+    /// </summary>
+    public int ConsumeNextAttackBonus()
+    {
+        int bonus = _nextAttackBonus;
+        if (bonus <= 0) return 0;
+
+        _nextAttackBonus = 0;
+        GameLog.Log($"{name}: bonus de prochaine attaque consommé (+{bonus})");
+        OnStatsModified?.Invoke();
+        return bonus;
+    }
+
+    // ========== BOUCLIER (PV temporaires) ==========
+
+    // Absorbe les dégâts avant les PV (pas les dégâts bruts, ex: Paire de Raze).
+    // Dure jusqu'au début du prochain tour de celui qui l'a donné ; les boucliers se cumulent.
+    private int _shield;
+    private Unit _shieldSource;
+
+    public event System.Action<int> OnShieldChanged;
+    public int GetShield() => _shield;
+
+    public void AddShield(int amount, Unit source)
+    {
+        if (amount <= 0) return;
+
+        _shield += amount;
+        _shieldSource = source;
+        GameLog.Log($"{name} gagne un bouclier de {amount} (total {_shield}), jusqu'au prochain tour de {source?.name}");
+        NotifyShieldChanged();
+    }
+
+    // Bouclier réactif (ex: Réflexe de survie) : se déclenche au premier coup reçu d'un ennemi,
+    // juste avant que ce coup soit appliqué ; expire au prochain tour du lanceur s'il n'a pas servi.
+    private int _reactiveShield;
+    private Unit _reactiveShieldSource;
+
+    public void ArmReactiveShield(int amount, Unit source)
+    {
+        if (amount <= 0) return;
+
+        _reactiveShield = amount;
+        _reactiveShieldSource = source;
+        GameLog.Log($"{name}: bouclier réactif de {amount} armé (au premier coup ennemi)");
+    }
+
+    // Déclenche le bouclier réactif si le coup vient d'un ennemi (tour d'une unité d'une autre
+    // faction ; sans grille, ex. en test, tout coup compte comme ennemi)
+    private void TriggerReactiveShield()
+    {
+        if (_reactiveShield <= 0) return;
+        if (Services.IsGridServiceAvailable() && Services.Grid.GetActiveUnit()?.GetFaction() == GetFaction()) return;
+
+        int amount = _reactiveShield;
+        Unit source = _reactiveShieldSource;
+        _reactiveShield = 0;
+        _reactiveShieldSource = null;
+        GameLog.Log($"{name}: bouclier réactif déclenché");
+        AddShield(amount, source);
+    }
+
+    /// <summary>
+    /// Le bouclier (et le bouclier réactif non déclenché) expire au début du prochain tour
+    /// de celui qui l'a donné, ou tout de suite si celui-ci est mort.
+    /// </summary>
+    private void ExpireShieldsOf(Unit turnUnit)
+    {
+        if (_reactiveShield > 0 && (_reactiveShieldSource == turnUnit || IsGone(_reactiveShieldSource)))
+        {
+            GameLog.Log($"{name}: bouclier réactif expiré sans avoir servi");
+            _reactiveShield = 0;
+            _reactiveShieldSource = null;
+        }
+
+        if (_shield <= 0) return;
+        if (_shieldSource != turnUnit && !IsGone(_shieldSource)) return;
+
+        GameLog.Log($"{name}: bouclier de {_shield} expiré");
+        _shield = 0;
+        _shieldSource = null;
+        NotifyShieldChanged();
+    }
+
+    /// <summary>
+    /// Retire du bouclier ce qu'il peut absorber et renvoie les dégâts restants pour les PV.
+    /// </summary>
+    private int AbsorbWithShield(int damage)
+    {
+        if (_shield <= 0 || damage <= 0) return damage;
+
+        int absorbed = Mathf.Min(_shield, damage);
+        _shield -= absorbed;
+        GameLog.Log($"{name}: le bouclier absorbe {absorbed} dégâts (reste {_shield})");
+        OnShieldChanged?.Invoke(_shield);
+        return damage - absorbed;
+    }
+
+    private void NotifyShieldChanged()
+    {
+        OnShieldChanged?.Invoke(_shield);
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
     }
 
@@ -500,7 +612,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Met à jour la barre de vie
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
     }
 
@@ -540,7 +652,7 @@ public class Unit : MonoBehaviour, IMarkable
         // Mettre à jour la barre de vie
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(_health, _maxHealth);
+            healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
     }
 
@@ -558,6 +670,18 @@ public class Unit : MonoBehaviour, IMarkable
         _currentMovementPoints -= amount;
         if (_currentMovementPoints < 0) _currentMovementPoints = 0;
         GameLog.Log($"{name} a dépensé {amount} PM. Restant : {_currentMovementPoints}");
+        OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
+    }
+
+    /// <summary>
+    /// Gagne des PM pour ce tour (ex: Élan tactique) ; peut dépasser le maximum, remis à niveau au prochain tour.
+    /// </summary>
+    public void GainMovement(int amount)
+    {
+        if (amount <= 0) return;
+
+        _currentMovementPoints += amount;
+        GameLog.Log($"{name} gagne {amount} PM ce tour. Total : {_currentMovementPoints}");
         OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
     }
 
@@ -584,9 +708,6 @@ public class Unit : MonoBehaviour, IMarkable
 
         // Phase 3.4: Marque comme mort
         _unitState?.SetDead();
-
-        // Retire toutes les marques sur cette unité
-        ClearAllMarks();
 
         OnUnitDied?.Invoke(this);
 
@@ -624,6 +745,11 @@ public class Unit : MonoBehaviour, IMarkable
         return UnitFaction.Player; // Par défaut, une Unit de base est considérée comme Player (ou neutre)
     }
 
+    /// <summary>
+    /// False pour une unité sans tour propre (invocation) : la rotation des tours la saute.
+    /// </summary>
+    public virtual bool TakesTurns => true;
+
     // Getter pour la position de grille actuelle de l'unité.
     public Vector2Int GetCurrentGridPos()
     {
@@ -645,33 +771,53 @@ public class Unit : MonoBehaviour, IMarkable
     // ont été déplacées vers les classes Champion et Enemy
 
     /// <summary>
-    /// Modifie les stats de l'unité (ATK, DEF).
-    /// Si duration > 0, crée un buff temporaire qui sera retiré après X tours.
-    /// Si duration == 0, le buff est permanent.
+    /// Modifie les stats de l'unité (ATK, armure, résistance magique).
+    /// Si duration > 0, crée un buff temporaire qui dure `duration` tours du lanceur (source) :
+    /// « 1 tour » = jusqu'au début du prochain tour du lanceur. Si duration == 0, c'est permanent.
     /// </summary>
-    public virtual void ModifyStats(int atk, int def, int duration)
+    public virtual void ModifyStats(int atk, int armor, int magicResistance, int duration, Unit source = null)
     {
         // Applique immédiatement les modifications
         _attackDamage += atk;
+        _armor += armor;
+        _magicResistance += magicResistance;
 
         // Si duration > 0, enregistre le buff pour le retirer plus tard
-        if (duration > 0 && (atk != 0 || def != 0))
+        if (duration > 0 && (atk != 0 || armor != 0 || magicResistance != 0))
         {
-            _activeBuffs.Add(new StatBuff(atk, def, duration));
-            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, DEF: {def} pour {duration} tour(s)");
+            _activeBuffs.Add(new StatBuff(atk, armor, magicResistance, duration, source));
+            GameLog.Log($"{name}: Buff temporaire ajouté - ATK: {atk}, armure: {armor}, résistance magique: {magicResistance} pour {duration} tour(s) de {source?.name ?? name}");
         }
-        else if (atk != 0)
+        else if (atk != 0 || armor != 0 || magicResistance != 0)
         {
-            GameLog.Log($"{name}: ATK modifiée de {atk} (Total: {_attackDamage}) - permanent");
+            GameLog.Log($"{name}: stats modifiées de façon permanente - ATK {_attackDamage}, armure {_armor}, résistance magique {_magicResistance}");
         }
 
         OnStatsModified?.Invoke();
     }
 
     /// <summary>
-    /// Appelé au début du tour de l'unité pour décrémenter et retirer les buffs expirés
+    /// Début du tour de cette unité : ses passifs propres (surchargé par les champions).
+    /// Les effets temporaires (buffs, boucliers) avancent dans TickEffectsOnTurnStartOf.
     /// </summary>
-    public virtual void ProcessBuffsOnTurnStart()
+    public virtual void OnOwnTurnStart()
+    {
+    }
+
+    /// <summary>
+    /// Appelé au début du tour de chaque unité : les effets posés sur cette unité par
+    /// `turnUnit` avancent d'un tour (durée comptée en tours du lanceur) ; ceux dont le
+    /// lanceur est mort ou a disparu expirent.
+    /// </summary>
+    public void TickEffectsOnTurnStartOf(Unit turnUnit)
+    {
+        TickBuffs(turnUnit);
+        ExpireShieldsOf(turnUnit);
+    }
+
+    private static bool IsGone(Unit unit) => unit == null || (unit.GetUnitState()?.IsDead() ?? false);
+
+    private void TickBuffs(Unit turnUnit)
     {
         if (_activeBuffs.Count == 0) return;
 
@@ -681,15 +827,21 @@ public class Unit : MonoBehaviour, IMarkable
         for (int i = _activeBuffs.Count - 1; i >= 0; i--)
         {
             StatBuff buff = _activeBuffs[i];
-            buff.remainingTurns--;
+            bool noSource = ReferenceEquals(buff.source, null); // compté en tours du porteur
+            bool sourceGone = !noSource && IsGone(buff.source);
+            bool sourceTurn = noSource ? turnUnit == this : buff.source == turnUnit;
+            if (!sourceTurn && !sourceGone) continue;
+
+            buff.remainingTurns = sourceGone ? 0 : buff.remainingTurns - 1;
 
             if (buff.remainingTurns <= 0)
             {
                 // Retire les effets du buff
                 _attackDamage -= buff.atkModifier;
-                // Note: DEF est géré par les classes dérivées (Enemy)
+                _armor -= buff.armorModifier;
+                _magicResistance -= buff.magicResistanceModifier;
 
-                GameLog.Log($"{name}: Buff expiré - ATK restaurée de {buff.atkModifier}");
+                GameLog.Log($"{name}: Buff expiré - ATK {-buff.atkModifier:+#;-#;0}, armure {-buff.armorModifier:+#;-#;0}, résistance magique {-buff.magicResistanceModifier:+#;-#;0}");
                 _activeBuffs.RemoveAt(i);
                 statsChanged = true;
             }
@@ -704,27 +856,6 @@ public class Unit : MonoBehaviour, IMarkable
         {
             OnStatsModified?.Invoke();
         }
-
-        // Gestion de la durée du partage de dégâts
-        if (_damageShareDuration > 0)
-        {
-            _damageShareDuration--;
-            if (_damageShareDuration <= 0)
-                GameLog.Log($"{name}: Le lien de partage de dégâts avec {_damageShareReceiver?.name} a expiré.");
-        }
-    }
-
-    /// <summary>
-    /// Retourne la liste des buffs actifs (pour les classes dérivées)
-    /// </summary>
-    protected List<StatBuff> GetActiveBuffs() => _activeBuffs;
-
-    /// <summary>
-    /// Permet aux classes dérivées de déclencher l'événement OnStatsModified
-    /// </summary>
-    protected void NotifyStatsModified()
-    {
-        OnStatsModified?.Invoke();
     }
 
     /// <summary>
@@ -798,311 +929,5 @@ public class Unit : MonoBehaviour, IMarkable
         }
 
         return finalPos;
-    }
-
-    /// <summary>
-    /// Configure un lien de partage de dégâts
-    /// </summary>
-    public void SetDamageShare(Unit receiver, float ratio, int duration)
-    {
-        _damageShareReceiver = receiver;
-        _damageShareRatio = Mathf.Clamp01(ratio);
-        _damageShareDuration = duration;
-        GameLog.Log($"{name}: Lien de partage de dégâts établi avec {receiver.name} (Ratio: {ratio:P0}, Durée: {duration} tours)");
-    }
-
-    // ========== IMPLÉMENTATION IMarkable ==========
-
-    /// <summary>
-    /// Applique une marque sur l'unité
-    /// </summary>
-    public void ApplyMark(UnitMark mark)
-    {
-        // Vérifie si l'unité peut recevoir des marques (pas morte)
-        if (_unitState != null && _unitState.IsDead())
-        {
-            GameLog.LogWarning($"{name}: Cannot receive mark - unit is dead");
-            return;
-        }
-
-        // Cherche si une marque du même type existe déjà
-        int existingIndex = _activeMarks.FindIndex(m => m.markType == mark.markType);
-
-        if (existingIndex >= 0)
-        {
-            // Ajoute les stacks à la marque existante
-            UnitMark existing = _activeMarks[existingIndex];
-            existing = existing.AddStacks(mark.stacks);
-
-            // Met à jour la durée si la nouvelle est plus longue
-            if (mark.remainingTurns > existing.remainingTurns)
-            {
-                existing.remainingTurns = mark.remainingTurns;
-            }
-
-            // Met à jour le bonus si plus élevé
-            if (mark.bonusValue > existing.bonusValue)
-            {
-                existing.bonusValue = mark.bonusValue;
-            }
-
-            _activeMarks[existingIndex] = existing;
-            GameLog.Log($"{name}: Marque {mark.markType} renforcée - Total stacks: {existing.stacks}");
-        }
-        else
-        {
-            // Ajoute une nouvelle marque
-            _activeMarks.Add(mark);
-            GameLog.Log($"{name}: Nouvelle marque {mark.markType} appliquée ({mark.stacks} stack(s))");
-        }
-
-        // Publie l'événement
-        OnMarkApplied?.Invoke(mark);
-        EventBus.Publish(new UnitMarkedEvent(this, mark));
-    }
-
-    /// <summary>
-    /// Applique une marque avec les paramètres spécifiés
-    /// </summary>
-    public void ApplyMark(MarkType type, Unit source, int stacks = 1, int duration = 0, int bonusValue = 0)
-    {
-        UnitMark newMark = new UnitMark(type, source, stacks, duration, bonusValue);
-        ApplyMark(newMark);
-    }
-
-    /// <summary>
-    /// Consomme une marque et retourne ses données
-    /// </summary>
-    public UnitMark ConsumeMark(MarkType type, bool consumeAllStacks = true)
-    {
-        int index = _activeMarks.FindIndex(m => m.markType == type);
-
-        if (index < 0)
-        {
-            return new UnitMark(MarkType.None, null, 0, 0, 0);
-        }
-
-        UnitMark mark = _activeMarks[index];
-
-        if (consumeAllStacks || mark.stacks <= 1)
-        {
-            // Retire complètement la marque
-            _activeMarks.RemoveAt(index);
-            GameLog.Log($"{name}: Marque {type} consommée ({mark.stacks} stack(s))");
-        }
-        else
-        {
-            // Retire un seul stack
-            mark = mark.RemoveStacks(1);
-            _activeMarks[index] = mark;
-
-            // Crée une copie avec 1 stack pour le retour
-            UnitMark consumedMark = new UnitMark(type, mark.appliedBy, 1, mark.remainingTurns, mark.bonusValue);
-            GameLog.Log($"{name}: 1 stack de {type} consommé (reste: {mark.stacks})");
-
-            OnMarkConsumed?.Invoke(consumedMark);
-            EventBus.Publish(new MarkConsumedEvent(this, consumedMark));
-            return consumedMark;
-        }
-
-        OnMarkConsumed?.Invoke(mark);
-        EventBus.Publish(new MarkConsumedEvent(this, mark));
-        return mark;
-    }
-
-    /// <summary>
-    /// Consomme une marque appliquée par une source spécifique
-    /// </summary>
-    public UnitMark ConsumeMarkFromSource(MarkType type, Unit source)
-    {
-        int index = _activeMarks.FindIndex(m => m.markType == type && m.appliedBy == source);
-
-        if (index < 0)
-        {
-            return new UnitMark(MarkType.None, null, 0, 0, 0);
-        }
-
-        UnitMark mark = _activeMarks[index];
-        _activeMarks.RemoveAt(index);
-
-        GameLog.Log($"{name}: Marque {type} de {source.name} consommée ({mark.stacks} stack(s))");
-
-        OnMarkConsumed?.Invoke(mark);
-        EventBus.Publish(new MarkConsumedEvent(this, mark));
-        return mark;
-    }
-
-    /// <summary>
-    /// Consomme TOUTES les marques appliquées par une source spécifique (utilisé pour AllMarks)
-    /// </summary>
-    public List<UnitMark> ConsumeAllMarksFromSource(Unit source)
-    {
-        List<UnitMark> consumedMarks = new List<UnitMark>();
-
-        // Trouve toutes les marques de cette source
-        List<UnitMark> marksToConsume = _activeMarks.FindAll(m => m.appliedBy == source);
-
-        foreach (UnitMark mark in marksToConsume)
-        {
-            _activeMarks.Remove(mark);
-            consumedMarks.Add(mark);
-
-            GameLog.Log($"{name}: Marque {mark.markType} de {source.name} consommée ({mark.stacks} stack(s))");
-
-            OnMarkConsumed?.Invoke(mark);
-            EventBus.Publish(new MarkConsumedEvent(this, mark));
-        }
-
-        return consumedMarks;
-    }
-
-    /// <summary>
-    /// Retire une marque sans déclencher d'effet
-    /// </summary>
-    public void RemoveMark(MarkType type)
-    {
-        int index = _activeMarks.FindIndex(m => m.markType == type);
-
-        if (index >= 0)
-        {
-            UnitMark mark = _activeMarks[index];
-            _activeMarks.RemoveAt(index);
-            GameLog.Log($"{name}: Marque {type} retirée");
-
-            OnMarkExpired?.Invoke(mark);
-            EventBus.Publish(new MarkExpiredEvent(this, mark, false));
-        }
-    }
-
-    /// <summary>
-    /// Vérifie si l'unité possède une marque d'un type donné
-    /// </summary>
-    public bool HasMark(MarkType type)
-    {
-        return _activeMarks.Exists(m => m.markType == type);
-    }
-
-    /// <summary>
-    /// Vérifie si l'unité possède une marque d'une source spécifique
-    /// </summary>
-    public bool HasMarkFromSource(MarkType type, Unit source)
-    {
-        return _activeMarks.Exists(m => m.markType == type && m.appliedBy == source);
-    }
-
-    /// <summary>
-    /// Retourne le nombre de stacks d'une marque
-    /// </summary>
-    public int GetMarkStacks(MarkType type)
-    {
-        UnitMark? mark = GetMark(type);
-        return mark?.stacks ?? 0;
-    }
-
-    /// <summary>
-    /// Retourne toutes les marques actives
-    /// </summary>
-    public List<UnitMark> GetAllMarks()
-    {
-        return new List<UnitMark>(_activeMarks);
-    }
-
-    /// <summary>
-    /// Retourne une marque spécifique si elle existe
-    /// </summary>
-    public UnitMark? GetMark(MarkType type)
-    {
-        int index = _activeMarks.FindIndex(m => m.markType == type);
-        if (index >= 0)
-        {
-            return _activeMarks[index];
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Traite les marques au début du tour (décrémente durées, retire les expirées, applique les effets)
-    /// </summary>
-    public void ProcessMarksOnTurnStart()
-    {
-        if (_activeMarks.Count == 0) return;
-
-        // Parcourt les marques en sens inverse pour pouvoir supprimer pendant l'itération
-        for (int i = _activeMarks.Count - 1; i >= 0; i--)
-        {
-            UnitMark mark = _activeMarks[i];
-
-            // Applique les effets des marques au début du tour
-            if (mark.markType == MarkType.Poison)
-            {
-                // Le poison inflige 10 dégâts bruts par stack
-                int poisonDamage = 10 * mark.stacks;
-                GameLog.Log($"☠️ POISON ! {name} perd {poisonDamage} PV (dégâts bruts, ignore l'armure)");
-                TakeRawDamage(poisonDamage);
-            }
-
-            // Ne décrémente que les marques non-permanentes
-            if (!mark.IsPermanent)
-            {
-                bool expired = mark.DecrementTurn();
-
-                if (expired)
-                {
-                    GameLog.Log($"{name}: Marque {mark.markType} expirée");
-                    _activeMarks.RemoveAt(i);
-
-                    OnMarkExpired?.Invoke(mark);
-                    EventBus.Publish(new MarkExpiredEvent(this, mark, true));
-                }
-                else
-                {
-                    _activeMarks[i] = mark;
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Retourne le nombre total de marques actives sur l'unité
-    /// </summary>
-    public int GetTotalMarkCount()
-    {
-        return _activeMarks.Count;
-    }
-
-    /// <summary>
-    /// Compte le nombre de malus actifs (Marques, Debuffs de stats, Perte de PA prévue)
-    /// </summary>
-    public int GetDebuffCount()
-    {
-        int count = 0;
-
-        // 1. Marques (chaque type de marque compte pour 1)
-        count += _activeMarks.Count;
-
-        // 2. Debuffs de stats (chaque buff avec une stat négative compte pour 1)
-        foreach (var buff in _activeBuffs)
-        {
-            if (buff.atkModifier < 0 || buff.defModifier < 0)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    /// <summary>
-    /// Retire toutes les marques de l'unité
-    /// </summary>
-    public void ClearAllMarks()
-    {
-        foreach (var mark in _activeMarks)
-        {
-            OnMarkExpired?.Invoke(mark);
-            EventBus.Publish(new MarkExpiredEvent(this, mark, false));
-        }
-        _activeMarks.Clear();
-        GameLog.Log($"{name}: Toutes les marques ont été retirées");
     }
 } 

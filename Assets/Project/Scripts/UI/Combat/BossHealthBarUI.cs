@@ -18,6 +18,10 @@ public class BossHealthBarUI : MonoBehaviour
     [SerializeField] private Image _bossPortrait; // Portrait du boss (optionnel)
     [SerializeField] private Image _fillImage; // Image de remplissage de la barre
 
+    [Header("Stats du boss (PM, PA, attaque, armure, résistance magique, bouclier)")]
+    [SerializeField] private Transform _statChipsContainer;
+    [SerializeField] private Sprite _chipBackground;
+
     private Enemy _trackedBoss;
 
     void Start()
@@ -64,6 +68,10 @@ public class BossHealthBarUI : MonoBehaviour
         {
             _trackedBoss.OnHealthChanged -= UpdateHealth;
             _trackedBoss.OnUnitDied -= OnBossDied;
+            _trackedBoss.OnStatsModified -= RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
         }
     }
 
@@ -77,6 +85,10 @@ public class BossHealthBarUI : MonoBehaviour
         {
             _trackedBoss.OnHealthChanged -= UpdateHealth;
             _trackedBoss.OnUnitDied -= OnBossDied;
+            _trackedBoss.OnStatsModified -= RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
         }
 
         _trackedBoss = boss;
@@ -86,6 +98,10 @@ public class BossHealthBarUI : MonoBehaviour
             // S'abonne aux événements
             _trackedBoss.OnHealthChanged += UpdateHealth;
             _trackedBoss.OnUnitDied += OnBossDied;
+            _trackedBoss.OnStatsModified += RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged += OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged += OnBossResourcesChanged;
+            _trackedBoss.OnShieldChanged += OnBossShieldChanged;
 
             // Affiche le container
             if (_container != null)
@@ -101,6 +117,7 @@ public class BossHealthBarUI : MonoBehaviour
 
             // Initialise la barre de vie
             UpdateHealth(_trackedBoss.GetHealth(), _trackedBoss.GetMaxHealth());
+            RefreshStatChips();
 
             // TODO: Charger le portrait si disponible
             // if (_bossPortrait != null && boss.GetEnemyData().portrait != null)
@@ -138,6 +155,41 @@ public class BossHealthBarUI : MonoBehaviour
     }
 
     /// <summary>
+    /// Pastilles PM / PA / attaque / armure / résistance magique / bouclier sous la barre (valeurs courantes)
+    /// </summary>
+    private void RefreshStatChips()
+    {
+        CardChipsView.Build(_statChipsContainer, CodexCardVisual.UnitChips(_trackedBoss), _chipBackground,
+            _bossNameText != null ? _bossNameText.font : null, 20f, 22f);
+    }
+
+    private void OnBossShieldChanged(int shield) => RefreshStatChips();
+    private void OnBossResourcesChanged(int current, int max) => RefreshStatChips();
+
+    // PM/PA affichés : restants pendant le tour du boss, sinon ceux de son prochain tour (retraits compris)
+    void OnEnable()
+    {
+        EventBus.Subscribe<ResourceDebuffChangedEvent>(OnResourceDebuffChanged);
+        EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+    }
+
+    void OnDisable()
+    {
+        EventBus.Unsubscribe<ResourceDebuffChangedEvent>(OnResourceDebuffChanged);
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+    }
+
+    private void OnResourceDebuffChanged(ResourceDebuffChangedEvent e)
+    {
+        if (e.Target == _trackedBoss) RefreshStatChips();
+    }
+
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (_trackedBoss != null) RefreshStatChips();
+    }
+
+    /// <summary>
     /// Appelé quand le boss meurt
     /// </summary>
     private void OnBossDied(Unit boss)
@@ -163,18 +215,12 @@ public class BossHealthBarUI : MonoBehaviour
         {
             _trackedBoss.OnHealthChanged -= UpdateHealth;
             _trackedBoss.OnUnitDied -= OnBossDied;
+            _trackedBoss.OnStatsModified -= RefreshStatChips;
+            _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
+            _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
             _trackedBoss = null;
         }
     }
 
-    /// <summary>
-    /// Change la couleur de la barre (optionnel, pour effets visuels)
-    /// </summary>
-    public void SetBarColor(Color color)
-    {
-        if (_fillImage != null)
-        {
-            _fillImage.color = color;
-        }
-    }
 }

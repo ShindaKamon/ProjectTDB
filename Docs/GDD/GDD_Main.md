@@ -125,7 +125,8 @@ Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 | **PA + PM** | **Budget fixe de 9 points par tour**, réparti par profil de personnage (min 3 PA, min 2 PM). Ex : brutal 6/3, équilibré 5/4, mobile 4/5. Identique à tous les niveaux. |
 | **PV** | 100 au niveau 1, +15 par niveau |
 | **Éveil** | Une jauge par émotion, alimentée par les cartes (voir `SYSTEME_EMOTIONS.md`) |
-| **Autres stats** (armure, résistances, critique…) | **Non définies** — à trancher |
+| **Armure / Résistance magique** | Réduction **fixe** des dégâts physiques (armure) ou magiques (résistance magique) ; type de dégâts choisi par carte ; stats de base des champions et monstres (0 par défaut), modifiables par les cartes (voir `Combat_System.md`) |
+| **Autres stats** (résistances, critique…) | **Non définies** — à trancher |
 
 **Règle d'or** : le niveau d'un champion n'augmente **jamais** la puissance des cartes ni les PA/PM. Il n'augmente que les PV, les passifs et les slots de cartes.
 
@@ -202,7 +203,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - [x] Règle de main/pioche : celle du code (départ 5, max 5, pioche 1/tour) — 24/09
 - [x] Grille carrée 4 directions (24/09) — reste à corriger la Roadmap de l'Excel (« hexagonale ») et le budget des zones (5 / 13 cases au lieu de 9 / 25)
 - [ ] Monstres de l'Orphelinat (stats selon le barème, patterns)
-- [ ] Adapter le code : Éveil (jauge + 6 slots de deck), statuts de contrôle, anti-lock, cycle de boss
+- [ ] Adapter le code : Éveil (jauge + 6 slots de deck), cycle de boss (statuts de contrôle et anti-lock : faits le 25/09)
 - [ ] Désaturation visuelle des donjons
 
 ## Objectifs de Design
@@ -271,16 +272,23 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
 | Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |
 | Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer | 24/09 |
-| Textes des cartes | Descriptions issues du codex émotionnel (`Docs/GDD/codex_emotionnel.html`), style simple : 1-2 phrases courtes, verbe + cible + chiffre (+ contrepartie), sans conseil ni parenthèse (ex. « Inflige 11 dégâts à un ennemi au contact. ») | 24/09 |
+| Textes des cartes | **Générés depuis les données** de la carte (`CardRulesText.Build`) : une ligne par effet avec son icône (« ↗ Inflige 33 »), puis « Cible : 1 ennemi · au contact », « Zone : cercle de 1 (ennemis) », la contrepartie en orange et, si besoin, « Spécial : … » (champ `specialText`, seulement pour une règle que les champs ne décrivent pas). Pas de texte d'ambiance pour l'instant. Le texte du codex reste dans `description` (recherche) mais n'est plus affiché ; Aura de terreur retire **1 PA** (calcul Excel) ; Bouclier de la terreur : le lanceur perd 1 PM à son prochain tour (`casterMovementLoss`) | 25/09 |
 | Miroir fraternel | Portée = celle de la carte jouée, mesurée depuis Lyse en 4 directions (comme toute la grille) ; cible = celle d'Evan si à portée, sinon la plus proche ; automatique (MVP) | 24/09 |
 | Construction de deck | Un champion peut jouer toutes les émotions, mais chaque deck a 1 ou 2 couleurs (choisies à la création) et ne contient que ces couleurs ; 4 exemplaires max par carte ; Signatures du champion obligatoires, 1 exemplaire chacune (nombre à redéfinir plus tard) ; Signatures des autres champions interdites | 24/09 |
+| Bouclier | En **PV** (et non en %) : absorbe les dégâts avant les PV, jauge bleue sur la barre de vie, cumulable, dure jusqu'au début du prochain tour du lanceur, ignoré par la Paire de Raze. Les réductions en % restent pour les passifs de Crux et Raze ; Aura de terreur retire **1 PA** (calcul Excel) ; Bouclier de la terreur : le lanceur perd 1 PM à son prochain tour (`casterMovementLoss`) | 25/09 |
+| Armure et résistance magique | Deux stats distinctes du bouclier : l'armure réduit les dégâts physiques, la résistance magique les magiques, par **soustraction fixe** (min. 1) ; le type de dégâts est choisi **par carte** ; stats de base sur champions et monstres (0 par défaut) ; la Paire de Raze perce le bouclier mais **pas** l'armure ni la résistance magique ; Aura de terreur retire **1 PA** (calcul Excel) ; Bouclier de la terreur : le lanceur perd 1 PM à son prochain tour (`casterMovementLoss`) | 25/09 |
+| Durée des effets | Comptée **en tours du lanceur** : « 1 tour » = jusqu'au début du prochain tour de celui qui a joué la carte (buffs, malus, bouclier, vulnérabilité) ; un effet dont le lanceur meurt expire. Les retraits de PA/PM restent « au prochain tour de la cible » | 25/09 |
+| Revue Joie / Peur | Vulnérabilité = armure du lanceur (Communion joyeuse et Euphorie aveuglante : −5, valeur à équilibrer) ; Voile d'ombre = bouclier de 11, Armure de rage (23) et Bouclier de la terreur (27) remis en bouclier comme le codex ; Éclat de joie blesse **tous** les ennemis au contact de l'allié soigné ; Réflexe de survie = bouclier réactif qui absorbe le 1er coup ; nouveaux champs `casterRetreat`, `casterMovementGain` / `casterActionGain`, `casterArmorAmount`, `damageAroundTarget`, `reactiveShield`, `removeAllMovement` ; les PM/PA du boss sont affichés (restants pendant son tour, sinon ceux de son prochain tour) ; Aura de terreur retire **1 PA** (calcul Excel) ; Bouclier de la terreur : le lanceur perd 1 PM à son prochain tour (`casterMovementLoss`) | 25/09 |
+| Anti-lock et Ténacité | Monstre contrôlé (PA ou PM retirés) qui ne peut pas jouer sa carte → **attaque de base** gratuite (`EnemyData.basicAttack`, UnderBed : 10 dégâts, portée 1-2). Après une **perte totale de PM**, le monstre ignore les retraits de PM à son tour suivant (option A, contre le blocage permanent) | 25/09 |
+| ATQ (option B) | Montée d'adrénaline / Chant d'encouragement : **+N dégâts fixes sur la prochaine carte offensive** de la cible (`nextAttackBonus`), consommés par la première carte qui inflige des dégâts ; cumulable, sans expiration ; ajoutés avant le % de Crux, puis l'armure / résistance magique de la cible. La stat ATQ reste descriptive (n'entre dans aucun calcul) ; le HUD affiche le bonus en attente (« ATQ : 15 (+23) ») | 25/09 |
+| Bond percutant et Tapis | **Bond** (`leapToTarget`) : le lanceur saute sur une **case vide** à portée (par-dessus les unités, pas forcément en ligne droite, contrairement à la charge), puis la zone se déclenche autour de son point d'arrivée ; il déclenche le Réflexe du grimpeur comme une charge. Tapis vise **2 ennemis** (Excel) | 25/09 |
 
 ## Questions ouvertes
 
 **Issues de l'Excel (onglet Roadmap) :**
 - **Éveil** : rythme de remplissage (base : 2 points par palier, jauge par émotion) et contenu des 6 cartes d'Éveil — **mis de côté le 24/09/2026**, à réfléchir plus tard
 - **Équipement** : existe-t-il ? Impact sur quoi ?
-- **Stats au-delà de PV/PA/PM** (armure, résistances, critique…)
+- **Stats au-delà de PV/PA/PM/armure/résistance magique** (résistances, critique…) ; valeurs d'armure et de résistance magique des champions, des monstres et des cartes (type physique/magique de chaque carte) à caler en playtest
 - **Cartes bi-émotion dédiées**
 - **Oppositions d'émotions** (paires Plutchik) — repoussé volontairement
 

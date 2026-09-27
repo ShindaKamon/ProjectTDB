@@ -32,7 +32,10 @@ public class TurnIndicatorUI : MonoBehaviour
 
     private void RefreshFromCurrentState()
     {
-        TurnStateMachine turnStateMachine = Services.Grid?.GetTurnStateMachine();
+        // Au chargement de la scène, GridManager peut ne pas être encore enregistré (ordre des Awake/OnEnable)
+        if (!Services.IsGridServiceAvailable()) return;
+
+        TurnStateMachine turnStateMachine = Services.Grid.GetTurnStateMachine();
         if (turnStateMachine == null) return;
 
         ApplyState(turnStateMachine.GetCurrentState());

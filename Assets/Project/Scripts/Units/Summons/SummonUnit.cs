@@ -39,6 +39,9 @@ public class SummonUnit : Unit
     // Une invocation suit la faction de son propriétaire (par défaut Player, comme Unit de base).
     public override UnitFaction GetFaction() => _owner != null ? _owner.GetFaction() : base.GetFaction();
 
+    // Pilotée par les cartes de son invocateur : pas de tour propre
+    public override bool TakesTurns => false;
+
     /// <summary>
     /// Téléporte l'invocation directement sur une nouvelle case (pas de pathfinding/animation —
     /// utilisé par les cartes de repositionnement comme Écho évanescent).

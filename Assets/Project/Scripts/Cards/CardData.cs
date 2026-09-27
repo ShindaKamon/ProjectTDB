@@ -44,35 +44,23 @@ public enum CardAffectedTarget
 public enum EmotionType
 {
     None,
-    Colere,         // Rouge #D64545
-    Degout,         // Violet #9A4FBF
-    Tristesse,      // Bleu #5A6FD8
-    Surprise,       // Bleu clair #4FA8E8
-    Peur,           // Vert #3F9D5C
-    Confiance,      // Vert clair #5CC98A
-    Joie,           // Jaune #D9A91F
-    Anticipation    // Orange #E08A3A
-}
-
-public enum CardEffectType
-{
-    None,       // Aucun
-    Riposte,    // Riposte
-    Taunt,      // Taunt
-    Knockback,  // Knockback
-    Debuff,     // Debuff
-    DamageShare // Partage de dégâts (le lanceur prend une partie des dégâts de la cible)
+    Anger,          // Colère — rouge #D64545
+    Disgust,        // Dégoût — violet #9A4FBF
+    Sadness,        // Tristesse — bleu #5A6FD8
+    Surprise,       // Surprise — bleu clair #4FA8E8
+    Fear,           // Peur — vert #3F9D5C
+    Trust,          // Confiance — vert clair #5CC98A
+    Joy,            // Joie — jaune #D9A91F
+    Anticipation    // Anticipation — orange #E08A3A
 }
 
 /// <summary>
-/// Cibles pour la consommation de marques (indépendant du targetType de la carte)
+/// Type de dégâts d'une carte : l'armure réduit les dégâts physiques, la résistance magique les magiques.
 /// </summary>
-public enum MarkConsumeTarget
+public enum DamageType
 {
-    CardTarget,     // Utilise le ciblage de la carte (targetType, AOE, etc.)
-    AllEnemies,     // Tous les ennemis sur le terrain
-    AllAllies,      // Tous les alliés sur le terrain
-    AllUnits        // Toutes les unités sur le terrain
+    Physical,   // Physique : réduit par l'armure
+    Magical     // Magique : réduit par la résistance magique
 }
 
 /// <summary>
@@ -81,7 +69,7 @@ public enum MarkConsumeTarget
 public enum CardCategory
 {
     Standard,   // Pioché dans le pool partagé, filtré par les émotions du deck
-    Eveil,      // Nécessite un seuil d'émotion (système pas encore implémenté)
+    Awakening,  // Éveil : nécessite un seuil d'émotion (système pas encore implémenté)
     Signature   // Fixe, liée à un champion précis (voir signatureOwner)
 }
 
@@ -97,8 +85,12 @@ public class CardData : ScriptableObject
     public string cardName = "Nom de la Carte";
 
     [TextArea(3, 5)]
-    [Tooltip("Description de l'effet de la carte")]
+    [Tooltip("Texte d'origine du codex. Plus affiché en jeu (le texte est généré depuis les champs, voir CardRulesText.Build) ; sert à la recherche de l'éditeur de deck.")]
     public string description = "Description de la carte.";
+
+    [TextArea(2, 4)]
+    [Tooltip("Règle que les champs ne décrivent pas (ex. condition, cas particulier). Affichée en « Spécial : … » sous le texte généré. Vide = aucune.")]
+    public string specialText = "";
 
     [Tooltip("Illustration de la carte")]
     public Sprite artwork;
@@ -123,9 +115,6 @@ public class CardData : ScriptableObject
 
     [Tooltip("Coût en Points de Vie (payé avant l'effet)")]
     public int costHP = 0;
-
-    [Tooltip("Coût en ressource spéciale (champion-spécifique)")]
-    public int costOther = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                              3. CIBLAGE                                    ║
@@ -178,6 +167,9 @@ public class CardData : ScriptableObject
     [Tooltip("Dégâts infligés à la cible")]
     public int damageAmount = 0;
 
+    [Tooltip("Physique : réduit par l'armure de la cible. Magique : réduit par sa résistance magique.")]
+    public DamageType damageType = DamageType.Physical;
+
     [Tooltip("Dégâts infligés au lanceur après l'effet (contrecoup)")]
     public int damageSelf = 0;
 
@@ -188,85 +180,77 @@ public class CardData : ScriptableObject
     [Tooltip("Points de vie volés si dégâts infligés")]
     public int lifestealFixedAmount = 0;
 
+    [Tooltip("Dégâts infligés à chaque ennemi au contact de la cible, du type de la carte (ex: Éclat de joie)")]
+    public int damageAroundTarget = 0;
+
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         5. BUFFS & DÉBUFFS                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
 
     [Header("═══ BUFFS & DÉBUFFS ═══")]
-    [Tooltip("Bonus d'attaque accordé")]
-    public int atkIncreased = 0;
+    [Tooltip("Dégâts ajoutés à la prochaine carte offensive de la cible (ex: Montée d'adrénaline), consommés par la première carte qui inflige des dégâts ; cumulable")]
+    [UnityEngine.Serialization.FormerlySerializedAs("atkIncreased")]
+    public int nextAttackBonus = 0;
 
-    [Tooltip("Points de défense accordés")]
-    public int defenseAmount = 0;
+    [Tooltip("Bouclier : réserve de PV qui absorbe les dégâts avant les PV (une seule fois, tous types), jusqu'au début du prochain tour du lanceur. ≠ armure, qui réduit chaque coup physique")]
+    [UnityEngine.Serialization.FormerlySerializedAs("defenseAmount")]
+    public int shieldAmount = 0;
 
-    [Tooltip("Points de mouvement bonus accordés")]
-    public int movementAmount = 0;
+    [Tooltip("Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup (ex: Réflexe de survie)")]
+    public bool reactiveShield = false;
 
-    [Tooltip("Durée des buffs/débuffs en tours")]
+    [Tooltip("Armure : retire N à CHAQUE coup physique reçu, pendant effectDuration tours du lanceur (négatif = armure retirée). ≠ bouclier, qui absorbe une seule fois")]
+    public int armorAmount = 0;
+
+    [Tooltip("Résistance magique ajoutée à la cible (négatif = résistance magique retirée) pendant effectDuration tours")]
+    [UnityEngine.Serialization.FormerlySerializedAs("barrierAmount")]
+    public int magicResistanceAmount = 0;
+
+    [Tooltip("Durée des effets à durée, en tours du lanceur (1 = jusqu'au début de son prochain tour) : armure, résistance magique, vulnérabilité. Renseignée aussi sur les retraits de PA/PM, en vue de retraits sur plusieurs tours (aujourd'hui un retrait vaut toujours pour le prochain tour de la cible)")]
     public int effectDuration = 0;
 
     [Space(5)]
-    [Tooltip("PA retirés à la cible")]
+    [Tooltip("PA retirés à la cible au début de son prochain tour (le plus fort retrait l'emporte, pas de cumul)")]
     public int paReduction = 0;
 
-    [Tooltip("PM retirés à la cible")]
+    [Tooltip("PM retirés à la cible au début de son prochain tour (le plus fort retrait l'emporte, pas de cumul)")]
     public int pmReduction = 0;
+
+    [Tooltip("Retire tous les PM de la cible au début de son prochain tour (ex: Terreur paralysante)")]
+    public bool removeAllMovement = false;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         6. EFFETS SPÉCIAUX                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
 
     [Header("═══ EFFETS SPÉCIAUX ═══")]
-    [Tooltip("Type d'effet spécial")]
-    public CardEffectType effectType = CardEffectType.None;
-
-    [Space(5)]
     [Tooltip("Si true, le lanceur charge vers la cible")]
     public bool isChargeCard = false;
 
-    [Tooltip("Distance de knockback/recul")]
+    [Tooltip("Si true, le lanceur bondit sur la case visée (par-dessus les unités, pas forcément en ligne droite), puis l'effet se déclenche depuis son point d'arrivée (ex: Bond percutant). À utiliser avec une cible « case vide »")]
+    public bool leapToTarget = false;
+
+    [Tooltip("Distance de poussée/tirage ; une carte à zone pousse toutes les unités touchées")]
     public int knockbackDistance = 0;
 
     [Tooltip("Si true, tire la cible VERS le lanceur au lieu de la repousser (ex: Corde de rappel)")]
     public bool pullsTowardCaster = false;
 
     [Space(5)]
-    [Tooltip("Pourcentage de dégâts redirigés (si DamageShare)")]
-    [Range(0, 100)]
-    public int damageSharePercent = 50;
+    [Tooltip("Le lanceur recule de N cases à l'opposé de sa cible après l'effet (contrepartie « Repli automatique », ex: Fuite panique)")]
+    public int casterRetreat = 0;
 
-    // ╔════════════════════════════════════════════════════════════════════════════╗
-    // ║                            7. MARQUES                                      ║
-    // ╚════════════════════════════════════════════════════════════════════════════╝
+    [Tooltip("PM gagnés par le lanceur pour ce tour (« Élan tactique », ex: Piège et recul)")]
+    public int casterMovementGain = 0;
 
-    [Header("═══ MARQUES ═══")]
-    [Tooltip("Type de marque à appliquer (None = pas de marque)")]
-    public MarkType markToApply = MarkType.None;
+    [Tooltip("PA gagnés par le lanceur pour ce tour (sans dépasser son maximum)")]
+    public int casterActionGain = 0;
 
-    [Tooltip("Nombre de stacks de marque à appliquer")]
-    public int markStacks = 1;
+    [Tooltip("Armure du lanceur pendant effectDuration tours (négatif = vulnérabilité, ex: Communion joyeuse)")]
+    public int casterArmorAmount = 0;
 
-    [Tooltip("Durée de la marque (0 = permanent)")]
-    public int markDuration = 0;
-
-    [Tooltip("Valeur bonus stockée dans la marque (heal, dégâts...)")]
-    public int markBonusValue = 0;
-
-    [Space(5)]
-    [Tooltip("Si true, consomme les marques au lieu d'en appliquer")]
-    public bool consumeMarks = false;
-
-    [Tooltip("Type de marque à consommer")]
-    public MarkType markToConsume = MarkType.None;
-
-    [Tooltip("Cibles pour la consommation (indépendant du targetType)")]
-    public MarkConsumeTarget consumeMarkTarget = MarkConsumeTarget.CardTarget;
-
-    [Tooltip("Dégâts par stack de marque consommée")]
-    public int damagePerMarkStack = 0;
-
-    [Tooltip("Soin sur le lanceur par marque présente sur la cible")]
-    public int healSelfPerMarkOnTarget = 0;
+    [Tooltip("PM perdus par le lanceur au début de son prochain tour (contrepartie « Perd 1 PM », ex: Bouclier de la terreur)")]
+    public int casterMovementLoss = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         8. GESTION DU DECK                                 ║
@@ -275,28 +259,6 @@ public class CardData : ScriptableObject
     [Header("═══ GESTION DU DECK ═══")]
     [Tooltip("Nombre de cartes à piocher")]
     public int drawAmount = 0;
-
-    [Space(5)]
-    [Tooltip("Carte spécifique à chercher (Tutor)")]
-    public CardData cardToFetch;
-
-    [Tooltip("Nombre de copies à chercher")]
-    public int fetchAmount = 0;
-
-    [Space(5)]
-    [Tooltip("Carte à ajouter au deck")]
-    public CardData cardToAddToDeck;
-
-    [Tooltip("Nombre de copies à ajouter")]
-    public int cardsToAddCount = 0;
-
-    // ╔════════════════════════════════════════════════════════════════════════════╗
-    // ║                       10. DÉGÂTS CONDITIONNELS                             ║
-    // ╚════════════════════════════════════════════════════════════════════════════╝
-
-    [Header("═══ DÉGÂTS CONDITIONNELS ═══")]
-    [Tooltip("Dégâts supplémentaires par debuff sur la cible")]
-    public int damagePerDebuff = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         11. INVOCATION                                     ║
@@ -323,12 +285,6 @@ public class CardData : ScriptableObject
 
     [Tooltip("Bonus de dégâts par PA déjà dépensé ce tour avant cette carte")]
     public int comboDamagePerPASpent = 0;
-
-    // Alias pour compatibilité (anciennes propriétés → effectDuration)
-    [System.Obsolete("Utiliser effectDuration à la place")]
-    public int statBoostDuration { get => effectDuration; set => effectDuration = value; }
-    [System.Obsolete("Utiliser effectDuration à la place")]
-    public int resourceDebuffDuration { get => effectDuration; set => effectDuration = value; }
 
     // Méthode pour vérifier si une unité est une cible valide
     public bool IsValidTarget(Unit source, Unit target)
@@ -577,7 +533,7 @@ public class CardData : ScriptableObject
         if (echoTarget == null) return;
 
         int echoDamage = Mathf.Max(1, Mathf.RoundToInt(appliedDamage * 0.4f));
-        echoTarget.TakeDamageFrom(echoDamage, summon);
+        echoTarget.TakeDamageFrom(echoTarget.ReduceByDefense(echoDamage, damageType), summon);
         GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
     }
 
@@ -594,7 +550,7 @@ public class CardData : ScriptableObject
     /// qui appelle ExecuteEffect une fois par cible). Dans ce cas, les effets qui doivent se
     /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés :
     /// combo tracker (Main gagnante d'Ace), invocation/repositionnement, dégâts sur soi, pioche,
-    /// fetch, ajout de cartes au deck, écho de Miroir fraternel.
+    /// écho de Miroir fraternel.
     /// </param>
     public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default, bool isAdditionalMultiTargetHit = false)
     {
@@ -622,10 +578,9 @@ public class CardData : ScriptableObject
         // Variables locales pour les valeurs finales (modifiables par boost)
         int finalDamage = damageAmount;
         int finalHeal = healAmount;
-        int finalDefense = defenseAmount;
+        int finalShield = shieldAmount;
         int finalDraw = drawAmount;
-        int finalFetch = fetchAmount;
-        int finalAtk = atkIncreased;
+        int finalNextAttackBonus = nextAttackBonus;
         int finalLifesteal = lifestealFixedAmount;
 
         // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis d'Ace) ---
@@ -636,6 +591,19 @@ public class CardData : ScriptableObject
             {
                 finalDamage += bonus;
                 GameLog.Log($"[CardData] {cardName}: +{bonus} dégâts (combo, {comboTracker.PASpentThisTurn} PA déjà dépensés ce tour)");
+            }
+        }
+
+        // --- BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ---
+        // Consommé par la première carte qui inflige des dégâts (une fois par carte : sur une
+        // carte à zone il touche toute la zone, sur une carte à cibles multiples la 1re cible)
+        if (finalDamage > 0 && !isAdditionalMultiTargetHit)
+        {
+            int attackBonus = source.ConsumeNextAttackBonus();
+            if (attackBonus > 0)
+            {
+                finalDamage += attackBonus;
+                GameLog.Log($"[CardData] {cardName}: +{attackBonus} dégâts (bonus de prochaine attaque)");
             }
         }
 
@@ -719,19 +687,15 @@ public class CardData : ScriptableObject
             foreach (Unit unit in affectedUnits)
             {
                 int totalUnitDamage = finalDamage;
-                if (damagePerDebuff > 0)
-                {
-                    totalUnitDamage += damagePerDebuff * unit.GetDebuffCount();
-                }
 
                 bool damageDealt = false;
                 if (totalUnitDamage > 0)
                 {
                     int hpBefore = unit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        unit.TakeRawDamage(totalUnitDamage); // Paire (Ace) : ignore les boucliers en %
+                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
-                        unit.TakeDamage(totalUnitDamage);
+                        unit.TakeDamage(unit.ReduceByDefense(totalUnitDamage, damageType));
                     int hpAfter = unit.GetHealth();
                     if (hpAfter < hpBefore) damageDealt = true;
                     actualDamageDealt += hpBefore - hpAfter;
@@ -741,16 +705,6 @@ public class CardData : ScriptableObject
                 {
                     unit.Heal(finalHeal);
                     GameLog.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
-                }
-                if (healSelfPerMarkOnTarget > 0)
-                {
-                    int markCount = unit.GetTotalMarkCount();
-                    int healSelf = markCount * healSelfPerMarkOnTarget;
-                    if (healSelf > 0)
-                    {
-                        source.Heal(healSelf);
-                        GameLog.Log($"  → {source.name} récupère {healSelf} PV (AOE sur {unit.name})");
-                    }
                 }
                 if (finalLifesteal > 0 && damageDealt)
                 {
@@ -765,19 +719,15 @@ public class CardData : ScriptableObject
             if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
             {
                 int totalTargetDamage = finalDamage;
-                if (damagePerDebuff > 0)
-                {
-                    totalTargetDamage += damagePerDebuff * targetUnit.GetDebuffCount();
-                }
 
                 bool damageDealt = false;
                 if (totalTargetDamage > 0)
                 {
                     int hpBefore = targetUnit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        targetUnit.TakeRawDamage(totalTargetDamage); // Paire (Ace) : ignore les boucliers en %
+                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
-                        targetUnit.TakeDamage(totalTargetDamage);
+                        targetUnit.TakeDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType));
                     int hpAfter = targetUnit.GetHealth();
                     if (hpAfter < hpBefore) damageDealt = true;
                     actualDamageDealt += hpBefore - hpAfter;
@@ -787,16 +737,6 @@ public class CardData : ScriptableObject
                 {
                     targetUnit.Heal(finalHeal);
                     GameLog.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
-                }
-                if (healSelfPerMarkOnTarget > 0)
-                {
-                    int markCount = targetUnit.GetTotalMarkCount();
-                    int healSelf = markCount * healSelfPerMarkOnTarget;
-                    if (healSelf > 0)
-                    {
-                        source.Heal(healSelf);
-                        GameLog.Log($"{source.name} récupère {healSelf} PV grâce aux marques sur {targetUnit.name} ({markCount} marques).");
-                    }
                 }
                 if (finalLifesteal > 0 && damageDealt)
                 {
@@ -830,13 +770,6 @@ public class CardData : ScriptableObject
             GameLog.Log($"{source.name} subit {damageSelf} dégâts de contrecoup avec {cardName}.");
         }
 
-        if (movementAmount > 0)
-        {
-            // La logique de mouvement sera gérée par l'InputManager ou une autre entité
-            // pour l'instant, nous pouvons juste loguer l'intention.
-            GameLog.Log($"{source.name} gagne {movementAmount} points de mouvement supplémentaires avec {cardName}.");
-        }
-
         // --- NOUVELLES CAPACITÉS ---
 
         // 1. Pioche de cartes (une seule fois par carte jouée, pas une fois par cible)
@@ -848,55 +781,75 @@ public class CardData : ScriptableObject
             }
         }
 
-        // 2. Aller chercher une carte spécifique (Fetch) - idem, une seule fois par carte jouée
-        if (cardToFetch != null && finalFetch > 0 && !isAdditionalMultiTargetHit)
+        // 4. Bonus de prochaine attaque, armure, résistance magique, bouclier
+        if (finalNextAttackBonus > 0 || finalShield != 0 || armorAmount != 0 || magicResistanceAmount != 0)
         {
-            if (source.TryGetComponentSafe(out DeckManager deckManager))
+            // Zone : toutes les unités affectées (ex: Rugissement destructeur) ; sinon la cible
+            // définie, ou le lanceur pour Self/None
+            List<Unit> statTargets = isAOE
+                ? GetAOEAffectedUnits(source, effectEpicenter)
+                : new List<Unit> { ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null) ? targetUnit : source };
+
+            foreach (Unit statTarget in statTargets)
             {
-                deckManager.FetchCards(c => c == cardToFetch, finalFetch);
-            }
-        }
+                // Bonus de dégâts sur la prochaine carte offensive de la cible (ex: Chant d'encouragement)
+                if (finalNextAttackBonus > 0) statTarget.AddNextAttackBonus(finalNextAttackBonus);
 
-        // 4. Gain de Stats (Force / Défense)
-        if (finalAtk != 0 || finalDefense != 0)
-        {
-            // Si la cible est définie, on l'utilise, sinon si c'est Self/None, c'est le lanceur
-            Unit statTarget = ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null) ? targetUnit : source;
+                // Armure et résistance magique pendant effectDuration tours du lanceur
+                if (armorAmount != 0 || magicResistanceAmount != 0)
+                    statTarget.ModifyStats(0, armorAmount, magicResistanceAmount, effectDuration, source);
 
-            // Applique les stats (nécessite la méthode ModifyStats sur Unit)
-            statTarget.ModifyStats(finalAtk, finalDefense, effectDuration);
-        }
-
-        // 5. Ajout de cartes au deck (cartes générées)
-        // Une seule fois par carte jouée (pas une fois par cible).
-        if (cardToAddToDeck != null && cardsToAddCount > 0 && !isAdditionalMultiTargetHit)
-        {
-            if (source.TryGetComponentSafe(out DeckManager deckManager))
-            {
-                for (int i = 0; i < cardsToAddCount; i++)
+                // Bouclier en PV (jusqu'au début du prochain tour du lanceur), ou bouclier
+                // réactif qui ne se déclenche qu'au premier coup ennemi (ex: Réflexe de survie)
+                if (finalShield > 0)
                 {
-                    deckManager.AddCardToDeck(cardToAddToDeck);
+                    if (reactiveShield) statTarget.ArmReactiveShield(finalShield, source);
+                    else statTarget.AddShield(finalShield, source);
                 }
-
-                deckManager.ShuffleDeck();
-
-                GameLog.Log($"{source.name} ajoute {cardsToAddCount}x {cardToAddToDeck.cardName} à son deck.");
             }
         }
 
-        // 6. Knockback simple (sur la cible) — pousse loin du lanceur, ou tire vers lui si pullsTowardCaster
-        if (effectType == CardEffectType.Knockback && !isChargeCard && targetUnit != null && knockbackDistance > 0)
+        // 5. Dégâts aux ennemis au contact de la cible (ex: Éclat de joie), une fois par carte
+        if (damageAroundTarget > 0 && targetUnit != null && !isAdditionalMultiTargetHit)
+        {
+            Vector2Int around = targetUnit.GetCurrentGridPos();
+            foreach (Unit unit in Services.Grid.GetAllUnits())
+            {
+                if (unit == targetUnit || unit.GetFaction() == source.GetFaction() || IsDead(unit)) continue;
+                if (GridGeometry.Distance(around, unit.GetCurrentGridPos()) != 1) continue;
+
+                unit.TakeDamage(unit.ReduceByDefense(damageAroundTarget, damageType));
+                GameLog.Log($"{cardName} : {unit.name} (au contact de {targetUnit.name}) subit {damageAroundTarget} dégâts");
+            }
+        }
+
+        // 6. Poussée / tirage — sur toute la zone pour une carte à zone (ex: Onde de terreur)
+        if (!isChargeCard && knockbackDistance > 0)
         {
             Vector2Int sourcePos = source.GetCurrentGridPos();
-            Vector2Int targetPos = targetUnit.GetCurrentGridPos();
-            Vector2 knockbackDir = pullsTowardCaster
-                ? ((Vector2)sourcePos - (Vector2)targetPos).normalized
-                : ((Vector2)targetPos - (Vector2)sourcePos).normalized;
-            targetUnit.ApplyKnockback(knockbackDir, knockbackDistance);
+            List<Unit> movedUnits = isAOE
+                ? GetAOEAffectedUnits(source, effectEpicenter)
+                : (targetUnit != null ? new List<Unit> { targetUnit } : new List<Unit>());
+            movedUnits.Remove(source);
+
+            // Poussée : les plus éloignés d'abord, pour qu'une unité ne bloque pas celle qui la
+            // suit ; tirage : les plus proches d'abord
+            movedUnits.Sort((a, b) => GridGeometry.Distance(sourcePos, a.GetCurrentGridPos())
+                .CompareTo(GridGeometry.Distance(sourcePos, b.GetCurrentGridPos())));
+            if (!pullsTowardCaster) movedUnits.Reverse();
+
+            foreach (Unit moved in movedUnits)
+            {
+                Vector2Int movedPos = moved.GetCurrentGridPos();
+                Vector2 direction = pullsTowardCaster
+                    ? (Vector2)(sourcePos - movedPos)
+                    : (Vector2)(movedPos - sourcePos);
+                moved.ApplyKnockback(direction, knockbackDistance);
+            }
         }
 
         // 7. Réduction de PA/PM sur la cible
-        if (paReduction > 0 || pmReduction > 0)
+        if (paReduction > 0 || pmReduction > 0 || removeAllMovement)
         {
             // Détermine les cibles pour la réduction
             List<Unit> debuffTargets = new List<Unit>();
@@ -912,150 +865,27 @@ public class CardData : ScriptableObject
 
             foreach (Unit debuffTarget in debuffTargets)
             {
-                // Utilise le ResourceDebuffManager pour gérer la durée
-                ResourceDebuffManager.ApplyDebuff(debuffTarget, paReduction, pmReduction, effectDuration, source);
+                // Retrait appliqué au début du prochain tour de la cible (voir ResourceDebuffManager)
+                ResourceDebuffManager.ApplyDebuff(debuffTarget, paReduction, removeAllMovement ? int.MaxValue : pmReduction, source);
             }
         }
 
-        // 8. Système de Marques
-        // 8a. Consommation de marques (doit être fait AVANT l'application pour éviter de consommer ce qu'on vient d'appliquer)
-        if (consumeMarks && markToConsume != MarkType.None)
+        // 8. Effets sur le lanceur, une fois par carte : gains de PM/PA, armure (vulnérabilité si
+        // négative), perte de PM au prochain tour,
+        // puis recul à l'opposé de la cible
+        if (!isAdditionalMultiTargetHit)
         {
-            List<Unit> markTargets = new List<Unit>();
+            if (casterMovementGain > 0) source.GainMovement(casterMovementGain);
+            if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain);
+            if (casterArmorAmount != 0) source.ModifyStats(0, casterArmorAmount, 0, Mathf.Max(1, effectDuration), source);
+            if (casterMovementLoss > 0) ResourceDebuffManager.ApplyDebuff(source, 0, casterMovementLoss, source);
 
-            // Détermine les cibles en fonction de consumeMarkTarget
-            switch (consumeMarkTarget)
+            if (casterRetreat > 0)
             {
-                case MarkConsumeTarget.AllEnemies:
-                    markTargets = Services.Grid?.GetAllEnemyUnits() ?? new List<Unit>();
-                    break;
-
-                case MarkConsumeTarget.AllAllies:
-                    markTargets = Services.Grid?.GetAllPlayerUnits() ?? new List<Unit>();
-                    break;
-
-                case MarkConsumeTarget.AllUnits:
-                    markTargets = Services.Grid?.GetAllUnits() ?? new List<Unit>();
-                    break;
-
-                case MarkConsumeTarget.CardTarget:
-                default:
-                    // Utilise le ciblage standard de la carte
-                    if (isAOE && aoeRadius > 0)
-                    {
-                        markTargets = GetAOEAffectedUnits(source, effectEpicenter);
-                    }
-                    else if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
-                    {
-                        markTargets.Add(targetUnit);
-                    }
-                    break;
+                Vector2Int from = targetUnit != null ? targetUnit.GetCurrentGridPos() : effectEpicenter;
+                Vector2Int away = source.GetCurrentGridPos() - from;
+                if (away != Vector2Int.zero) source.ApplyKnockback(away, casterRetreat);
             }
-
-            int totalHeal = 0;
-
-            foreach (Unit markTarget in markTargets)
-            {
-                // AllMarks : consomme TOUTES les marques de tous types sur cette cible
-                if (markToConsume == MarkType.AllMarks)
-                {
-                    List<UnitMark> consumedMarks = markTarget.ConsumeAllMarksFromSource(source);
-
-                    foreach (UnitMark consumedMark in consumedMarks)
-                    {
-                        // Dégâts par stack
-                        int bonusDamage = consumedMark.stacks * damagePerMarkStack;
-                        if (bonusDamage > 0)
-                        {
-                            markTarget.TakeDamage(bonusDamage);
-                            GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {consumedMark.markType})");
-                        }
-
-                        // Bonus de la marque
-                        if (consumedMark.bonusValue > 0)
-                        {
-                            int markBonus = consumedMark.bonusValue * consumedMark.stacks;
-                            markTarget.TakeDamage(markBonus);
-                            GameLog.Log($"🎯 BONUS DE MARQUE ! {markBonus} dégâts supplémentaires");
-                        }
-
-                        // Heal par marque consommée
-                        if (healAmount > 0)
-                        {
-                            totalHeal += healAmount;
-                        }
-                    }
-                }
-                // Type de marque spécifique
-                else if (markTarget.HasMark(markToConsume))
-                {
-                    // Consomme uniquement les marques appliquées par ce champion
-                    UnitMark consumedMark = markTarget.ConsumeMarkFromSource(markToConsume, source);
-
-                    if (consumedMark.markType != MarkType.None)
-                    {
-                        // Calcule les dégâts bonus basés sur les stacks
-                        int bonusDamage = consumedMark.stacks * damagePerMarkStack;
-
-                        if (bonusDamage > 0)
-                        {
-                            markTarget.TakeDamage(bonusDamage);
-                            GameLog.Log($"🎯 MARQUE CONSOMMÉE ! {source.name} inflige {bonusDamage} dégâts bonus à {markTarget.name} ({consumedMark.stacks} stacks de {markToConsume})");
-                        }
-
-                        // Bonus supplémentaire de la marque
-                        if (consumedMark.bonusValue > 0)
-                        {
-                            markTarget.TakeDamage(consumedMark.bonusValue * consumedMark.stacks);
-                            GameLog.Log($"🎯 BONUS DE MARQUE ! {consumedMark.bonusValue * consumedMark.stacks} dégâts supplémentaires");
-                        }
-
-                        // Heal par marque consommée
-                        if (healAmount > 0)
-                        {
-                            totalHeal += healAmount;
-                        }
-                    }
-                }
-            }
-
-            // Applique le heal total au lanceur
-            if (totalHeal > 0)
-            {
-                source.Heal(totalHeal);
-                GameLog.Log($"🎯 {source.name} récupère {totalHeal} PV (marques consommées)");
-            }
-        }
-
-        // 8b. Application de nouvelles marques
-        if (markToApply != MarkType.None && markStacks > 0)
-        {
-            // Détermine les cibles pour l'application
-            List<Unit> markTargets = new List<Unit>();
-
-            if (isAOE && aoeRadius > 0)
-            {
-                markTargets = GetAOEAffectedUnits(source, effectEpicenter);
-            }
-            else if ((targetsUnit || targetType == CardTargetType.EnemyOrTile) && targetUnit != null)
-            {
-                markTargets.Add(targetUnit);
-            }
-
-            foreach (Unit markTarget in markTargets)
-            {
-                markTarget.ApplyMark(markToApply, source, markStacks, markDuration, markBonusValue);
-                GameLog.Log($"🎯 MARQUE APPLIQUÉE ! {source.name} marque {markTarget.name} avec {markToApply} ({markStacks} stack(s), durée: {(markDuration == 0 ? "permanent" : markDuration + " tours")})");
-            }
-        }
-
-        // 9. Partage de Dégâts (Damage Share)
-        if (effectType == CardEffectType.DamageShare && targetUnit != null)
-        {
-            // Applique le lien de partage de dégâts sur la cible vers le lanceur
-            // Ratio basé sur damageSharePercent, durée basée sur statBoostDuration (défaut 1 tour si 0)
-            float ratio = Mathf.Clamp01(damageSharePercent / 100f);
-            targetUnit.SetDamageShare(source, ratio, effectDuration > 0 ? effectDuration : 1);
         }
 
         // Met à jour l'historique de combo (Main gagnante) pour la prochaine carte jouée
@@ -1130,10 +960,20 @@ public class CardData : ScriptableObject
             landingReactor.OnChargeLanded();
         }
 
-        // --- MODIFICATEUR DE DÉGÂTS SORTANTS GÉNÉRIQUE (ex: Réflexe du grimpeur) ---
+        // --- BONUS DE PROCHAINE ATTAQUE puis MODIFICATEUR DE DÉGÂTS SORTANTS ---
         // Même traitement que dans ExecuteEffect, pour que les cartes de charge bénéficient
-        // aussi des modificateurs de dégâts sortants (et les consomment).
+        // aussi de ces bonus (et les consomment).
         int finalChargeDamage = damageAmount;
+        if (finalChargeDamage > 0)
+        {
+            int attackBonus = source.ConsumeNextAttackBonus();
+            if (attackBonus > 0)
+            {
+                finalChargeDamage += attackBonus;
+                GameLog.Log($"[CardData] {cardName}: +{attackBonus} dégâts de charge (bonus de prochaine attaque)");
+            }
+        }
+
         if (finalChargeDamage > 0 && source is IOutgoingDamageModifier dmgMod)
         {
             float multiplier = dmgMod.GetDamageMultiplier();
@@ -1154,7 +994,7 @@ public class CardData : ScriptableObject
             // Applique les dégâts de la charge
             if (finalChargeDamage > 0)
             {
-                pathInfo.EnemyHit.TakeDamage(finalChargeDamage);
+                pathInfo.EnemyHit.TakeDamage(pathInfo.EnemyHit.ReduceByDefense(finalChargeDamage, damageType));
                 GameLog.Log($"🏃 CHARGE ! {source.name} inflige {finalChargeDamage} dégâts à {pathInfo.EnemyHit.name}");
             }
 
@@ -1183,5 +1023,41 @@ public class CardData : ScriptableObject
         comboTracker?.OnCardResolved(this);
 
         onComplete?.Invoke();
+    }
+
+    /// <summary>
+    /// Exécute un bond (ex: Bond percutant) : le lanceur saute sur la case visée, puis l'effet
+    /// de la carte se résout normalement, centré sur son point d'arrivée.
+    /// </summary>
+    public void ExecuteLeapEffect(Unit source, Vector2Int targetTilePos)
+    {
+        source.StartCoroutine(ExecuteLeapEffectCoroutine(source, targetTilePos));
+    }
+
+    private System.Collections.IEnumerator ExecuteLeapEffectCoroutine(Unit source, Vector2Int targetTilePos)
+    {
+        // Chemin d'une seule case : le lanceur va droit sur la case, par-dessus ce qui se trouve entre
+        Tile landing = Services.Grid.GetTileAtPosition(targetTilePos);
+        if (landing != null && Services.Grid.GetUnitAtGridPos(targetTilePos) == null)
+        {
+            GameLog.Log($"🦘 BOND ! {source.name} de {source.GetCurrentGridPos()} vers {targetTilePos}");
+            source.MoveToTile(new List<Tile> { landing });
+            while (source.IsMoving())
+                yield return null;
+
+            // Un bond est un déplacement rapide : il déclenche le Réflexe du grimpeur, comme la charge
+            if (source is IChargeLandingReactor landingReactor)
+                landingReactor.OnChargeLanded();
+        }
+        else
+        {
+            GameLog.LogWarning($"{cardName} : case d'arrivée {targetTilePos} invalide ou occupée, l'effet part de la position actuelle");
+            targetTilePos = source.GetCurrentGridPos();
+        }
+
+        // Case cible = case d'arrivée : la zone se centre sur le lanceur
+        ExecuteEffect(source, null, targetTilePos);
+
+        EventBus.Publish(new ShowMovementRangeEvent(source));
     }
 }

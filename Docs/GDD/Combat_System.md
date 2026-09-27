@@ -112,7 +112,8 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **PA + PM** | **Budget de 9 points**, réparti par profil (min 3 PA, min 2 PM) | 2-4 PA, 2-4 PM | Complète par tour | PA pour jouer des cartes, PM pour se déplacer (1 PM = 1 case) |
 | **PV** | 100 au niveau 1, +15 par niveau | Selon le barème (`Enemies.md`) | Via cartes/effets | Tombe à 0 = vaincu |
 | **Éveil** | Une jauge par émotion | — | Générée en jouant des cartes | Débloque les cartes d'Éveil (voir `SYSTEME_EMOTIONS.md`) |
-| **Autres stats** (armure, résistances, critique) | **Non définies** — à trancher | | | |
+| **Armure / Résistance magique** | 0 par défaut (fiche champion) | Selon la fiche monstre | Buffs/malus de cartes (durée `effectDuration`) | Soustraction fixe : l'armure réduit les dégâts **physiques**, la résistance magique les **magiques** (type choisi par carte) ; minimum 1 dégât ; une valeur négative augmente les dégâts. Ordre : armure/résistance magique → réductions en % → bouclier → PV |
+| **Autres stats** (résistances, critique) | **Non définies** — à trancher | | | |
 
 **Profils PA/PM (exemples de l'Excel) :** brutal 6 PA / 3 PM · équilibré 5 PA / 4 PM · mobile 4 PA / 5 PM. Le profil est fixé par le personnage et **ne change pas avec le niveau**.
 
@@ -151,7 +152,8 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 **Mouvement via Cartes :**
 - Certaines cartes donnent des PM bonus (contrepartie « Élan tactique » : +2 PM)
 - Téléportation possible (ignore obstacles)
-- Déplacement forcé (poussée/tirage), bond offensif, repli automatique
+- Déplacement forcé (poussée/tirage), repli automatique
+- Bond offensif (Bond percutant) : saut sur une case vide à portée, par-dessus les unités, puis zone autour du point d'arrivée ; charge (Piolet d'ascension) : ligne droite, arrêtée par la première unité
 - Grappin (Piolet d'ascension de Crux)
 
 
@@ -201,13 +203,18 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | Effet | Source | Règle |
 |-------|--------|-------|
 | **Retrait de PM** | Peur | -1 / -2 / -3 PM ou perte totale au **prochain tour** de la cible. Ne se cumulent pas : un retrait plus fort remplace un plus faible ; un plus faible n'écrase jamais un plus fort en cours |
-| **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) |
-| **Bouclier (% de réduction)** | Colère (Armure de rage), Peur, Joie, Crux | Réduit les prochains dégâts subis d'un pourcentage ; ignoré par la Paire de Raze |
-| **Vulnérabilité** | Contrepartie (Joie) | Le lanceur subit plus de dégâts |
-| **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour) |
-| **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour |
+| **Poussée / Tirage** | Peur, Crux | Déplacement forcé de N cases (se cumule avec le retrait de PM) ; une carte à zone pousse toutes les unités touchées (les plus éloignées d'abord) |
+| **Bouclier (PV)** | Colère (Armure de rage), Peur, Joie | Absorbe les dégâts avant les PV (jauge bleue sur la barre de vie) ; cumulable ; dure jusqu'au début du prochain tour du lanceur ; ignoré par la Paire de Raze |
+| **Réduction de dégâts (%)** | Passifs de Crux et de Raze (Bluff) | Réduit les prochains dégâts subis d'un pourcentage |
+| **Vulnérabilité** | Contrepartie (Joie) | Le lanceur perd de l'**armure** (−5 par défaut, à équilibrer) jusqu'à son prochain tour : il subit plus de dégâts physiques |
+| **Bouclier réactif** | Peur (Réflexe de survie) | Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup |
+| **Recul et élan** | Peur (Fuite panique, Piège et recul) | Le lanceur recule de N cases à l'opposé de sa cible ; gain de PM (ou de PA) pour le tour en cours |
+| **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour). Durée comptée en tours du lanceur (voir « Décisions actées » de `GDD_Main.md`) |
+| **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour : −1 PA pour Aura de terreur (calcul Excel : 26 × (1 − 0,15 portée − 0,10 Éveil) ≈ 20 pts ≈ −20 % des PA pendant 1 tour ≈ 1 PA) |
 
-**Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**.
+**Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**. Codée (25/09/2026) : si le monstre a perdu des PA ou des PM ce tour et ne peut pas jouer sa carte prévue, il joue la carte `EnemyData.basicAttack` (0 PA, sans avancer son pattern), s'il a une cible à portée.
+
+**Ténacité** : un monstre qui perd **tous** ses PM ignore les retraits de PM à son tour suivant (pastille « tenace » sous la barre du boss). On peut l'immobiliser, mais pas indéfiniment, même à plusieurs joueurs.
 
 ### Statuts prévus hors MVP
 

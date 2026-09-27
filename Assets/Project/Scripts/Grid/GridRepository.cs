@@ -128,22 +128,6 @@ public class GridRepository
         return closestPos;
     }
 
-    /// <summary>
-    /// Retourne toutes les tuiles de la grille
-    /// </summary>
-    public Dictionary<Vector2Int, Tile> GetAllTiles()
-    {
-        return _tiles;
-    }
-
-    /// <summary>
-    /// Vérifie si une position existe dans la grille
-    /// </summary>
-    public bool IsValidGridPosition(Vector2Int pos)
-    {
-        return _tiles.ContainsKey(pos);
-    }
-
     // ========== QUERIES D'UNITÉS ==========
 
     /// <summary>
@@ -210,17 +194,6 @@ public class GridRepository
         {
             _units.Add(unit);
             GameLog.Log($"GridRepository: Unité ajoutée - {unit.name}");
-        }
-    }
-
-    /// <summary>
-    /// Retire une unité de la liste (appelé lors de la mort)
-    /// </summary>
-    public void RemoveUnit(Unit unit)
-    {
-        if (_units.Remove(unit))
-        {
-            GameLog.Log($"GridRepository: Unité retirée - {unit.name}");
         }
     }
 
@@ -395,33 +368,7 @@ public class GridRepository
         return path;
     }
 
-    /// <summary>
-    /// Calcule le coût en PM pour atteindre une destination
-    /// Retourne -1 si la destination est inaccessible
-    /// </summary>
-    public int GetPathCost(Vector2Int startPos, Vector2Int targetPos, int maxRange, Unit ignoreUnit = null)
-    {
-        List<Tile> path = GetPathToTile(startPos, targetPos, maxRange, ignoreUnit);
-        return path.Count > 0 ? path.Count : (startPos == targetPos ? 0 : -1);
-    }
-
     // ========== UTILITAIRES ==========
-
-    /// <summary>
-    /// Retourne le nombre total de tuiles dans la grille
-    /// </summary>
-    public int GetTileCount()
-    {
-        return _tiles.Count;
-    }
-
-    /// <summary>
-    /// Retourne le nombre total d'unités
-    /// </summary>
-    public int GetUnitCount()
-    {
-        return _units.Count;
-    }
 
     /// <summary>
     /// Retourne les dimensions de la grille

@@ -44,4 +44,9 @@ public interface IActionPointsUser
     /// </summary>
     /// <param name="amount">Montant de PA à retirer</param>
     void ReduceCurrentPA(int amount);
+
+    /// <summary>
+    /// Ajoute des PA courants (ex: gain de PA d'une carte), sans dépasser le maximum
+    /// </summary>
+    void AddPA(int amount);
 }

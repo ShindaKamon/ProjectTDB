@@ -93,7 +93,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     /// <summary>
     /// Connecte un ennemi boss à la barre de vie de boss
     /// </summary>
-    public void RegisterBoss(Enemy boss)
+    private void RegisterBoss(Enemy boss)
     {
         if (boss == null || !boss.IsBoss()) return;
 
@@ -114,7 +114,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     /// Connecte un ennemi à la preview de carte
     /// (généralement le premier ennemi trouvé ou l'ennemi actif)
     /// </summary>
-    public void TrackEnemyCards(Enemy enemy)
+    private void TrackEnemyCards(Enemy enemy)
     {
         if (enemy == null) return;
 
@@ -135,7 +135,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     /// Change l'ennemi tracké pour la preview de carte
     /// (utile quand on veut voir les cartes d'un ennemi spécifique)
     /// </summary>
-    public void SwitchTrackedEnemy(Enemy newEnemy)
+    private void SwitchTrackedEnemy(Enemy newEnemy)
     {
         TrackEnemyCards(newEnemy);
     }
@@ -224,10 +224,19 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         }
     }
 
+    void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+    void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+
+    // L'orbe de vie montre le champion dont c'est le tour (coop : elle change de champion à chaque tour)
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (e.NewActiveUnit is Champion champion) RegisterPlayer(champion);
+    }
+
     /// <summary>
     /// Enregistre le joueur pour mettre à jour l'Orbe de vie
     /// </summary>
-    public void RegisterPlayer(Champion player)
+    private void RegisterPlayer(Champion player)
     {
         if (player == null) return;
 
@@ -256,7 +265,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), _defaultOrbColor);
     }
 
-    public void UpdatePlayerOrb (float currentHP, float maxHP, Color emotionColor)
+    private void UpdatePlayerOrb(float currentHP, float maxHP, Color emotionColor)
     {
         if (_playerHealthOrb != null)
         {

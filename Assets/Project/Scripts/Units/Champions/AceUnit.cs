@@ -25,16 +25,6 @@ public class AceUnit : Champion, IComboTracker
     public int PASpentThisTurn => _paSpentThisTurn;
     public bool ShouldIgnoreDamageReduction => _ignoreReductionThisCard;
 
-    protected override void Start()
-    {
-        base.Start();
-
-        if (Services.IsBattleUIServiceAvailable())
-        {
-            Services.BattleUI.RegisterPlayer(this);
-        }
-    }
-
     // ========== IComboTracker ==========
 
     public void OnCardAboutToExecute(CardData card)
@@ -47,7 +37,7 @@ public class AceUnit : Champion, IComboTracker
                 && card.emotionType != EmotionType.None
                 && _lastCardPlayedThisTurn.emotionType != EmotionType.None;
             bool isSuite = card.costPA == _lastCardPlayedThisTurn.costPA + 1;
-            bool isPaire = card.costPA == _lastCardPlayedThisTurn.costPA;
+            bool isPair = card.costPA == _lastCardPlayedThisTurn.costPA;
 
             if (differentEmotion)
             {
@@ -59,7 +49,7 @@ public class AceUnit : Champion, IComboTracker
                 AddPA(1); // hérité de Champion
                 GameLog.Log($"[Main gagnante] Suite ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {name} gagne 1 PA immédiat.");
             }
-            else if (isPaire)
+            else if (isPair)
             {
                 _ignoreReductionThisCard = true;
                 GameLog.Log($"[Main gagnante] Paire ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {card.cardName} ignore les réductions de dégâts en % de la cible.");
@@ -92,7 +82,7 @@ public class AceUnit : Champion, IComboTracker
     /// Réinitialise l'historique de combo et le bouclier Bluff au début du tour d'Ace
     /// (protège tout le tour adverse, comme le Réflexe du grimpeur de L'Alpiniste).
     /// </summary>
-    public override void ProcessBuffsOnTurnStart()
+    public override void OnOwnTurnStart()
     {
         if (_hasBluffShield)
         {
@@ -103,6 +93,6 @@ public class AceUnit : Champion, IComboTracker
         _lastCardPlayedThisTurn = null;
         _paSpentThisTurn = 0;
 
-        base.ProcessBuffsOnTurnStart();
+        base.OnOwnTurnStart();
     }
 }

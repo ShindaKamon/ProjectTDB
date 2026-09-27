@@ -10,16 +10,6 @@ public class SorenUnit : Champion, ISummonOwner
     private SummonUnit _activeSummon;
     public SummonUnit ActiveSummon => _activeSummon;
 
-    protected override void Start()
-    {
-        base.Start();
-
-        if (Services.IsBattleUIServiceAvailable())
-        {
-            Services.BattleUI.RegisterPlayer(this);
-        }
-    }
-
     // ========== ISummonOwner ==========
 
     public void RegisterSummon(SummonUnit summon)

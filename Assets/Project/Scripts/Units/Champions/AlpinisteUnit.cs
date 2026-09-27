@@ -23,16 +23,6 @@ public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageMod
     // Bonus de dégâts à usage unique sur la prochaine carte de dégâts (atterrissage près d'un ennemi)
     private bool _hasNextCardBonus = false;
 
-    protected override void Start()
-    {
-        base.Start();
-
-        if (Services.IsBattleUIServiceAvailable())
-        {
-            Services.BattleUI.RegisterPlayer(this);
-        }
-    }
-
     // ========== IChargeLandingReactor ==========
 
     /// <summary>
@@ -89,7 +79,7 @@ public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageMod
     /// <summary>
     /// Le bouclier expire au début du prochain tour de L'Alpiniste (protège tout le tour adverse).
     /// </summary>
-    public override void ProcessBuffsOnTurnStart()
+    public override void OnOwnTurnStart()
     {
         if (_hasClimberShield)
         {
@@ -97,7 +87,7 @@ public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageMod
             GameLog.Log($"[Réflexe du grimpeur] Bouclier de {name} expiré (nouveau tour)");
         }
 
-        base.ProcessBuffsOnTurnStart();
+        base.OnOwnTurnStart();
     }
 
     // ========== IOutgoingDamageModifier (bonus prochaine carte) ==========

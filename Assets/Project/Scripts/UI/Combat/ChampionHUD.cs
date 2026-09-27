@@ -37,6 +37,15 @@ public class ChampionHUD : MonoBehaviour
         TryConnectToChampion();
     }
 
+    void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+    void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+
+    // Coop : le HUD suit le champion dont c'est le tour.
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (e.NewActiveUnit is Champion champion) SetChampion(champion);
+    }
+
     void Update()
     {
         // Continue d'essayer de se connecter si pas encore fait
@@ -188,7 +197,9 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_atkText != null && _champion != null)
         {
-            _atkText.text = $"ATQ : {_champion.GetAttack()}";
+            // Bonus de prochaine attaque en attente (ex: Montée d'adrénaline) affiché à côté
+            int bonus = _champion.GetNextAttackBonus();
+            _atkText.text = bonus > 0 ? $"ATQ : {_champion.GetAttack()} (+{bonus})" : $"ATQ : {_champion.GetAttack()}";
         }
     }
 
@@ -196,8 +207,8 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_defText != null && _champion != null)
         {
-            // Défense de base depuis ChampionData (aucun champion MVP n'a de défense active)
-            _defText.text = $"DEF : {_champion.GetBaseDefense()}";
+            // Armure (physique) / résistance magique (magique), buffs compris
+            _defText.text = $"ARM : {_champion.GetArmor()}  RM : {_champion.GetMagicResistance()}";
         }
     }
 }

@@ -96,7 +96,7 @@ public class Enemy : Unit, IActionPointsUser
         _enemyData = data;
 
         // Initialise les stats de base via la classe Unit (HP, PM, ATK)
-        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage);
+        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.magicResistance);
 
         // Initialise le component PA depuis EnemyData
         _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{gameObject.name} (Enemy)");
@@ -187,6 +187,16 @@ public class Enemy : Unit, IActionPointsUser
         _actionPointsComponent.ReduceCurrentPA(amount);
     }
 
+    public void AddPA(int amount)
+    {
+        if (_actionPointsComponent == null)
+        {
+            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
+            return;
+        }
+        _actionPointsComponent.AddPA(amount);
+    }
+
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========
 
     /// <summary>
@@ -226,25 +236,6 @@ public class Enemy : Unit, IActionPointsUser
         OnNextCardChanged?.Invoke(GetNextCard());
 
         return nextCard;
-    }
-
-    /// <summary>
-    /// Réinitialise le deck au début (utilisé si on veut forcer un reset)
-    /// </summary>
-    public void ResetDeckIndex()
-    {
-        _currentCardIndex = 0;
-        OnNextCardChanged?.Invoke(GetNextCard());
-        GameLog.Log($"{name} (Enemy): Index du deck réinitialisé");
-    }
-
-    /// <summary>
-    /// Retourne le nombre de cartes restantes avant la boucle
-    /// </summary>
-    public int GetRemainingCardsInCycle()
-    {
-        if (_combatDeck == null || _combatDeck.Count == 0) return 0;
-        return _combatDeck.Count - _currentCardIndex;
     }
 
     /// <summary>

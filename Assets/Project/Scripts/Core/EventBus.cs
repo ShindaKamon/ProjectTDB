@@ -8,21 +8,12 @@ using UnityEngine;
 public static class EventBus
 {
     private static readonly Dictionary<Type, List<Delegate>> _subscribers = new Dictionary<Type, List<Delegate>>();
-    private static int _totalEventsPublished = 0;
-    private static bool _enableLogging = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void InitializeOnLoad()
     {
         _subscribers.Clear();
-        _totalEventsPublished = 0;
-        _enableLogging = false;
         GameLog.Log("[EventBus] Initialisé au chargement du runtime.");
-    }
-
-    public static void SetLogging(bool enabled)
-    {
-        _enableLogging = enabled;
     }
 
     public static void Subscribe<T>(Action<T> handler) where T : GameEvent
@@ -38,9 +29,6 @@ public static class EventBus
         }
 
         _subscribers[eventType].Add(handler);
-
-        if (_enableLogging)
-            GameLog.Log($"[EventBus] Abonné à {eventType.Name} ({_subscribers[eventType].Count}).");
     }
 
     public static void Unsubscribe<T>(Action<T> handler) where T : GameEvent
@@ -63,7 +51,6 @@ public static class EventBus
         }
 
         Type eventType = typeof(T);
-        _totalEventsPublished++;
 
         if (!_subscribers.ContainsKey(eventType))
             return;
@@ -78,30 +65,6 @@ public static class EventBus
             {
                 Debug.LogError($"[EventBus] Erreur pendant la publication de {eventType.Name}: {ex.Message}\n{ex.StackTrace}");
             }
-        }
-    }
-
-    public static void Clear()
-    {
-        _subscribers.Clear();
-        _totalEventsPublished = 0;
-        if (_enableLogging)
-            GameLog.Log("[EventBus] Nettoyage complet.");
-    }
-
-    public static int GetSubscriberCount<T>() where T : GameEvent
-        => _subscribers.TryGetValue(typeof(T), out var list) ? list.Count : 0;
-
-    public static int GetTotalEventsPublished() => _totalEventsPublished;
-
-    public static void DebugPrintSubscribers()
-    {
-        GameLog.Log("=== EventBus Subscribers ===");
-        foreach (var kvp in _subscribers)
-        {
-            GameLog.Log($"  {kvp.Key.Name}: {kvp.Value.Count}");
-            foreach (var handler in kvp.Value)
-                GameLog.Log($"    - {handler.Target?.GetType().Name ?? "Static"}.{handler.Method.Name}");
         }
     }
 }

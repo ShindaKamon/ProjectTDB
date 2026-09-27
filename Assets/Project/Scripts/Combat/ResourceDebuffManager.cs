@@ -2,32 +2,19 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Structure représentant un debuff de ressources (PA/PM) sur une unité
-/// </summary>
-public struct ResourceDebuff
-{
-    public int paReduction;
-    public int pmReduction;
-    public int remainingTurns;
-    public Unit appliedBy;
-
-    public ResourceDebuff(int pa, int pm, int duration, Unit source)
-    {
-        paReduction = pa;
-        pmReduction = pm;
-        remainingTurns = duration;
-        appliedBy = source;
-    }
-}
-
-/// <summary>
-/// Gestionnaire des debuffs de ressources (PA/PM).
-/// Gère les réductions temporaires qui s'appliquent au début de chaque tour.
+/// Retraits de PA/PM (règle du GDD, Combat_System.md) : appliqués au début du prochain tour de la
+/// cible, une seule fois. Ils ne se cumulent pas : un retrait plus fort remplace un plus faible,
+/// un plus faible n'écrase jamais un plus fort en attente (PA et PM comptés séparément).
+/// Ténacité (monstres) : après une perte totale de PM, un monstre ignore les retraits de PM à son
+/// tour suivant, pour qu'on ne puisse pas l'immobiliser indéfiniment (même à plusieurs joueurs).
 /// </summary>
 public static class ResourceDebuffManager
 {
-    // Liste des debuffs actifs par unité
-    private static Dictionary<Unit, List<ResourceDebuff>> _activeDebuffs = new Dictionary<Unit, List<ResourceDebuff>>();
+    // Retraits en attente par unité : (PA, PM)
+    private static Dictionary<Unit, (int pa, int pm)> _pending = new Dictionary<Unit, (int pa, int pm)>();
+
+    // Monstres immunisés aux retraits de PM à leur prochain tour (Ténacité)
+    private static HashSet<Unit> _pmImmune = new HashSet<Unit>();
 
     /// <summary>
     /// Réinitialise le gestionnaire (appelé automatiquement au lancement du jeu)
@@ -35,159 +22,75 @@ public static class ResourceDebuffManager
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStaticData()
     {
-        _activeDebuffs = new Dictionary<Unit, List<ResourceDebuff>>();
+        _pending = new Dictionary<Unit, (int pa, int pm)>();
+        _pmImmune = new HashSet<Unit>();
     }
 
     /// <summary>
-    /// Applique un debuff de ressources sur une cible
+    /// Programme un retrait de PA/PM pour le prochain tour de la cible
     /// </summary>
-    /// <param name="target">L'unité ciblée</param>
-    /// <param name="paReduction">PA à retirer par tour</param>
-    /// <param name="pmReduction">PM à retirer par tour</param>
-    /// <param name="duration">Durée en tours (0 = effet immédiat uniquement)</param>
-    /// <param name="source">L'unité qui applique le debuff</param>
-    public static void ApplyDebuff(Unit target, int paReduction, int pmReduction, int duration, Unit source)
+    public static void ApplyDebuff(Unit target, int paReduction, int pmReduction, Unit source)
     {
         if (target == null) return;
         if (paReduction <= 0 && pmReduction <= 0) return;
 
-        // Applique l'effet immédiat
-        ApplyImmediateEffect(target, paReduction, pmReduction, source);
-
-        // Si duration > 0, enregistre le debuff pour les tours suivants
-        if (duration > 0)
-        {
-            ResourceDebuff debuff = new ResourceDebuff(paReduction, pmReduction, duration, source);
-
-            if (!_activeDebuffs.ContainsKey(target))
-            {
-                _activeDebuffs[target] = new List<ResourceDebuff>();
-            }
-
-            _activeDebuffs[target].Add(debuff);
-            GameLog.Log($"[Debuff] {target.name} reçoit un debuff de ressources pour {duration} tour(s) (PA: -{paReduction}, PM: -{pmReduction})");
-        }
+        _pending.TryGetValue(target, out var current);
+        _pending[target] = (Mathf.Max(current.pa, paReduction), Mathf.Max(current.pm, pmReduction));
+        GameLog.Log($"[Retrait] {source?.name ?? "Effet"} : {target.name} perdra {_pending[target].pa} PA / {(IsPmImmune(target) ? "0 (Ténacité)" : _pending[target].pm.ToString())} PM à son prochain tour");
+        EventBus.Publish(new ResourceDebuffChangedEvent(target));
     }
 
     /// <summary>
-    /// Applique l'effet immédiat de réduction de PA/PM
+    /// Retraits en attente contre une unité (0, 0 si aucun) : ce qu'elle perdra à son prochain tour
+    /// (retrait de PM ignoré si elle est protégée par la Ténacité)
     /// </summary>
-    private static void ApplyImmediateEffect(Unit target, int paReduction, int pmReduction, Unit source)
+    public static (int pa, int pm) GetPending(Unit unit)
     {
-        // Réduction de PA
-        if (paReduction > 0 && target is IActionPointsUser paUser)
-        {
-            paUser.ReduceCurrentPA(paReduction);
-            GameLog.Log($"⚡ {source?.name ?? "Effet"} retire {paReduction} PA à {target.name}");
-        }
-
-        // Réduction de PM
-        if (pmReduction > 0)
-        {
-            target.SpendMovement(pmReduction);
-            GameLog.Log($"⚡ {source?.name ?? "Effet"} retire {pmReduction} PM à {target.name}");
-        }
+        if (unit == null || !_pending.TryGetValue(unit, out var debuff)) return (0, 0);
+        return (debuff.pa, IsPmImmune(unit) ? 0 : debuff.pm);
     }
 
     /// <summary>
-    /// Appelé au début du tour d'une unité pour appliquer les debuffs actifs
+    /// True si le monstre ignore les retraits de PM jusqu'à la fin de son prochain tour (Ténacité)
     /// </summary>
-    /// <param name="unit">L'unité dont c'est le tour</param>
+    public static bool IsPmImmune(Unit unit) => unit != null && _pmImmune.Contains(unit);
+
+    /// <summary>
+    /// Appelé au début du tour d'une unité, après la remise à niveau de ses PA/PM
+    /// </summary>
     public static void ProcessDebuffsOnTurnStart(Unit unit)
     {
         if (unit == null) return;
 
-        if (!_activeDebuffs.TryGetValue(unit, out List<ResourceDebuff> debuffs))
+        // La Ténacité couvre ce tour-ci : les retraits de PM en attente sont ignorés, puis elle s'arrête
+        bool immune = _pmImmune.Remove(unit);
+
+        if (!_pending.TryGetValue(unit, out var debuff)) return;
+        _pending.Remove(unit);
+
+        if (debuff.pa > 0 && unit is IActionPointsUser paUser)
         {
-            return;
+            paUser.ReduceCurrentPA(debuff.pa);
+            GameLog.Log($"⚡ {unit.name} perd {debuff.pa} PA ce tour");
         }
 
-        // Parcourt les debuffs en sens inverse pour pouvoir supprimer pendant l'itération
-        for (int i = debuffs.Count - 1; i >= 0; i--)
+        if (debuff.pm > 0 && immune)
         {
-            ResourceDebuff debuff = debuffs[i];
-
-            // Applique l'effet
-            ApplyImmediateEffect(unit, debuff.paReduction, debuff.pmReduction, debuff.appliedBy);
-
-            // Décrémente la durée
-            debuff.remainingTurns--;
-
-            if (debuff.remainingTurns <= 0)
+            GameLog.Log($"🛡 {unit.name} ignore le retrait de {debuff.pm} PM (Ténacité)");
+        }
+        else if (debuff.pm > 0)
+        {
+            // Un monstre qui perd tous ses PM devient tenace pour son tour suivant (marqué avant le
+            // retrait, pour que l'affichage qui réagit au changement de PM le voie déjà)
+            bool losesAll = debuff.pm >= unit.GetCurrentMovementPoints();
+            if (losesAll && unit.GetFaction() == Unit.UnitFaction.Enemy)
             {
-                // Le debuff expire
-                debuffs.RemoveAt(i);
-                GameLog.Log($"[Debuff] Debuff de ressources expiré sur {unit.name}");
+                _pmImmune.Add(unit);
+                GameLog.Log($"🛡 {unit.name} est tenace : retraits de PM ignorés à son prochain tour");
             }
-            else
-            {
-                // Met à jour le debuff
-                debuffs[i] = debuff;
-            }
-        }
 
-        // Nettoie si plus de debuffs
-        if (debuffs.Count == 0)
-        {
-            _activeDebuffs.Remove(unit);
-        }
-    }
-
-    /// <summary>
-    /// Vérifie si une unité a des debuffs de ressources actifs
-    /// </summary>
-    public static bool HasActiveDebuffs(Unit unit)
-    {
-        return unit != null && _activeDebuffs.ContainsKey(unit) && _activeDebuffs[unit].Count > 0;
-    }
-
-    /// <summary>
-    /// Retourne le nombre de debuffs actifs sur une unité
-    /// </summary>
-    public static int GetDebuffCount(Unit unit)
-    {
-        if (unit == null || !_activeDebuffs.ContainsKey(unit))
-        {
-            return 0;
-        }
-        return _activeDebuffs[unit].Count;
-    }
-
-    /// <summary>
-    /// Retire tous les debuffs d'une unité (appelé quand l'unité meurt)
-    /// </summary>
-    public static void ClearDebuffs(Unit unit)
-    {
-        if (unit != null)
-        {
-            _activeDebuffs.Remove(unit);
-        }
-    }
-
-    /// <summary>
-    /// Retire tous les debuffs appliqués par une source spécifique (appelé quand la source meurt)
-    /// </summary>
-    public static void ClearDebuffsFromSource(Unit source)
-    {
-        if (source == null) return;
-
-        foreach (var kvp in _activeDebuffs)
-        {
-            kvp.Value.RemoveAll(d => d.appliedBy == source);
-        }
-
-        // Nettoie les entrées vides
-        List<Unit> emptyKeys = new List<Unit>();
-        foreach (var kvp in _activeDebuffs)
-        {
-            if (kvp.Value.Count == 0)
-            {
-                emptyKeys.Add(kvp.Key);
-            }
-        }
-        foreach (Unit key in emptyKeys)
-        {
-            _activeDebuffs.Remove(key);
+            unit.SpendMovement(debuff.pm);
+            GameLog.Log($"⚡ {unit.name} perd {(losesAll ? "tous ses" : debuff.pm.ToString())} PM ce tour");
         }
     }
 }

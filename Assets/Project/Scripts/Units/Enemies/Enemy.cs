@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// - Un deck séquentiel (pas de mélange) qui boucle
 /// - Un comportement prévisible pour le joueur
 /// </summary>
-public class Enemy : Unit, IActionPointsUser
+public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
 {
     // ========== ENEMY DATA ==========
 
@@ -144,6 +144,29 @@ public class Enemy : Unit, IActionPointsUser
             CreateHealthBar(_enemyData.healthBarOffset, _enemyData.healthBarColor);
         }
     }
+
+    // ========== NOMBRE DE JOUEURS (coop) ==========
+
+    private float _damageMultiplier = 1f;
+
+    /// <summary>
+    /// Adapte le monstre au nombre de joueurs (EnemyScaling) : PV max et dégâts de ses cartes.
+    /// Appelé par GridManager au lancement du combat ; le barème d'EnemyData est celui d'un joueur.
+    /// </summary>
+    public void ScaleForPlayers(int playerCount)
+    {
+        if (_enemyData == null) return;
+        _damageMultiplier = EnemyScaling.DamageMultiplier(playerCount);
+        SetMaxHealth(EnemyScaling.ScaledHealth(_enemyData.maxHealth, playerCount));
+        GameLog.Log($"{name} adapté à {playerCount} joueur(s) : PV {_maxHealth}, dégâts x{_damageMultiplier:F2}");
+    }
+
+    // ========== IMPLÉMENTATION INTERFACE IOutgoingDamageModifier ==========
+    // Multiplicateur permanent (nombre de joueurs) : rien à consommer.
+
+    public float GetDamageMultiplier() => _damageMultiplier;
+
+    public void ConsumeDamageModifier() { }
 
     // ========== IMPLÉMENTATION INTERFACE IActionPointsUser ==========
 

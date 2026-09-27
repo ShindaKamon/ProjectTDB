@@ -36,7 +36,7 @@ Un joueur contrôle un seul champion. Un même donjon doit donc marcher à 1 jou
 | **Dégâts (ATK et dégâts des cartes)** | × (1 + 0,5 × (N − 1)) *(à valider)* | × 2 | Un coup ne touche en général qu'un joueur : l'augmenter × 3 rendrait chaque coup mortel. À 3 joueurs, un monstre fait ≈ 30 % des PV d'un joueur par tour, moins que les 45 % du barème de groupe de l'Excel : facteur à régler en playtest |
 | **PA, PM, portée, contrôle, pattern** | Inchangés | Inchangés | Le monstre se comporte pareil quel que soit le nombre de joueurs : on apprend son pattern une fois |
 
-Pour le MVP (1 joueur), le multiplicateur vaut 1 : **rien à coder tout de suite**. Le jour du multijoueur, il suffira d'appliquer ces facteurs à l'apparition du monstre (`Enemy.InitializeEnemy`), sans toucher aux assets `EnemyData`.
+Codé le 27/09/2026 pour la coop locale : `EnemyScaling` porte les facteurs, appliqués par `Enemy.ScaleForPlayers` au lancement du combat (1 joueur = barème inchangé), sans toucher aux assets `EnemyData`.
 
 ### Règle anti-lock
 

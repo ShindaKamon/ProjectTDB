@@ -66,8 +66,8 @@ Tests EditMode (`Assets/Project/Tests/EditMode/`) : une classe `XxxTests` par cl
 ## Architecture
 
 ### Flux de scènes
-`ChampionSelectScene` → `CombatScene` (`Assets/Project/Scenes/`). L'éditeur force le Play Mode à démarrer sur ChampionSelectScene (`Scripts/Editor/PlayModeStartSceneSetup.cs`, désactivable via *Tools > Play Mode Start Scene*), car CombatScene dépend d'un état statique posé par la sélection :
-- `ChampionSelectManager.SelectedChampion` (static) — `GridManager` instancie `SelectedChampion.prefab` au lancement du combat.
+`MainMenuScene` → `ChampionSelectScene` → `CombatScene` (`Assets/Project/Scenes/`). Menu principal : Jouer (solo) ou Multijoueur → Créer (salon local, écran `Screen_Lobby` de ChampionSelectScene, `LobbyUI`) ; Rejoindre est grisé (en ligne, V2). L'éditeur force le Play Mode à démarrer sur MainMenuScene (`Scripts/Editor/PlayModeStartSceneSetup.cs`, désactivable via *Tools > Play Mode Start Scene*), car CombatScene dépend d'un état statique posé par la sélection :
+- `CombatParty` (statique, `Combat/`) — mode (`IsMultiplayer`, posé par le menu) et équipe du combat (coop locale : 1 à 3 joueurs sur un PC, un champion et un deck chacun, champions uniques) ; `GridManager` instancie un champion par membre, dans l'ordre des tours, et adapte les monstres au nombre de joueurs (`Enemy.ScaleForPlayers`, facteurs dans `EnemyScaling`).
 - `DeckSaveManager` (classe statique) — decks persistés en JSON dans `Application.persistentDataPath`, avec cache ; le deck « de base » est resynchronisé depuis les cartes de départ du champion à chaque session.
 
 ### Communication entre systèmes

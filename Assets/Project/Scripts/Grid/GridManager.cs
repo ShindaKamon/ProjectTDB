@@ -16,9 +16,15 @@ public class GridManager : MonoBehaviour, IGridService
     [SerializeField] private int _width = 10;
     [SerializeField] private int _height = 10;
     [SerializeField] private GameObject _tilePrefab;
-    [SerializeField] private Vector2Int _playerSpawnGridPos = new Vector2Int(0,0); // Position de la grille où le joueur apparaîtra
-    [SerializeField] private Vector2Int _secondPlayerSpawnGridPos = new Vector2Int(1,0); // Coop : position du second champion
-    
+    [Tooltip("Cases de départ des champions (en rouge pendant le placement) ; chaque joueur apparaît sur la case de son rang, puis peut changer de case")]
+    [SerializeField] private Vector2Int[] _startCells =
+    {
+        new Vector2Int(3, 1), new Vector2Int(5, 1), new Vector2Int(7, 1),
+        new Vector2Int(2, 0), new Vector2Int(4, 0), new Vector2Int(6, 0)
+    };
+    [Tooltip("Phase de placement avant le premier tour (vide = le combat démarre directement)")]
+    [SerializeField] private PlacementPhase _placementPhase;
+
     [Header("=== Couleurs Portées ===")]
     [SerializeField] private Color _moveColor = Color.blue;
     [SerializeField] private Color _cardTargetColor = Color.yellow; // Couleur pour les cibles de carte
@@ -174,23 +180,20 @@ public class GridManager : MonoBehaviour, IGridService
     {
         // _units est déjà initialisé dans Awake() et partagé avec GridRepository
 
-        // 1. Instancie le champion sélectionné (si disponible)
-        if (ChampionSelectManager.SelectedChampion != null)
+        // 1. Instancie les champions de l'équipe sur les cases de départ, dans l'ordre des joueurs
+        // (= ordre des tours dans _units)
+        int playerCount = Mathf.Min(CombatParty.Count, _startCells.Length);
+        var champions = new List<Champion>();
+        for (int i = 0; i < playerCount; i++)
         {
+            CombatParty.Member member = CombatParty.Members[i];
             // Utiliser le deck personnalisé s'il existe, sinon le startingDeck
-            var deckToUse = ChampionSelectManager.SelectedDeck != null && ChampionSelectManager.SelectedDeck.Count > 0
-                ? ChampionSelectManager.SelectedDeck
-                : ChampionSelectManager.SelectedChampion.startingDeck;
-
-            _activeUnit = SpawnChampion(ChampionSelectManager.SelectedChampion, deckToUse, _playerSpawnGridPos);
-
-            // Coop : le second champion joue juste après le premier (ordre de _units)
-            if (ChampionSelectManager.SecondChampion != null)
-            {
-                SpawnChampion(ChampionSelectManager.SecondChampion, ChampionSelectManager.SecondChampion.startingDeck, _secondPlayerSpawnGridPos);
-            }
+            var deckToUse = member.Deck != null && member.Deck.Count > 0 ? member.Deck : member.Champion.startingDeck;
+            Champion champion = SpawnChampion(member.Champion, deckToUse, _startCells[i]);
+            if (champion != null) champions.Add(champion);
         }
-        else
+
+        if (playerCount == 0)
         {
             GameLog.LogWarning("Aucun champion sélectionné. Le jeu commencera sans unité joueur initialement.");
         }
@@ -213,6 +216,9 @@ public class GridManager : MonoBehaviour, IGridService
                         enemy.InitializeEnemy(enemy.GetEnemyData(), GetGridPosFromWorldPos(enemy.transform.position));
                         GameLog.Log($"Ennemi initialisé: {enemy.name}");
                     }
+
+                    // PV et dégâts selon le nombre de joueurs (1 en solo : barème inchangé)
+                    enemy.ScaleForPlayers(playerCount);
 
                     // Notifie le BattleUIManager pour connecter les UI
                     GameLog.Log($"GridManager: Tentative de connexion UI pour {enemy.name}...");
@@ -244,7 +250,22 @@ public class GridManager : MonoBehaviour, IGridService
                 _units.Add(unit);
             }
         }
-        
+
+        // 3. Placement des champions (façon Dofus) avant le premier tour ; le boss garde sa case.
+        // Pas d'unité active pendant le placement : InputManager ne réagit pas.
+        if (_placementPhase != null && champions.Count > 0)
+            _placementPhase.Begin(champions, _startCells, () => StartBattle(champions[0]));
+        else
+            StartBattle(champions.Count > 0 ? champions[0] : null);
+    }
+
+    /// <summary>
+    /// Démarre le premier tour (après la phase de placement s'il y en a une).
+    /// </summary>
+    private void StartBattle(Unit firstUnit)
+    {
+        _activeUnit = firstUnit;
+
         if (_units.Count > 0)
         {
             // Si aucun champion n'a été sélectionné ET qu'il n'y a pas d'unité active, prend la première unité trouvée comme active
@@ -452,6 +473,9 @@ public class GridManager : MonoBehaviour, IGridService
     
     public void OnEndTurnButtonClick()
     {
+        // Phase de placement : pas encore d'unité active, rien à terminer
+        if (_activeUnit == null) return;
+
         GameLog.Log("=== Fin de tour ===");
         ResetAllTileColors();
         NextTurn();

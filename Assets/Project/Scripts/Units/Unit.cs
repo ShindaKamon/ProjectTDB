@@ -756,6 +756,19 @@ public class Unit : MonoBehaviour
         return _currentGridPos;
     }
 
+    /// <summary>
+    /// Téléporte l'unité directement sur une nouvelle case (pas de pathfinding/animation —
+    /// utilisé par les cartes de repositionnement comme Écho évanescent et par la phase de placement).
+    /// </summary>
+    public virtual void TeleportTo(Vector2Int newPos)
+    {
+        Tile tile = Services.Grid.GetTileAtPosition(newPos);
+        if (tile == null) return;
+
+        _currentGridPos = newPos;
+        transform.position = tile.transform.position + new Vector3(0, 0.5f, 0);
+    }
+
     // Getter pour vérifier si l'unité est en mouvement.
     public bool IsMoving()
     {

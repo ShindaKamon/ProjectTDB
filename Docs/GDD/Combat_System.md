@@ -31,7 +31,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | Action                  | Description                               |
 |-------------------------|-------------------------------------------|
 | **Setup de la grille**  | Génération de la grille de combat         |
-| **Placement unités**    | Champions et ennemis placés sur la grille |
+| **Placement unités**    | Boss à sa position fixe ; phase de placement des champions sur les cases de départ, puis « Lancer le combat » (voir `Grid_System.md`, « Zones de Départ ») |
 | **Init des decks**      | Mélange des decks des champions           |
 | **Pioche initiale**     | Main de départ (code : 5 cartes — règle à trancher) |
 | **Ressources initiales**| Attribution des PA, PM de départ          |

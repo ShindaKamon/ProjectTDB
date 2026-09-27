@@ -41,17 +41,4 @@ public class SummonUnit : Unit
 
     // Pilotée par les cartes de son invocateur : pas de tour propre
     public override bool TakesTurns => false;
-
-    /// <summary>
-    /// Téléporte l'invocation directement sur une nouvelle case (pas de pathfinding/animation —
-    /// utilisé par les cartes de repositionnement comme Écho évanescent).
-    /// </summary>
-    public virtual void TeleportTo(Vector2Int newPos)
-    {
-        Tile tile = Services.Grid.GetTileAtPosition(newPos);
-        if (tile == null) return;
-
-        _currentGridPos = newPos;
-        transform.position = tile.transform.position + new Vector3(0, 0.5f, 0);
-    }
 }

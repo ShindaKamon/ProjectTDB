@@ -6,10 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class ChampionSelectManager : MonoBehaviour
 {
-    public static ChampionData SelectedChampion { get; private set; }
-    public static List<CardData> SelectedDeck { get; private set; }
-    // Coop : second champion du combat (joué avec son deck de départ), null en solo
-    public static ChampionData SecondChampion { get; private set; }
+    // Champion validé et deck choisi du joueur en cours ; l'équipe du combat est dans CombatParty
+    private ChampionData _selectedChampion;
+    private List<CardData> _selectedDeck;
 
     [Header("References UI - Zone Champion (Gauche)")]
     [SerializeField] private Transform _championButtonParent;
@@ -39,22 +38,23 @@ public class ChampionSelectManager : MonoBehaviour
     [SerializeField] private Color _selectedButtonColor = new Color(0.95f, 0.85f, 0.55f); // Doré/bronze, cohérent avec la palette parchemin
     [SerializeField] private Color _normalButtonColor = Color.white;
 
-    [Header("Test coop (2 champions sur un seul PC)")]
-    [Tooltip("Si renseigné, ce champion rejoint le combat avec son deck de départ ; " +
-             "les deux champions se jouent à tour de rôle sur ce PC. Vide = solo.")]
-    [SerializeField] private ChampionData _testSecondChampion;
+    [Header("Multijoueur (salon local, plusieurs joueurs sur un seul PC)")]
+    [SerializeField] private LobbyUI _lobby;
+    [Tooltip("Écran Sélection du champion : retour au salon (multijoueur) ou au menu principal (solo).")]
+    [SerializeField] private Button _backFromChampionSelectButton;
+    [SerializeField] private string _mainMenuSceneName = "MainMenuScene";
+    [Tooltip("Libellé du bouton de l'écran Choix du deck en multijoueur (il inscrit le joueur au lieu de lancer le combat).")]
+    [SerializeField] private string _confirmPlayerLabel = "Valider le joueur";
 
     private ChampionData _currentSelectedChampion;
     private Button _selectedChampionButton;
     private Dictionary<ChampionData, Button> _championButtons = new Dictionary<ChampionData, Button>();
 
+    // Multijoueur : place du salon en cours de choix (CombatParty.Count = nouveau joueur)
+    private int _editingSlot;
+
     void Awake()
     {
-        // Réinitialiser les données statiques
-        SelectedChampion = null;
-        SelectedDeck = null;
-        SecondChampion = _testSecondChampion;
-
         if (_allChampions == null || _allChampions.Count == 0)
         {
             Debug.LogError("Aucun ChampionData n'est assigné au ChampionSelectManager.");
@@ -76,6 +76,23 @@ public class ChampionSelectManager : MonoBehaviour
             _chooseChampionButton.interactable = false;
         }
 
+        if (_backFromChampionSelectButton != null)
+            _backFromChampionSelectButton.onClick.AddListener(BackFromChampionSelect);
+
+        if (CombatParty.IsMultiplayer)
+        {
+            TextMeshProUGUI startLabel = _startButton != null ? _startButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+            if (startLabel != null) startLabel.text = _confirmPlayerLabel;
+        }
+
+        if (_lobby != null)
+        {
+            _lobby.OnEditSlot += EditSlot;
+            _lobby.OnRemoveSlot += RemoveSlot;
+            _lobby.OnStart += StartMultiplayerGame;
+            _lobby.OnBack += BackToMainMenu;
+        }
+
         // Cacher le panel deck au départ
         if (_deckPanelObject != null)
             _deckPanelObject.SetActive(false);
@@ -94,21 +111,50 @@ public class ChampionSelectManager : MonoBehaviour
 
     void Start()
     {
-        // Sélectionner automatiquement le premier champion au démarrage
-        if (_allChampions != null && _allChampions.Count > 0)
+        // Multijoueur : on arrive sur le salon, le champion se choisit en ouvrant une case
+        if (CombatParty.IsMultiplayer)
+            _lobby?.Refresh();
+        else
+            SelectFirstAvailableChampion();
+    }
+
+    /// <summary>
+    /// Surligne le premier champion pas encore pris par un autre joueur de l'équipe.
+    /// </summary>
+    private void SelectFirstAvailableChampion()
+    {
+        if (_allChampions == null) return;
+
+        foreach (ChampionData champion in _allChampions)
         {
-            ChampionData firstChampion = _allChampions[0];
-            if (_championButtons.TryGetValue(firstChampion, out Button button))
+            if (champion == null || IsTakenByAnotherPlayer(champion)) continue;
+            if (_championButtons.TryGetValue(champion, out Button button))
             {
-                SelectChampion(firstChampion, button);
+                SelectChampion(champion, button);
+                return;
             }
         }
+    }
+
+    private bool IsTakenByAnotherPlayer(ChampionData champion)
+    {
+        if (!CombatParty.IsMultiplayer) return false;
+        int owner = CombatParty.IndexOf(champion);
+        return owner >= 0 && owner != _editingSlot;
     }
 
     void OnDestroy()
     {
         if (_deckListUI != null)
             _deckListUI.OnDeckSelected -= OnDeckSelected;
+
+        if (_lobby != null)
+        {
+            _lobby.OnEditSlot -= EditSlot;
+            _lobby.OnRemoveSlot -= RemoveSlot;
+            _lobby.OnStart -= StartMultiplayerGame;
+            _lobby.OnBack -= BackToMainMenu;
+        }
     }
 
     private void GenerateChampionButtons()
@@ -184,9 +230,9 @@ public class ChampionSelectManager : MonoBehaviour
     /// </summary>
     private void ConfirmChampionSelection()
     {
-        if (_currentSelectedChampion == null) return;
+        if (_currentSelectedChampion == null || IsTakenByAnotherPlayer(_currentSelectedChampion)) return;
 
-        SelectedChampion = _currentSelectedChampion;
+        _selectedChampion = _currentSelectedChampion;
 
         // Afficher le panel deck et charger les decks du champion
         if (_deckPanelObject != null)
@@ -244,7 +290,7 @@ public class ChampionSelectManager : MonoBehaviour
 
     private void OnDeckSelected(List<CardData> deckCards)
     {
-        SelectedDeck = deckCards;
+        _selectedDeck = deckCards;
         UpdateStartButtonWarning(deckCards?.Count ?? 0);
         GameLog.Log($"Deck sélectionné avec {deckCards.Count} cartes.");
     }
@@ -253,15 +299,15 @@ public class ChampionSelectManager : MonoBehaviour
     {
         if (_deckListUI != null)
         {
-            SelectedDeck = _deckListUI.GetSelectedDeckCards();
+            _selectedDeck = _deckListUI.GetSelectedDeckCards();
         }
         else if (_currentSelectedChampion != null)
         {
             // Fallback: utiliser le startingDeck du champion
-            SelectedDeck = new List<CardData>(_currentSelectedChampion.startingDeck);
+            _selectedDeck = new List<CardData>(_currentSelectedChampion.startingDeck);
         }
 
-        UpdateStartButtonWarning(SelectedDeck?.Count ?? 0);
+        UpdateStartButtonWarning(_selectedDeck?.Count ?? 0);
     }
 
     /// <summary>
@@ -274,21 +320,107 @@ public class ChampionSelectManager : MonoBehaviour
         _startButtonWarningOutline.enabled = cardCount < DeckData.TOTAL_SLOTS;
     }
 
+    /// <summary>
+    /// Bouton de l'écran Choix du deck : lance le combat en solo, inscrit le joueur et
+    /// revient au salon en multijoueur.
+    /// </summary>
     private void StartGame()
     {
-        if (SelectedChampion == null)
+        if (_selectedChampion == null)
         {
-            GameLog.LogWarning("Aucun champion sélectionné pour commencer le jeu.");
+            GameLog.LogWarning("Aucun champion sélectionné pour ce joueur.");
             return;
         }
 
         // S'assurer qu'on a un deck
-        if (SelectedDeck == null || SelectedDeck.Count == 0)
+        if (_selectedDeck == null || _selectedDeck.Count == 0)
         {
             UpdateSelectedDeck();
         }
 
-        GameLog.Log($"Lancement du jeu avec {SelectedChampion.championName} et un deck de {SelectedDeck?.Count ?? 0} cartes.");
+        if (CombatParty.IsMultiplayer)
+        {
+            ConfirmPlayer();
+            return;
+        }
+
+        CombatParty.Clear();
+        CombatParty.TryAdd(_selectedChampion, _selectedDeck);
+        GameLog.Log($"Lancement du combat avec {_selectedChampion.championName} et un deck de {_selectedDeck?.Count ?? 0} cartes.");
         SceneManager.LoadScene(_combatSceneName);
+    }
+
+    // ========== MULTIJOUEUR (salon local) ==========
+
+    /// <summary>Inscrit (ou modifie) le joueur de la case en cours puis revient au salon.</summary>
+    private void ConfirmPlayer()
+    {
+        bool ok = _editingSlot >= CombatParty.Count
+            ? CombatParty.TryAdd(_selectedChampion, _selectedDeck)
+            : CombatParty.TryReplace(_editingSlot, _selectedChampion, _selectedDeck);
+
+        if (!ok)
+        {
+            GameLog.LogWarning($"Impossible d'inscrire {_selectedChampion.championName} : déjà pris ou salon complet.");
+            return;
+        }
+
+        GameLog.Log($"Joueur {_editingSlot + 1} : {_selectedChampion.championName}, deck de {_selectedDeck?.Count ?? 0} cartes.");
+        ShowLobby();
+    }
+
+    /// <summary>Case du salon cliquée (Ajouter ou Changer) : choix du champion pour ce joueur.</summary>
+    private void EditSlot(int slot)
+    {
+        _editingSlot = slot;
+        _selectedChampion = null;
+        _selectedDeck = null;
+
+        foreach (var kvp in _championButtons)
+            kvp.Value.interactable = !IsTakenByAnotherPlayer(kvp.Key);
+
+        // Afficher l'écran avant de sélectionner : la fiche du champion a besoin d'être active
+        if (_flowController != null)
+            _flowController.ShowScreen(ChampionSelectFlowController.Screen.ChampionSelect);
+
+        // Changer : on repart du champion actuel du joueur ; Ajouter : du premier libre
+        ChampionData current = slot < CombatParty.Count ? CombatParty.Members[slot].Champion : null;
+        if (current != null && _championButtons.TryGetValue(current, out Button button))
+            SelectChampion(current, button);
+        else
+            SelectFirstAvailableChampion();
+    }
+
+    private void RemoveSlot(int slot)
+    {
+        CombatParty.RemoveAt(slot);
+        _lobby?.Refresh();
+    }
+
+    private void ShowLobby()
+    {
+        _lobby?.Refresh();
+        if (_flowController != null)
+            _flowController.ShowScreen(ChampionSelectFlowController.Screen.Lobby);
+    }
+
+    private void StartMultiplayerGame()
+    {
+        if (CombatParty.Count < 2) return;
+        GameLog.Log($"Lancement du combat avec {CombatParty.Count} joueurs.");
+        SceneManager.LoadScene(_combatSceneName);
+    }
+
+    private void BackFromChampionSelect()
+    {
+        if (CombatParty.IsMultiplayer)
+            ShowLobby();
+        else
+            BackToMainMenu();
+    }
+
+    private void BackToMainMenu()
+    {
+        SceneManager.LoadScene(_mainMenuSceneName);
     }
 }

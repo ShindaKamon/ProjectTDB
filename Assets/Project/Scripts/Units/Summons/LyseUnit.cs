@@ -1,9 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// Lyse, l'invocation signature de Soren. Ses PV ne sont jamais figés à l'invocation : ils
-/// valent en permanence la moitié des PV ACTUELS de Soren, recalculés à chaque changement de
-/// PV de Soren. Elle peut donc mourir sans être ciblée directement, si Soren perd trop de PV.
+/// Lyse, l'invocation signature d'Evan. Ses PV ne sont jamais figés à l'invocation : ils
+/// valent en permanence la moitié des PV ACTUELS d'Evan, recalculés à chaque changement de
+/// PV d'Evan. Elle peut donc mourir sans être ciblée directement, si Evan perd trop de PV.
 /// </summary>
 public class LyseUnit : SummonUnit
 {
@@ -21,7 +21,7 @@ public class LyseUnit : SummonUnit
 
     private void HandleOwnerHealthChanged(int currentHealth, int maxHealth)
     {
-        // Recalcule en continu : la moitié des PV ACTUELS de Soren (SetMaxHealth ajuste
+        // Recalcule en continu : la moitié des PV ACTUELS d'Evan (SetMaxHealth ajuste
         // aussi les PV courants de Lyse proportionnellement, cf. Unit.SetMaxHealth).
         SetMaxHealth(Mathf.Max(1, currentHealth / 2));
     }

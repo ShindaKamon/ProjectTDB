@@ -276,7 +276,7 @@ public class CardData : ScriptableObject
     public bool isRepositionSummonCard = false;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
-    // ║                         12. COMBO (Ace)                                    ║
+    // ║                         12. COMBO (Raze)                                    ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
 
     [Header("═══ COMBO ═══")]
@@ -489,7 +489,7 @@ public class CardData : ScriptableObject
         GridGeometry.SnapDirection(from, to);
 
     /// <summary>
-    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active avec un ennemi à
+    /// Passif "Miroir fraternel" (Evan) : si le lanceur a une invocation active avec un ennemi à
     /// portée, elle inflige un écho à 40% des dégâts réellement infligés (après réduction/boucliers).
     /// Règles (décision du 24/09/2026) :
     /// - portée = celle de la carte jouée, mesurée depuis l'invocation, en 4 directions comme toute
@@ -549,14 +549,14 @@ public class CardData : ScriptableObject
     /// multiples déjà résolue pour une cible précédente (voir HandUIController.ExecutePendingMultiTargetCard,
     /// qui appelle ExecuteEffect une fois par cible). Dans ce cas, les effets qui doivent se
     /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés :
-    /// combo tracker (Main gagnante d'Ace), invocation/repositionnement, dégâts sur soi, pioche,
+    /// combo tracker (Main gagnante de Raze), invocation/repositionnement, dégâts sur soi, pioche,
     /// écho de Miroir fraternel.
     /// </param>
     public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default, bool isAdditionalMultiTargetHit = false)
     {
         GameLog.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
-        // Passif "Main gagnante" (Ace) : détecte un motif avec la carte précédente AVANT de
+        // Passif "Main gagnante" (Raze) : détecte un motif avec la carte précédente AVANT de
         // résoudre les effets, pour que le bonus s'applique à CETTE carte (ex: Paire).
         // Ne s'exécute qu'une fois par carte jouée, pas une fois par cible (sinon la carte se
         // comparerait à elle-même sur la 2e cible d'une carte à cibles multiples).
@@ -583,7 +583,7 @@ public class CardData : ScriptableObject
         int finalNextAttackBonus = nextAttackBonus;
         int finalLifesteal = lifestealFixedAmount;
 
-        // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis d'Ace) ---
+        // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis de Raze) ---
         if (scalesWithPASpentThisTurn && comboDamagePerPASpent > 0 && comboTracker != null)
         {
             int bonus = comboDamagePerPASpent * comboTracker.PASpentThisTurn;
@@ -628,7 +628,7 @@ public class CardData : ScriptableObject
         {
             if (isSummonCard && summonPrefab != null)
             {
-                // Si l'invocation du lanceur est déjà active et vivante (ex: Lyse pour Soren),
+                // Si l'invocation du lanceur est déjà active et vivante (ex: Lyse pour Evan),
                 // on ne réinvoque pas une deuxième copie : on la soigne à la place (décision produit).
                 SummonUnit existingSummon = (source is ISummonOwner existingSummonOwner) ? existingSummonOwner.ActiveSummon : null;
                 UnitState existingSummonState = existingSummon != null ? existingSummon.GetUnitState() : null;
@@ -693,7 +693,7 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = unit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
+                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
                         unit.TakeDamage(unit.ReduceByDefense(totalUnitDamage, damageType));
                     int hpAfter = unit.GetHealth();
@@ -725,7 +725,7 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = targetUnit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
+                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
                         targetUnit.TakeDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType));
                     int hpAfter = targetUnit.GetHealth();
@@ -751,7 +751,7 @@ public class CardData : ScriptableObject
             }
         }
 
-        // Passif "Miroir fraternel" (Soren) : écho à 40% de puissance sur une cible à portée
+        // Passif "Miroir fraternel" (Evan) : écho à 40% de puissance sur une cible à portée
         // de l'invocation active, si la carte jouée inflige réellement des dégâts.
         // Basé sur les dégâts réellement appliqués (après réduction/boucliers), pas sur
         // finalDamage (théorique, avant résolution) - sinon l'écho se déclenchait même quand
@@ -921,8 +921,8 @@ public class CardData : ScriptableObject
     /// </summary>
     private System.Collections.IEnumerator ExecuteChargeEffectCoroutine(Unit source, Vector2Int targetTilePos, System.Action onComplete)
     {
-        // Passif "Main gagnante" (Ace) / système de combo : mêmes hooks que ExecuteEffect,
-        // pour que les cartes de charge (ex: L'Alpiniste) participent au combo.
+        // Passif "Main gagnante" (Raze) / système de combo : mêmes hooks que ExecuteEffect,
+        // pour que les cartes de charge (ex: Crux) participent au combo.
         IComboTracker comboTracker = source as IComboTracker;
         comboTracker?.OnCardAboutToExecute(this);
 
@@ -954,7 +954,7 @@ public class CardData : ScriptableObject
             }
         }
 
-        // Notifie l'unité de son atterrissage (ex: Réflexe du grimpeur de L'Alpiniste)
+        // Notifie l'unité de son atterrissage (ex: Réflexe du grimpeur de Crux)
         if (source is IChargeLandingReactor landingReactor)
         {
             landingReactor.OnChargeLanded();

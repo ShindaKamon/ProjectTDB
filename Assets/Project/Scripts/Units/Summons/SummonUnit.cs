@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Classe de base pour toute unité invoquée par un champion (ex: Lyse pour Soren).
+/// Classe de base pour toute unité invoquée par un champion (ex: Lyse pour Evan).
 /// Réutilisable pour d'autres personnages avec d'autres types d'invocations à l'avenir.
 /// Ne joue pas de tour propre (PA/PM = 0 par défaut) : sert de pion positionnel contrôlé
 /// indirectement par son invocateur via des cartes dédiées.

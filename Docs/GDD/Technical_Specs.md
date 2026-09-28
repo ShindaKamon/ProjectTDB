@@ -48,7 +48,7 @@
 | **Assets/Project/Scripts/Combat/** | `TurnStateMachine`, `ResourceDebuffManager` (retraits de PA/PM) |
 | **Assets/Project/Scripts/Cards/** | `CardData` (ScriptableObject data-driven + enums de cartes), `ChargeHelper`, `CodexCardVisual` (visuels et palette des émotions), `DeckManager` (pioche/main/défausse en combat) |
 | **Assets/Project/Scripts/Deck/** | Construction et sauvegarde des decks : `DeckData`, `DeckRules`, `DeckSaveManager`, `CardPoolQuery`, `ChampionDecksData`, `AllDecksData`, `CardCollection` |
-| **Assets/Project/Scripts/Units/** | `Unit`, `UnitState`, `ActionPointsComponent`, interfaces (`IActionPointsUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) ; `Champions/` (`Champion`, `ChampionData`, `AceUnit`, `AlpinisteUnit`, `SorenUnit`), `Enemies/` (`Enemy`, `EnemyAI`, `EnemyData`), `Summons/` (`SummonUnit`, `LyseUnit`) |
+| **Assets/Project/Scripts/Units/** | `Unit`, `UnitState`, `ActionPointsComponent`, interfaces (`IActionPointsUser`, `IComboTracker`, `IOutgoingDamageModifier`, `IChargeLandingReactor`, `ISummonOwner`) ; `Champions/` (`Champion`, `ChampionData`, `RazeUnit`, `CruxUnit`, `EvanUnit`), `Enemies/` (`Enemy`, `EnemyAI`, `EnemyData`), `Summons/` (`SummonUnit`, `LyseUnit`) |
 | **Assets/Project/Scripts/Validation/** | `GameActionValidator`, `ValidationResult` |
 | **Assets/Project/Scripts/Input/** | `InputManager` |
 | **Assets/Project/Scripts/UI/** | `Combat/` (HUD, `BattleUIManager`, `HealthBarManager`, orbe de vie, barres de vie, retours de combat), `ChampionSelect/` (écrans de sélection et de decks, `ChampionSelectManager`, `ChampionSelectFlowController`), `Cards/` (main de cartes, ciblage), `DeckEditor/`, `Common/` |
@@ -80,7 +80,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 |------|------------|---------|
 | **Scènes** | PascalCase | MainMenu, Combat_Level01 |
 | **Prefabs** | PascalCase | CardUI_Template, HexTile |
-| **ScriptableObjects** | PascalCase avec suffixe | Card_CoupDeColereData, Character_SorenData |
+| **ScriptableObjects** | PascalCase avec suffixe | Card_CoupDeColereData, Character_EvanData |
 
 ---
 
@@ -174,7 +174,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 | Deck | 18 cartes (2 Signature + 16 Standard), 1 base + 3 perso | 24 cartes (2 / 6 / 16) |
 | Statuts | Bouclier en PV (`Unit.AddShield`, `shieldAmount` des cartes, jauge bleue de `HealthBar`) ; armure/résistance magique (`Unit.ReduceByDefense`, `CardData.damageType`, `armorAmount`/`magicResistanceAmount`) ; bouclier réactif, vulnérabilité (`casterArmorAmount`), recul et élan du lanceur, dégâts autour de la cible ; durées en tours du lanceur (`Unit.TickEffectsOnTurnStartOf`) ; retraits de PA/PM ; le reste non implémenté | Retrait de PM (le plus fort remplace le plus faible), poussée/tirage, boucliers en PV, vulnérabilité |
 | IA ennemie | Deck pattern | Attaque de base anti-lock et Ténacité faites (`EnemyAI.TryBasicAttack`, `ResourceDebuffManager`) ; reste le cycle de boss Zone/Basique/Heal |
-| Champions | Sous-classes `AceUnit`, `AlpinisteUnit`, `SorenUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
+| Champions | Sous-classes `RazeUnit`, `CruxUnit`, `EvanUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
 | Main | Départ 5, max 5, pioche 1/tour | Idem (acté le 24/09) |
 | Stats | `attackDamage`, `armor`, `magicResistance` dans `ChampionData` ; ATQ descriptive (n'entre dans aucun calcul, bonus de prochaine attaque à part), armure / résistance magique actives | Armure / résistance magique actées le 25/09 ; rôle de l'ATQ à trancher |
 | Grille | Carrée 10×10, 4 directions (`GridGeometry`) | Idem (acté le 24/09) ; budget des zones de l'Excel (9 / 25 cases) à revoir |

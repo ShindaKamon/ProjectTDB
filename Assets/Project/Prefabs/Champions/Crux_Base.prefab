@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6016670008061778447}
   - component: {fileID: 4915960506887670734}
   m_Layer: 0
-  m_Name: Alpiniste_Base
+  m_Name: Crux_Base
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67,7 +67,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e01a45614bb2d943965d9936991249f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ProjectTDB::AlpinisteUnit
+  m_EditorClassIdentifier: ProjectTDB::CruxUnit
   _currentGridPos: {x: 0, y: 0}
   _initialGridPos: {x: 0, y: 0}
   _moveSpeed: 5

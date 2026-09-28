@@ -92,13 +92,13 @@ Tests EditMode (`Assets/Project/Tests/EditMode/`) : une classe `XxxTests` par cl
 ScriptableObjects dans `Assets/ScriptableObjects/` (champions, cartes, ennemis, `CardCollection`). Les decks sauvegardés sont rangés **par nom de champion** et référencent les cartes **par nom** : renommer un champion (`championName`) ou une carte (`cardName`) exige d'ajouter l'ancien nom dans `RenamedChampions` / `RenamedCards` de `DeckSaveManager`, sinon les decks existants perdent le champion ou la carte. Même piège pour les émotions des decks, sauvegardées **par nom** d'enum : renommer une valeur d'`EmotionType` exige d'ajouter l'ancien nom dans `LegacyEmotionNames` de `DeckData`.
 
 ### Noms des champions
-Le roster a été renommé le 24/09/2026 : seuls les noms affichés (`ChampionData.championName`) ont changé, pas les identifiants internes.
+Le roster a été renommé le 24/09/2026 (Soren → Evan, l'Alpiniste → Crux, Ace → Raze), puis les identifiants internes ont suivi le 28/09/2026 (classes, fiches, prefabs, matériaux, textures, dossiers de cartes). Les anciens noms ne subsistent que dans `RenamedChampions` de `DeckSaveManager`, pour migrer les decks sauvegardés.
 
-| Nom (jeu et GDD) | Classe | Fiche / prefab |
+| Nom | Classe | Fiche / prefab |
 |---|---|---|
-| Evan (+ invocation Lyse) | `SorenUnit` | `Soren.asset`, `Soren_Base.prefab` |
-| Crux | `AlpinisteUnit` | `Alpiniste.asset`, `Alpiniste_Base.prefab` |
-| Raze | `AceUnit` | `Ace.asset`, `Ace_Base.prefab` |
+| Evan (+ invocation Lyse) | `EvanUnit` | `Evan.asset`, `Evan_Base.prefab` |
+| Crux | `CruxUnit` | `Crux.asset`, `Crux_Base.prefab` |
+| Raze | `RazeUnit` | `Raze.asset`, `Raze_Base.prefab` |
 
 ### Logs
 Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build via `[Conditional]`) au lieu de `Debug.Log`. `Debug.LogError` reste direct.

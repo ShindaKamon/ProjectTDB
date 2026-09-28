@@ -11,7 +11,7 @@ public class DeckManager : MonoBehaviour
     private List<CardData> _hand = new List<CardData>();
     private List<CardData> _discardPile = new List<CardData>();
 
-    // Surcouche de coût par carte (ex: "Triche" d'Ace, ±1 PA). CardData est un
+    // Surcouche de coût par carte (ex: "Triche" de Raze, ±1 PA). CardData est un
     // ScriptableObject partagé : si la main contient 2 exemplaires de la même carte, les deux
     // partagent le même override (limitation connue, acceptable tant qu'aucune UI de ciblage
     // "carte de la main" n'existe pour choisir un exemplaire précis).

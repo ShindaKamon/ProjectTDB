@@ -840,21 +840,21 @@ namespace ProjectTDB.Tests
             return card;
         }
 
-        private (SorenUnit soren, SummonUnit summon) NewSorenWithSummon(Vector2Int summonPos)
+        private (EvanUnit evan, SummonUnit summon) NewEvanWithSummon(Vector2Int summonPos)
         {
-            var soren = NewUnit<SorenUnit>(new Vector2Int(0, 0));
+            var evan = NewUnit<EvanUnit>(new Vector2Int(0, 0));
             var summon = NewUnit<SummonUnit>(summonPos);
-            summon.SetOwner(soren);
-            SetField(soren, "_activeSummon", summon);
-            return (soren, summon);
+            summon.SetOwner(evan);
+            SetField(evan, "_activeSummon", summon);
+            return (evan, summon);
         }
 
         [Test]
         public void CanPlayCard_RepositionWithoutSummon_Fails()
         {
-            var soren = NewUnit<SorenUnit>();
+            var evan = NewUnit<EvanUnit>();
 
-            var result = GameActionValidator.CanPlayCard(soren, NewRepositionCard());
+            var result = GameActionValidator.CanPlayCard(evan, NewRepositionCard());
 
             Assert.IsFalse(result.IsValid);
             StringAssert.Contains("Aucune invocation", result.ErrorMessage);
@@ -863,9 +863,9 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanPlayCard_RepositionWithSummon_Succeeds()
         {
-            var (soren, _) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var (evan, _) = NewEvanWithSummon(new Vector2Int(2, 2));
 
-            var result = GameActionValidator.CanPlayCard(soren, NewRepositionCard());
+            var result = GameActionValidator.CanPlayCard(evan, NewRepositionCard());
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }
@@ -873,26 +873,26 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanSelectSummonToMove_OwnSummon_Succeeds()
         {
-            var (soren, summon) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var (evan, summon) = NewEvanWithSummon(new Vector2Int(2, 2));
 
-            Assert.IsTrue(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, summon).IsValid);
+            Assert.IsTrue(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), evan, summon).IsValid);
         }
 
         [Test]
         public void CanSelectSummonToMove_NotASummon_Fails()
         {
-            var (soren, _) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var (evan, _) = NewEvanWithSummon(new Vector2Int(2, 2));
             var enemy = NewUnit<Enemy>(new Vector2Int(3, 3));
 
-            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, enemy).IsValid);
-            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, soren).IsValid);
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), evan, enemy).IsValid);
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), evan, evan).IsValid);
         }
 
         [Test]
         public void CanSelectSummonToMove_SomeoneElsesSummon_Fails()
         {
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(2, 2));
-            var otherCaster = NewUnit<SorenUnit>(new Vector2Int(5, 5));
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(2, 2));
+            var otherCaster = NewUnit<EvanUnit>(new Vector2Int(5, 5));
 
             Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), otherCaster, summon).IsValid);
         }
@@ -900,8 +900,8 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanMoveSummonTo_RangeMeasuredFromSummon_NotFromCaster()
         {
-            // Soren en (0,0), invocation en (6,6) : (6,9) est à 3 cases de l'invocation, 15 de Soren
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(6, 6));
+            // Evan en (0,0), invocation en (6,6) : (6,9) est à 3 cases de l'invocation, 15 d'Evan
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(6, 6));
 
             Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(3), summon, new Vector2Int(6, 9), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(3), summon, new Vector2Int(1, 0), true).IsValid);
@@ -910,7 +910,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanMoveSummonTo_DiagonalCountsAsTwo()
         {
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(5, 5));
 
             Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(2), summon, new Vector2Int(6, 6), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(1), summon, new Vector2Int(6, 6), true).IsValid);
@@ -919,7 +919,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanMoveSummonTo_SameTileOrOccupied_Fails()
         {
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(5, 5));
 
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 5), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 6), false).IsValid);

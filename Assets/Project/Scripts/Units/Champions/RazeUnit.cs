@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// AceUnit hérite de Champion et représente le champion Ace.
+/// RazeUnit hérite de Champion et représente le champion Raze.
 /// Passif : Main gagnante — analyse la carte en cours par rapport à la précédente jouée ce
 /// tour et déclenche un bonus selon le motif reconnu par cette paire :
 /// - Bluff (émotions différentes) → -10% dégâts subis jusqu'au prochain tour.
@@ -11,7 +11,7 @@ using UnityEngine;
 /// Suite > Paire). Version provisoire (choix de cible/déclenchement automatique plutôt qu'un
 /// choix du joueur) — cf. notes de design du classeur source, à retravailler en playtest.
 /// </summary>
-public class AceUnit : Champion, IComboTracker
+public class RazeUnit : Champion, IComboTracker
 {
     [Header("=== Main gagnante ===")]
     [Tooltip("Réduction des dégâts subis quand le bouclier Bluff est actif (0.10 = -10%)")]
@@ -79,8 +79,8 @@ public class AceUnit : Champion, IComboTracker
     }
 
     /// <summary>
-    /// Réinitialise l'historique de combo et le bouclier Bluff au début du tour d'Ace
-    /// (protège tout le tour adverse, comme le Réflexe du grimpeur de L'Alpiniste).
+    /// Réinitialise l'historique de combo et le bouclier Bluff au début du tour de Raze
+    /// (protège tout le tour adverse, comme le Réflexe du grimpeur de Crux).
     /// </summary>
     public override void OnOwnTurnStart()
     {

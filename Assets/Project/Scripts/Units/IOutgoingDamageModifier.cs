@@ -1,6 +1,6 @@
 /// <summary>
 /// Interface pour toute unité capable de modifier les dégâts qu'elle inflige via une carte
-/// (ex: bonus "prochaine carte" de Réflexe du grimpeur pour L'Alpiniste, dégâts des monstres
+/// (ex: bonus "prochaine carte" de Réflexe du grimpeur pour Crux, dégâts des monstres
 /// selon le nombre de joueurs). Consultée par
 /// CardData.ExecuteEffect juste avant l'application des dégâts finaux.
 /// </summary>

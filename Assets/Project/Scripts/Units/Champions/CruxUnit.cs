@@ -1,14 +1,14 @@
 using UnityEngine;
 
 /// <summary>
-/// AlpinisteUnit hérite de Champion et représente le champion L'Alpiniste.
+/// CruxUnit hérite de Champion et représente le champion Crux.
 /// Passif : Réflexe du grimpeur — après un déplacement de charge (Piolet d'ascension),
 /// s'il atterrit adjacent à un allié il gagne un bouclier (réduit les prochains dégâts subis
 /// jusqu'à son prochain tour) ; s'il atterrit adjacent à un ennemi, il gagne un bonus de
 /// dégâts sur la prochaine carte de dégâts jouée. Le joueur choisit tank ou assassin à
 /// chaque déplacement, selon la cible visée.
 /// </summary>
-public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageModifier
+public class CruxUnit : Champion, IChargeLandingReactor, IOutgoingDamageModifier
 {
     [Header("=== Réflexe du grimpeur ===")]
     [Tooltip("Réduction des dégâts subis quand le bouclier est actif (0.15 = -15%)")]
@@ -17,7 +17,7 @@ public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageMod
     [Tooltip("Bonus de dégâts sur la prochaine carte de dégâts jouée (0.15 = +15%)")]
     [SerializeField] private float _nextCardDamageBonus = 0.15f;
 
-    // Bouclier actif jusqu'au prochain tour de L'Alpiniste (atterrissage près d'un allié)
+    // Bouclier actif jusqu'au prochain tour de Crux (atterrissage près d'un allié)
     private bool _hasClimberShield = false;
 
     // Bonus de dégâts à usage unique sur la prochaine carte de dégâts (atterrissage près d'un ennemi)
@@ -77,7 +77,7 @@ public class AlpinisteUnit : Champion, IChargeLandingReactor, IOutgoingDamageMod
     }
 
     /// <summary>
-    /// Le bouclier expire au début du prochain tour de L'Alpiniste (protège tout le tour adverse).
+    /// Le bouclier expire au début du prochain tour de Crux (protège tout le tour adverse).
     /// </summary>
     public override void OnOwnTurnStart()
     {

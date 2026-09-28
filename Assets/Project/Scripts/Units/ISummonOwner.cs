@@ -1,6 +1,6 @@
 /// <summary>
 /// Interface pour toute unité capable d'invoquer et de contrôler indirectement une
-/// SummonUnit (ex: Soren et Lyse). Permet à CardData de déclencher l'invocation, le
+/// SummonUnit (ex: Evan et Lyse). Permet à CardData de déclencher l'invocation, le
 /// repositionnement et de consulter l'invocation active sans connaître le champion précis.
 /// </summary>
 public interface ISummonOwner

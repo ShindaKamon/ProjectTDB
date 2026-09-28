@@ -5,7 +5,7 @@ using TMPro;
 /// <summary>
 /// HUD affichant les stats du champion à l'écran.
 /// Se met à jour automatiquement en s'abonnant aux événements de l'unité.
-/// Compatible avec tous les champions (Soren, l'Alpiniste, Ace)
+/// Compatible avec tous les champions (Evan, Crux, Raze)
 /// </summary>
 public class ChampionHUD : MonoBehaviour
 {

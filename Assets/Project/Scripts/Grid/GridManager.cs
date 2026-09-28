@@ -324,7 +324,7 @@ public class GridManager : MonoBehaviour, IGridService
         GameObject playerUnitGO = Instantiate(data.prefab);
 
         // On récupère le composant Champion pour appeler son initialisation.
-        // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (SorenUnit, AlpinisteUnit, AceUnit)
+        // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (EvanUnit, CruxUnit, RazeUnit)
         Champion champion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
         if (champion == null) return null;
 

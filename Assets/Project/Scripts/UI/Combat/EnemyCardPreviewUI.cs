@@ -18,12 +18,32 @@ public class EnemyCardPreviewUI : MonoBehaviour
 
     private Enemy _trackedEnemy;
 
+    // Pas d'aperçu avant le premier tour (pendant la phase de placement, le combat n'a pas commencé)
+    private bool _battleStarted;
+
+    // Abonné du réveil à la destruction (pas OnEnable/OnDisable) : l'aperçu se cache lui-même
+    // (_previewContainer est souvent ce GameObject) et doit quand même recevoir le premier tour
+    void Awake() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (_battleStarted) return;
+
+        _battleStarted = true;
+        if (_trackedEnemy != null) UpdatePreview(_trackedEnemy.GetNextCard());
+    }
+
     void Start()
     {
         GameLog.Log("EnemyCardPreviewUI: Start() appelé");
 
-        // Cache le preview au démarrage
-        if (_previewContainer != null)
+        // Cache le preview au démarrage. Start peut n'arriver qu'au lancement du combat (aperçu
+        // masqué avant son premier Start) : il ne doit pas alors recacher la carte qui vient de s'afficher
+        if (_previewContainer != null && _battleStarted)
+        {
+            // rien à faire : l'aperçu est déjà à jour
+        }
+        else if (_previewContainer != null)
         {
             _previewContainer.SetActive(false);
             GameLog.Log("EnemyCardPreviewUI: Container caché au démarrage");
@@ -36,6 +56,8 @@ public class EnemyCardPreviewUI : MonoBehaviour
 
     void OnDestroy()
     {
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+
         // Désabonne des événements
         if (_trackedEnemy != null)
         {
@@ -79,7 +101,7 @@ public class EnemyCardPreviewUI : MonoBehaviour
     /// </summary>
     private void UpdatePreview(CardData nextCard)
     {
-        if (nextCard == null)
+        if (nextCard == null || !_battleStarted)
         {
             // Pas de carte à afficher
             if (_previewContainer != null)

@@ -290,7 +290,7 @@ public class ChampionSelectManager : MonoBehaviour
     private void OnDeckSelected(List<CardData> deckCards)
     {
         _selectedDeck = deckCards;
-        UpdateStartButtonState(deckCards?.Count ?? 0);
+        UpdateStartButtonState(deckCards);
         GameLog.Log($"Deck sélectionné avec {deckCards.Count} cartes.");
     }
 
@@ -306,26 +306,32 @@ public class ChampionSelectManager : MonoBehaviour
             _selectedDeck = new List<CardData>(_currentSelectedChampion.startingDeck);
         }
 
-        UpdateStartButtonState(_selectedDeck?.Count ?? 0);
+        UpdateStartButtonState(_selectedDeck);
     }
 
     /// <summary>
-    /// Décision du 28/09/2026 : un deck incomplet (moins de DeckData.TOTAL_SLOTS cartes) ne peut
-    /// pas être choisi pour le combat. Le bouton est grisé, entouré du liseré orange, et son
-    /// libellé indique combien de cartes il manque.
+    /// Décisions du 28/09/2026 : un deck incomplet (moins de DeckData.TOTAL_SLOTS cartes) ou qui
+    /// garde des cartes hors de ses couleurs (après un changement de couleurs) ne peut pas être
+    /// choisi pour le combat. Le bouton est grisé, entouré du liseré orange, et son libellé dit pourquoi.
     /// </summary>
-    private void UpdateStartButtonState(int cardCount)
+    private void UpdateStartButtonState(IList<CardData> cards)
     {
-        bool complete = DeckRules.IsComplete(cardCount);
+        int cardCount = cards?.Count ?? 0;
+        int offColor = DeckRules.CountOffColor(cards, _deckListUI != null ? _deckListUI.SelectedDeckColors : null);
+        bool playable = DeckRules.IsComplete(cardCount) && offColor == 0;
 
         if (_startButton != null)
-            _startButton.interactable = _selectedChampion != null && complete;
+            _startButton.interactable = _selectedChampion != null && playable;
 
         if (_startButtonWarningOutline != null)
-            _startButtonWarningOutline.enabled = !complete;
+            _startButtonWarningOutline.enabled = !playable;
 
         if (_startLabel != null)
-            _startLabel.text = complete ? _startLabelText : $"Deck incomplet : {cardCount}/{DeckData.TOTAL_SLOTS} cartes";
+        {
+            if (playable) _startLabel.text = _startLabelText;
+            else if (offColor > 0) _startLabel.text = $"Deck invalide : {offColor} carte{(offColor > 1 ? "s" : "")} hors couleurs";
+            else _startLabel.text = $"Deck incomplet : {cardCount}/{DeckData.TOTAL_SLOTS} cartes";
+        }
     }
 
     /// <summary>
@@ -346,9 +352,9 @@ public class ChampionSelectManager : MonoBehaviour
             UpdateSelectedDeck();
         }
 
-        if (!DeckRules.IsComplete(_selectedDeck?.Count ?? 0))
+        if (!DeckRules.IsPlayable(_selectedDeck, _deckListUI != null ? _deckListUI.SelectedDeckColors : null))
         {
-            GameLog.LogWarning($"Deck incomplet ({_selectedDeck?.Count ?? 0}/{DeckData.TOTAL_SLOTS} cartes) : combat refusé.");
+            GameLog.LogWarning($"Deck injouable ({_selectedDeck?.Count ?? 0}/{DeckData.TOTAL_SLOTS} cartes, ou cartes hors couleurs) : combat refusé.");
             return;
         }
 

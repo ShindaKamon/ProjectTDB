@@ -24,6 +24,7 @@ MonoBehaviour:
   costHP: 0
   targetType: 7
   targetRange: 3
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -34,16 +35,25 @@ MonoBehaviour:
   damageSelf: 0
   healAmount: 15
   lifestealFixedAmount: 0
-  atkIncreased: 0
-  defenseAmount: 0
+  damageAroundTarget: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
+  reactiveShield: 0
   armorAmount: 0
-  barrierAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
+  removeAllMovement: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
+  casterRetreat: 0
+  casterMovementGain: 0
+  casterActionGain: 0
+  casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
   isSummonCard: 1
   summonPrefab: {fileID: 6726855022100611391, guid: 1dc6c5e2b46bad34487c7fc86ab1fe94, type: 3}

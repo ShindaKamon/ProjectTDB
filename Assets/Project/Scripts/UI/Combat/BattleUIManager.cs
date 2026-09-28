@@ -11,6 +11,8 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     [Header("UI References")]
     [SerializeField] private BossHealthBarUI _bossHealthBar;
     [SerializeField] private EnemyCardPreviewUI _enemyCardPreview;
+    [Tooltip("Aperçus (plus petits, sous celui du boss) de la prochaine carte des monstres ordinaires, un par monstre")]
+    [SerializeField] private EnemyCardPreviewUI[] _minionCardPreviews;
     [SerializeField] private HealthOrbController _playerHealthOrb;
 
     [Header("Settings")]
@@ -18,6 +20,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
 
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
+    private readonly Dictionary<Enemy, EnemyCardPreviewUI> _minionPreviews = new Dictionary<Enemy, EnemyCardPreviewUI>();
     private Champion _currentPlayer;
 
     void Awake()
@@ -169,6 +172,14 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             GameLog.Log($"  -> Ce n'est PAS un boss");
         }
 
+        // Le boss a le grand aperçu ; chaque monstre ordinaire prend un petit aperçu libre
+        if (enemy.IsBoss())
+        {
+            TrackEnemyCards(enemy);
+            return;
+        }
+        if (TryTrackMinionCards(enemy)) return;
+
         // Si aucun ennemi n'est tracké pour la preview, track celui-ci
         if (_currentTrackedEnemy == null)
         {
@@ -181,12 +192,36 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         }
     }
 
+    // Petit aperçu libre pour un monstre ordinaire ; false s'il n'y en a plus
+    private bool TryTrackMinionCards(Enemy enemy)
+    {
+        if (_minionCardPreviews == null) return false;
+
+        foreach (EnemyCardPreviewUI preview in _minionCardPreviews)
+        {
+            if (preview == null || _minionPreviews.ContainsValue(preview)) continue;
+
+            _minionPreviews[enemy] = preview;
+            preview.SetTrackedEnemy(enemy);
+            return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Nettoie les références quand un ennemi meurt
     /// </summary>
     public void OnEnemyDied(Enemy enemy)
     {
         if (enemy == null) return;
+
+        // Monstre ordinaire : son petit aperçu disparaît
+        if (_minionPreviews.TryGetValue(enemy, out EnemyCardPreviewUI minionPreview))
+        {
+            minionPreview.HidePreview();
+            _minionPreviews.Remove(enemy);
+            return;
+        }
 
         // Si c'était le boss, cache la barre
         if (enemy == _currentBoss && _bossHealthBar != null)

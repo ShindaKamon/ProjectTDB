@@ -215,7 +215,11 @@ public static class CodexCardVisual
             {
                 case CardAreaEffect.Circle: Box(tx, ty, radius); break;
                 case CardAreaEffect.Line: for (int k = 0; k < 3; k++) Add(tx + k, ty); break;
-                case CardAreaEffect.Cone: Add(tx, ty); Add(tx + 1, ty - 1); Add(tx + 1, ty + 1); Add(tx + 1, ty); break;
+                case CardAreaEffect.Cone:
+                    // Rangées de 1, 3, 5… cases à partir de la case visée (comme CardData.IsInAOEShape)
+                    for (int row = 0; row < Mathf.Max(1, card.aoeRadius); row++)
+                        for (int side = -row; side <= row; side++) Add(tx + row, ty + side);
+                    break;
                 case CardAreaEffect.Cross: Add(tx, ty); Add(tx - 1, ty); Add(tx + 1, ty); Add(tx, ty - 1); Add(tx, ty + 1); break;
                 case CardAreaEffect.WholeTeam: Team(); break;
                 default:
@@ -256,8 +260,9 @@ public static class CodexCardVisual
 
         // Ordre : ATQ, armure (DEFP), résistance magique (DEFM), bouclier, PA, PM, Ténacité
         if (unit.GetAttack() != 0) chips.Add(new CardChip("dmg", unit.GetAttack().ToString(), ChipKind.Damage));
-        if (unit.GetArmor() != 0) chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Defense));
-        if (unit.GetMagicResistance() != 0) chips.Add(new CardChip("magicresist", unit.GetMagicResistance().ToString(), ChipKind.Defense));
+        // Armure et résistance magique toujours affichées (0 compris) : des cartes peuvent les baisser
+        chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Defense));
+        chips.Add(new CardChip("magicresist", unit.GetMagicResistance().ToString(), ChipKind.Defense));
         if (unit.GetShield() > 0) chips.Add(new CardChip("shield", unit.GetShield().ToString(), ChipKind.Shield));
 
         if (unit is IActionPointsUser paUser)

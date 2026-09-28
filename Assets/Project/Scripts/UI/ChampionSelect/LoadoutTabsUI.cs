@@ -20,6 +20,8 @@ public class LoadoutTabsUI : MonoBehaviour
     [Header("Actions sur le deck sélectionné (boutons sous la liste)")]
     [SerializeField] private Button _openDeckButton;      // « Modifier » : ouvre le gestionnaire de deck
     [SerializeField] private Button _renameDeckButton;
+    [Tooltip("« Couleurs » : change les 1 ou 2 couleurs du deck sans le supprimer (indisponible pour le deck de base)")]
+    [SerializeField] private Button _colorsDeckButton;
     [SerializeField] private Button _deleteDeckButton;    // indisponible pour le deck de base
 
     [Header("Popups")]
@@ -60,6 +62,9 @@ public class LoadoutTabsUI : MonoBehaviour
 
         if (_deleteDeckButton != null)
             _deleteDeckButton.onClick.AddListener(DeleteSelectedDeck);
+
+        if (_colorsDeckButton != null)
+            _colorsDeckButton.onClick.AddListener(EditSelectedDeckColors);
 
         SetupPopupCallbacks();
         ConfigureLayoutGroup();
@@ -161,6 +166,7 @@ public class LoadoutTabsUI : MonoBehaviour
                 tabGO.transform.SetSiblingIndex(i);
 
                 tab.Setup(deckData, i, DeckColorsOf(deckData));
+                tab.SetOffColorCount(OffColorCountOf(deckData));
                 tab.SetSelected(i == _activeDeckIndex);
                 tab.OnSlotClicked += OnTabClicked;
                 _tabs.Add(tab);
@@ -199,6 +205,13 @@ public class LoadoutTabsUI : MonoBehaviour
             ? _currentChampion.startingDeck
             : DeckSaveManager.GetCardsFromNames(deck.cardNames, _cardCollection);
         return DeckRules.DeckColors(deck, cards);
+    }
+
+    // Cartes d'un deck perso qui ne sont plus de ses couleurs (le deck de base n'en a jamais)
+    private int OffColorCountOf(DeckData deck)
+    {
+        if (deck.isDefault || _cardCollection == null) return 0;
+        return DeckRules.CountOffColor(DeckSaveManager.GetCardsFromNames(deck.cardNames, _cardCollection), DeckColorsOf(deck));
     }
 
     private void UpdateAddTabButtonState()
@@ -286,8 +299,8 @@ public class LoadoutTabsUI : MonoBehaviour
     /// <summary>Post-autosave : rafraîchit uniquement le compteur de cartes de l'onglet concerné.</summary>
     private void HandleDeckSaved(int index, List<CardData> cards)
     {
-        if (index < _tabs.Count)
-            _tabs[index].UpdateDisplay();
+        if (index < _tabs.Count && _currentDecksData != null && index < _currentDecksData.decks.Count)
+            _tabs[index].SetOffColorCount(OffColorCountOf(_currentDecksData.decks[index]));
     }
 
     /// <summary>
@@ -328,7 +341,32 @@ public class LoadoutTabsUI : MonoBehaviour
 
         if (_openDeckButton != null) _openDeckButton.interactable = HasSelectedDeck;
         if (_renameDeckButton != null) _renameDeckButton.interactable = isCustom;
+        if (_colorsDeckButton != null) _colorsDeckButton.interactable = isCustom;
         if (_deleteDeckButton != null) _deleteDeckButton.interactable = isCustom;
+    }
+
+    /// <summary>Couleurs du deck sélectionné (celles qui décident des cartes hors couleurs).</summary>
+    public List<EmotionType> SelectedDeckColors =>
+        HasSelectedDeck ? DeckColorsOf(_currentDecksData.decks[_activeDeckIndex]) : new List<EmotionType>();
+
+    // Change les couleurs sans toucher aux cartes : celles qui ne sont plus des couleurs du deck
+    // restent, en rouge dans l'éditeur, et bloquent le deck jusqu'à ce qu'elles soient retirées
+    private void EditSelectedDeckColors()
+    {
+        if (!HasSelectedDeck || _createDeckPopup == null) return;
+
+        var deck = _currentDecksData.decks[_activeDeckIndex];
+        if (deck.isDefault) return;
+
+        int index = _activeDeckIndex;
+        _createDeckPopup.ShowEdit(deck.deckName, deck.Emotion1, deck.Emotion2, (newName, emotion1, emotion2) =>
+        {
+            if (newName != deck.deckName) DeckSaveManager.RenameDeck(_currentChampion, index, newName);
+            DeckSaveManager.SetDeckColors(_currentChampion, index, emotion1, emotion2);
+            _currentDecksData = DeckSaveManager.GetDecksForChampion(_currentChampion);
+            RefreshTabs();
+            SelectTab(index);
+        });
     }
 
     private void OpenSelectedDeck()

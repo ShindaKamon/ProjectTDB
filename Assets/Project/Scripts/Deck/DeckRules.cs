@@ -55,6 +55,23 @@ public static class DeckRules
     /// <summary>Un deck n'est jouable que complet : au moins DeckData.TOTAL_SLOTS cartes.</summary>
     public static bool IsComplete(int cardCount) => cardCount >= DeckData.TOTAL_SLOTS;
 
+    /// <summary>
+    /// Cartes qui ne sont pas (ou plus, après un changement de couleurs) des couleurs du deck. Elles
+    /// restent dans le deck, signalées, jusqu'à ce que le joueur les retire (décision du 28/09/2026).
+    /// </summary>
+    public static int CountOffColor(IEnumerable<CardData> cards, ICollection<EmotionType> deckColors)
+    {
+        int count = 0;
+        if (cards == null) return count;
+        foreach (var card in cards)
+            if (card != null && !MatchesColors(card, deckColors)) count++;
+        return count;
+    }
+
+    /// <summary>Jouable = complet et sans carte hors des couleurs du deck.</summary>
+    public static bool IsPlayable(IList<CardData> cards, ICollection<EmotionType> deckColors) =>
+        cards != null && IsComplete(cards.Count) && CountOffColor(cards, deckColors) == 0;
+
     public static int MaxCopies(CardData card) =>
         card != null && card.category == CardCategory.Signature ? MAX_SIGNATURE_COPIES : MAX_COPIES;
 
@@ -160,16 +177,6 @@ public static class DeckRules
             }
         }
         return removed;
-    }
-
-    /// <summary>
-    /// Retire d'un deck existant les cartes qui ne sont pas de ses couleurs. Retourne le nombre de
-    /// cartes retirées (aucune si le deck n'a pas de couleur).
-    /// </summary>
-    public static int EnforceColors(List<CardData> deck, ICollection<EmotionType> deckColors)
-    {
-        if (deck == null || deckColors == null || deckColors.Count == 0) return 0;
-        return deck.RemoveAll(c => c != null && !MatchesColors(c, deckColors));
     }
 
     static int SlotsFor(CardCategory category) => category switch

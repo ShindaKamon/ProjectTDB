@@ -148,11 +148,21 @@ public class BossHealthBarUI : MonoBehaviour
             _healthSlider.value = currentHP;
         }
 
+        // Bouclier : toute la barre en bleu clair et son montant après les PV (comme les autres barres)
+        int shield = _trackedBoss != null ? _trackedBoss.GetShield() : 0;
+        if (_fillImage != null)
+        {
+            if (_fillBaseColor == null) _fillBaseColor = _fillImage.color;
+            _fillImage.color = shield > 0 ? CodexCardVisual.ChipColor(ChipKind.Shield) : _fillBaseColor.Value;
+        }
+
         if (_healthText != null)
         {
-            _healthText.text = $"{currentHP}/{maxHP}";
+            _healthText.text = shield > 0 ? $"{currentHP}/{maxHP} +{shield}" : $"{currentHP}/{maxHP}";
         }
     }
+
+    private Color? _fillBaseColor; // couleur de la barre sans bouclier (celle de la scène)
 
     /// <summary>
     /// Pastilles PM / PA / attaque / armure / résistance magique / bouclier sous la barre (valeurs courantes)
@@ -163,7 +173,11 @@ public class BossHealthBarUI : MonoBehaviour
             _bossNameText != null ? _bossNameText.font : null, 20f, 22f);
     }
 
-    private void OnBossShieldChanged(int shield) => RefreshStatChips();
+    private void OnBossShieldChanged(int shield)
+    {
+        RefreshStatChips();
+        if (_trackedBoss != null) UpdateHealth(_trackedBoss.GetHealth(), _trackedBoss.GetMaxHealth());
+    }
     private void OnBossResourcesChanged(int current, int max) => RefreshStatChips();
 
     // PM/PA affichés : restants pendant le tour du boss, sinon ceux de son prochain tour (retraits compris)

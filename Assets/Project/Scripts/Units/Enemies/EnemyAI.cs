@@ -46,7 +46,7 @@ public class EnemyAI : MonoBehaviour
             yield break;
         }
 
-        Unit closestPlayerUnit = FindClosestPlayer(playerUnits);
+        Unit closestPlayerUnit = FindClosestPlayer(playerUnits, GetMaxCardRange());
 
         if (closestPlayerUnit == null)
         {
@@ -154,9 +154,11 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // 4. Règle anti-lock : bloqué par un contrôle (PA ou PM retirés), le monstre fait son
-        // attaque de base (0 PA) ; sa carte prévue reste pour le prochain tour
-        if (!cardPlayed && controlled)
+        // 4. Attaque de base (0 PA) quand la carte prévue n'a pas pu être jouée ; la carte reste pour
+        // le prochain tour. Boss : seulement s'il est bloqué par un contrôle (règle anti-lock).
+        // Monstres ordinaires : dès que la carte est injouable, contrôlés ou non (décision du 28/09/2026)
+        bool isMinion = _enemy != null && !_enemy.IsBoss();
+        if (!cardPlayed && (controlled || isMinion))
         {
             yield return StartCoroutine(TryBasicAttack());
         }
@@ -174,7 +176,7 @@ public class EnemyAI : MonoBehaviour
         CardData basicAttack = _enemy.GetEnemyData()?.basicAttack;
         if (basicAttack == null)
         {
-            GameLog.LogWarning($"{_enemy.name}: bloqué par un contrôle mais aucune attaque de base définie (EnemyData.basicAttack)");
+            GameLog.LogWarning($"{_enemy.name}: carte injouable mais aucune attaque de base définie (EnemyData.basicAttack)");
             yield break;
         }
 
@@ -184,7 +186,7 @@ public class EnemyAI : MonoBehaviour
             yield break;
         }
 
-        GameLog.Log($"{_enemy.name} est bloqué par un contrôle : attaque de base ({basicAttack.cardName})");
+        GameLog.Log($"{_enemy.name} ne peut pas jouer sa carte : attaque de base ({basicAttack.cardName})");
         yield return StartCoroutine(ExecuteEnemyCard(basicAttack));
     }
 
@@ -275,25 +277,35 @@ public class EnemyAI : MonoBehaviour
         return bestMove;
     }
 
-    // Trouve le joueur le plus proche
-    private Unit FindClosestPlayer(List<Unit> playerUnits)
-    {
-        Unit closestPlayerUnit = null;
-        float minDistance = float.MaxValue;
+    // Cible du monstre pour une attaque de portée attackRange (voir ChooseTarget)
+    private Unit FindClosestPlayer(List<Unit> playerUnits, int attackRange) =>
+        ChooseTarget(_enemyUnit.GetCurrentGridPos(), playerUnits, attackRange);
 
-        foreach (Unit playerUnit in playerUnits)
+    /// <summary>
+    /// Ciblage de base des monstres (décision du 28/09/2026, pourra varier selon le boss) : toutes
+    /// les cibles à portée de l'attaque comptent comme aussi proches, et parmi elles le monstre vise
+    /// celle qui a le moins de PV ; si aucune n'est à portée, la plus proche (cases en 4 directions),
+    /// puis le moins de PV à distance égale.
+    /// </summary>
+    public static Unit ChooseTarget(Vector2Int from, IEnumerable<Unit> candidates, int attackRange = 0)
+    {
+        Unit best = null;
+        int bestDistance = int.MaxValue;
+
+        foreach (Unit unit in candidates)
         {
-            // Distance en cases (4 directions), départagée par la distance réelle
-            float distance = GridGeometry.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos())
-                             + 0.001f * Vector2.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos());
-            if (distance < minDistance)
+            if (unit == null) continue;
+
+            // À portée = aussi proche que n'importe quelle autre cible à portée
+            int distance = Mathf.Max(attackRange, GridGeometry.Distance(from, unit.GetCurrentGridPos()));
+            if (distance < bestDistance || (distance == bestDistance && unit.GetHealth() < best.GetHealth()))
             {
-                minDistance = distance;
-                closestPlayerUnit = playerUnit;
+                bestDistance = distance;
+                best = unit;
             }
         }
 
-        return closestPlayerUnit;
+        return best;
     }
 
     /// <summary>
@@ -315,7 +327,7 @@ public class EnemyAI : MonoBehaviour
             return false; // Pas de cible disponible
         }
 
-        Unit closestPlayer = FindClosestPlayer(playerUnits);
+        Unit closestPlayer = FindClosestPlayer(playerUnits, card.targetRange);
         if (closestPlayer == null)
         {
             return false;
@@ -351,7 +363,7 @@ public class EnemyAI : MonoBehaviour
         List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
         if (playerUnits != null && playerUnits.Count > 0)
         {
-            Unit closestPlayer = FindClosestPlayer(playerUnits);
+            Unit closestPlayer = FindClosestPlayer(playerUnits, card.targetRange);
 
             // Vérifie si la carte cible une unité
             if (card.targetsUnit)

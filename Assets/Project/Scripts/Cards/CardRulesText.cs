@@ -17,7 +17,7 @@ public static class CardRulesText
     public static string Build(CardData card)
     {
         var lines = new List<string>();
-        void Effect(string icon, ChipKind kind, string text) => lines.Add(Icon(icon, kind) + " " + text);
+        void Effect(string icon, ChipKind kind, string text) => lines.Add(Icon(icon, kind) + " " + ColorValue(text, kind));
         string Turns() => card.effectDuration > 0 ? $" ({card.effectDuration} tour{(card.effectDuration > 1 ? "s" : "")})" : "";
 
         if (card.damageAmount > 0)
@@ -35,9 +35,10 @@ public static class CardRulesText
         if (card.nextAttackBonus > 0) Effect("buff", ChipKind.Damage, $"+{card.nextAttackBonus} dégâts sur la prochaine carte offensive");
         if (card.armorAmount != 0) Effect("armor", ChipKind.Defense, "Armure " + card.armorAmount.ToString("+#;−#") + Turns());
         if (card.magicResistanceAmount != 0) Effect("magicresist", ChipKind.Defense, "Résistance magique " + card.magicResistanceAmount.ToString("+#;−#") + Turns());
-        if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Retire tous les PM au prochain tour");
-        else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Retire {card.pmReduction} PM au prochain tour");
-        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Retire {card.paReduction} PA au prochain tour");
+        // Malus de la cible, formulés comme les autres malus : « Perd 1 PM pendant 1 tour »
+        if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Perd tous ses PM pendant " + DebuffTurns(card));
+        else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Perd {card.pmReduction} PM pendant " + DebuffTurns(card));
+        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Perd {card.paReduction} PA pendant " + DebuffTurns(card));
         if (card.knockbackDistance > 0)
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));
@@ -70,7 +71,7 @@ public static class CardRulesText
 
         if (card.damageSelf > 0) Warn("self", $"Contrecoup : tu subis {card.damageSelf}");
         if (card.casterArmorAmount < 0) Warn("armor", $"Contrecoup : ton armure {card.casterArmorAmount.ToString("+#;−#")}" + CasterTurns(card));
-        if (card.casterMovementLoss > 0) Warn("pm", $"Contrecoup : tu perds {card.casterMovementLoss} PM au prochain tour");
+        if (card.casterMovementLoss > 0) Warn("pm", $"Contrecoup : tu perds {card.casterMovementLoss} PM pendant 1 tour");
 
         if (!string.IsNullOrWhiteSpace(card.specialText))
             lines.Add("<i>Spécial :</i> " + card.specialText.Trim());
@@ -82,6 +83,26 @@ public static class CardRulesText
         $"<sprite name=\"{name}\" color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(kind))}>";
 
     static string Cases(int n) => n + (n > 1 ? " cases" : " case");
+
+    // Valeur d'un effet (1er nombre de la ligne, signe compris) dans la couleur de sa stat, comme
+    // l'icône : « Inflige <rouge>27</rouge> », « Perd <vert>1</vert> PM pendant 1 tour ». Les
+    // effets sans stat (pioche, invocation…) gardent la couleur du texte.
+    static readonly System.Text.RegularExpressions.Regex FirstValue =
+        new System.Text.RegularExpressions.Regex(@"[+−-]?\d+%?");
+
+    public static string ColorValue(string text, ChipKind kind)
+    {
+        if (kind == ChipKind.Mute) return text;
+        string hex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(kind));
+        return FirstValue.Replace(text, m => $"<color=#{hex}>{m.Value}</color>", 1);
+    }
+
+    // Durée d'un retrait de PA/PM (au moins 1 tour), ex. « 1 tour »
+    static string DebuffTurns(CardData card)
+    {
+        int turns = Mathf.Max(1, card.effectDuration);
+        return $"{turns} tour{(turns > 1 ? "s" : "")}";
+    }
 
     // Durée d'un effet sur le lanceur (au moins 1 tour : jusqu'à son prochain tour)
     static string CasterTurns(CardData card)

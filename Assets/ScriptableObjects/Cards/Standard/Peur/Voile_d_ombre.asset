@@ -22,7 +22,7 @@ MonoBehaviour:
   costPA: 1
   costHP: 0
   targetType: 1
-  targetRange: 1
+  targetRange: 0
   targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0

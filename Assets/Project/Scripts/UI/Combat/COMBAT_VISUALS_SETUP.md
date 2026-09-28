@@ -63,7 +63,6 @@ Ce système affiche automatiquement les nombres de dégâts/soins flottants et l
    - **Shake Settings**:
      - Damage Shake Duration: `0.2`
      - Damage Shake Intensity: `0.15`
-     - Critical Shake Intensity: `0.3`
 
    - **Flash Settings**:
      - Damage Flash Duration: `0.15`
@@ -134,20 +133,24 @@ feedback.ShakeTransform(unit.transform, duration: 0.3f, intensity: 0.5f);
 - **Format**: `-15`
 - **Effets**: Shake léger + flash rouge
 
-### 2. Critical (Dégâts critiques)
-- **Couleur**: Orange (1, 0.5, 0)
-- **Format**: `-25!`
-- **Effets**: Shake intense + texte 20% plus gros
+Pas de coups critiques dans le jeu : tous les dégâts s'affichent de la même façon. L'écho de Lyse
+(Miroir fraternel) est un dégât normal, affiché sur la cible juste au-dessus du chiffre d'Evan.
 
-### 3. Heal (Soins)
+### 2. Heal (Soins)
 - **Couleur**: Vert (0.2, 1, 0.2)
 - **Format**: `+10`
 - **Effets**: Flash vert
 
-### 4. Immune (Immunité)
+### 3. Immune (Immunité)
 - **Couleur**: Gris (0.7, 0.7, 0.7)
 - **Format**: `IMMUNE`
 - **Effets**: Aucun shake
+
+### 4. Bonus / malus
+- **Source**: `UnitEffectAppliedEvent` (bouclier, armure, résistance magique, ATQ, PA, PM, Ténacité…)
+- **Couleur**: celle de la pastille correspondante (`CodexCardVisual.ChipColor`)
+- **Format**: `+23 bouclier`, `-1 PA`, `-15% dégâts subis`, `Tenace`
+- **Effets**: empilés au-dessus du chiffre de dégâts s'il y en a plusieurs en même temps
 
 ---
 
@@ -170,7 +173,6 @@ feedback.ShakeTransform(unit.transform, duration: 0.3f, intensity: 0.5f);
 |-----------|-------------|-------------------|
 | Damage Shake Duration | Durée du shake normal | 0.2s |
 | Damage Shake Intensity | Intensité du shake normal | 0.15 |
-| Critical Shake Intensity | Intensité du shake critique | 0.3 |
 
 ### Flash Settings (CombatFeedbackManager)
 
@@ -276,20 +278,12 @@ Auto-destroy après 1.5s
 
 ## 👨‍💻 Code Examples
 
-### Déclencher des dégâts critiques
+### Afficher un bonus / malus
 
 ```csharp
-// Dans CardData.cs
-int damage = CalculateDamage();
-bool isCritical = Random.value > 0.8f; // 20% de chance
-
-if (isCritical)
-{
-    damage = Mathf.RoundToInt(damage * 1.5f);
-}
-
-EventBus.Publish(new UnitDamagedEvent(target, source, damage));
-// Le CombatFeedbackManager détectera automatiquement si damage > 15 (critique)
+// Publié là où l'effet est appliqué (Unit, ResourceDebuffManager, passifs) ;
+// CombatFeedbackManager choisit le texte et la couleur (DescribeEffect)
+EventBus.Publish(new UnitEffectAppliedEvent(target, UnitEffect.Armor, 5)); // « +5 armure »
 ```
 
 ### Créer un popup custom

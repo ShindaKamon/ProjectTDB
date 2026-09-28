@@ -1,7 +1,7 @@
 # 🔧 Spécifications Techniques - Émotions Tactics (Project TDB)
 
-**Version:** 2.7
-**Date:** 26 Septembre 2026
+**Version:** 2.8
+**Date:** 28 Septembre 2026
 **Statut:** Reflète l'architecture actuelle.
 **Changements :**
 - v2.1 (10/09/2026) : retrait des mentions Classes et Éléments.
@@ -11,6 +11,7 @@
 - v2.5 (24/09/2026) : règle de grille unifiée dans `GridGeometry` : 4 directions (Manhattan) partout, la portée euclidienne de certaines validations est supprimée ; IA ennemie sans contrainte d'alignement ; écho du Miroir fraternel compris.
 - v2.6 (24/09/2026) : scripts rangés par domaine (Core = infrastructure, Grid, Combat, Units/Champions|Enemies|Summons, UI/Combat…) ; palette des émotions unique (`CodexCardVisual`).
 - v2.7 (26/09/2026) : protections (bouclier en PV, armure / résistance magique, `DamageType`), texte des cartes généré (`CardRulesText`) et pastilles d'icônes, noms du code en anglais, revue Colère / Joie / Peur, anti-lock et Ténacité des monstres, ATQ option B (`nextAttackBonus`), bond (`leapToTarget`, Bond percutant), Tapis à 2 cibles ; écarts restants avec l'Excel dans « Adaptations à prévoir » (ligne Cartes MVP).
+- v2.8 (28/09/2026) : identifiants internes des champions renommés (`EvanUnit`, `CruxUnit`, `RazeUnit`, fiches, prefabs, matériaux) ; zone `Line` partant de la case visée, aperçu de zone fidèle à la forme réelle ; ciblage en ligne droite (`targetInStraightLine`) ; ciblage par case (les unités ne masquent plus la case derrière elles) ; bouclier sans durée, affiché sur l'orbe de vie ; textes flottants des bonus/malus (`UnitEffectAppliedEvent`), faux critiques retirés ; Signatures en 2 exemplaires (deck de 20 cartes), deck incomplet non jouable ; Invocation de Lyse cible Lyse pour la soigner ; poussée sans demi-tour.
 
 ---
 
@@ -110,7 +111,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 - `CardData` : ScriptableObject **data-driven** (dégâts, ciblage `CardTargetType`, zone `CardAreaEffect`, type de dégâts `DamageType`, poussée/tirage (`knockbackDistance`), charge (ligne droite), bond (`leapToTarget` : saut sur une case vide, zone à l'arrivée), émotion `EmotionType`, catégorie `CardCategory` Standard/Eveil/Signature). Résolution via `CardData.ExecuteEffect(...)`, appelée par `HandUIController` et `EnemyAI`. Une nouvelle carte = un nouvel asset.
 - `DeckManager` (sur l'unité) : pioche, main, défausse, coûts effectifs (`GetEffectiveCost`, overrides de coût pour Raze).
-- `DeckData` : 2 slots Signature + 16 Standard (les 6 slots Éveil ne sont pas encore ajoutés) ; `DeckSaveManager` : sauvegarde JSON, 1 deck de base + 3 decks perso par champion. Les decks référencent les cartes **par nom**.
+- `DeckData` : 4 slots Signature (2 exemplaires de chacune des 2 Signatures) + 16 Standard (les 6 slots Éveil ne sont pas encore ajoutés) ; `DeckSaveManager` : sauvegarde JSON, 1 deck de base + 3 decks perso par champion. Les decks référencent les cartes **par nom**.
 
 ### 3. UI de cartes
 
@@ -121,7 +122,12 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 - `TurnStateMachine` (classe C# pure) : états Initializing / PlayerTurn / EnemyTurn / TransitioningTurn / BattleEnd.
 - Rotation : un tour par unité dans l'ordre de `_units` (invocations sautées). Au début du tour : PM et PA rafraîchis, 1 carte piochée.
-- `GameActionValidator` : centralise les règles « peut-on jouer / cibler / se déplacer » (le plus couvert par les tests).
+- `GameActionValidator` : centralise les règles « peut-on jouer / cibler / se déplacer » (le plus couvert par les tests), dont le ciblage en ligne droite (`CardData.targetInStraightLine`, ex. Éclat de rage) et le soin de l'invocation déjà présente par sa carte d'invocation (`HealsActiveSummon`).
+- Zones (`CardData.IsInAOEShape`, seule source de la forme, pour l'effet comme pour l'aperçu de `GridManager.ShowAOEZone`) : `Line` part de la case visée et s'éloigne du lanceur (`aoeRadius` cases, cible comprise).
+- Saisie (`InputManager.TryGetPointedObject`) : le rayon de la souris traverse les unités et vise la case ; l'unité posée dessus est la cible.
+- Déplacements subis (poussée, tirage, recul) : l'unité garde son orientation.
+- Bouclier (`Unit.AddShield`) : sans durée, consommé par les dégâts avant les PV ; seul le bouclier réactif non déclenché expire au prochain tour du lanceur.
+- Retours visuels (`CombatFeedbackManager`) : dégâts en rouge, soins en vert, bonus/malus en texte flottant (`UnitEffectAppliedEvent`, couleurs des pastilles), empilés au-dessus du chiffre de dégâts ; l'écho de Lyse s'affiche sur la cible et Lyse se tourne vers elle.
 
 ### 5. Émotions
 
@@ -142,7 +148,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **Cartes :** 49 cartes Standard (17 Colère, 17 Peur, 15 Joie), mêmes noms que la bibliothèque de l'Excel ; Signatures des 3 champions (les anciens assets « Family » ont été supprimés).
 
-**Deck :** 20 cartes (4 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) . Règles (`DeckRules`) : cartes des couleurs du deck uniquement (1 ou 2, choisies à sa création parmi `DeckRules.AvailableEmotions` = Colère, Peur, Joie pour le MVP ; le deck de base prend celles de ses cartes), 4 exemplaires max par carte, les 2 Signatures du champion obligatoires (2 exemplaires chacune, `DeckRules.MAX_SIGNATURE_COPIES`) ; les Signatures des autres champions sont interdites ; un deck existant non conforme est corrigé à son chargement (cartes hors couleurs et exemplaires en trop retirés, Signatures ajoutées).
+**Deck :** 20 cartes (4 Signature + 16 Standard, `DeckData`) ; multi-deck : 1 deck de base (non supprimable, resynchronisé depuis les cartes de départ du champion à chaque session) + jusqu'à 3 decks perso (`MAX_CUSTOM_DECKS = 3`) . Règles (`DeckRules`) : cartes des couleurs du deck uniquement (1 ou 2, choisies à sa création parmi `DeckRules.AvailableEmotions` = Colère, Peur, Joie pour le MVP ; le deck de base prend celles de ses cartes), 4 exemplaires max par carte, les 2 Signatures du champion obligatoires (2 exemplaires chacune, `DeckRules.MAX_SIGNATURE_COPIES`) ; les Signatures des autres champions sont interdites ; un deck existant non conforme est corrigé à son chargement (exemplaires en trop retirés, Signatures ajoutées) ; les couleurs d'un deck perso se changent par le bouton « Couleurs » (`CreateDeckPopup.ShowEdit`, `DeckSaveManager.SetDeckColors`) et les cartes hors couleurs sont gardées, en rouge dans l'éditeur, le deck restant injouable tant qu'il en reste (`DeckRules.CountOffColor` / `IsPlayable`).
 
 **Combat :** grille carrée 10×10 en 4 directions (Manhattan, pour le déplacement, la portée, les zones et les charges) ; un tour par unité ; main de départ 5, max 5, 1 carte piochée par tour ; 1 ennemi (UnderBed, 500 PV, cartes « Attaque Range » et « Heal Self »). **Coop locale** (27/09/2026) : 1 à 3 joueurs sur un seul PC, un champion et un deck chacun, champions uniques (`CombatParty`) ; les champions jouent dans l'ordre d'inscription, un champion mort est retiré et son tour sauté ; PV et dégâts des monstres adaptés au nombre de joueurs (`EnemyScaling`, via `Enemy.ScaleForPlayers` et `IOutgoingDamageModifier`). Phase de placement avant le premier tour (`PlacementPhase` + règles en C# pur `PlacementBoard`) : 6 cases de départ (`GridManager._startCells`), placement à tour de rôle : le champion du joueur courant va sur la case rouge libre cliquée, « Joueur suivant » puis « Lancer le combat », « Lancer le combat » ; pas d'unité active pendant le placement ; l'interface de combat (main, pioche/défausse, fin de tour, HUD, orbe, indicateur de tour : liste `PlacementPhase._combatOnlyUI`) est masquée, seules la barre du boss et sa carte prévue restent visibles. Pas encore de victoire ni de défaite.
 
@@ -152,6 +158,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 - Salon local (`Screen_Lobby`, `LobbyUI` + 3 `LobbySlotUI`) : une case par joueur (portrait, champion, nombre de cartes du deck, Changer / Retirer) et une case « Ajouter un joueur » tant qu'il reste de la place ; Ajouter / Changer ouvre la sélection du champion (champions des autres joueurs grisés) puis le choix du deck, dont le bouton devient « Valider le joueur » et ramène au salon ; « Commencer » dès 2 joueurs ; ordre des cases = ordre des tours.
 - Page Choix du deck (`Screen_DeckSelect`) : tuiles des decks du champion (`LoadoutTabsUI` + `DeckSlotUI` : bande et noms des couleurs du deck, nombre de cartes), clic = sélectionner, re-clic ou « Modifier » = ouvrir, « Renommer » / « Supprimer » (indisponibles pour le deck de base), « + » = nouveau deck ; « Commencer » lance le combat avec le deck sélectionné ; Retour vers la sélection du champion.
 - Gestionnaire de deck (`Screen_DeckManager`, style MTG Arena) : plus d'onglets (le choix du deck se fait sur la page précédente), sert uniquement à modifier le deck : Retour en bas à gauche vers le choix du deck (la dernière modification est sauvegardée en quittant l'écran), pas de bouton Commencer, pool filtrable (~73 % de la largeur) dont les cartes reprennent le design du codex émotionnel (`CardPoolItemUI` + `CodexCardVisual` : rond de coût à la couleur de l'émotion, schéma de portée 9×9, pastilles d'effets avec les icônes du codex dans `Textures/UI/CodexIcons`, description ; exemple et valeurs Excel non repris), liste du deck en colonne façon MTG Arena (une ligne par carte : couleur de l'émotion, coût PA, nom, ×N ; clic = retirer un exemplaire ; prefab `DeckListRow` généré par `UISetupWizard`), courbe de coût en PA, pas d'illustration du personnage, sauvegarde automatique. Le combat se lance depuis la page Choix du deck, seulement avec un deck complet (`DeckRules.IsComplete`, 20 cartes : sinon bouton grisé « Deck incomplet : 17/20 cartes » et compteur orange sur l'onglet du deck). Variante mobile (onglets Pool/Deck) : pas encore faite.
+- Orbe de vie du champion (`HealthOrbController`) : passe en bleu clair tant qu'il a du bouclier, montant du bouclier sous les PV ; barre de vie de Lyse en rouge.
 - HUD de combat (`CombatScene`) : stats du personnage en haut à gauche sous l'indicateur de tour, carte ennemie en haut à droite.
 
 **À savoir :**

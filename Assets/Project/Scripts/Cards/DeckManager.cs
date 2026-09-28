@@ -20,6 +20,7 @@ public class DeckManager : MonoBehaviour
     public System.Action OnHandChanged; // Événement pour notifier les changements dans la main
     public System.Action<int> OnDeckChanged; // Notifie changement taille deck
     public System.Action<int> OnDiscardChanged; // Notifie changement taille défausse
+    public System.Action<int> OnDiscardReshuffled; // Défausse remélangée dans la pioche (nombre de cartes)
 
     public void InitializeDeck(List<CardData> initialCards)
     {
@@ -66,6 +67,12 @@ public class DeckManager : MonoBehaviour
     {
         return _discardPile.Count;
     }
+
+    /// <summary>Cartes de la pioche, en lecture seule (l'ordre est celui du tirage : ne pas l'afficher tel quel).</summary>
+    public IReadOnlyList<CardData> GetDeckCards() => _deck;
+
+    /// <summary>Cartes de la défausse, en lecture seule, de la plus ancienne à la plus récente.</summary>
+    public IReadOnlyList<CardData> GetDiscardCards() => _discardPile;
 
     public CardData DrawCard()
     {
@@ -162,11 +169,13 @@ public class DeckManager : MonoBehaviour
     private void ReshuffleDiscardIntoDeck()
     {
         GameLog.Log("Défausse mélangée dans le deck.");
+        int reshuffled = _discardPile.Count;
         _deck.AddRange(_discardPile);
         _discardPile.Clear();
         ShuffleDeck();
         OnDeckChanged?.Invoke(_deck.Count);
         OnDiscardChanged?.Invoke(_discardPile.Count);
+        OnDiscardReshuffled?.Invoke(reshuffled);
     }
 
     public void DiscardHand()

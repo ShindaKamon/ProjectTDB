@@ -103,9 +103,11 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 | **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
 | **AllyorEnemy** | Alliés ET ennemis | Aucune carte pour l'instant (prévu pour Corde de rappel, voir `Technical_Specs.md`) |
 | **AnyUnit** | N'importe quelle unité | Aucune carte pour l'instant |
-| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse, Écho évanescent (Evan), Bond percutant (bond) |
+| **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (si Lyse est déjà là : cible Lyse pour la soigner), Écho évanescent (Evan), Bond percutant (bond) |
 | **AnyTile** | N'importe quelle tuile | Piolet d'ascension (Crux, charge en ligne droite) |
-| **EnemyOrTile** | Un ennemi ou une tuile | Aucune carte pour l'instant |
+| **EnemyOrTile** | Un ennemi ou une tuile | Éclat de rage |
+
+Option **ciblage en ligne droite** (`targetInStraightLine`) : la cible doit être sur la même ligne ou la même colonne que le lanceur, sans diagonale (Éclat de rage). On vise toujours une **case** : une unité ne masque jamais la case derrière elle.
 
 ### Portée
 
@@ -115,7 +117,7 @@ Portées utilisées par les cartes MVP : **1 (mêlée)**, **1-3**, **1-5**, **1-
 
 Formes utilisées par les cartes MVP : cible unique, ligne (2-3 cases), cône (3 cases), cercle rayon 1 et 2, cibles multiples séparées (2 ou 3), contagion (se propage aux cibles à 2 cases ou moins), équipe entière.
 
-Dans le code (`CardAreaEffect`) : None, OneTile, Line, Cross, Circle, Cone (ouverture 90°), WholeTeam.
+Dans le code (`CardAreaEffect`) : None, OneTile, Line, Cross, Circle, Cone (ouverture 90°), WholeTeam. La **ligne** part de la case visée et s'éloigne du lanceur : une ligne de 3 couvre la cible et les 2 cases derrière elle (le lanceur n'est pas touché) — décision du 28/09/2026. Le **cône** part aussi de la case visée et s'élargit : rangées de 1, 3, 5… cases, une rangée par point de rayon (28/09/2026).
 
 ### Cibles Affectées dans l'AOE
 

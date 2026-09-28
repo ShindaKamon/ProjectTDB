@@ -76,6 +76,16 @@ public class DeckListRowUI : MonoBehaviour, IPointerClickHandler, IPointerEnterH
         _locked = locked;
     }
 
+    /// <summary>
+    /// Carte qui n'est plus des couleurs du deck (après un changement de couleurs) : nom en rouge,
+    /// à retirer pour que le deck redevienne jouable.
+    /// </summary>
+    public void SetOffColor(bool offColor)
+    {
+        if (_nameText != null)
+            _nameText.color = offColor ? CodexCardVisual.ChipColor(ChipKind.Damage) : CodexCardVisual.Ink;
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
         if (!CanRemove) return;

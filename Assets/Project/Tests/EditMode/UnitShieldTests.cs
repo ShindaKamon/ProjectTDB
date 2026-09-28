@@ -110,6 +110,31 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void Lyse_ShieldAbsorbsBeforeHealth_AndSurvivesEvanHealthChanges()
+        {
+            // Lyse (PV = moitié de ceux d'Evan) : les dégâts entament d'abord son bouclier
+            Unit evan = NewUnit(maxHealth: 100);
+            var go = new GameObject("TestLyse");
+            _createdGameObjects.Add(go);
+            var lyse = go.AddComponent<LyseUnit>();
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true; // pas de grille en EditMode (placement ignoré)
+            lyse.InitializeSummon(evan, Vector2Int.zero, 0);
+            Assert.AreEqual(50, lyse.GetHealth());
+
+            lyse.AddShield(10, evan);
+            lyse.TakeDamage(6);
+            Assert.AreEqual(4, lyse.GetShield(), "le bouclier baisse");
+            Assert.AreEqual(50, lyse.GetHealth(), "la vie ne bouge pas");
+
+            evan.TakeDamage(20); // Evan à 80 → Lyse recalculée à 40 PV max
+            Assert.AreEqual(4, lyse.GetShield(), "le recalcul des PV de Lyse ne touche pas au bouclier");
+
+            lyse.TakeDamage(10);
+            Assert.AreEqual(0, lyse.GetShield());
+            Assert.AreEqual(40 - 6, lyse.GetHealth(), "le reste (6) passe sur la vie");
+        }
+
+        [Test]
         public void ReactiveShield_AbsorbsFirstHitOnly()
         {
             Unit unit = NewUnit();

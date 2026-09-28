@@ -23,7 +23,7 @@ public enum CardAreaEffect
     Line,           // Ligne de aoeRadius cases partant de l'épicentre (compris), dans la direction lanceur → épicentre
     Cross,          // Croix de aoeRadius cases de rayon centrée sur l'épicentre (axes seulement)
     Circle,         // Cercle de aoeRadius cases de rayon centré sur l'épicentre
-    Cone,           // Cône de aoeRadius cases de portée depuis le lanceur, ouverture 90°
+    Cone,           // Cône partant de l'épicentre : aoeRadius rangées de 1, 3, 5… cases, en s'éloignant du lanceur
     WholeTeam       // Toute l'équipe du lanceur, sans portée ni ligne de vue (ex: Communion joyeuse)
 }
 
@@ -156,8 +156,9 @@ public class CardData : ScriptableObject
     /// True si la carte nécessite une sélection manuelle de plusieurs cibles distinctes
     /// (ex: Frappe rapide) au lieu du ciblage classique une-cible-un-clic.
     /// </summary>
-    public bool isMultiTarget => targetCount > 1 && targetsUnit;
-    public bool isAOE => areaEffect != CardAreaEffect.None && aoeRadius > 0;
+    public bool isMultiTarget => targetCount > 1 && targetsUnit && targetType != CardTargetType.Self; // une carte sur soi n'a qu'une cible
+    // Zone : une forme avec un rayon, ou toute l'équipe (qui n'en a pas besoin)
+    public bool isAOE => areaEffect == CardAreaEffect.WholeTeam || (areaEffect != CardAreaEffect.None && aoeRadius > 0);
     public bool affectsSelf => affectedTarget == CardAffectedTarget.Self || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AnyUnit;
     public bool affectsAllies => affectedTarget == CardAffectedTarget.Ally || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;
     public bool affectsEnemies => affectedTarget == CardAffectedTarget.Enemies || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;
@@ -195,7 +196,7 @@ public class CardData : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("atkIncreased")]
     public int nextAttackBonus = 0;
 
-    [Tooltip("Bouclier : réserve de PV qui absorbe les dégâts avant les PV (une seule fois, tous types), jusqu'au début du prochain tour du lanceur. ≠ armure, qui réduit chaque coup physique")]
+    [Tooltip("Bouclier : réserve de PV qui absorbe les dégâts avant les PV (tous types), sans durée : reste jusqu'à être consommé. ≠ armure, qui réduit chaque coup physique")]
     [UnityEngine.Serialization.FormerlySerializedAs("defenseAmount")]
     public int shieldAmount = 0;
 
@@ -377,7 +378,7 @@ public class CardData : ScriptableObject
     {
         List<Unit> affectedUnits = new List<Unit>();
 
-        if (!isAOE || aoeRadius <= 0)
+        if (!isAOE)
         {
             return affectedUnits;
         }
@@ -419,7 +420,7 @@ public class CardData : ScriptableObject
 
     /// <summary>
     /// Détermine si une case donnée est couverte par la forme de zone de la carte
-    /// (Circle/OneTile centrés sur l'épicentre ; Line part de l'épicentre et Cone du lanceur, dans la
+    /// (Circle/OneTile centrés sur l'épicentre ; Line et Cone partent de l'épicentre, dans la
     /// direction lanceur → épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
     /// </summary>
     public bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
@@ -456,19 +457,15 @@ public class CardData : ScriptableObject
 
             case CardAreaEffect.Cone:
             {
-                Vector2Int sourcePos = source.GetCurrentGridPos();
-                // La case du lanceur (origine du cône) est considérée "dans la forme" ;
-                // c'est affectsSelf (géré par l'appelant) qui décide si elle est réellement affectée.
-                if (tilePos == sourcePos) return true;
-
-                Vector2Int dir = GetSnappedDirection(sourcePos, epicenter);
+                // Part de la case visée et s'élargit en s'éloignant du lanceur : aoeRadius rangées de
+                // 1, 3, 5… cases (2 de plus à chaque rangée) — décision du 28/09/2026
+                Vector2Int dir = GetSnappedDirection(source.GetCurrentGridPos(), epicenter);
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
-                Vector2Int toTile = tilePos - sourcePos;
-                if (GridGeometry.Distance(sourcePos, tilePos) > aoeRadius) return false;
-
-                float angle = Vector2.Angle(dir, toTile);
-                return angle <= 45f; // ouverture totale de 90°
+                Vector2Int rel = tilePos - epicenter;
+                int forward = rel.x * dir.x + rel.y * dir.y;            // rangée (0 = case visée)
+                int lateral = Mathf.Abs(rel.x * dir.y - rel.y * dir.x); // écart sur les côtés
+                return forward >= 0 && forward < aoeRadius && lateral <= forward;
             }
 
             case CardAreaEffect.WholeTeam:
@@ -487,17 +484,22 @@ public class CardData : ScriptableObject
 
     /// <summary>
     /// Passif "Miroir fraternel" (Evan) : si le lanceur a une invocation active avec un ennemi à
-    /// portée, elle inflige un écho à 40% des dégâts réellement infligés (après réduction/boucliers).
+    /// portée, elle inflige un écho à 40 % des dégâts d'origine de l'attaque (avant la défense de la
+    /// cible d'Evan) ; la défense de la cible de l'écho s'applique ensuite (décision du 28/09/2026).
+    /// L'écho n'a lieu que si l'attaque d'Evan a réellement infligé des dégâts.
     /// Règles (décision du 24/09/2026) :
     /// - portée = celle de la carte jouée, mesurée depuis l'invocation, en 4 directions comme toute
     ///   la grille : on place Lyse selon la carte qu'on veut jouer ;
     /// - cible : l'ennemi visé par le lanceur s'il est à portée de l'invocation (et encore en vie),
     ///   sinon l'ennemi le plus proche de l'invocation ;
+    /// - carte à cibles multiples : un écho par cible touchée, chacun sur un ennemi différent
+    ///   (décision du 28/09/2026 : Lyse renvoie la même attaque qu'Evan) ;
     /// - déclenchement automatique (le choix manuel de la cible est prévu pour la V2).
     /// </summary>
-    private void TryTriggerSummonEcho(Unit source, int appliedDamage, Unit sourceTarget)
+    private void TryTriggerSummonEcho(Unit source, int appliedDamage, int attackDamage, Unit sourceTarget, bool firstHitOfCard)
     {
-        if (appliedDamage <= 0) return;
+        if (firstHitOfCard) _echoTargetsThisCard.Clear();
+        if (appliedDamage <= 0 || attackDamage <= 0) return;
         if (!(source is ISummonOwner summonOwner)) return;
 
         SummonUnit summon = summonOwner.ActiveSummon;
@@ -506,6 +508,7 @@ public class CardData : ScriptableObject
         Vector2Int summonPos = summon.GetCurrentGridPos();
         bool IsValidEchoTarget(Unit unit) =>
             unit != null && unit != source && unit != summon && !IsDead(unit)
+            && !_echoTargetsThisCard.Contains(unit) // un ennemi différent par écho d'une même carte
             && unit.GetFaction() != summon.GetFaction() // uniquement les ennemis de l'invocation
             && GridGeometry.Distance(summonPos, unit.GetCurrentGridPos()) <= targetRange;
 
@@ -528,11 +531,17 @@ public class CardData : ScriptableObject
         }
 
         if (echoTarget == null) return;
+        _echoTargetsThisCard.Add(echoTarget);
 
-        int echoDamage = Mathf.Max(1, Mathf.RoundToInt(appliedDamage * 0.4f));
-        echoTarget.TakeDamageFrom(echoTarget.ReduceByDefense(echoDamage, damageType), summon);
-        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
+        // 40 % de l'attaque d'origine ; la défense de la cible de l'écho est retirée à l'impact
+        // (sans minimum : un écho entièrement absorbé fait 0, affiché « -0 »)
+        int echoDamage = Mathf.RoundToInt(attackDamage * 0.4f);
+        summon.DealEcho(echoTarget, echoDamage, damageType); // après un court délai, pour le distinguer du coup du lanceur
+        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts avant défense (40% de {attackDamage}) sur {echoTarget.name}");
     }
+
+    // Cibles déjà touchées par un écho pendant la carte en cours (remis à zéro à sa 1re cible)
+    [System.NonSerialized] private readonly HashSet<Unit> _echoTargetsThisCard = new HashSet<Unit>();
 
     private static bool IsDead(Unit unit)
     {
@@ -546,8 +555,8 @@ public class CardData : ScriptableObject
     /// multiples déjà résolue pour une cible précédente (voir HandUIController.ExecutePendingMultiTargetCard,
     /// qui appelle ExecuteEffect une fois par cible). Dans ce cas, les effets qui doivent se
     /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés :
-    /// combo tracker (Main gagnante de Raze), invocation/repositionnement, dégâts sur soi, pioche,
-    /// écho de Miroir fraternel.
+    /// combo tracker (Main gagnante de Raze), invocation/repositionnement, dégâts sur soi, pioche.
+    /// L'écho de Miroir fraternel, lui, se déclenche pour chaque cible (sur un ennemi différent).
     /// </param>
     public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default, bool isAdditionalMultiTargetHit = false)
     {
@@ -676,7 +685,7 @@ public class CardData : ScriptableObject
         int actualDamageDealt = 0;
 
         // Applique l'effet AOE si activé
-        if (isAOE && aoeRadius > 0)
+        if (isAOE)
         {
             List<Unit> affectedUnits = GetAOEAffectedUnits(source, effectEpicenter);
             GameLog.Log($"🔥 AOE {cardName} : {affectedUnits.Count} unités affectées dans un rayon de {aoeRadius}");
@@ -748,16 +757,11 @@ public class CardData : ScriptableObject
             }
         }
 
-        // Passif "Miroir fraternel" (Evan) : écho à 40% de puissance sur une cible à portée
-        // de l'invocation active, si la carte jouée inflige réellement des dégâts.
-        // Basé sur les dégâts réellement appliqués (après réduction/boucliers), pas sur
-        // finalDamage (théorique, avant résolution) - sinon l'écho se déclenchait même quand
-        // la cible était entièrement protégée.
-        // Une seule fois par carte jouée (pas une fois par cible).
-        if (!isAdditionalMultiTargetHit)
-        {
-            TryTriggerSummonEcho(source, actualDamageDealt, targetUnit);
-        }
+        // Passif "Miroir fraternel" (Evan) : écho à 40 % de l'attaque d'origine (finalDamage, avant
+        // la défense de la cible) sur une cible à portée de l'invocation active, seulement si la carte
+        // a réellement infligé des dégâts (pas d'écho si la cible était entièrement protégée).
+        // Une fois par cible touchée : pour une carte à cibles multiples, Lyse renvoie la même attaque.
+        TryTriggerSummonEcho(source, actualDamageDealt, finalDamage, targetUnit, firstHitOfCard: !isAdditionalMultiTargetHit);
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)
         // Une seule fois par carte jouée (pas une fois par cible).
@@ -851,7 +855,7 @@ public class CardData : ScriptableObject
             // Détermine les cibles pour la réduction
             List<Unit> debuffTargets = new List<Unit>();
 
-            if (isAOE && aoeRadius > 0)
+            if (isAOE)
             {
                 debuffTargets = GetAOEAffectedUnits(source, effectEpicenter);
             }
@@ -1033,14 +1037,17 @@ public class CardData : ScriptableObject
 
     private System.Collections.IEnumerator ExecuteLeapEffectCoroutine(Unit source, Vector2Int targetTilePos)
     {
-        // Chemin d'une seule case : le lanceur va droit sur la case, par-dessus ce qui se trouve entre
+        // Le lanceur se téléporte sur la case (par-dessus ce qui se trouve entre), tourné dans le sens
+        // du saut ; l'animation viendra avec les assets adéquats
         Tile landing = Services.Grid.GetTileAtPosition(targetTilePos);
         if (landing != null && Services.Grid.GetUnitAtGridPos(targetTilePos) == null)
         {
             GameLog.Log($"🦘 BOND ! {source.name} de {source.GetCurrentGridPos()} vers {targetTilePos}");
-            source.MoveToTile(new List<Tile> { landing });
-            while (source.IsMoving())
-                yield return null;
+            Vector2Int direction = GridGeometry.SnapDirection(source.GetCurrentGridPos(), targetTilePos);
+            source.TeleportTo(targetTilePos);
+            if (direction != Vector2Int.zero)
+                source.transform.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0f, direction.y));
+            yield return null;
 
             // Un bond est un déplacement rapide : il déclenche le Réflexe du grimpeur, comme la charge
             if (source is IChargeLandingReactor landingReactor)

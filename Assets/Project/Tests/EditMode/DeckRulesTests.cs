@@ -139,8 +139,9 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void EnforceColors_RemovesOffColorCardsOnly()
+        public void CountOffColor_IgnoresSignatures()
         {
+            // Deck passé de Peur à Colère : la carte Peur est hors couleurs, la Signature jamais
             var champion = NewChampion();
             var deck = new List<CardData>
             {
@@ -149,10 +150,24 @@ namespace ProjectTDB.Tests
                 NewCard("Sig", CardCategory.Signature, champion, EmotionType.None),
             };
 
-            int removed = DeckRules.EnforceColors(deck, new List<EmotionType> { EmotionType.Anger });
+            Assert.AreEqual(1, DeckRules.CountOffColor(deck, new List<EmotionType> { EmotionType.Anger }));
+            Assert.AreEqual(0, DeckRules.CountOffColor(deck, new List<EmotionType> { EmotionType.Anger, EmotionType.Fear }));
+        }
 
-            Assert.AreEqual(1, removed);
-            CollectionAssert.AreEquivalent(new[] { "Rouge", "Sig" }, deck.ConvertAll(c => c.cardName));
+        [Test]
+        public void IsPlayable_CompleteAndNoOffColorCard()
+        {
+            var anger = new List<EmotionType> { EmotionType.Anger };
+            var deck = new List<CardData>();
+            for (int i = 0; i < DeckData.TOTAL_SLOTS; i++) deck.Add(NewCard("Rouge" + i, emotion: EmotionType.Anger));
+
+            Assert.IsTrue(DeckRules.IsPlayable(deck, anger));
+
+            deck[0] = NewCard("Vert", emotion: EmotionType.Fear);
+            Assert.IsFalse(DeckRules.IsPlayable(deck, anger), "une carte hors couleurs bloque le deck");
+
+            deck.RemoveAt(0);
+            Assert.IsFalse(DeckRules.IsPlayable(deck, anger), "incomplet");
         }
 
         [Test]

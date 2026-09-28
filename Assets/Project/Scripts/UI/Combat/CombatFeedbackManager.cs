@@ -35,7 +35,6 @@ public class CombatFeedbackManager : MonoBehaviour
 
     [Header("Écho d'invocation (Miroir fraternel)")]
     [SerializeField] private Vector3 _echoNumberExtraOffset = new Vector3(0f, 0.5f, 0f); // au-dessus du chiffre du lanceur, pas vers une case voisine
-
     [Header("Bonus / malus")]
     [Tooltip("Écart vertical entre les textes de bonus/malus apparus en même temps sur une unité (au-dessus du chiffre de dégâts)")]
     [SerializeField] private float _effectTextSpacing = 0.5f;
@@ -147,8 +146,8 @@ public class CombatFeedbackManager : MonoBehaviour
     {
         if (evt.Target == null) return;
 
-        // Écho d'une invocation (Miroir fraternel) : l'invocation fait un bond d'attaque, puis
-        // la cible subit des dégâts affichés comme les autres, au-dessus du chiffre du lanceur
+        // Écho d'une invocation (Miroir fraternel, infligé un peu après le coup du lanceur) :
+        // l'invocation se tourne vers la cible, le chiffre apparaît au-dessus de celui du lanceur
         Vector3 numberPosition = evt.Target.transform.position;
         if (evt.Source is SummonUnit summon)
         {

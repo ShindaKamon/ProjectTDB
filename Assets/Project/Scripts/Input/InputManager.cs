@@ -46,7 +46,7 @@ public class InputManager : MonoBehaviour
     /// donc jamais la case derrière elles. Renvoie l'unité posée sur la case visée s'il y en a une,
     /// sinon la case ; false si aucune case n'est sous le curseur.
     /// </summary>
-    private static bool TryGetPointedObject(out GameObject pointed)
+    public static bool TryGetPointedObject(out GameObject pointed)
     {
         pointed = null;
         Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
@@ -66,6 +66,21 @@ public class InputManager : MonoBehaviour
         Unit unitOnTile = Services.Grid.GetUnitAtGridPos(Services.Grid.GetGridPosFromWorldPos(closestTile.transform.position));
         pointed = unitOnTile != null ? unitOnTile.gameObject : closestTile.gameObject;
         return true;
+    }
+
+    /// <summary>
+    /// Réaffiche la portée de la carte sélectionnée, puis garde en rouge le sol des cibles déjà
+    /// choisies d'une carte à cibles multiples (ex: Frappe rapide), pour qu'on les voie en
+    /// choisissant les suivantes.
+    /// </summary>
+    private void ShowCardTargets(CardData card, Unit activeUnit)
+    {
+        EventBus.Publish(new ShowCardTargetsEvent(card, activeUnit));
+
+        foreach (Unit chosen in _handUIController.PendingMultiTargets)
+        {
+            if (chosen != null) Services.Grid.HighlightTile(chosen.GetCurrentGridPos(), Color.red);
+        }
     }
 
     private static bool TryGetUnitGridPosition(GameObject gameObject, out Vector2Int gridPos)
@@ -99,7 +114,7 @@ public class InputManager : MonoBehaviour
             if (currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile))
             {
                 // Affiche les cibles valides pour la nouvelle carte sélectionnée (OPTIMISATION Phase 3.2: EventBus)
-                EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
+                ShowCardTargets(currentSelectedCard, activeUnit);
             }
             else if (_previousSelectedCard != null)
             {
@@ -199,7 +214,7 @@ public class InputManager : MonoBehaviour
                     _lastHoveredTilePos = hoveredPos;
 
                     // Réaffiche les cibles de base (OPTIMISATION Phase 3.2: EventBus)
-                    EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
+                    ShowCardTargets(currentSelectedCard, activeUnit);
 
                     // Si la carte est AOE, affiche la zone AOE
                     if (currentSelectedCard.isAOE && currentSelectedCard.aoeRadius > 0)
@@ -217,14 +232,14 @@ public class InputManager : MonoBehaviour
                 {
                     // Si on ne survole plus de cible valide, réaffiche juste les cibles de base (OPTIMISATION Phase 3.2: EventBus)
                     _lastHoveredTilePos = new Vector2Int(-1, -1);
-                    EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
+                    ShowCardTargets(currentSelectedCard, activeUnit);
                 }
             }
             else if (_lastHoveredTilePos != new Vector2Int(-1, -1))
             {
                 // Si le raycast ne touche rien, réinitialise (OPTIMISATION Phase 3.2: EventBus)
                 _lastHoveredTilePos = new Vector2Int(-1, -1);
-                EventBus.Publish(new ShowCardTargetsEvent(currentSelectedCard, activeUnit));
+                ShowCardTargets(currentSelectedCard, activeUnit);
             }
         }
         else if (currentSelectedCard == null)
@@ -239,6 +254,14 @@ public class InputManager : MonoBehaviour
             {
                 GameLog.Log("Clic droit détecté : annulation d'une étape de ciblage.");
                 _handUIController.CancelTargetingStep();
+
+                // Carte à cibles multiples encore en main : la cible retirée perd son sol rouge
+                CardData stillSelected = _handUIController.SelectedCard;
+                if (stillSelected != null && stillSelected.isMultiTarget)
+                {
+                    _lastHoveredTilePos = new Vector2Int(-1, -1);
+                    ShowCardTargets(stillSelected, activeUnit);
+                }
                 return; // Consomme le clic droit et bloque toute autre interaction
             }
         }
@@ -450,6 +473,10 @@ public class InputManager : MonoBehaviour
             if (targetUnit != null)
             {
                 _handUIController.AddMultiTarget(targetUnit);
+
+                // Toujours en cours de ciblage : le sol de la cible choisie reste rouge
+                if (_handUIController.SelectedCard == selectedCard)
+                    ShowCardTargets(selectedCard, activeUnit);
             }
             // Clic invalide (pas d'unité cliquée) : ignoré sans désélectionner, le joueur peut recliquer.
             return;

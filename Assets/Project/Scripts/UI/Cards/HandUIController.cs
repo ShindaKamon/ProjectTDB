@@ -28,6 +28,22 @@ public class HandUIController : MonoBehaviour
     [SerializeField] private Color _curveColor = new Color(0f, 1f, 1f, 0.8f); // Couleur cyan avec transparence
     [SerializeField] private Color _reticleColor = new Color(1f, 1f, 0f, 0.9f); // Couleur jaune avec transparence
 
+    [Header("Pioche")]
+    [Tooltip("Tas de pioche d'où partent les cartes piochées (à défaut, elles montent du bas de l'écran)")]
+    [SerializeField] private RectTransform _drawOrigin;
+    [Tooltip("Durée du trajet d'une carte, de la pioche à la main (secondes)")]
+    [SerializeField] private float _drawDuration = 0.3f;
+    [Tooltip("Délai entre deux cartes piochées d'affilée : elles arrivent une par une (secondes)")]
+    [SerializeField] private float _drawInterval = 0.15f;
+
+    // Animation de pioche, par position dans la main : départ prévu, trajet et échelle finale
+    private readonly List<float> _drawStartTimes = new List<float>();
+    private readonly List<Vector2> _drawFrom = new List<Vector2>();
+    private readonly List<Vector2> _drawTo = new List<Vector2>();
+    private readonly List<Vector3> _drawScale = new List<Vector3>();
+    private readonly List<bool> _drawDone = new List<bool>();
+    private float _nextDrawTime;
+
     private DeckManager _playerDeckManager;
     private List<GameObject> _instantiatedCardUIs = new List<GameObject>();
     private CardData _selectedCard = null; // La carte actuellement sélectionnée par le joueur
@@ -42,6 +58,9 @@ public class HandUIController : MonoBehaviour
 
     // Propriété publique pour que l'InputManager puisse accéder à la carte sélectionnée
     public CardData SelectedCard => _selectedCard;
+
+    /// <summary>Cibles déjà choisies pour la carte à cibles multiples en cours (ex: Frappe rapide).</summary>
+    public IReadOnlyList<Unit> PendingMultiTargets => _pendingMultiTargets;
 
     // Carte de déplacement d'invocation (ex: Écho évanescent) : invocation choisie à la 1re étape
     // du ciblage ; null tant que le joueur n'en a pas choisi (il doit alors cliquer une invocation).
@@ -314,6 +333,7 @@ public class HandUIController : MonoBehaviour
         if (_playerDeckManager != null)
         {
             _playerDeckManager.OnHandChanged += UpdateHandUI; // S'abonner à l'événement de changement de main
+            _drawStartTimes.Clear(); // la main de ce joueur est distribuée carte par carte
             UpdateHandUI(); // Mettre à jour l'UI immédiatement après l'abonnement
             GameLog.Log($"HandUIController: main de {unit.name} affichée");
         }
@@ -494,6 +514,9 @@ public class HandUIController : MonoBehaviour
         // Arranger les cartes en arc
         ArrangeCardsInArc();
 
+        // Cartes nouvellement piochées : elles partent de la pioche, une par une
+        ScheduleDrawAnimations();
+
         // BUGFIX: si une carte ciblant une unité/tuile était sélectionnée (détachée du
         // HandContainer et attachée au Canvas avec un sorting order élevé) au moment du
         // rafraîchissement, son GameObject UI a été détruit et réinstancié ci-dessus : il a donc
@@ -503,6 +526,86 @@ public class HandUIController : MonoBehaviour
         if (_selectedCard != null && _selectedCardUIObject != null)
         {
             AttachSelectedCardUIToCanvas();
+        }
+    }
+
+    /// <summary>
+    /// Après chaque reconstruction de la main : les cartes au-delà de celles déjà vues sont
+    /// nouvelles et reçoivent un départ décalé (une par une) ; toutes reprennent leur trajet
+    /// pioche → place dans l'arc (les GameObjects viennent d'être recréés).
+    /// </summary>
+    private void ScheduleDrawAnimations()
+    {
+        int count = _instantiatedCardUIs.Count;
+        if (_drawStartTimes.Count > count)
+        {
+            _drawStartTimes.RemoveRange(count, _drawStartTimes.Count - count);
+            _drawDone.RemoveRange(count, _drawDone.Count - count);
+        }
+        while (_drawStartTimes.Count < count)
+        {
+            float start = Mathf.Max(Time.time, _nextDrawTime);
+            _drawStartTimes.Add(start);
+            _drawDone.Add(false);
+            _nextDrawTime = start + _drawInterval;
+        }
+
+        _drawFrom.Clear();
+        _drawTo.Clear();
+        _drawScale.Clear();
+        var handRect = (RectTransform)_handContainer;
+        for (int i = 0; i < count; i++)
+        {
+            var rect = (RectTransform)_instantiatedCardUIs[i].transform;
+            Vector2 to = rect.anchoredPosition;
+            Vector2 from = to + Vector2.down * 400f;
+            if (_drawOrigin != null)
+            {
+                Vector3 originLocal = handRect.InverseTransformPoint(_drawOrigin.position);
+                from = to + (Vector2)(originLocal - rect.localPosition);
+            }
+            _drawFrom.Add(from);
+            _drawTo.Add(to);
+            _drawScale.Add(rect.localScale);
+        }
+
+        ApplyDrawAnimations();
+    }
+
+    // Après les Update (CardUIElement anime aussi l'échelle) : place les cartes en cours de pioche
+    void LateUpdate() => ApplyDrawAnimations();
+
+    private void ApplyDrawAnimations()
+    {
+        int count = Mathf.Min(_instantiatedCardUIs.Count, _drawTo.Count);
+        for (int i = 0; i < count; i++)
+        {
+            if (_drawDone[i]) continue;
+
+            GameObject card = _instantiatedCardUIs[i];
+            if (card == null || card == _selectedCardUIObject) { _drawDone[i] = true; continue; }
+
+            var rect = (RectTransform)card.transform;
+            float t = (Time.time - _drawStartTimes[i]) / Mathf.Max(0.01f, _drawDuration);
+            if (t >= 1f)
+            {
+                rect.anchoredPosition = _drawTo[i];
+                rect.localScale = _drawScale[i];
+                _drawDone[i] = true;
+                continue;
+            }
+
+            if (t < 0f)
+            {
+                // Pas encore son tour : invisible, sur la pioche
+                rect.anchoredPosition = _drawFrom[i];
+                rect.localScale = Vector3.zero;
+                continue;
+            }
+
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+            rect.anchoredPosition = Vector2.LerpUnclamped(_drawFrom[i], _drawTo[i], eased);
+            rect.localScale = _drawScale[i] * Mathf.Lerp(0.3f, 1f, eased);
         }
     }
 

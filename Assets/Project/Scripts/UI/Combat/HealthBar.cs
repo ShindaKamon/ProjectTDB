@@ -94,73 +94,83 @@ public class HealthBar : MonoBehaviour
     }
     
     /// <summary>
-    /// Met à jour la barre de vie (0-1). Le bouclier s'affiche en bleu à la suite des PV ;
-    /// si PV + bouclier dépassent le max, la barre est rééchelonnée pour tout montrer.
+    /// Met à jour la barre de vie (0-1). Tant que l'unité a du bouclier, toute la barre passe en
+    /// bleu clair (comme l'orbe de vie des champions) et le montant s'affiche après les PV.
     /// </summary>
     public void UpdateHealth(float currentHP, float maxHP, float shield = 0f)
     {
-        float scale = Mathf.Max(maxHP, currentHP + shield);
-
         if (_healthSlider != null)
         {
-            _healthSlider.value = Mathf.Clamp01(currentHP / scale);
-            UpdateShieldFill(currentHP / scale, (currentHP + shield) / scale, shield > 0f);
+            _healthSlider.value = maxHP > 0 ? Mathf.Clamp01(currentHP / maxHP) : 0f;
+            ApplyFillColor(shield > 0f ? ShieldColor : _baseColor);
         }
 
         // Met à jour le texte (optionnel)
         if (_healthText != null)
         {
-            _healthText.text = shield > 0f
-                ? $"{(int)currentHP}/{(int)maxHP} <color={ShieldColorHex}>+{(int)shield}</color>"
-                : $"{(int)currentHP}/{(int)maxHP}";
+            _healthText.text = $"{(int)currentHP}/{(int)maxHP}";
         }
+
+        UpdateShieldText(shield);
     }
 
-    // ========== BOUCLIER ==========
+    // Montant du bouclier sous la barre (le texte des PV est posé sur la barre : illisible sur le bleu)
+    private TextMeshProUGUI _shieldText;
+
+    private void UpdateShieldText(float shield)
+    {
+        if (_shieldText == null)
+        {
+            if (shield <= 0f || _healthSlider == null) return;
+
+            var go = new GameObject("ShieldText", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(_healthSlider.transform, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, -2f);
+            rt.sizeDelta = new Vector2(160f, 24f);
+
+            _shieldText = go.GetComponent<TextMeshProUGUI>();
+            if (_healthText != null)
+            {
+                _shieldText.font = _healthText.font;
+                _shieldText.fontSize = _healthText.fontSize;
+            }
+            _shieldText.color = ShieldColor;
+            _shieldText.fontStyle = FontStyles.Bold;
+            _shieldText.alignment = TextAlignmentOptions.Top;
+            _shieldText.textWrappingMode = TextWrappingModes.NoWrap;
+            _shieldText.raycastTarget = false;
+        }
+
+        _shieldText.gameObject.SetActive(shield > 0f);
+        _shieldText.text = $"Bouclier {(int)shield}";
+    }
 
     // Couleur du bouclier : celle de la palette unique des icônes (CodexCardVisual.ChipColor)
     private static Color ShieldColor => CodexCardVisual.ChipColor(ChipKind.Shield);
-    private static string ShieldColorHex => "#" + ColorUtility.ToHtmlStringRGB(ShieldColor);
-    private RectTransform _shieldFill;
+
+    // Couleur de la barre sans bouclier (SetColor : rouge pour les monstres, celle de l'invocation…)
+    private Color _baseColor = Color.red;
 
     /// <summary>
-    /// Segment bleu entre la fin des PV (from) et PV + bouclier (to), en fraction de la barre.
-    /// Créé à la volée à côté du remplissage du slider, pour ne pas toucher au prefab.
-    /// </summary>
-    private void UpdateShieldFill(float from, float to, bool visible)
-    {
-        if (_shieldFill == null)
-        {
-            if (!visible || _healthSlider.fillRect == null) return;
-
-            var go = new GameObject("ShieldFill", typeof(RectTransform), typeof(Image));
-            _shieldFill = go.GetComponent<RectTransform>();
-            _shieldFill.SetParent(_healthSlider.fillRect.parent, false);
-            go.GetComponent<Image>().color = ShieldColor;
-            go.GetComponent<Image>().raycastTarget = false;
-        }
-
-        _shieldFill.gameObject.SetActive(visible);
-        if (!visible) return;
-
-        _shieldFill.anchorMin = new Vector2(Mathf.Clamp01(from), 0f);
-        _shieldFill.anchorMax = new Vector2(Mathf.Clamp01(to), 1f);
-        _shieldFill.offsetMin = Vector2.zero;
-        _shieldFill.offsetMax = Vector2.zero;
-    }
-
-    /// <summary>
-    /// Change la couleur de la barre
+    /// Change la couleur de la barre (sans bouclier)
     /// </summary>
     public void SetColor(Color color)
     {
-        if (_healthSlider != null)
+        _baseColor = color;
+        ApplyFillColor(color);
+    }
+
+    private void ApplyFillColor(Color color)
+    {
+        if (_healthSlider == null || _healthSlider.fillRect == null) return;
+
+        Image fillImage = _healthSlider.fillRect.GetComponent<Image>();
+        if (fillImage != null)
         {
-            Image fillImage = _healthSlider.fillRect.GetComponent<Image>();
-            if (fillImage != null)
-            {
-                fillImage.color = color;
-            }
+            fillImage.color = color;
         }
     }
 }

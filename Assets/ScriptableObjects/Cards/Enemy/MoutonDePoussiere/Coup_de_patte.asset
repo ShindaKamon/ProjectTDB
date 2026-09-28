@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Coup_de_patte
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Coup de patte
-  description: "Inflige 5 d\xE9g\xE2ts \xE0 un ennemi au contact. Attaque de base
+  description: "Inflige 4 d\xE9g\xE2ts \xE0 un ennemi au contact. Attaque de base
     : gratuite, jou\xE9e quand la carte pr\xE9vue ne peut pas l'\xEAtre."
   specialText: 
   artwork: {fileID: 0}
@@ -30,7 +30,7 @@ MonoBehaviour:
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 5
+  damageAmount: 4
   damageType: 0
   damageSelf: 0
   healAmount: 0

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Raze
   m_EditorClassIdentifier: ProjectTDB::ChampionData
   championName: Raze
-  title: 
+  title: Le Tricheur
   description: "Il a tout mis\xE9 sur une main l\xE9gendaire et tout perdu en un
     instant : fortune, r\xE9putation, confiance de ses proches. Depuis, il ne laisse
     plus jamais le hasard d\xE9cider : il triche, compte les cartes, calcule chaque
@@ -23,9 +23,9 @@ MonoBehaviour:
   prefab: {fileID: 5440214431298301374, guid: 557eea8d6f65ac94bac218fef4e68914, type: 3}
   emotionType: 0
   maxHealth: 100
-  movementRange: 4
-  maxActionPoints: 5
-  attackDamage: 15
+  movementRange: 3
+  maxActionPoints: 6
+  attackDamage: 0
   armor: 0
   magicResistance: 0
   startingDeck:

@@ -641,7 +641,7 @@ public class CardData : ScriptableObject
 
                 if (existingSummon != null && (existingSummonState == null || !existingSummonState.IsDead()))
                 {
-                    existingSummon.Heal(healAmount);
+                    existingSummon.HealFrom(healAmount, source);
                     GameLog.Log($"{cardName} : {existingSummon.name} est déjà invoquée, elle est soignée de {healAmount} PV au lieu d'être réinvoquée.");
                 }
                 else
@@ -699,9 +699,9 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = unit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
+                        unit.TakeRawDamageFrom(unit.ReduceByDefense(totalUnitDamage, damageType), source); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
-                        unit.TakeDamage(unit.ReduceByDefense(totalUnitDamage, damageType));
+                        unit.TakeDamageFrom(unit.ReduceByDefense(totalUnitDamage, damageType), source);
                     int hpAfter = unit.GetHealth();
                     if (hpAfter < hpBefore) damageDealt = true;
                     actualDamageDealt += hpBefore - hpAfter;
@@ -709,7 +709,7 @@ public class CardData : ScriptableObject
                 }
                 if (finalHeal > 0)
                 {
-                    unit.Heal(finalHeal);
+                    unit.HealFrom(finalHeal, source);
                     GameLog.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
                 }
                 if (finalLifesteal > 0 && damageDealt)
@@ -731,9 +731,9 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = targetUnit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
+                        targetUnit.TakeRawDamageFrom(targetUnit.ReduceByDefense(totalTargetDamage, damageType), source); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
-                        targetUnit.TakeDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType));
+                        targetUnit.TakeDamageFrom(targetUnit.ReduceByDefense(totalTargetDamage, damageType), source);
                     int hpAfter = targetUnit.GetHealth();
                     if (hpAfter < hpBefore) damageDealt = true;
                     actualDamageDealt += hpBefore - hpAfter;
@@ -741,7 +741,7 @@ public class CardData : ScriptableObject
                 }
                 if (finalHeal > 0)
                 {
-                    targetUnit.Heal(finalHeal);
+                    targetUnit.HealFrom(finalHeal, source);
                     GameLog.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
                 }
                 if (finalLifesteal > 0 && damageDealt)
@@ -819,7 +819,7 @@ public class CardData : ScriptableObject
                 if (unit == targetUnit || unit.GetFaction() == source.GetFaction() || IsDead(unit)) continue;
                 if (GridGeometry.Distance(around, unit.GetCurrentGridPos()) != 1) continue;
 
-                unit.TakeDamage(unit.ReduceByDefense(damageAroundTarget, damageType));
+                unit.TakeDamageFrom(unit.ReduceByDefense(damageAroundTarget, damageType), source);
                 GameLog.Log($"{cardName} : {unit.name} (au contact de {targetUnit.name}) subit {damageAroundTarget} dégâts");
             }
         }
@@ -995,7 +995,7 @@ public class CardData : ScriptableObject
             // Applique les dégâts de la charge
             if (finalChargeDamage > 0)
             {
-                pathInfo.EnemyHit.TakeDamage(pathInfo.EnemyHit.ReduceByDefense(finalChargeDamage, damageType));
+                pathInfo.EnemyHit.TakeDamageFrom(pathInfo.EnemyHit.ReduceByDefense(finalChargeDamage, damageType), source);
                 GameLog.Log($"🏃 CHARGE ! {source.name} inflige {finalChargeDamage} dégâts à {pathInfo.EnemyHit.name}");
             }
 

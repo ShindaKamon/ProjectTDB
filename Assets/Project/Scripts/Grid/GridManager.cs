@@ -471,10 +471,23 @@ public class GridManager : MonoBehaviour, IGridService
         HandleTurnStart(_activeUnit);
     }
     
+    /// <summary>
+    /// Arrête le combat : plus aucun tour ne démarre, l'écran de fin (BattleEndUI) s'affiche.
+    /// </summary>
+    private void EndBattle(BattleResult result)
+    {
+        if (_turnStateMachine.IsBattleOver()) return;
+
+        GameLog.Log($"=== Fin du combat : {(result == BattleResult.Victory ? "VICTOIRE" : "DÉFAITE")} ===");
+        _turnStateMachine.EndBattle();
+        ResetAllTileColors();
+        EventBus.Publish(new BattleEndedEvent(result));
+    }
+
     public void OnEndTurnButtonClick()
     {
-        // Phase de placement : pas encore d'unité active, rien à terminer
-        if (_activeUnit == null) return;
+        // Phase de placement : pas encore d'unité active, rien à terminer ; combat fini : plus de tour
+        if (_activeUnit == null || _turnStateMachine.IsBattleOver()) return;
 
         GameLog.Log("=== Fin de tour ===");
         ResetAllTileColors();
@@ -537,7 +550,15 @@ public class GridManager : MonoBehaviour, IGridService
         diedUnit.OnUnitDied -= HandleUnitDied;
         
         _units.Remove(diedUnit);
-        
+
+        // Fin du combat : plus d'ennemi (victoire) ou plus de champion (défaite)
+        BattleResult result = BattleOutcome.Evaluate(_units);
+        if (result != BattleResult.Ongoing)
+        {
+            EndBattle(result);
+            return;
+        }
+
         if (_activeUnit == diedUnit)
         {
             GameLog.Log("L'unité active est morte. Passage au tour suivant.");

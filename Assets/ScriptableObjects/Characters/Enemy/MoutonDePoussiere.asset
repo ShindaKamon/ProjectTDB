@@ -15,10 +15,10 @@ MonoBehaviour:
   enemyName: "Mouton de poussi\xE8re"
   prefab: {fileID: 4649986285180131820, guid: 18798e632fb2a3e4b8a725d40e61f404, type: 3}
   isBoss: 0
-  maxHealth: 60
+  maxHealth: 50
   movementRange: 3
   maxActionPoints: 2
-  attackDamage: 10
+  attackDamage: 0
   armor: 0
   magicResistance: 0
   combatDeck:

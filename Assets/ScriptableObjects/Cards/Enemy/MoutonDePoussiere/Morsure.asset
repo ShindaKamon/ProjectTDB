@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Morsure
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Morsure
-  description: "Inflige 10 d\xE9g\xE2ts \xE0 un ennemi au contact et rend 5 PV au
+  description: "Inflige 8 d\xE9g\xE2ts \xE0 un ennemi au contact et rend 4 PV au
     lanceur."
   specialText: 
   artwork: {fileID: 0}
@@ -30,11 +30,11 @@ MonoBehaviour:
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 10
+  damageAmount: 8
   damageType: 0
   damageSelf: 0
   healAmount: 0
-  lifestealFixedAmount: 5
+  lifestealFixedAmount: 4
   damageAroundTarget: 0
   nextAttackBonus: 0
   shieldAmount: 0

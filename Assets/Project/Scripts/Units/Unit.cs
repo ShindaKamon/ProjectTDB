@@ -306,12 +306,15 @@ public class Unit : MonoBehaviour
         transform.rotation = targetRotation; // Snap final pour la précision
     }
 
+    /// <summary>Nom affiché en jeu (infobulle, récapitulatif) : surchargé par les champions, monstres et invocations.</summary>
+    public virtual string DisplayName => name;
+
     // Origine des dégâts en cours d'application (voir TakeDamageFrom), relayée dans UnitDamagedEvent
     private Unit _incomingDamageSource;
 
     /// <summary>
-    /// Inflige des dégâts en précisant leur origine (ex: écho de Lyse), pour que les retours
-    /// visuels puissent les distinguer. Passe par TakeDamage, surcharges comprises (boucliers).
+    /// Inflige des dégâts en précisant leur origine (ex: écho de Lyse, carte d'un champion), pour
+    /// les retours visuels et le récapitulatif du combat. Passe par TakeDamage, surcharges comprises (boucliers).
     /// </summary>
     public void TakeDamageFrom(int damage, Unit source)
     {
@@ -323,6 +326,37 @@ public class Unit : MonoBehaviour
         finally
         {
             _incomingDamageSource = null;
+        }
+    }
+
+    /// <summary>Comme TakeRawDamage, en précisant l'origine des dégâts (voir TakeDamageFrom).</summary>
+    public void TakeRawDamageFrom(int damage, Unit source)
+    {
+        _incomingDamageSource = source;
+        try
+        {
+            TakeRawDamage(damage);
+        }
+        finally
+        {
+            _incomingDamageSource = null;
+        }
+    }
+
+    // Origine du soin en cours (voir HealFrom), relayée dans UnitHealedEvent ; null = l'unité soignée elle-même
+    private Unit _incomingHealSource;
+
+    /// <summary>Soigne en précisant qui soigne (récapitulatif du combat).</summary>
+    public void HealFrom(int amount, Unit source)
+    {
+        _incomingHealSource = source;
+        try
+        {
+            Heal(amount);
+        }
+        finally
+        {
+            _incomingHealSource = null;
         }
     }
 
@@ -338,13 +372,15 @@ public class Unit : MonoBehaviour
 
         TriggerReactiveShield();
         int damageToSelf = AbsorbWithShield(damage);
+        int healthBefore = _health;
         _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
         GameLog.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        // Source connue seulement via TakeDamageFrom (null sinon)
-        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
+        // Source connue seulement via TakeDamageFrom (null sinon) ; effectif = bouclier absorbé + PV perdus
+        int effective = (damage - damageToSelf) + (healthBefore - _health);
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage, effective));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -371,12 +407,13 @@ public class Unit : MonoBehaviour
             return;
         }
 
+        int healthBefore = _health;
         _health = Mathf.Clamp(_health - damage, 0, _maxHealth);
         GameLog.Log($"{name} a pris {damage} dégâts bruts (ignore bouclier et réductions en %). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage, healthBefore - _health));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -602,7 +639,7 @@ public class Unit : MonoBehaviour
         // Phase 4.1: Publie l'événement de soins pour le système de combat visuals
         if (actualHealAmount > 0)
         {
-            EventBus.Publish(new UnitHealedEvent(this, actualHealAmount));
+            EventBus.Publish(new UnitHealedEvent(this, actualHealAmount, _incomingHealSource ?? this));
         }
 
         // Met à jour la barre de vie

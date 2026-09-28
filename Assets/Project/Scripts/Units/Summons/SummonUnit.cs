@@ -14,7 +14,7 @@ public class SummonUnit : Unit
     [Tooltip("Nom affiché en jeu (bulle de survol), ex. « Lyse »")]
     [SerializeField] private string _displayName;
 
-    public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
+    public override string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
 
     [Tooltip("Délai entre le coup de l'invocateur et l'écho de l'invocation (secondes) : les deux dégâts se lisent séparément")]
     [SerializeField] private float _echoDelay = 0.5f;

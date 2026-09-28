@@ -49,6 +49,7 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
     public int GetMaxPA() => _actionPointsComponent?.GetMaxPA() ?? 0;
     public EnemyData GetEnemyData() => _enemyData;
     public bool IsBoss() => _enemyData != null && _enemyData.isBoss;
+    public override string DisplayName => _enemyData != null ? _enemyData.enemyName : name;
 
     // Surcharge pour définir la faction automatiquement
     public override UnitFaction GetFaction() => UnitFaction.Enemy;

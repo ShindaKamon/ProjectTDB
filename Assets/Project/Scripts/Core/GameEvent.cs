@@ -103,13 +103,15 @@ public class UnitDamagedEvent : GameEvent
 {
     public Unit Target { get; private set; }
     public Unit Source { get; private set; }
-    public int Damage { get; private set; }
+    public int Damage { get; private set; }          // coup reçu (chiffre affiché)
+    public int EffectiveDamage { get; private set; } // réellement retiré (bouclier + PV, sans l'excédent au-delà des PV)
 
-    public UnitDamagedEvent(Unit target, Unit source, int damage)
+    public UnitDamagedEvent(Unit target, Unit source, int damage, int effectiveDamage = -1)
     {
         Target = target;
         Source = source;
         Damage = damage;
+        EffectiveDamage = effectiveDamage >= 0 ? effectiveDamage : damage;
     }
 }
 
@@ -120,11 +122,26 @@ public class UnitHealedEvent : GameEvent
 {
     public Unit Target { get; private set; }
     public int HealAmount { get; private set; }
+    public Unit Source { get; private set; } // qui soigne (la cible elle-même par défaut)
 
-    public UnitHealedEvent(Unit target, int healAmount)
+    public UnitHealedEvent(Unit target, int healAmount, Unit source = null)
     {
         Target = target;
         HealAmount = healAmount;
+        Source = source ?? target;
+    }
+}
+
+/// <summary>
+/// Publié quand le combat se termine (voir BattleOutcome) : victoire ou défaite
+/// </summary>
+public class BattleEndedEvent : GameEvent
+{
+    public BattleResult Result { get; private set; }
+
+    public BattleEndedEvent(BattleResult result)
+    {
+        Result = result;
     }
 }
 

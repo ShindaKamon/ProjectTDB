@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Crux
   m_EditorClassIdentifier: ProjectTDB::ChampionData
   championName: Crux
-  title: 
+  title: Le Grimpeur
   description: "Lors d'une ascension film\xE9e et sponsoris\xE9e, un mousqueton a
     c\xE9d\xE9 : toute son \xE9quipe est rest\xE9e suspendue deux jours avant les
     secours. Personne n'est mort, mais l'humiliation publique et la perte de confiance
@@ -24,9 +24,9 @@ MonoBehaviour:
   prefab: {fileID: 8911284436020867190, guid: ece5be0747ba1a348841f328d1f0f102, type: 3}
   emotionType: 0
   maxHealth: 100
-  movementRange: 4
-  maxActionPoints: 5
-  attackDamage: 15
+  movementRange: 5
+  maxActionPoints: 4
+  attackDamage: 0
   armor: 0
   magicResistance: 0
   startingDeck:

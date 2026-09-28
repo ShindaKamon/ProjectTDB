@@ -13,6 +13,8 @@ public abstract class Champion : Unit, IActionPointsUser
     [Header("Champion Data")]
     [SerializeField] public ChampionData championData;
 
+    public override string DisplayName => championData != null ? championData.championName : name;
+
     // ========== SYSTÈME PA (Points d'Action) ==========
     // Les champions utilisent leurs PA pour jouer des cartes de leur deck personnel
     // Utilise la composition avec ActionPointsComponent pour éviter la duplication de code

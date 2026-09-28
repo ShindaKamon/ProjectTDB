@@ -100,6 +100,8 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **Tous les ennemis vaincus**   | Victoire |
 | **Tous les champions vaincus** | Défaite  |
 
+**Code (28/09/2026)** : `BattleOutcome` (les invocations comme Lyse ne comptent pas ; si les deux arrivent en même temps, c'est une victoire), vérifié à chaque mort par `GridManager` ; écran de fin MVP `BattleEndUI` : « VICTOIRE ! » / « DÉFAITE », puis **Rejouer** (même équipe) ou **Menu principal**.
+
 **Récompenses (à implémenter)** : XP, cartes, Or — voir `Progression.md`. Dans un donjon, la victoire contribue au retour de la couleur (voir `UI_Design.md`).
 
 

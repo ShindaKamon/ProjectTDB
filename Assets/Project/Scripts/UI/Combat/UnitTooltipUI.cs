@@ -52,19 +52,12 @@ public class UnitTooltipUI : MonoBehaviour
         return unit is Enemy || unit is SummonUnit ? unit : null;
     }
 
-    private static string DisplayName(Unit unit) => unit switch
-    {
-        Enemy enemy when enemy.GetEnemyData() != null => enemy.GetEnemyData().enemyName,
-        SummonUnit summon => summon.DisplayName,
-        _ => unit.name
-    };
-
     private void Refresh(Unit unit)
     {
         _shownUnit = unit;
         _nextRefresh = Time.time + _refreshInterval;
 
-        _nameText.text = DisplayName(unit);
+        _nameText.text = unit.DisplayName;
         int shield = unit.GetShield();
         _healthText.text = $"PV {unit.GetHealth()}/{unit.GetMaxHealth()}"
             + (shield > 0 ? $"  <color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Shield))}>+{shield}</color>" : "");

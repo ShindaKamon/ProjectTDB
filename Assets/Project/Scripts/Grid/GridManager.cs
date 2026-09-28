@@ -726,6 +726,14 @@ public class GridManager : MonoBehaviour, IGridService
         Vector2Int sourcePos = source.GetCurrentGridPos();
         int range = card.targetRange;
 
+        // Carte d'invocation alors que l'invocation est déjà là : seule sa case est ciblable (soin)
+        if (GameActionValidator.HealsActiveSummon(card, source))
+        {
+            Tile summonTile = GetTileAtPosition(((ISummonOwner)source).ActiveSummon.GetCurrentGridPos());
+            if (summonTile != null) summonTile.SetColor(_cardTargetColor);
+            return;
+        }
+
         // Pour les cartes de charge, affiche uniquement les cases en ligne droite
         if (card.isChargeCard)
         {
@@ -736,9 +744,11 @@ public class GridManager : MonoBehaviour, IGridService
         // Obtient toutes les tuiles dans la portée de la carte
         List<Tile> tilesInRange = GetAttackTiles(sourcePos, range, source);
 
-        // Colorie TOUTES les tuiles dans la portée en jaune
+        // Colorie TOUTES les tuiles dans la portée en jaune (seulement les lignes droites si la carte l'exige)
         foreach (Tile tile in tilesInRange)
         {
+            if (card.targetInStraightLine && !GridGeometry.TryGetLine(sourcePos, GetGridPosFromWorldPos(tile.transform.position), out _, out _))
+                continue;
             tile.SetColor(_cardTargetColor);
         }
 
@@ -808,18 +818,19 @@ public class GridManager : MonoBehaviour, IGridService
     }
 
     /// <summary>
-    /// Affiche la zone AOE autour d'une position donnée
+    /// Affiche la zone AOE de la carte (ligne, cercle, cône…) pour un épicentre donné
     /// </summary>
     public void ShowAOEZone(Vector2Int epicenter, int radius, CardData card, Unit source)
     {
         if (radius <= 0) return;
 
-        // Obtient toutes les tuiles dans le rayon AOE
-        List<Tile> aoeArea = GetAttackTiles(epicenter, radius, null);
-
-        foreach (Tile tile in aoeArea)
+        // Même forme que celle utilisée pour appliquer l'effet (CardData.IsInAOEShape)
+        foreach (var entry in _tiles)
         {
-            Vector2Int tilePos = GetGridPosFromWorldPos(tile.transform.position);
+            Vector2Int tilePos = entry.Key;
+            if (!card.IsInAOEShape(source, epicenter, tilePos)) continue;
+
+            Tile tile = entry.Value;
             Unit unitOnTile = GetUnitAtGridPos(tilePos);
 
             // Colore différemment selon si une unité sera affectée

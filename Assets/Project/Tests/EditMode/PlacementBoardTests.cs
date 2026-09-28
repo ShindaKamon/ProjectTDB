@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ProjectTDB.Tests
 {
     /// <summary>
-    /// Phase de placement : pose initiale, déplacement sur une case libre, échange, cases interdites.
+    /// Phase de placement : pose initiale, déplacement sur une case libre, cases occupées ou interdites.
     /// </summary>
     public class PlacementBoardTests
     {
@@ -44,21 +44,19 @@ namespace ProjectTDB.Tests
         {
             var board = NewBoard("Crux", "Raze");
 
-            Assert.IsTrue(board.TryMove("Crux", C, out string swapped));
-            Assert.IsNull(swapped);
+            Assert.IsTrue(board.TryMove("Crux", C));
             Assert.AreEqual("Crux", board.UnitAt(C));
             Assert.IsNull(board.UnitAt(A));
         }
 
         [Test]
-        public void TryMove_ToOccupiedStartCell_Swaps()
+        public void TryMove_ToOccupiedStartCell_IsRefused()
         {
             var board = NewBoard("Crux", "Raze");
 
-            Assert.IsTrue(board.TryMove("Crux", B, out string swapped));
-            Assert.AreEqual("Raze", swapped);
-            Assert.AreEqual("Crux", board.UnitAt(B));
-            Assert.AreEqual("Raze", board.UnitAt(A));
+            Assert.IsFalse(board.TryMove("Crux", B));
+            Assert.AreEqual("Raze", board.UnitAt(B));
+            Assert.AreEqual("Crux", board.UnitAt(A));
         }
 
         [Test]
@@ -66,7 +64,7 @@ namespace ProjectTDB.Tests
         {
             var board = NewBoard("Crux");
 
-            Assert.IsFalse(board.TryMove("Crux", new Vector2Int(5, 5), out _));
+            Assert.IsFalse(board.TryMove("Crux", new Vector2Int(5, 5)));
             Assert.AreEqual("Crux", board.UnitAt(A));
         }
 
@@ -75,7 +73,7 @@ namespace ProjectTDB.Tests
         {
             var board = NewBoard("Crux");
 
-            Assert.IsFalse(board.TryMove("Evan", C, out _));
+            Assert.IsFalse(board.TryMove("Evan", C));
         }
 
         [Test]
@@ -83,8 +81,7 @@ namespace ProjectTDB.Tests
         {
             var board = NewBoard("Crux");
 
-            Assert.IsTrue(board.TryMove("Crux", A, out string swapped));
-            Assert.IsNull(swapped);
+            Assert.IsTrue(board.TryMove("Crux", A));
         }
     }
 }

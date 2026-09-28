@@ -372,6 +372,25 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void CanTargetUnit_StraightLineCard_OnlyAlignedTargets()
+        {
+            // Ex. Éclat de rage : cible en croix depuis le lanceur, jamais en diagonale
+            var card = NewCard();
+            card.targetType = CardTargetType.Enemy;
+            card.targetRange = 5;
+            card.targetInStraightLine = true;
+            var source = NewUnit<Unit>(new Vector2Int(2, 2));
+
+            Assert.IsTrue(GameActionValidator.CanTargetUnit(card, source, NewUnit<Enemy>(new Vector2Int(2, 5))).IsValid);
+            Assert.IsTrue(GameActionValidator.CanTargetUnit(card, source, NewUnit<Enemy>(new Vector2Int(0, 2))).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetUnit(card, source, NewUnit<Enemy>(new Vector2Int(3, 3))).IsValid, "diagonale");
+
+            card.targetType = CardTargetType.AnyTile;
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, source, new Vector2Int(5, 2)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(4, 3)).IsValid, "case hors ligne");
+        }
+
+        [Test]
         public void CanTargetUnit_AllyType_TargetingSelf_Fails()
         {
             var card = NewCard();
@@ -847,6 +866,25 @@ namespace ProjectTDB.Tests
             summon.SetOwner(evan);
             SetField(evan, "_activeSummon", summon);
             return (evan, summon);
+        }
+
+        [Test]
+        public void SummonCard_WithSummonAlreadyThere_TargetsOnlyTheSummon()
+        {
+            // Invocation de Lyse, Lyse déjà sur le terrain : on la cible elle (même hors portée) pour la soigner
+            var card = NewCard("Invocation de Lyse");
+            card.targetType = CardTargetType.EmptyTile;
+            card.targetRange = 3;
+            card.isSummonCard = true;
+            var (evan, summon) = NewEvanWithSummon(new Vector2Int(6, 6));
+
+            Assert.IsTrue(GameActionValidator.HealsActiveSummon(card, evan));
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, evan, new Vector2Int(6, 6)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, evan, new Vector2Int(1, 0)).IsValid, "case vide à portée");
+
+            SetField(evan, "_activeSummon", null);
+            Assert.IsFalse(GameActionValidator.HealsActiveSummon(card, evan));
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, evan, new Vector2Int(1, 0)).IsValid, "sans Lyse : ciblage normal");
         }
 
         [Test]

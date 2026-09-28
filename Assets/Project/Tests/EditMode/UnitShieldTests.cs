@@ -87,30 +87,26 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void Shield_ExpiresOnlyAtSourceTurnStart()
+        public void Shield_HasNoDuration_LastsUntilDepleted()
         {
+            // Armure de rage : bouclier de 23, 20 dégâts → reste 3, quels que soient les tours écoulés
             Unit caster = NewUnit();
             Unit ally = NewUnit();
-            ally.AddShield(20, caster);
+            ally.AddShield(23, caster);
 
             ally.TickEffectsOnTurnStartOf(ally);
-            Assert.AreEqual(20, ally.GetShield(), "Le tour du porteur ne doit pas retirer un bouclier donné par un autre");
-
             ally.TickEffectsOnTurnStartOf(caster);
-            Assert.AreEqual(0, ally.GetShield());
-        }
-
-        [Test]
-        public void Shield_ExpiresWhenSourceIsGone()
-        {
-            Unit caster = NewUnit();
-            Unit ally = NewUnit();
-            ally.AddShield(20, caster);
-
             Object.DestroyImmediate(caster.gameObject);
             ally.TickEffectsOnTurnStartOf(ally);
+            Assert.AreEqual(23, ally.GetShield(), "Ni les tours ni la mort du lanceur ne retirent le bouclier");
 
+            ally.TakeDamage(20);
+            Assert.AreEqual(3, ally.GetShield());
+            Assert.AreEqual(100, ally.GetHealth());
+
+            ally.TakeDamage(10);
             Assert.AreEqual(0, ally.GetShield());
+            Assert.AreEqual(93, ally.GetHealth());
         }
 
         [Test]
@@ -126,7 +122,7 @@ namespace ProjectTDB.Tests
 
             unit.TickEffectsOnTurnStartOf(unit);
             unit.TakeDamage(10);
-            Assert.AreEqual(90, unit.GetHealth(), "Pas de second déclenchement");
+            Assert.AreEqual(93, unit.GetHealth(), "Pas de second déclenchement : seul le reste de 3 absorbe");
         }
 
         [Test]

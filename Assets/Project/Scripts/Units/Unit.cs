@@ -19,6 +19,7 @@ public class Unit : MonoBehaviour
     // Variables pour le déplacement fluide.
     private Vector3 _targetWorldPosition; // La position mondiale cible de l'unité.
     private bool _isMoving = false; // Indique si l'unité est en cours de déplacement.
+    private bool _keepFacing = false; // Déplacement subi (poussée, tirage, recul) : l'unité ne se retourne pas
     private List<Tile> _path; // Le chemin que l'unité doit suivre.
 
     // Événement déclenché à chaque fois que l'unité termine une étape de son mouvement.
@@ -222,6 +223,7 @@ public class Unit : MonoBehaviour
 
         _path = path; // Stocke le chemin.
         _isMoving = true; // Active le mouvement.
+        _keepFacing = forceMove;
         _targetWorldPosition = _path[0].gameObject.transform.position + new Vector3(0, 0.5f, 0); // La première tuile du chemin est la première cible.
         GameLog.Log($"Déplacement de {name} le long d'un chemin de {path.Count} tuiles.");
     }
@@ -239,7 +241,7 @@ public class Unit : MonoBehaviour
             // Applique la rotation seulement si on a une direction horizontale significative.
             // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp, donc pas
             // de passage transitoire par un angle en diagonale pendant les virages.
-            if (direction.sqrMagnitude > 0.001f)
+            if (!_keepFacing && direction.sqrMagnitude > 0.001f)
             {
                 Vector2Int snapped = GridGeometry.SnapDirection(new Vector2(direction.x, direction.z));
                 transform.rotation = Quaternion.LookRotation(new Vector3(snapped.x, 0, snapped.y));
@@ -473,6 +475,7 @@ public class Unit : MonoBehaviour
         _nextAttackBonus += amount;
         GameLog.Log($"{name}: +{amount} dégâts sur sa prochaine carte offensive (total {_nextAttackBonus})");
         OnStatsModified?.Invoke();
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.NextAttackBonus, amount));
     }
 
     /// <summary>
@@ -492,9 +495,8 @@ public class Unit : MonoBehaviour
     // ========== BOUCLIER (PV temporaires) ==========
 
     // Absorbe les dégâts avant les PV (pas les dégâts bruts, ex: Paire de Raze).
-    // Dure jusqu'au début du prochain tour de celui qui l'a donné ; les boucliers se cumulent.
+    // Sans durée : reste jusqu'à être entièrement consommé ; les boucliers se cumulent.
     private int _shield;
-    private Unit _shieldSource;
 
     public event System.Action<int> OnShieldChanged;
     public int GetShield() => _shield;
@@ -504,9 +506,9 @@ public class Unit : MonoBehaviour
         if (amount <= 0) return;
 
         _shield += amount;
-        _shieldSource = source;
-        GameLog.Log($"{name} gagne un bouclier de {amount} (total {_shield}), jusqu'au prochain tour de {source?.name}");
+        GameLog.Log($"{name} gagne un bouclier de {amount} (total {_shield}) de {source?.name ?? name}, jusqu'à épuisement");
         NotifyShieldChanged();
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.Shield, amount));
     }
 
     // Bouclier réactif (ex: Réflexe de survie) : se déclenche au premier coup reçu d'un ennemi,
@@ -521,6 +523,7 @@ public class Unit : MonoBehaviour
         _reactiveShield = amount;
         _reactiveShieldSource = source;
         GameLog.Log($"{name}: bouclier réactif de {amount} armé (au premier coup ennemi)");
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ReactiveShield, amount));
     }
 
     // Déclenche le bouclier réactif si le coup vient d'un ennemi (tour d'une unité d'une autre
@@ -539,8 +542,9 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// Le bouclier (et le bouclier réactif non déclenché) expire au début du prochain tour
-    /// de celui qui l'a donné, ou tout de suite si celui-ci est mort.
+    /// Le bouclier réactif non déclenché expire au début du prochain tour de celui qui l'a donné,
+    /// ou tout de suite si celui-ci est mort. Le bouclier lui-même n'a pas de durée (décision du
+    /// 28/09/2026) : il reste tant qu'il n'a pas été entièrement consommé par les dégâts.
     /// </summary>
     private void ExpireShieldsOf(Unit turnUnit)
     {
@@ -550,14 +554,6 @@ public class Unit : MonoBehaviour
             _reactiveShield = 0;
             _reactiveShieldSource = null;
         }
-
-        if (_shield <= 0) return;
-        if (_shieldSource != turnUnit && !IsGone(_shieldSource)) return;
-
-        GameLog.Log($"{name}: bouclier de {_shield} expiré");
-        _shield = 0;
-        _shieldSource = null;
-        NotifyShieldChanged();
     }
 
     /// <summary>
@@ -683,6 +679,7 @@ public class Unit : MonoBehaviour
         _currentMovementPoints += amount;
         GameLog.Log($"{name} gagne {amount} PM ce tour. Total : {_currentMovementPoints}");
         OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.MovementPoints, amount));
     }
 
     // Méthode pour réinitialiser les PM au début du tour
@@ -807,6 +804,9 @@ public class Unit : MonoBehaviour
         }
 
         OnStatsModified?.Invoke();
+        if (atk != 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.Attack, atk));
+        if (armor != 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.Armor, armor));
+        if (magicResistance != 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.MagicResistance, magicResistance));
     }
 
     /// <summary>

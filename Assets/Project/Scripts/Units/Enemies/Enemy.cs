@@ -218,6 +218,7 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
             return;
         }
         _actionPointsComponent.AddPA(amount);
+        if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
     }
 
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========

@@ -128,6 +128,41 @@ public class UnitHealedEvent : GameEvent
     }
 }
 
+/// <summary>
+/// Bonus ou malus appliqué à une unité (hors dégâts et soins), pour le retour visuel
+/// </summary>
+public enum UnitEffect
+{
+    Shield,
+    ReactiveShield,
+    NextAttackBonus,
+    Attack,
+    Armor,
+    MagicResistance,
+    ActionPoints,           // montant négatif = retrait au prochain tour
+    MovementPoints,         // idem ; int.MaxValue en négatif = tous les PM
+    DamageTakenPercent,     // ex. -15 : dégâts subis réduits de 15 %
+    NextAttackPercent,      // ex. +15 : prochaine carte de dégâts +15 %
+    PmImmune                // Ténacité (montant ignoré)
+}
+
+/// <summary>
+/// Publié quand un bonus ou un malus est appliqué à une unité (montant signé)
+/// </summary>
+public class UnitEffectAppliedEvent : GameEvent
+{
+    public Unit Target { get; private set; }
+    public UnitEffect Effect { get; private set; }
+    public int Amount { get; private set; }
+
+    public UnitEffectAppliedEvent(Unit target, UnitEffect effect, int amount)
+    {
+        Target = target;
+        Effect = effect;
+        Amount = amount;
+    }
+}
+
 // ========== ÉVÉNEMENTS D'AFFICHAGE ==========
 
 /// <summary>

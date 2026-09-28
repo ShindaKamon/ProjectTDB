@@ -20,7 +20,7 @@ public enum CardAreaEffect
 {
     None,           // Aucune zone
     OneTile,        // Une case (l'épicentre uniquement)
-    Line,           // Ligne de aoeRadius cases depuis le lanceur, dans la direction de l'épicentre
+    Line,           // Ligne de aoeRadius cases partant de l'épicentre (compris), dans la direction lanceur → épicentre
     Cross,          // Croix de aoeRadius cases de rayon centrée sur l'épicentre (axes seulement)
     Circle,         // Cercle de aoeRadius cases de rayon centré sur l'épicentre
     Cone,           // Cône de aoeRadius cases de portée depuis le lanceur, ouverture 90°
@@ -126,6 +126,9 @@ public class CardData : ScriptableObject
 
     [Tooltip("Portée maximale de la carte")]
     public int targetRange = 0;
+
+    [Tooltip("Cible uniquement en ligne droite depuis le lanceur (4 directions, pas de diagonale)")]
+    public bool targetInStraightLine = false;
 
     [Space(5)]
     [Tooltip("Forme de la zone d'effet")]
@@ -416,10 +419,10 @@ public class CardData : ScriptableObject
 
     /// <summary>
     /// Détermine si une case donnée est couverte par la forme de zone de la carte
-    /// (Circle/OneTile centrés sur l'épicentre ; Line/Cone tracés depuis le lanceur en
-    /// direction de l'épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
+    /// (Circle/OneTile centrés sur l'épicentre ; Line part de l'épicentre et Cone du lanceur, dans la
+    /// direction lanceur → épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
     /// </summary>
-    private bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
+    public bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
     {
         switch (areaEffect)
         {
@@ -440,19 +443,13 @@ public class CardData : ScriptableObject
 
             case CardAreaEffect.Line:
             {
-                Vector2Int lineSourcePos = source.GetCurrentGridPos();
-                // La case du lanceur (origine de la ligne) est considérée "dans la forme" ;
-                // c'est affectsSelf (géré par l'appelant) qui décide si elle est réellement affectée.
-                if (tilePos == lineSourcePos) return true;
-
-                Vector2Int dir = GetSnappedDirection(lineSourcePos, epicenter);
+                // Part de la case visée (pas du lanceur) et s'éloigne du lanceur : aoeRadius cases, cible comprise
+                Vector2Int dir = GetSnappedDirection(source.GetCurrentGridPos(), epicenter);
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
-                Vector2Int cur = lineSourcePos;
-                for (int i = 1; i <= aoeRadius; i++)
+                for (int i = 0; i < aoeRadius; i++)
                 {
-                    cur += dir;
-                    if (cur == tilePos) return true;
+                    if (epicenter + dir * i == tilePos) return true;
                 }
                 return false;
             }
@@ -799,7 +796,7 @@ public class CardData : ScriptableObject
                 if (armorAmount != 0 || magicResistanceAmount != 0)
                     statTarget.ModifyStats(0, armorAmount, magicResistanceAmount, effectDuration, source);
 
-                // Bouclier en PV (jusqu'au début du prochain tour du lanceur), ou bouclier
+                // Bouclier en PV (sans durée, jusqu'à épuisement), ou bouclier
                 // réactif qui ne se déclenche qu'au premier coup ennemi (ex: Réflexe de survie)
                 if (finalShield > 0)
                 {

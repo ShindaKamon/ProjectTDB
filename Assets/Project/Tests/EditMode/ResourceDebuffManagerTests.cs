@@ -21,6 +21,32 @@ namespace ProjectTDB.Tests
             return unit;
         }
 
+        [Test]
+        public void ApplyDebuff_AnnouncesPaAndPmLossAtImpact()
+        {
+            Unit unit = NewUnit(4);
+            var received = new List<UnitEffectAppliedEvent>();
+            System.Action<UnitEffectAppliedEvent> handler = e => received.Add(e);
+            EventBus.Subscribe(handler);
+            try
+            {
+                ResourceDebuffManager.ApplyDebuff(unit, 1, 2, null);
+            }
+            finally
+            {
+                EventBus.Unsubscribe(handler);
+            }
+
+            Assert.AreEqual(2, received.Count);
+            Assert.AreEqual(UnitEffect.ActionPoints, received[0].Effect);
+            Assert.AreEqual(-1, received[0].Amount);
+            Assert.AreEqual(UnitEffect.MovementPoints, received[1].Effect);
+            Assert.AreEqual(-2, received[1].Amount);
+            Assert.AreSame(unit, received[1].Target);
+
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit); // vide le retrait en attente
+        }
+
         [TearDown]
         public void TearDown()
         {

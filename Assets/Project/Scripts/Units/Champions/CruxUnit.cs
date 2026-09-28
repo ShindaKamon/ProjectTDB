@@ -53,11 +53,13 @@ public class CruxUnit : Champion, IChargeLandingReactor, IOutgoingDamageModifier
         {
             _hasClimberShield = true;
             GameLog.Log($"[Réflexe du grimpeur] {name} atterrit près d'un allié -> bouclier -{_shieldDamageReduction:P0} jusqu'à son prochain tour");
+            EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.DamageTakenPercent, -Mathf.RoundToInt(_shieldDamageReduction * 100)));
         }
         else if (adjacentEnemy)
         {
             _hasNextCardBonus = true;
             GameLog.Log($"[Réflexe du grimpeur] {name} atterrit près d'un ennemi -> +{_nextCardDamageBonus:P0} dégâts sur la prochaine carte");
+            EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.NextAttackPercent, Mathf.RoundToInt(_nextCardDamageBonus * 100)));
         }
     }
 

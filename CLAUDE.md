@@ -107,4 +107,4 @@ Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build
 `Scripts/Editor/UISetupWizard.cs` (génération de hiérarchies UI), `DeckDebugMenu.cs` (reset/inspection des sauvegardes de decks).
 
 ## Documentation
-`Docs/GDD/` : GDD découpé par système (index : `Docs/GDD/README.md`) — à consulter avant de concevoir une mécanique. Émotions de lancement : Colère, Peur, Joie ; roster MVP : Evan, Crux, Raze ; deck cible 24 cartes (2 Signature + 6 Éveil + 16 Standard, le code en gère 18 pour l'instant, 2 + 16, sans emplacements Éveil).
+`Docs/GDD/` : GDD découpé par système (index : `Docs/GDD/README.md`) — à consulter avant de concevoir une mécanique. Émotions de lancement : Colère, Peur, Joie ; roster MVP : Evan, Crux, Raze ; deck cible 24 cartes (2 Signature + 6 Éveil + 16 Standard, le code en gère 20 pour l'instant, 4 Signature — 2 exemplaires de chacune — + 16 Standard, sans emplacements Éveil).

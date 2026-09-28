@@ -38,6 +38,10 @@ public static class ResourceDebuffManager
         _pending[target] = (Mathf.Max(current.pa, paReduction), Mathf.Max(current.pm, pmReduction));
         GameLog.Log($"[Retrait] {source?.name ?? "Effet"} : {target.name} perdra {_pending[target].pa} PA / {(IsPmImmune(target) ? "0 (Ténacité)" : _pending[target].pm.ToString())} PM à son prochain tour");
         EventBus.Publish(new ResourceDebuffChangedEvent(target));
+
+        // Retour visuel à l'impact (le retrait lui-même tombe au prochain tour de la cible)
+        if (paReduction > 0) EventBus.Publish(new UnitEffectAppliedEvent(target, UnitEffect.ActionPoints, -paReduction));
+        if (pmReduction > 0 && !IsPmImmune(target)) EventBus.Publish(new UnitEffectAppliedEvent(target, UnitEffect.MovementPoints, -pmReduction));
     }
 
     /// <summary>
@@ -87,6 +91,7 @@ public static class ResourceDebuffManager
             {
                 _pmImmune.Add(unit);
                 GameLog.Log($"🛡 {unit.name} est tenace : retraits de PM ignorés à son prochain tour");
+                EventBus.Publish(new UnitEffectAppliedEvent(unit, UnitEffect.PmImmune, 0));
             }
 
             unit.SpendMovement(debuff.pm);

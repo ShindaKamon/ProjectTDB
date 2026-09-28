@@ -8,9 +8,11 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Phase de placement avant le combat (façon Dofus) : les champions sont posés sur les cases de
-/// départ (en rouge) ; clic sur un champion pour le choisir, puis sur une case rouge pour l'y
-/// déplacer (ou échanger avec l'allié qui l'occupe). « Lancer le combat » termine la phase.
-/// Les boss gardent la position fixée dans la scène. Les règles sont dans PlacementBoard.
+/// départ (en rouge), puis chaque joueur place son champion à tour de rôle, comme en solo : son
+/// champion est sélectionné d'office et chaque clic sur une case rouge libre l'y déplace (on ne peut
+/// pas déplacer le champion d'un autre joueur). Le bouton passe au joueur suivant, puis lance le
+/// combat après le dernier. Les boss gardent la position fixée dans la scène. Les règles sont dans
+/// PlacementBoard.
 /// </summary>
 public class PlacementPhase : MonoBehaviour
 {
@@ -19,6 +21,10 @@ public class PlacementPhase : MonoBehaviour
     [SerializeField] private GameObject _panel;
     [SerializeField] private TextMeshProUGUI _instructionText;
     [SerializeField] private Button _launchButton;
+    [SerializeField] private string _nextPlayerLabel = "Joueur suivant";
+    [SerializeField] private string _launchLabel = "Lancer le combat";
+    [Tooltip("Interface utile seulement pendant le combat (main, pioche, fin de tour, HUD…) : masquée pendant le placement.")]
+    [SerializeField] private GameObject[] _combatOnlyUI;
 
     [Header("Couleurs")]
     [SerializeField] private Color _startCellColor = new Color(0.85f, 0.25f, 0.25f);
@@ -26,20 +32,23 @@ public class PlacementPhase : MonoBehaviour
 
     private PlacementBoard<Champion> _board;
     private List<Champion> _champions;
-    private Champion _selected;
+    private int _currentIndex;
     private Action _onDone;
 
     public bool IsActive => _board != null;
 
+    // Champion du joueur qui se place
+    private Champion Current => _champions[_currentIndex];
+
     void Awake()
     {
-        if (_launchButton != null) _launchButton.onClick.AddListener(End);
+        if (_launchButton != null) _launchButton.onClick.AddListener(OnButtonClicked);
         if (_panel != null) _panel.SetActive(false);
     }
 
     /// <summary>
     /// Démarre le placement : les champions sont déjà sur les premières cases de départ, dans l'ordre.
-    /// onDone est appelé quand le joueur lance le combat.
+    /// onDone est appelé quand le dernier joueur lance le combat.
     /// </summary>
     public void Begin(List<Champion> champions, IReadOnlyList<Vector2Int> startCells, Action onDone)
     {
@@ -47,9 +56,10 @@ public class PlacementPhase : MonoBehaviour
         _onDone = onDone;
         _board = new PlacementBoard<Champion>(startCells);
         _board.PlaceInOrder(champions);
-        _selected = champions.Count > 0 ? champions[0] : null;
+        _currentIndex = 0;
 
         if (_panel != null) _panel.SetActive(true);
+        SetCombatUIVisible(false);
         Refresh();
         GameLog.Log($"Phase de placement : {champions.Count} champion(s), {startCells.Count} cases de départ.");
     }
@@ -57,39 +67,35 @@ public class PlacementPhase : MonoBehaviour
     void Update()
     {
         if (!IsActive || Mouse.current == null) return;
-
-        if (Mouse.current.rightButton.wasPressedThisFrame)
-        {
-            _selected = null;
-            Refresh();
-            return;
-        }
-
         if (!Mouse.current.leftButton.wasPressedThisFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
         if (!TryGetClickedCell(out Vector2Int cell)) return;
 
-        Champion atCell = _board.UnitAt(cell);
-        if (_selected != null && _board.IsStartCell(cell) && atCell != _selected)
+        // Seules les cases rouges libres comptent : pas question de bouger le champion d'un autre joueur
+        if (!_board.IsStartCell(cell) || _board.UnitAt(cell) != null) return;
+
+        if (_board.TryMove(Current, cell))
         {
-            MoveSelectedTo(cell);
+            Current.TeleportTo(cell);
+            GameLog.Log($"Placement : {Current.name} -> {cell}");
+            Refresh();
         }
-        else if (atCell != null)
-        {
-            _selected = atCell;
-        }
-        Refresh();
     }
 
-    private void MoveSelectedTo(Vector2Int cell)
+    /// <summary>Joueur suivant, ou lancement du combat après le dernier.</summary>
+    private void OnButtonClicked()
     {
-        _board.TryGetPosition(_selected, out Vector2Int from);
-        if (!_board.TryMove(_selected, cell, out Champion swapped)) return;
+        if (!IsActive) return;
 
-        _selected.TeleportTo(cell);
-        if (swapped != null) swapped.TeleportTo(from);
-        GameLog.Log($"Placement : {_selected.name} -> {cell}{(swapped != null ? $", échange avec {swapped.name}" : "")}");
-        _selected = null;
+        if (_currentIndex < _champions.Count - 1)
+        {
+            _currentIndex++;
+            Refresh();
+        }
+        else
+        {
+            End();
+        }
     }
 
     private bool TryGetClickedCell(out Vector2Int cell)
@@ -116,31 +122,35 @@ public class PlacementPhase : MonoBehaviour
         EventBus.Publish(new ResetTileColorsEvent());
         foreach (Vector2Int cell in _board.StartCells)
         {
-            bool isSelected = _selected != null && _board.UnitAt(cell) == _selected;
-            Services.Grid.HighlightTile(cell, isSelected ? _selectedCellColor : _startCellColor);
+            bool isCurrent = _board.UnitAt(cell) == Current;
+            Services.Grid.HighlightTile(cell, isCurrent ? _selectedCellColor : _startCellColor);
         }
 
-        if (_instructionText == null) return;
-        if (_selected == null)
-        {
-            _instructionText.text = "Placement : clique un champion, puis une case rouge.";
-        }
-        else
-        {
-            int player = _champions.IndexOf(_selected) + 1;
-            _instructionText.text = $"Joueur {player} – {_selected.championData.championName} : choisis une case rouge.";
-        }
+        if (_instructionText != null)
+            _instructionText.text = $"Joueur {_currentIndex + 1} – {Current.championData.championName} : clique une case rouge pour te placer.";
+
+        TextMeshProUGUI label = _launchButton != null ? _launchButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+        if (label != null)
+            label.text = _currentIndex < _champions.Count - 1 ? _nextPlayerLabel : _launchLabel;
     }
 
     private void End()
     {
-        if (!IsActive) return;
-
         _board = null;
-        _selected = null;
         if (_panel != null) _panel.SetActive(false);
         EventBus.Publish(new ResetTileColorsEvent());
+        // Réafficher l'interface de combat avant le premier tour, pour qu'elle reçoive son TurnChangedEvent
+        SetCombatUIVisible(true);
         GameLog.Log("Fin du placement : début du combat.");
         _onDone?.Invoke();
+    }
+
+    private void SetCombatUIVisible(bool visible)
+    {
+        if (_combatOnlyUI == null) return;
+        foreach (GameObject ui in _combatOnlyUI)
+        {
+            if (ui != null) ui.SetActive(visible);
+        }
     }
 }

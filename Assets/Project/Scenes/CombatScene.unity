@@ -166,6 +166,15 @@ MonoBehaviour:
   _panel: {fileID: 527879725}
   _instructionText: {fileID: 2114994614}
   _launchButton: {fileID: 1210911578}
+  _nextPlayerLabel: Joueur suivant
+  _launchLabel: Lancer le combat
+  _combatOnlyUI:
+  - {fileID: 1273965760}
+  - {fileID: 208480651}
+  - {fileID: 992870903}
+  - {fileID: 317032985}
+  - {fileID: 1975365049}
+  - {fileID: 1628007309}
   _startCellColor: {r: 0.85, g: 0.25, b: 0.25, a: 1}
   _selectedCellColor: {r: 0.95, g: 0.8, b: 0.2, a: 1}
 --- !u!1 &102044332
@@ -1071,7 +1080,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TargetingCurve
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   _curveThickness: 10
   _curveSegments: 50
@@ -4776,7 +4785,7 @@ MonoBehaviour:
   _criticalDamageThreshold: 15
   _echoLungeDuration: 0.12
   _echoLungeRatio: 0.4
-  _echoNumberExtraOffset: {x: 0.6, y: 0.5, z: 0}
+  _echoNumberExtraOffset: {x: 0, y: 0.5, z: 0}
 --- !u!4 &1866151102
 Transform:
   m_ObjectHideFlags: 0

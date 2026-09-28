@@ -5,14 +5,14 @@ using System.Collections.Generic;
 /// - un champion peut jouer toutes les émotions, mais chaque deck a ses couleurs (1 ou 2, choisies à
 ///   sa création) et ne contient que des cartes de ces couleurs, plus les Signatures du champion ;
 /// - les Signatures d'un autre champion sont interdites ; celles du champion sont obligatoires ;
-/// - 4 exemplaires maximum d'une même carte, 1 seul pour une Signature ;
+/// - 4 exemplaires maximum d'une même carte, 2 pour une Signature (décision du 28/09/2026) ;
 /// - emplacements par catégorie : DeckData.SIGNATURE_SLOTS et DeckData.STANDARD_SLOTS.
 /// C# pur : testable en EditMode.
 /// </summary>
 public static class DeckRules
 {
     public const int MAX_COPIES = 4;
-    public const int MAX_SIGNATURE_COPIES = 1;
+    public const int MAX_SIGNATURE_COPIES = 2;
 
     /// <summary>
     /// Émotions qu'on peut choisir comme couleurs d'un deck : celles du lancement (MVP). Les 5 autres
@@ -51,6 +51,9 @@ public static class DeckRules
     public static bool MatchesColors(CardData card, ICollection<EmotionType> deckColors) =>
         card != null && (card.category == CardCategory.Signature || deckColors == null || deckColors.Count == 0
                          || deckColors.Contains(card.emotionType));
+
+    /// <summary>Un deck n'est jouable que complet : au moins DeckData.TOTAL_SLOTS cartes.</summary>
+    public static bool IsComplete(int cardCount) => cardCount >= DeckData.TOTAL_SLOTS;
 
     public static int MaxCopies(CardData card) =>
         card != null && card.category == CardCategory.Signature ? MAX_SIGNATURE_COPIES : MAX_COPIES;
@@ -107,7 +110,10 @@ public static class DeckRules
         return ValidationResult.Success();
     }
 
-    /// <summary>Signatures du champion (dans l'ensemble de cartes fourni) absentes du deck.</summary>
+    /// <summary>
+    /// Exemplaires de Signatures du champion (dans l'ensemble de cartes fourni) qui manquent au deck :
+    /// une entrée par exemplaire manquant, jusqu'à MAX_SIGNATURE_COPIES chacune.
+    /// </summary>
     public static List<CardData> MissingSignatures(IList<CardData> deck, ChampionData champion, IEnumerable<CardData> allCards)
     {
         var missing = new List<CardData>();
@@ -117,12 +123,12 @@ public static class DeckRules
         {
             if (!IsOwnSignature(card, champion)) continue;
 
-            bool present = false;
+            int copies = 0;
             if (deck != null)
                 foreach (var c in deck)
-                    if (c != null && c.cardName == card.cardName) { present = true; break; }
+                    if (c != null && c.cardName == card.cardName) copies++;
 
-            if (!present) missing.Add(card);
+            for (int i = copies; i < MAX_SIGNATURE_COPIES; i++) missing.Add(card);
         }
         return missing;
     }

@@ -43,6 +43,7 @@ public class RazeUnit : Champion, IComboTracker
             {
                 _hasBluffShield = true;
                 GameLog.Log($"[Main gagnante] Bluff ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {name} réduit les prochains dégâts subis de {_bluffDamageReduction:P0} jusqu'à son prochain tour.");
+                EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.DamageTakenPercent, -Mathf.RoundToInt(_bluffDamageReduction * 100)));
             }
             else if (isSuite)
             {

@@ -209,7 +209,7 @@ public class UISetupWizard : EditorWindow
         colorsTMP.textWrappingMode = TextWrappingModes.NoWrap;
         SetAnchors(colorsTMP.gameObject, new Vector2(0, 1), new Vector2(1, 1), new Vector2(16, -78), new Vector2(-16, -52));
 
-        TextMeshProUGUI countTMP = AddText(root, "CardCountText", "18 cartes", 14, FontStyles.Normal, TextAlignmentOptions.Left, CodexCardVisual.InkDim);
+        TextMeshProUGUI countTMP = AddText(root, "CardCountText", "20 cartes", 14, FontStyles.Normal, TextAlignmentOptions.Left, CodexCardVisual.InkDim);
         SetAnchors(countTMP.gameObject, new Vector2(0, 0), new Vector2(1, 0), new Vector2(16, 10), new Vector2(-16, 34));
 
         // Assigner les references au script

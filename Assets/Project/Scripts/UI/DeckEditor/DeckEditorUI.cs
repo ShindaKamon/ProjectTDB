@@ -46,7 +46,7 @@ public class DeckEditorUI : MonoBehaviour
     [SerializeField] private Button _duplicateButton; // toujours visible
 
     [Header("Configuration")]
-    // Total de slots affichés = 2 Signature + 16 Standard (voir DeckData.TOTAL_SLOTS).
+    // Total de slots affichés = 4 Signature + 16 Standard (voir DeckData.TOTAL_SLOTS).
     // Les limites par catégorie sont appliquées dans OnPoolCardClicked.
     [SerializeField] private int _deckSize = DeckData.TOTAL_SLOTS;
     [SerializeField] private float _autosaveDebounceSeconds = 0.4f;

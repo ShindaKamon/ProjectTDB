@@ -113,7 +113,8 @@ public static class CardRulesText
         };
         if (who == "" || card.targetType == CardTargetType.Self) return who;
         if (card.isChargeCard) return who + " en ligne droite";
-        return who + " · " + (CodexCardVisual.Range(card) <= 1 ? "au contact" : "portée 1-" + CodexCardVisual.Range(card));
+        return who + (card.targetInStraightLine ? " en ligne droite" : "") + " · "
+            + (CodexCardVisual.Range(card) <= 1 ? "au contact" : "portée 1-" + CodexCardVisual.Range(card));
     }
 
     static string ZoneText(CardData card)

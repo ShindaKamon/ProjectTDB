@@ -50,8 +50,8 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 
 ## Deckbuilding
 
-- **24 cartes** : **2 Signature + 6 Éveil + 16 Standard** (code actuel : 18 cartes, 2 Signature + 16 Standard, les slots Éveil ne sont pas encore implémentés)
-- Deck : **1 ou 2 couleurs** choisies à sa création (cartes de ces couleurs uniquement ; un champion peut choisir n'importe lesquelles) ; **4 exemplaires max** par carte ; les **2 Signatures du champion obligatoires** (1 exemplaire chacune)
+- **24 cartes** : **2 Signature + 6 Éveil + 16 Standard** (code actuel : 20 cartes, 4 Signature + 16 Standard, les slots Éveil ne sont pas encore implémentés ; depuis le 28/09 les Signatures sont en 2 exemplaires, le format cible est à recompter)
+- Deck : **1 ou 2 couleurs** choisies à sa création (cartes de ces couleurs uniquement ; un champion peut choisir n'importe lesquelles) ; **4 exemplaires max** par carte ; les **2 Signatures du champion obligatoires** (2 exemplaires chacune)
 - Plusieurs decks par champion, plusieurs champions par compte
 - Le **niveau** du champion débloque des **slots de cartes**, mais n'augmente jamais la puissance des cartes (voir `Progression.md`)
 - Suivi de la composition : onglet « Suivi de deck » de l'Excel

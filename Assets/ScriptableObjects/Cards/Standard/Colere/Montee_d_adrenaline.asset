@@ -22,7 +22,8 @@ MonoBehaviour:
   costPA: 2
   costHP: 0
   targetType: 1
-  targetRange: 1
+  targetRange: 0
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -35,7 +36,7 @@ MonoBehaviour:
   lifestealFixedAmount: 0
   damageAroundTarget: 0
   nextAttackBonus: 23
-  defenseAmount: 0
+  shieldAmount: 0
   reactiveShield: 0
   armorAmount: 0
   magicResistanceAmount: 0
@@ -44,6 +45,7 @@ MonoBehaviour:
   pmReduction: 0
   removeAllMovement: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
   casterRetreat: 0

@@ -86,6 +86,7 @@ public abstract class Champion : Unit, IActionPointsUser
             return;
         }
         _actionPointsComponent.AddPA(amount);
+        if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
     }
 
     // Surcharge pour définir la faction automatiquement

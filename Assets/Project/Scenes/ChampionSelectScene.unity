@@ -18332,7 +18332,7 @@ MonoBehaviour:
   _paCurve: {fileID: 198641093}
   _resetButton: {fileID: 503593880}
   _duplicateButton: {fileID: 1677506537}
-  _deckSize: 18
+  _deckSize: 20
   _autosaveDebounceSeconds: 0.4
 --- !u!1 &1917832192
 GameObject:

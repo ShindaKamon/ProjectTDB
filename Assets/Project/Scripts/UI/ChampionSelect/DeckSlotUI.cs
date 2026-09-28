@@ -91,7 +91,14 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         if (_cardCountText != null)
         {
             int count = _deckData.cardNames.Count;
-            _cardCountText.text = $"{count} carte{(count > 1 ? "s" : "")}";
+            string countText = $"{count} carte{(count > 1 ? "s" : "")}";
+            // Deck incomplet : non jouable, le compteur l'indique en orange (« 17/20 cartes »)
+            if (!DeckRules.IsComplete(count))
+            {
+                string warnHex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Warn));
+                countText = $"<color=#{warnHex}>{count}/{DeckData.TOTAL_SLOTS} cartes</color>";
+            }
+            _cardCountText.text = countText;
         }
 
         if (_colorsText != null)

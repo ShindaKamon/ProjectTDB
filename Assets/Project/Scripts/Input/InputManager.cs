@@ -41,6 +41,42 @@ public class InputManager : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Objet pointé par la souris, choisi par case : le rayon traverse les unités, qui ne masquent
+    /// donc jamais la case derrière elles. Renvoie l'unité posée sur la case visée s'il y en a une,
+    /// sinon la case ; false si aucune case n'est sous le curseur.
+    /// </summary>
+    private static bool TryGetPointedObject(out GameObject pointed)
+    {
+        pointed = null;
+        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+        Tile closestTile = null;
+        float closestDistance = float.MaxValue;
+        foreach (RaycastHit hit in Physics.RaycastAll(ray, 1000f))
+        {
+            if (hit.distance < closestDistance && hit.collider.TryGetComponentSafe(out Tile tile))
+            {
+                closestDistance = hit.distance;
+                closestTile = tile;
+            }
+        }
+        if (closestTile == null) return false;
+
+        Unit unitOnTile = Services.Grid.GetUnitAtGridPos(Services.Grid.GetGridPosFromWorldPos(closestTile.transform.position));
+        pointed = unitOnTile != null ? unitOnTile.gameObject : closestTile.gameObject;
+        return true;
+    }
+
+    private static bool TryGetUnitGridPosition(GameObject gameObject, out Vector2Int gridPos)
+    {
+        gridPos = Vector2Int.zero;
+        if (!gameObject.TryGetComponentSafe(out Unit unit)) return false;
+
+        gridPos = unit.GetCurrentGridPos();
+        return true;
+    }
+
     void Update()
     {
         // Phase 3.5: Utilise Services.Grid au lieu de Services.Grid
@@ -84,12 +120,8 @@ public class InputManager : MonoBehaviour
         // Preview hover pour les cartes avec cibles (AOE ou non)
         else if (currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile))
         {
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit, 1000f))
+            if (TryGetPointedObject(out GameObject hoveredObject))
             {
-                GameObject hoveredObject = hit.collider.gameObject;
                 Vector2Int hoveredPos = Vector2Int.zero;
                 bool isValidHoverTarget = false;
 
@@ -124,15 +156,18 @@ public class InputManager : MonoBehaviour
                         List<Tile> tilesInRange = Services.Grid.GetAttackTiles(sourcePos, currentSelectedCard.targetRange, activeUnit);
                         Tile targetTile = Services.Grid.GetTileAtPosition(targetPos);
 
+                        bool inLine = !currentSelectedCard.targetInStraightLine || GridGeometry.TryGetLine(sourcePos, targetPos, out _, out _);
+
                         // On survole une unité, elle est dans la portée ET c'est une cible valide
-                        if (tilesInRange.Contains(targetTile) && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
+                        if (tilesInRange.Contains(targetTile) && inLine && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
                         {
                             hoveredPos = hoveredUnit.GetCurrentGridPos();
                             isValidHoverTarget = true;
                         }
                     }
                 }
-                else if (TryGetGridPosition(hoveredObject, out hoveredPos))
+                // Une unité survolée par une carte qui cible une case compte comme sa case (ex: EnemyOrTile)
+                else if (TryGetGridPosition(hoveredObject, out hoveredPos) || TryGetUnitGridPosition(hoveredObject, out hoveredPos))
                 {
                     // Vérifie si on survole une tuile valide
                     Tile hoveredTile = Services.Grid.GetTileAtPosition(hoveredPos);
@@ -145,8 +180,14 @@ public class InputManager : MonoBehaviour
                     bool isValidTarget = currentSelectedCard.isChargeCard
                         ? currentSelectedCard.IsValidChargeTarget(hoveredTile, activeUnit)
                         : currentSelectedCard.IsValidTileTarget(hoveredTile);
+                    bool inLine = !currentSelectedCard.targetInStraightLine || GridGeometry.TryGetLine(sourcePos, hoveredPos, out _, out _);
 
-                    if (currentSelectedCard.targetsTile && tilesInRange.Contains(hoveredTile) && isValidTarget)
+                    // Carte d'invocation alors que l'invocation est déjà là : seule sa case est valide (soin)
+                    bool isValidTile = GameActionValidator.HealsActiveSummon(currentSelectedCard, activeUnit)
+                        ? GameActionValidator.CanTargetTile(currentSelectedCard, activeUnit, hoveredPos).IsValid
+                        : currentSelectedCard.targetsTile && tilesInRange.Contains(hoveredTile) && inLine && isValidTarget;
+
+                    if (isValidTile)
                     {
                         isValidHoverTarget = true;
                     }
@@ -225,13 +266,9 @@ public class InputManager : MonoBehaviour
             }
 
             // Si le pointeur n'est PAS sur l'UI, alors c'est une interaction avec le monde
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit, 1000f))
+            if (TryGetPointedObject(out GameObject clickedObject))
             {
-                GameObject clickedObject = hit.collider.gameObject;
-                
+
                 // Si une carte est sélectionnée, tenter de la jouer sur l'objet monde
                 if (_handUIController != null && _handUIController.SelectedCard != null)
                 {
@@ -269,10 +306,8 @@ public class InputManager : MonoBehaviour
         bool isValid = false;
         Vector2Int hoveredPos = new Vector2Int(-1, -1);
 
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
+        if (TryGetPointedObject(out GameObject hovered))
         {
-            GameObject hovered = hit.collider.gameObject;
             hovered.TryGetComponentSafe(out Unit hoveredUnit);
 
             if (hoveredUnit != null)
@@ -309,12 +344,8 @@ public class InputManager : MonoBehaviour
 
     private void HandleMovementHover(Unit activeUnit)
     {
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, 1000f))
+        if (TryGetPointedObject(out GameObject hoveredObject))
         {
-            GameObject hoveredObject = hit.collider.gameObject;
             Vector2Int hoveredPos = Vector2Int.zero;
             bool isValidHover = false;
 
@@ -381,8 +412,9 @@ public class InputManager : MonoBehaviour
         // Détermine la position cible
         if (targetUnit != null)
         {
-            // Si on clique sur une unité, utilise sa position
+            // Si on clique sur une unité, utilise sa position (et sa case, pour les cartes qui ciblent une case)
             targetTilePos = targetUnit.GetCurrentGridPos();
+            targetTile = Services.Grid.GetTileAtPosition(targetTilePos);
         }
         else if (TryGetGridPosition(clickedObject, out targetTilePos))
         {
@@ -457,6 +489,17 @@ public class InputManager : MonoBehaviour
             StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, default));
             return; // La coroutine gère la suite
         }
+        // Cas spécial : carte d'invocation alors que l'invocation est déjà là (ex: Invocation de
+        // Lyse) : cliquer l'invocation la soigne, tout autre clic annule
+        if (GameActionValidator.HealsActiveSummon(selectedCard, activeUnit))
+        {
+            if (GameActionValidator.CanTargetTile(selectedCard, activeUnit, targetTilePos).IsValid)
+                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, targetTilePos));
+            else
+                _handUIController.DeselectCard();
+            return;
+        }
+
         // Cas spécial : Carte de charge ciblant un ennemi directement (doit être traité AVANT la vérification de portée classique)
         if (selectedCard.isChargeCard && targetUnit != null && targetUnit.GetFaction() != activeUnit.GetFaction())
         {

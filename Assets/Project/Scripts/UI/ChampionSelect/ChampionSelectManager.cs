@@ -23,9 +23,9 @@ public class ChampionSelectManager : MonoBehaviour
     [SerializeField] private Button _startButton;
     [SerializeField] private Button _chooseChampionButton;
 
-    [Header("Avertissement deck incomplet")]
+    [Header("Deck incomplet")]
     [Tooltip("Liseré affiché sur le bouton Lancer le combat quand le deck actif a moins de " +
-             "DeckData.TOTAL_SLOTS cartes. Le combat reste lançable : ceci est un simple avertissement.")]
+             "DeckData.TOTAL_SLOTS cartes ; le bouton est alors grisé et indique le nombre de cartes.")]
     [SerializeField] private Outline _startButtonWarningOutline;
     [SerializeField] private Color _startButtonWarningColor = new Color(1f, 0.55f, 0f); // Orange
 
@@ -45,6 +45,10 @@ public class ChampionSelectManager : MonoBehaviour
     [SerializeField] private string _mainMenuSceneName = "MainMenuScene";
     [Tooltip("Libellé du bouton de l'écran Choix du deck en multijoueur (il inscrit le joueur au lieu de lancer le combat).")]
     [SerializeField] private string _confirmPlayerLabel = "Valider le joueur";
+
+    // Libellé du bouton de lancement, remplacé par le nombre de cartes tant que le deck est incomplet
+    private TextMeshProUGUI _startLabel;
+    private string _startLabelText;
 
     private ChampionData _currentSelectedChampion;
     private Button _selectedChampionButton;
@@ -79,11 +83,9 @@ public class ChampionSelectManager : MonoBehaviour
         if (_backFromChampionSelectButton != null)
             _backFromChampionSelectButton.onClick.AddListener(BackFromChampionSelect);
 
-        if (CombatParty.IsMultiplayer)
-        {
-            TextMeshProUGUI startLabel = _startButton != null ? _startButton.GetComponentInChildren<TextMeshProUGUI>() : null;
-            if (startLabel != null) startLabel.text = _confirmPlayerLabel;
-        }
+        _startLabel = _startButton != null ? _startButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+        if (CombatParty.IsMultiplayer && _startLabel != null) _startLabel.text = _confirmPlayerLabel;
+        _startLabelText = _startLabel != null ? _startLabel.text : "";
 
         if (_lobby != null)
         {
@@ -241,11 +243,8 @@ public class ChampionSelectManager : MonoBehaviour
         if (_deckListUI != null)
             _deckListUI.ShowDecksForChampion(_currentSelectedChampion);
 
-        // Mettre à jour le deck sélectionné
+        // Mettre à jour le deck sélectionné (active le bouton de lancement si le deck est complet)
         UpdateSelectedDeck();
-
-        if (_startButton != null)
-            _startButton.interactable = true;
 
         if (_flowController != null)
             _flowController.ShowScreen(ChampionSelectFlowController.Screen.DeckSelect);
@@ -291,7 +290,7 @@ public class ChampionSelectManager : MonoBehaviour
     private void OnDeckSelected(List<CardData> deckCards)
     {
         _selectedDeck = deckCards;
-        UpdateStartButtonWarning(deckCards?.Count ?? 0);
+        UpdateStartButtonState(deckCards?.Count ?? 0);
         GameLog.Log($"Deck sélectionné avec {deckCards.Count} cartes.");
     }
 
@@ -307,17 +306,26 @@ public class ChampionSelectManager : MonoBehaviour
             _selectedDeck = new List<CardData>(_currentSelectedChampion.startingDeck);
         }
 
-        UpdateStartButtonWarning(_selectedDeck?.Count ?? 0);
+        UpdateStartButtonState(_selectedDeck?.Count ?? 0);
     }
 
     /// <summary>
-    /// Decision design : un deck incomplet (moins de DeckData.TOTAL_SLOTS cartes) reste
-    /// lançable, on affiche seulement un avertissement visuel sur le bouton de lancement.
+    /// Décision du 28/09/2026 : un deck incomplet (moins de DeckData.TOTAL_SLOTS cartes) ne peut
+    /// pas être choisi pour le combat. Le bouton est grisé, entouré du liseré orange, et son
+    /// libellé indique combien de cartes il manque.
     /// </summary>
-    private void UpdateStartButtonWarning(int cardCount)
+    private void UpdateStartButtonState(int cardCount)
     {
-        if (_startButtonWarningOutline == null) return;
-        _startButtonWarningOutline.enabled = cardCount < DeckData.TOTAL_SLOTS;
+        bool complete = DeckRules.IsComplete(cardCount);
+
+        if (_startButton != null)
+            _startButton.interactable = _selectedChampion != null && complete;
+
+        if (_startButtonWarningOutline != null)
+            _startButtonWarningOutline.enabled = !complete;
+
+        if (_startLabel != null)
+            _startLabel.text = complete ? _startLabelText : $"Deck incomplet : {cardCount}/{DeckData.TOTAL_SLOTS} cartes";
     }
 
     /// <summary>
@@ -336,6 +344,12 @@ public class ChampionSelectManager : MonoBehaviour
         if (_selectedDeck == null || _selectedDeck.Count == 0)
         {
             UpdateSelectedDeck();
+        }
+
+        if (!DeckRules.IsComplete(_selectedDeck?.Count ?? 0))
+        {
+            GameLog.LogWarning($"Deck incomplet ({_selectedDeck?.Count ?? 0}/{DeckData.TOTAL_SLOTS} cartes) : combat refusé.");
+            return;
         }
 
         if (CombatParty.IsMultiplayer)

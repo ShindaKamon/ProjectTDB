@@ -244,12 +244,14 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         if (_currentPlayer != null)
         {
             _currentPlayer.OnHealthChanged -= OnPlayerHealthChanged;
+            _currentPlayer.OnShieldChanged -= OnPlayerShieldChanged;
         }
 
         _currentPlayer = player;
 
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
+        _currentPlayer.OnShieldChanged += OnPlayerShieldChanged;
 
         // Mise à jour initiale
         UpdatePlayerOrbUI();
@@ -258,18 +260,20 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
 
     private void OnPlayerHealthChanged(int current, int max) => UpdatePlayerOrbUI();
 
+    private void OnPlayerShieldChanged(int shield) => UpdatePlayerOrbUI();
+
     private void UpdatePlayerOrbUI()
     {
         if (_currentPlayer == null) return;
 
-        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), _defaultOrbColor);
+        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), _defaultOrbColor, _currentPlayer.GetShield());
     }
 
-    private void UpdatePlayerOrb(float currentHP, float maxHP, Color emotionColor)
+    private void UpdatePlayerOrb(float currentHP, float maxHP, Color emotionColor, float shield)
     {
         if (_playerHealthOrb != null)
         {
-            _playerHealthOrb.UpdateHealth(currentHP, maxHP, emotionColor);
+            _playerHealthOrb.UpdateHealth(currentHP, maxHP, emotionColor, shield);
         }
     }
 }

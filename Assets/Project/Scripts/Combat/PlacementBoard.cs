@@ -3,8 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Règles de la phase de placement (façon Dofus), en C# pur : des cases de départ, au plus une
-/// unité par case ; une unité peut aller sur une case de départ libre ou échanger sa place avec
-/// l'unité qui occupe la case visée.
+/// unité par case ; une unité ne peut aller que sur une case de départ libre.
 /// </summary>
 public class PlacementBoard<T> where T : class
 {
@@ -45,24 +44,17 @@ public class PlacementBoard<T> where T : class
     }
 
     /// <summary>
-    /// Déplace une unité posée vers une case de départ. Case libre : simple déplacement ;
-    /// case occupée par une autre unité : échange (swappedWith = cette unité). Refusé hors des
-    /// cases de départ ou pour une unité non posée.
+    /// Déplace une unité posée vers une case de départ libre. Refusé hors des cases de départ,
+    /// sur une case occupée par une autre unité, ou pour une unité non posée.
     /// </summary>
-    public bool TryMove(T unit, Vector2Int target, out T swappedWith)
+    public bool TryMove(T unit, Vector2Int target)
     {
-        swappedWith = null;
         if (unit == null || !_positions.TryGetValue(unit, out Vector2Int from) || !IsStartCell(target))
             return false;
 
         if (from == target) return true;
+        if (UnitAt(target) != null) return false;
 
-        T occupant = UnitAt(target);
-        if (occupant != null)
-        {
-            _positions[occupant] = from;
-            swappedWith = occupant;
-        }
         _positions[unit] = target;
         return true;
     }

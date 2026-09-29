@@ -37,6 +37,9 @@ public class PlacementPhase : MonoBehaviour
 
     public bool IsActive => _board != null;
 
+    /// <summary>Place dans CombatParty du joueur qui se place.</summary>
+    public int CurrentIndex => IsActive ? CombatParty.IndexOf(Current.championData) : -1;
+
     // Champion du joueur qui se place
     private Champion Current => _champions[_currentIndex];
 
@@ -71,6 +74,15 @@ public class PlacementPhase : MonoBehaviour
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
         if (!TryGetClickedCell(out Vector2Int cell)) return;
 
+        // Action du joueur : passe par les commandes (voir CombatCommandExecutor)
+        Services.Commands?.Submit(CombatCommand.PlacementMove(CurrentIndex, cell));
+    }
+
+    /// <summary>Place le champion courant sur une case rouge libre (commande PlacementMove).</summary>
+    public void TryPlaceCurrent(Vector2Int cell)
+    {
+        if (!IsActive) return;
+
         // Seules les cases rouges libres comptent : pas question de bouger le champion d'un autre joueur
         if (!_board.IsStartCell(cell) || _board.UnitAt(cell) != null) return;
 
@@ -82,8 +94,13 @@ public class PlacementPhase : MonoBehaviour
         }
     }
 
-    /// <summary>Joueur suivant, ou lancement du combat après le dernier.</summary>
     private void OnButtonClicked()
+    {
+        if (IsActive) Services.Commands?.Submit(CombatCommand.PlacementNext(CurrentIndex));
+    }
+
+    /// <summary>Joueur suivant, ou lancement du combat après le dernier (commande PlacementNext).</summary>
+    public void Advance()
     {
         if (!IsActive) return;
 

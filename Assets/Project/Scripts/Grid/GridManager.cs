@@ -24,6 +24,7 @@ public class GridManager : MonoBehaviour, IGridService
     };
     [Tooltip("Phase de placement avant le premier tour (vide = le combat démarre directement)")]
     [SerializeField] private PlacementPhase _placementPhase;
+    private CombatCommandExecutor _commands;
 
     [Header("=== Couleurs Portées ===")]
     [SerializeField] private Color _moveColor = Color.blue;
@@ -74,6 +75,10 @@ public class GridManager : MonoBehaviour, IGridService
         ServiceLocator.Instance.Register<IGridService>(this);
         GameLog.Log("GridManager: Enregistré dans ServiceLocator comme IGridService");
 
+        // Actions des joueurs (déplacement, cartes, fin de tour, placement) : voir CombatCommandExecutor
+        _commands = gameObject.AddComponent<CombatCommandExecutor>();
+        _commands.Init(this, _placementPhase);
+
         // S'abonne aux événements de l'EventBus
         EventBus.Subscribe<TurnEndRequestedEvent>(OnTurnEndRequested);
         EventBus.Subscribe<ShowMovementRangeEvent>(OnShowMovementRange);
@@ -107,7 +112,7 @@ public class GridManager : MonoBehaviour, IGridService
     private void OnTurnEndRequested(TurnEndRequestedEvent e)
     {
         GameLog.Log($"[EventBus] Fin de tour demandée par {e.RequestingUnit?.name ?? "Inconnu"}");
-        OnEndTurnButtonClick();
+        EndActiveTurn();
     }
 
     /// <summary>
@@ -202,6 +207,14 @@ public class GridManager : MonoBehaviour, IGridService
         // 2. Trouve toutes les autres unités (ennemis) déjà présentes dans la scène
         // et les ajoute à la liste, en s'assurant de les initialiser si elles ne l'ont pas été.
         Unit[] existingUnitsInScene = FindObjectsByType<Unit>(FindObjectsSortMode.None);
+        // Ordre fixe (par position dans la scène) : c'est l'ordre des tours des monstres, qui doit
+        // être le même sur tous les PC en réseau
+        System.Array.Sort(existingUnitsInScene, (a, b) =>
+        {
+            Vector3 pa = a.transform.position, pb = b.transform.position;
+            int byX = pa.x.CompareTo(pb.x);
+            return byX != 0 ? byX : pa.z.CompareTo(pb.z);
+        });
         foreach (Unit unit in existingUnitsInScene)
         {
             if (!_units.Contains(unit)) // Évite d'ajouter le joueur si déjà instancié
@@ -493,7 +506,19 @@ public class GridManager : MonoBehaviour, IGridService
         EventBus.Publish(new BattleEndedEvent(result));
     }
 
+    /// <summary>
+    /// Bouton « Fin de tour » : action du joueur, qui passe par les commandes (voir CombatCommandExecutor)
+    /// </summary>
     public void OnEndTurnButtonClick()
+    {
+        int actor = _commands != null ? _commands.ActiveActor : -1;
+        if (actor >= 0 && _activeUnit != null) _commands.Submit(CombatCommand.EndTurn(actor));
+    }
+
+    /// <summary>
+    /// Termine le tour de l'unité active : commande Fin de tour, fin du tour d'un monstre, mort de l'unité active
+    /// </summary>
+    public void EndActiveTurn()
     {
         // Phase de placement : pas encore d'unité active, rien à terminer ; combat fini : plus de tour
         if (_activeUnit == null || _turnStateMachine.IsBattleOver()) return;
@@ -546,7 +571,7 @@ public class GridManager : MonoBehaviour, IGridService
             else
             {
                 Debug.LogError($"{unit.name} n'a pas de composant EnemyAI !");
-                OnEndTurnButtonClick();
+                EndActiveTurn();
             }
         }
     }
@@ -579,7 +604,7 @@ public class GridManager : MonoBehaviour, IGridService
         if (_activeUnit == diedUnit)
         {
             GameLog.Log("L'unité active est morte. Passage au tour suivant.");
-            OnEndTurnButtonClick();
+            EndActiveTurn();
         }
         else
         {

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems; // Ajouté pour EventSystem
@@ -502,8 +501,8 @@ public class InputManager : MonoBehaviour
             // Vérifie qu'on a cliqué sur l'unité active (le joueur)
             if (targetUnit != null && targetUnit == activeUnit)
             {
-                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, activeUnit, default));
-                return; // La coroutine gère la suite
+                _handUIController.PlaySelectedCard(activeUnit, default);
+                return;
             }
             else
             {
@@ -516,15 +515,15 @@ public class InputManager : MonoBehaviour
         else if (!selectedCard.targetsUnit && !selectedCard.targetsTile)
         {
             // Pour les cartes sans cible, on peut cliquer n'importe où
-            StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, default));
-            return; // La coroutine gère la suite
+            _handUIController.PlaySelectedCard(null, default);
+            return;
         }
         // Cas spécial : carte d'invocation alors que l'invocation est déjà là (ex: Invocation de
         // Lyse) : cliquer l'invocation la soigne, tout autre clic annule
         if (GameActionValidator.HealsActiveSummon(selectedCard, activeUnit))
         {
             if (GameActionValidator.CanTargetTile(selectedCard, activeUnit, targetTilePos).IsValid)
-                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, targetTilePos));
+                _handUIController.PlaySelectedCard(null, targetTilePos);
             else
                 _handUIController.DeselectCard();
             return;
@@ -556,7 +555,7 @@ public class InputManager : MonoBehaviour
 
             GameLog.Log($"Charge valide sur ennemi : {targetUnit.name} à distance {lineDistance}");
             // Joue la carte avec la position de l'ennemi comme cible
-            StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, enemyPos));
+            _handUIController.PlaySelectedCard(targetUnit, enemyPos);
             return;
         }
 
@@ -581,8 +580,8 @@ public class InputManager : MonoBehaviour
             // Vérifie que l'unité est une cible valide selon le type de carte
             if (selectedCard.IsValidTarget(activeUnit, targetUnit))
             {
-                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, targetUnit, targetTilePos));
-                return; // La coroutine gère la suite
+                _handUIController.PlaySelectedCard(targetUnit, targetTilePos);
+                return;
             }
         }
         
@@ -597,15 +596,15 @@ public class InputManager : MonoBehaviour
 
             if (isValidTarget)
             {
-                StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, targetTilePos));
-                return; // La coroutine gère la suite
+                _handUIController.PlaySelectedCard(null, targetTilePos);
+                return;
             }
         }
         else if (!selectedCard.targetsUnit && !selectedCard.targetsTile)
         {
             // Carte sans cible, joue immédiatement
-            StartCoroutine(PlayCardSequence(selectedCard, activeUnit, null, default));
-            return; // La coroutine gère la suite
+            _handUIController.PlaySelectedCard(null, default);
+            return;
         }
 
         // Si on arrive ici, c'est que la cible était invalide ou hors de portée
@@ -628,100 +627,16 @@ public class InputManager : MonoBehaviour
         }
         else if (TryGetGridPosition(clickedObject, out Vector2Int targetGridPos))
         {
-            // DÉPLACEMENT - Vérifie si l'unité a encore des points de mouvement
             if (availablePoints <= 0)
             {
                 GameLog.LogWarning($"{activeUnit.name} n'a plus de PM ! (PM: {availablePoints})");
                 return;
             }
 
-            // Récupère les tuiles atteignables
-            Dictionary<Tile, int> reachableTilesWithCost = Services.Grid.GetMovementTiles(
-                activeUnit.GetCurrentGridPos(),
-                availablePoints,
-                activeUnit
-            );
-
-            Tile targetTile = Services.Grid.GetTileAtPosition(targetGridPos);
-
-            if (targetTile == null || !reachableTilesWithCost.ContainsKey(targetTile))
-            {
-                GameLog.LogWarning($"La tuile {targetGridPos} n'est pas atteignable.");
-                return;
-            }
-
-            // Calcule le chemin
-            List<Tile> pathToTarget = Services.Grid.GetPathToTile(
-                activeUnit.GetCurrentGridPos(),
-                targetGridPos,
-                availablePoints,
-                activeUnit
-            );
-
-            if (pathToTarget == null || pathToTarget.Count == 0)
-            {
-                GameLog.LogWarning($"Aucun chemin valide vers {targetGridPos}");
-                return;
-            }
-
-            int movementCost = pathToTarget.Count;
-            if (availablePoints < movementCost)
-            {
-                GameLog.LogWarning($"{activeUnit.name} n'a pas assez de points ({availablePoints}) pour {targetGridPos} (coût {movementCost})");
-                return;
-            }
-
-            // Exécute le déplacement
-            GameLog.Log($"{activeUnit.name} se déplace vers {targetGridPos} (coût: {movementCost})");
-            EventBus.Publish(new ResetTileColorsEvent());
-            activeUnit.MoveToTile(pathToTarget);
-            activeUnit.SpendMovement(movementCost);
-            GameLog.Log($"PM dépensés : {movementCost}. Restant : {activeUnit.GetCurrentMovementPoints()}/{activeUnit.GetMaxMovementPoints()}");
-            StartCoroutine(RefreshRangeAfterMovement(activeUnit));
+            // Déplacement : action du joueur, validée et exécutée par CombatCommandExecutor
+            ICombatCommandService commands = Services.Commands;
+            if (commands != null && commands.ActiveActor >= 0)
+                commands.Submit(CombatCommand.Move(commands.ActiveActor, targetGridPos));
         }
-    }
-
-    // Rafraîchit la portée après le mouvement
-    private IEnumerator RefreshRangeAfterMovement(Unit unit)
-    {
-        yield return new WaitForSeconds(0.1f);
-
-        // Tous les déplacements utilisent les PM (Points de Mouvement)
-        int remainingPM = unit.GetCurrentMovementPoints();
-
-        if (unit != null && remainingPM > 0)
-        {
-            // OPTIMISATION Phase 3.2: EventBus
-            EventBus.Publish(new ShowMovementRangeEvent(unit));
-            GameLog.Log($"Portée rafraîchie : {remainingPM} PM restants");
-        }
-        else if (unit != null)
-        {
-            // Plus de points de mouvement, on réinitialise juste l'affichage (OPTIMISATION Phase 3.2: EventBus)
-            EventBus.Publish(new ResetTileColorsEvent());
-            GameLog.Log($"{unit.name} n'a plus de PM.");
-        }
-    }
-
-    private IEnumerator PlayCardSequence(CardData card, Unit source, Unit target, Vector2Int targetTilePos)
-    {
-        // 1. Tourne pour faire face à la cible
-        if (target != null && target != source)
-        {
-            yield return StartCoroutine(source.LookAtCoroutine(target.transform.position));
-        }
-        else if (card.targetsTile)
-        {
-            Tile tile = Services.Grid.GetTileAtPosition(targetTilePos);
-            if (tile != null)
-            {
-                // Cible le centre de la tuile
-                Vector3 targetWorldPos = tile.transform.position + new Vector3(0, 0.5f, 0);
-                yield return StartCoroutine(source.LookAtCoroutine(targetWorldPos));
-            }
-        }
-
-        // 2. Joue la carte après la rotation
-        _handUIController.PlaySelectedCard(target, targetTilePos);
     }
 }

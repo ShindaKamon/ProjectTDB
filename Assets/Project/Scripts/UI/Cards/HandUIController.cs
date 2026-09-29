@@ -187,26 +187,28 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void ExecutePendingMultiTargetCard(Unit activeUnit)
     {
-        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
-        if (!canPlayResult.IsValid)
-        {
-            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
-            DeselectCard();
-            return;
-        }
+        var tiles = _pendingMultiTargets.ConvertAll(t => t.GetCurrentGridPos());
+        SubmitCardAndEndSelection(activeUnit, CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, tiles.ToArray()));
+    }
 
-        bool isFirstTarget = true;
-        foreach (Unit target in _pendingMultiTargets)
-        {
-            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (combo
-            // tracker, invocation, dégâts sur soi, pioche, fetch, ajout au deck, écho de Lyse) —
-            // voir CardData.ExecuteEffect(isAdditionalMultiTargetHit).
-            _selectedCard.ExecuteEffect(activeUnit, target, default, !isFirstTarget);
-            isFirstTarget = false;
-        }
+    // Place dans CombatParty du joueur dont c'est le tour (-1 si aucun)
+    private static int ActiveActor => Services.Commands != null ? Services.Commands.ActiveActor : -1;
 
-        PayCostsAndEndCardPlay(activeUnit);
-        GameLog.Log($"✅ Carte à cibles multiples jouée avec succès");
+    /// <summary>
+    /// Envoie la carte jouée aux commandes de combat (validation, effet et paiement : voir
+    /// CombatCommandExecutor), puis remet à zéro la sélection et les affichages de ciblage.
+    /// </summary>
+    private void SubmitCardAndEndSelection(Unit activeUnit, CombatCommand command)
+    {
+        if (command.Actor >= 0) Services.Commands.Submit(command);
+
+        _pendingMultiTargets.Clear();
+        _summonToMove = null;
+        _selectedCard = null;
+        ResetSelectedCardUIPosition();
+        ResetCardHighlights();
+        EventBus.Publish(new ResetTileColorsEvent());
+        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
     }
 
     /// <summary>
@@ -241,14 +243,7 @@ public class HandUIController : MonoBehaviour
         Unit activeUnit = Services.Grid?.GetActiveUnit();
         if (activeUnit == null) return;
 
-        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
-        if (!canPlayResult.IsValid)
-        {
-            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
-            DeselectCard();
-            return;
-        }
-
+        // Case invalide : rien ne se passe, le joueur peut recliquer (sans attendre l'exécution)
         bool isFree = Services.Grid.GetTileAtPosition(destination) != null && Services.Grid.GetUnitAtGridPos(destination) == null;
         ValidationResult moveResult = GameActionValidator.CanMoveSummonTo(_selectedCard, _summonToMove, destination, isFree);
         if (!moveResult.IsValid)
@@ -257,38 +252,8 @@ public class HandUIController : MonoBehaviour
             return;
         }
 
-        _selectedCard.ExecuteEffect(activeUnit, _summonToMove, destination);
-        PayCostsAndEndCardPlay(activeUnit);
-        GameLog.Log($"✅ Invocation déplacée avec succès");
-    }
-
-    /// <summary>
-    /// Fin commune d'une carte jouée : défausse, paiement des PA (coût effectif, overrides compris)
-    /// et des PV, puis remise à zéro de la sélection et des affichages de ciblage.
-    /// </summary>
-    private void PayCostsAndEndCardPlay(Unit activeUnit)
-    {
-        // Coût effectif (tient compte d'un éventuel override, ex: Triche)
-        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
-        _playerDeckManager.PlayCard(_selectedCard);
-
-        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
-        {
-            paUser.SpendPA(effectiveCostPA);
-        }
-
-        if (_selectedCard.costHP > 0)
-        {
-            activeUnit.PayHealth(_selectedCard.costHP);
-        }
-
-        _pendingMultiTargets.Clear();
-        _summonToMove = null;
-        _selectedCard = null;
-        ResetSelectedCardUIPosition();
-        ResetCardHighlights();
-        EventBus.Publish(new ResetTileColorsEvent());
-        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+        SubmitCardAndEndSelection(activeUnit,
+            CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, _summonToMove.GetCurrentGridPos(), destination));
     }
 
     void OnEnable()
@@ -319,12 +284,11 @@ public class HandUIController : MonoBehaviour
         UpdateDiscardPrompt();
     }
 
+    // La défausse est une action du joueur (commande) : le compteur est remis à jour par
+    // HandDiscardRequiredEvent, ou le tour se termine une fois la main revenue au maximum
     private void DiscardForEndOfTurn(CardData card)
     {
-        _playerDeckManager.DiscardFromHand(card);
-        _cardsToDiscard = _playerDeckManager.ExcessCards;
-        UpdateDiscardPrompt();
-        if (_cardsToDiscard == 0) EventBus.Publish(new TurnEndRequestedEvent(Services.Grid.GetActiveUnit()));
+        if (ActiveActor >= 0) Services.Commands.Submit(CombatCommand.Discard(ActiveActor, card.cardName));
     }
 
     private void UpdateDiscardPrompt()
@@ -949,26 +913,14 @@ public class HandUIController : MonoBehaviour
             }
         }
 
-        // Toutes les validations passées, exécuter la carte
-        if (_selectedCard.isChargeCard)
-        {
-            // Carte de charge : le lanceur se déplace vers la cible (case vide ou ennemi)
-            // Si targetUnit est défini, utilise sa position comme cible
-            Vector2Int chargeTarget = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
-            _selectedCard.ExecuteChargeEffect(activeUnit, chargeTarget);
-        }
-        else if (_selectedCard.leapToTarget)
-        {
-            // Bond : le lanceur saute sur la case, puis l'effet part de son point d'arrivée
-            _selectedCard.ExecuteLeapEffect(activeUnit, targetTile);
-        }
-        else
-        {
-            _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
-        }
-
-        PayCostsAndEndCardPlay(activeUnit);
-        GameLog.Log($"✅ Carte jouée avec succès");
+        // Vérifications passées : la carte devient une commande (cible = sa case : celle de l'unité
+        // visée, ou la case visée ; aucune pour une carte sans cible)
+        CombatCommand command = targetUnit != null
+            ? CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, targetUnit.GetCurrentGridPos())
+            : _selectedCard.targetsTile
+                ? CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, targetTile)
+                : CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName);
+        SubmitCardAndEndSelection(activeUnit, command);
     }
 
     /// <summary>
@@ -1015,43 +967,13 @@ public class HandUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Applique le choix (±1 PA sur targetCard), puis paie et défausse la carte jouée (ex: Triche)
+    /// Choix fait (±1 PA sur targetCard) : la carte jouée (ex: Triche) devient une commande
     /// </summary>
     private void ApplyHandCardCostChange(Unit activeUnit, CardData targetCard, int delta)
     {
-        if (_selectedCard == null || _playerDeckManager == null) return;
-
-        // Triche est une carte jouée comme les autres pour la Main gagnante de Raze (Suite, Paire,
-        // PA dépensés de Tapis), même si elle ne passe pas par CardData.ExecuteEffect
-        IComboTracker combo = activeUnit as IComboTracker;
-        combo?.OnCardAboutToExecute(_selectedCard);
-
-        _playerDeckManager.ModifyCardCost(targetCard, delta);
-        GameLog.Log($"🎭 {_selectedCard.cardName} : coût de {targetCard.cardName} modifié de {(delta > 0 ? "+" : "")}{delta} PA.");
-
-        combo?.OnCardResolved(_selectedCard); // avant PlayCard : son coût réel est encore connu
-
-        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
-
-        _playerDeckManager.PlayCard(_selectedCard);
-
-        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
-        {
-            paUser.SpendPA(effectiveCostPA);
-        }
-
-        if (_selectedCard.costHP > 0)
-        {
-            activeUnit.PayHealth(_selectedCard.costHP);
-        }
-
-        _selectedCard = null;
-        ResetSelectedCardUIPosition();
-        ResetCardHighlights();
-        RefreshCardAffordability(); // le coût de targetCard a changé, rafraîchit son affichage en main
-        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
-
-        GameLog.Log($"✅ Carte jouée avec succès");
+        if (_selectedCard == null) return;
+        SubmitCardAndEndSelection(activeUnit,
+            CombatCommand.ChangeHandCardCost(ActiveActor, _selectedCard.cardName, targetCard.cardName, delta));
     }
 
     /// <summary>

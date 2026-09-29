@@ -38,6 +38,7 @@ public class GridManager : MonoBehaviour, IGridService
     // ===== DONNÉES INTERNES =====
     private Dictionary<Vector2Int, Tile> _tiles;
     private List<Unit> _units;
+    private readonly HashSet<Unit> _unitsWhoPlayed = new HashSet<Unit>(); // unités ayant déjà eu un tour (pioche dès le 2e)
     private Unit _activeUnit;
 
     // ===== REPOSITORY PATTERN =====
@@ -376,10 +377,18 @@ public class GridManager : MonoBehaviour, IGridService
 
         // Pioche une carte si l'unité a un DeckManager (unités joueur uniquement)
         // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car les ennemis n'ont pas de DeckManager)
+        // Pas de pioche au premier tour de chaque champion : sa main de départ (5) suffit
+        bool firstTurn = _unitsWhoPlayed.Add(_activeUnit);
         if (_activeUnit.TryGetComponentSafe(out DeckManager deckManager))
         {
-            deckManager.DrawCard();
-            GameLog.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
+            // Coûts modifiés (ex: Triche) non joués : retour au coût normal
+            deckManager.ClearAllCostOverrides();
+
+            if (!firstTurn)
+            {
+                deckManager.DrawCard();
+                GameLog.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
+            }
         }
     }
 
@@ -488,6 +497,14 @@ public class GridManager : MonoBehaviour, IGridService
     {
         // Phase de placement : pas encore d'unité active, rien à terminer ; combat fini : plus de tour
         if (_activeUnit == null || _turnStateMachine.IsBattleOver()) return;
+
+        // Main au-delà du maximum : le joueur défausse d'abord l'excédent (au choix), puis le tour
+        // se termine (l'UI de la main redemande la fin de tour). Pas pour une unité morte.
+        if (_units.Contains(_activeUnit) && _activeUnit.TryGetComponentSafe(out DeckManager hand) && hand.ExcessCards > 0)
+        {
+            EventBus.Publish(new HandDiscardRequiredEvent(_activeUnit, hand.ExcessCards));
+            return;
+        }
 
         GameLog.Log("=== Fin de tour ===");
         ResetAllTileColors();
@@ -732,6 +749,9 @@ public class GridManager : MonoBehaviour, IGridService
 
         ResetAllTileColors();
 
+        // Carte qui cible une carte de la main (ex: Triche) : aucune case à montrer
+        if (card.targetsHandCard) return;
+
         // Carte de déplacement d'invocation (ex: Écho évanescent), ciblage en 2 étapes :
         // source = lanceur -> étape 1, on montre ses invocations ; source = l'invocation choisie
         // -> étape 2, on montre les cases d'arrivée autour d'elle.
@@ -758,7 +778,7 @@ public class GridManager : MonoBehaviour, IGridService
         // Pour les cartes de charge, affiche uniquement les cases en ligne droite
         if (card.isChargeCard)
         {
-            ShowChargeTargets(sourcePos, range, source);
+            ShowChargeTargets(card, sourcePos, range, source);
             return;
         }
 
@@ -804,7 +824,7 @@ public class GridManager : MonoBehaviour, IGridService
     /// Affiche les cases vides ET les cases avec ennemis comme cibles valides (jaune)
     /// L'ennemi sera surligné en rouge uniquement au hover (géré par InputManager)
     /// </summary>
-    private void ShowChargeTargets(Vector2Int sourcePos, int range, Unit source)
+    private void ShowChargeTargets(CardData card, Vector2Int sourcePos, int range, Unit source)
     {
         // 4 directions : haut, bas, gauche, droite
         foreach (Vector2Int dir in GridGeometry.Directions4)
@@ -820,18 +840,18 @@ public class GridManager : MonoBehaviour, IGridService
                 if (unitOnTile != null)
                 {
                     // Il y a une unité
-                    if (unitOnTile.GetFaction() != source.GetFaction())
+                    if (card.targetsUnit ? card.IsValidTarget(source, unitOnTile) : unitOnTile.GetFaction() != source.GetFaction())
                     {
-                        // C'est un ennemi : cible valide (jaune comme les autres cases)
-                        // La tuile rouge n'apparaîtra qu'au hover
+                        // Cible valide (ennemi, ou allié si la carte cible une unité) : jaune comme
+                        // les autres cases, la tuile rouge n'apparaîtra qu'au hover
                         tile.SetColor(_cardTargetColor);
                     }
                     // On s'arrête ici (on ne peut pas cibler au-delà d'une unité)
                     break;
                 }
 
-                // Case vide valide, on la colorie en jaune
-                tile.SetColor(_cardTargetColor);
+                // Case vide valide, on la colorie en jaune (pas pour une charge qui cible une unité)
+                if (!card.targetsUnit) tile.SetColor(_cardTargetColor);
             }
         }
 

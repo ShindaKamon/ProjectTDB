@@ -22,8 +22,9 @@ MonoBehaviour:
   signatureOwner: {fileID: 0}
   costPA: 2
   costHP: 0
-  targetType: 3
+  targetType: 4
   targetRange: 1
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 1
   affectedTarget: 2
@@ -35,22 +36,24 @@ MonoBehaviour:
   healAmount: 10
   lifestealFixedAmount: 0
   damageAroundTarget: 10
-  atkIncreased: 0
-  defenseAmount: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
   reactiveShield: 0
   armorAmount: 0
-  barrierAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
   casterRetreat: 0
   casterMovementGain: 0
   casterActionGain: 0
   casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

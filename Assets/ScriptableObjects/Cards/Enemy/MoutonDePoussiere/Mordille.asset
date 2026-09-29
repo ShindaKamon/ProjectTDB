@@ -10,17 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Coup_de_patte
+  m_Name: Mordille
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: Coup de patte
-  description: "Inflige 4 d\xE9g\xE2ts \xE0 un ennemi au contact. Attaque de base
-    : gratuite, jou\xE9e quand la carte pr\xE9vue ne peut pas l'\xEAtre."
+  cardName: Mordille
+  description: "Mordille un champion au contact : 8 d\xE9g\xE2ts, vole 4 PV."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
   category: 0
   signatureOwner: {fileID: 0}
-  costPA: 0
+  costPA: 2
   costHP: 0
   targetType: 2
   targetRange: 1
@@ -30,11 +29,11 @@ MonoBehaviour:
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 4
+  damageAmount: 8
   damageType: 0
   damageSelf: 0
   healAmount: 0
-  lifestealFixedAmount: 0
+  lifestealFixedAmount: 4
   damageAroundTarget: 0
   nextAttackBonus: 0
   shieldAmount: 0
@@ -45,6 +44,8 @@ MonoBehaviour:
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 0
@@ -55,6 +56,7 @@ MonoBehaviour:
   casterArmorAmount: 0
   casterMovementLoss: 0
   drawAmount: 0
+  discardHandAttackBonusPerCard: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

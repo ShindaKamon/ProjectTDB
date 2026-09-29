@@ -153,8 +153,9 @@ public static class GameActionValidator
         if (source == null)
             return ValidationResult.Fail("Source null - impossible de valider le ciblage");
 
-        // Si la carte ne cible pas de tuile, c'est OK
-        if (!card.targetsTile)
+        // Si la carte ne cible pas de tuile, c'est OK — sauf une charge sur une unité (ex:
+        // Grappin), dont la case de la cible doit rester en ligne droite et à portée
+        if (!card.targetsTile && !card.isChargeCard)
             return ValidationResult.Success();
 
         // Carte d'invocation alors que l'invocation est déjà là : on la cible elle-même pour la

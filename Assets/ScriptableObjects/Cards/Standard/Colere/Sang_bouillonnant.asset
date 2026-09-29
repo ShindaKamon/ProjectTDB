@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Sang_bouillonnant
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Sang bouillonnant
-  description: "Inflige 18 d\xE9g\xE2ts \xE0 un ennemi au contact et r\xE9cup\xE8re
-    autant de PV."
+  description: "Inflige 32 d\xE9g\xE2ts \xE0 un ennemi au contact ; tu subis 7 d\xE9g\xE2ts."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 1
@@ -24,27 +23,40 @@ MonoBehaviour:
   costHP: 0
   targetType: 2
   targetRange: 1
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 18
+  damageAmount: 32
   damageType: 0
-  damageSelf: 0
+  damageSelf: 7
   healAmount: 0
-  lifestealFixedAmount: 18
-  atkIncreased: 0
-  defenseAmount: 0
+  lifestealFixedAmount: 0
+  damageAroundTarget: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
+  reactiveShield: 0
   armorAmount: 0
-  barrierAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
+  removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
+  casterRetreat: 0
+  casterMovementGain: 0
+  casterActionGain: 0
+  casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
+  discardHandAttackBonusPerCard: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

@@ -13,8 +13,10 @@ public static class CardRulesText
     /// <summary>
     /// Texte complet d'une carte, une ligne par élément.
     /// Ex. « ↗ Inflige 33 / Cible : 1 ennemi · au contact / Zone : cercle de 1 (ennemis) ».
+    /// paSpentThisTurn : PA déjà dépensés ce tour par le lanceur (main en combat) ; une carte dont
+    /// les dégâts en dépendent (ex: Tapis) affiche alors ses dégâts actuels, « Inflige 40 (56) ».
     /// </summary>
-    public static string Build(CardData card)
+    public static string Build(CardData card, int paSpentThisTurn = 0)
     {
         var lines = new List<string>();
         void Effect(string icon, ChipKind kind, string text) => lines.Add(Icon(icon, kind) + " " + ColorValue(text, kind));
@@ -22,12 +24,14 @@ public static class CardRulesText
 
         if (card.damageAmount > 0)
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage,
-                "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : ""));
+                "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : "")
+                + (card.targetType == CardTargetType.AllyorEnemy ? " à un ennemi" : "")
+                + (card.scalesWithPASpentThisTurn && paSpentThisTurn > 0 ? $" ({card.damageAmount + card.comboDamagePerPASpent * paSpentThisTurn})" : ""));
         if (card.scalesWithPASpentThisTurn && card.comboDamagePerPASpent > 0)
             Effect("dmg", ChipKind.Damage, $"+{card.comboDamagePerPASpent} dégâts par PA déjà dépensé ce tour");
         // Carte d'invocation : le soin ne sert que si l'invocation est déjà sur le terrain (voir ExecuteEffect)
         if (card.healAmount > 0 && !card.isSummonCard) Effect("heal", ChipKind.Heal, "Soigne " + card.healAmount);
-        if (card.lifestealFixedAmount > 0) Effect("drain", ChipKind.Heal, "Vol de vie " + card.lifestealFixedAmount);
+        if (card.lifestealFixedAmount > 0) Effect("drain", ChipKind.Heal, "Vol de vie " + card.lifestealFixedAmount + (card.isAOE ? " par ennemi touché" : ""));
         if (card.damageAroundTarget > 0)
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage, $"Inflige {card.damageAroundTarget} aux ennemis au contact de la cible");
         if (card.shieldAmount > 0)
@@ -39,10 +43,15 @@ public static class CardRulesText
         if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Perd tous ses PM pendant " + DebuffTurns(card));
         else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Perd {card.pmReduction} PM pendant " + DebuffTurns(card));
         if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Perd {card.paReduction} PA pendant " + DebuffTurns(card));
+        if (card.nextTurnActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.nextTurnActionGain} PA au prochain tour");
+        if (card.cancelsEnemyNextCard) Effect("lock", ChipKind.Mute, "Le monstre ne joue pas sa prochaine carte");
         if (card.knockbackDistance > 0)
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));
-        if (card.isChargeCard) Effect("bond", ChipKind.Push, "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
+        if (card.isChargeCard)
+            Effect("bond", ChipKind.Push, card.targetsUnit
+                ? "Te hisse jusqu'à la cible (" + Cases(CodexCardVisual.Range(card)) + " max)" // ex: Grappin
+                : "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
         if (card.leapToTarget) Effect("bond", ChipKind.Push, "Bondis sur la case visée");
         if (card.isSummonCard)
         {
@@ -52,6 +61,8 @@ public static class CardRulesText
         if (card.isRepositionSummonCard) Effect("summon", ChipKind.Mute, "Déplace ton invocation");
         if (card.targetsHandCard) Effect("hand", ChipKind.Mute, "Cible une carte de ta main");
         if (card.drawAmount > 0) Effect("hand", ChipKind.Mute, "Pioche " + card.drawAmount);
+        if (card.discardHandAttackBonusPerCard > 0)
+            Effect("buff", ChipKind.Damage, $"Défausse ta main : +{card.discardHandAttackBonusPerCard} dégâts sur ta prochaine carte offensive par carte défaussée");
         if (card.casterMovementGain > 0) Effect("pm", ChipKind.MovementPoints, $"+{card.casterMovementGain} PM ce tour");
         if (card.casterActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.casterActionGain} PA ce tour");
         if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Defense, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));

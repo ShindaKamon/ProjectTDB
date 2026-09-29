@@ -721,6 +721,9 @@ MonoBehaviour:
   _cardDescriptionText: {fileID: 4956813025782959961}
   _cardCostText: {fileID: 7170079574966853244}
   _costDisk: {fileID: 1160196838342929552}
+  _modifiedCostOutline: {r: 1, g: 0.85, b: 0.1, a: 1}
+  _frame: {fileID: 1150916411098052526}
+  _targetFrameColor: {r: 1, g: 0.85, b: 0.1, a: 1}
   _cardIllustrationImage: {fileID: 4687863072914913123}
   _selectionHighlight: {fileID: 0}
   _canvasGroup: {fileID: 7974083402461963192}

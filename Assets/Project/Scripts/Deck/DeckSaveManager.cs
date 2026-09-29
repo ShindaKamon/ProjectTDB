@@ -369,6 +369,8 @@ public static class DeckSaveManager
         { "Corde de rappel forcé", "Corde de rappel" },
         { "Écho de Lyse", "Écho évanescent" },
         { "Écho evanescent", "Écho évanescent" }, // orthographe provisoire du 24/09/2026
+        { "Vision cauchemardesque", "Hantise" }, // nom trop long pour la carte (29/09/2026)
+        { "Piolet d'ascension", "Grappin" }, // 29/09/2026 : un piolet ne fait pas bondir
     };
 
     /// <summary>Nom actuel d'une carte (suit les renommages successifs).</summary>

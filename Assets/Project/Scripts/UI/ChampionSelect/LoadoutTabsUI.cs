@@ -37,6 +37,9 @@ public class LoadoutTabsUI : MonoBehaviour
 
     private ChampionData _currentChampion;
     private ChampionDecksData _currentDecksData;
+
+    /// <summary>Collection de cartes (pour retrouver les cartes des decks par leur nom).</summary>
+    public CardCollection Collection => _cardCollection;
     private List<DeckSlotUI> _tabs = new List<DeckSlotUI>();
     private int _activeDeckIndex = -1;
 

@@ -44,6 +44,17 @@ public class HandUIController : MonoBehaviour
     private readonly List<bool> _drawDone = new List<bool>();
     private float _nextDrawTime;
 
+    [Header("Triche")]
+    [Tooltip("Choix −1 / +1 PA affiché au-dessus de la carte visée par une carte qui modifie un coût (ex: Triche)")]
+    [SerializeField] private CardCostChoicePopup _costChoicePopup;
+
+    [Header("Défausse de fin de tour")]
+    [Tooltip("Message « Défausse N cartes » affiché tant que la main dépasse le maximum en fin de tour (optionnel)")]
+    [SerializeField] private TextMeshProUGUI _discardPrompt;
+
+    // Cartes encore à défausser avant de finir le tour (0 = pas en mode défausse)
+    private int _cardsToDiscard;
+
     private DeckManager _playerDeckManager;
     private List<GameObject> _instantiatedCardUIs = new List<GameObject>();
     private CardData _selectedCard = null; // La carte actuellement sélectionnée par le joueur
@@ -69,6 +80,7 @@ public class HandUIController : MonoBehaviour
 
     public void DeselectCard()
     {
+        if (_costChoicePopup != null) _costChoicePopup.Hide();
         if (_selectedCard != null)
         {
             GameLog.Log($"Carte {_selectedCard.cardName} désélectionnée via appel externe.");
@@ -285,6 +297,7 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardHoverEnter += HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit += HandleCardHoverExit;
         EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Subscribe<HandDiscardRequiredEvent>(OnHandDiscardRequired);
     }
 
     void OnDisable()
@@ -293,6 +306,32 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
         EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Unsubscribe<HandDiscardRequiredEvent>(OnHandDiscardRequired);
+    }
+
+    /// <summary>
+    /// Fin de tour avec trop de cartes : chaque clic sur une carte la défausse, puis le tour se termine
+    /// </summary>
+    private void OnHandDiscardRequired(HandDiscardRequiredEvent e)
+    {
+        if (_selectedCard != null) DeselectCard();
+        _cardsToDiscard = e.Count;
+        UpdateDiscardPrompt();
+    }
+
+    private void DiscardForEndOfTurn(CardData card)
+    {
+        _playerDeckManager.DiscardFromHand(card);
+        _cardsToDiscard = _playerDeckManager.ExcessCards;
+        UpdateDiscardPrompt();
+        if (_cardsToDiscard == 0) EventBus.Publish(new TurnEndRequestedEvent(Services.Grid.GetActiveUnit()));
+    }
+
+    private void UpdateDiscardPrompt()
+    {
+        if (_discardPrompt == null) return;
+        _discardPrompt.gameObject.SetActive(_cardsToDiscard > 0);
+        _discardPrompt.text = $"Main pleine : défausse {_cardsToDiscard} carte{(_cardsToDiscard > 1 ? "s" : "")} pour finir ton tour";
     }
 
     private bool _isInitialized = false;
@@ -319,6 +358,9 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void OnTurnChanged(TurnChangedEvent e)
     {
+        _cardsToDiscard = 0;
+        UpdateDiscardPrompt();
+
         if (!(e.NewActiveUnit is Champion) || e.NewActiveUnit == _boundChampion) return;
 
         if (_selectedCard != null) DeselectCard();
@@ -348,6 +390,7 @@ public class HandUIController : MonoBehaviour
         if (_boundChampion != null)
         {
             _boundChampion.OnActionPointsChanged += HandlePAChanged;
+            _boundChampion.OnStatsModified += RefreshCardAffordability; // ex: PA dépensés ce tour (Tapis)
         }
 
         _isInitialized = true;
@@ -363,6 +406,7 @@ public class HandUIController : MonoBehaviour
         if (_boundChampion != null)
         {
             _boundChampion.OnActionPointsChanged -= HandlePAChanged;
+            _boundChampion.OnStatsModified -= RefreshCardAffordability;
         }
     }
 
@@ -393,7 +437,7 @@ public class HandUIController : MonoBehaviour
         }
 
         // Si une carte est sélectionnée et nécessite une cible, la positionner à gauche en mode preview
-        if (_selectedCard != null && (_selectedCard.targetsUnit || _selectedCard.targetsTile) && _selectedCardUIObject != null)
+        if (_selectedCard != null && (_selectedCard.targetsUnit || _selectedCard.targetsTile || _selectedCard.targetsHandCard) && _selectedCardUIObject != null)
         {
             // Cache le RectTransform si pas déjà fait
             if (_selectedCardRect == null)
@@ -679,7 +723,17 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void HandleCardHoverEnter(GameObject cardUI)
     {
+        // Carte qui vise la main (ex: Triche) : cadre jaune sur la carte survolée, cible valide
+        if (_selectedCard != null && _selectedCard.targetsHandCard && cardUI != _selectedCardUIObject
+            && cardUI.TryGetComponentSafe(out CardUIElement target) && target.CardData != _selectedCard)
+            target.SetTargetFrame(true);
+
         if (_hoveredCard != null || cardUI == _selectedCardUIObject) return;
+
+        // Carte encore en vol depuis la pioche : sa position n'est pas finale, la mémoriser la
+        // ferait revenir au mauvais endroit (cartes qui se chevauchent) à la sortie du survol
+        int index = _instantiatedCardUIs.IndexOf(cardUI);
+        if (index >= 0 && index < _drawDone.Count && !_drawDone[index]) return;
 
         _hoveredCard = cardUI;
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
@@ -706,6 +760,8 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void HandleCardHoverExit(GameObject cardUI)
     {
+        if (cardUI.TryGetComponentSafe(out CardUIElement target)) target.SetTargetFrame(false);
+
         if (_hoveredCard != cardUI) return;
 
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
@@ -722,12 +778,29 @@ public class HandUIController : MonoBehaviour
     private void HandleCardClicked(CardData clickedCard)
     {
         GameLog.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
+        if (_costChoicePopup != null) _costChoicePopup.Hide(); // un nouveau clic remplace un choix en cours
+
+        // Défausse de fin de tour : le clic défausse la carte au lieu de la sélectionner
+        if (_cardsToDiscard > 0 && _playerDeckManager != null)
+        {
+            DiscardForEndOfTurn(clickedCard);
+            return;
+        }
 
         // Cas spécial : une carte "cible une carte de la main" (ex: Triche) est sélectionnée
         // et on clique sur une AUTRE carte -> c'est le ciblage, pas un changement de sélection.
         if (_selectedCard != null && _selectedCard.targetsHandCard && clickedCard != _selectedCard)
         {
             PlayHandCardTargetingCard(clickedCard);
+            return;
+        }
+
+        // Carte injouable (PA, PV…) : pas de sélection (re-cliquer la carte sélectionnée la désélectionne)
+        RectTransform clickedUI = FindCardUI(clickedCard);
+        if (clickedCard != _selectedCard && clickedUI != null
+            && clickedUI.TryGetComponentSafe(out CardUIElement clickedElement) && !clickedElement.IsAffordable)
+        {
+            GameLog.LogWarning($"Pas assez de PA pour jouer {clickedCard.cardName}");
             return;
         }
 
@@ -900,7 +973,7 @@ public class HandUIController : MonoBehaviour
 
     /// <summary>
     /// Joue une carte qui cible une autre carte de la main (ex: Triche sur "targetCard").
-    /// Maintenir Maj pendant le clic augmente le coût de +1 PA au lieu de le réduire de -1 PA.
+    /// Le joueur choisit ensuite −1 ou +1 PA dans CardCostChoicePopup, au-dessus de la carte visée.
     /// </summary>
     private void PlayHandCardTargetingCard(CardData targetCard)
     {
@@ -920,9 +993,43 @@ public class HandUIController : MonoBehaviour
             return;
         }
 
-        int delta = (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed) ? 1 : -1;
+        // Le joueur choisit −1 ou +1 PA au-dessus de la carte visée (sans popup : −1)
+        RectTransform anchor = FindCardUI(targetCard);
+        if (_costChoicePopup == null || anchor == null)
+        {
+            ApplyHandCardCostChange(activeUnit, targetCard, -1);
+            return;
+        }
+        _costChoicePopup.Show(anchor, _playerDeckManager.GetEffectiveCost(targetCard),
+            delta => ApplyHandCardCostChange(activeUnit, targetCard, delta));
+    }
+
+    private RectTransform FindCardUI(CardData card)
+    {
+        foreach (GameObject cardUI in _instantiatedCardUIs)
+        {
+            if (cardUI.TryGetComponentSafe(out CardUIElement element) && element.CardData == card)
+                return (RectTransform)cardUI.transform;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Applique le choix (±1 PA sur targetCard), puis paie et défausse la carte jouée (ex: Triche)
+    /// </summary>
+    private void ApplyHandCardCostChange(Unit activeUnit, CardData targetCard, int delta)
+    {
+        if (_selectedCard == null || _playerDeckManager == null) return;
+
+        // Triche est une carte jouée comme les autres pour la Main gagnante de Raze (Suite, Paire,
+        // PA dépensés de Tapis), même si elle ne passe pas par CardData.ExecuteEffect
+        IComboTracker combo = activeUnit as IComboTracker;
+        combo?.OnCardAboutToExecute(_selectedCard);
+
         _playerDeckManager.ModifyCardCost(targetCard, delta);
-        GameLog.Log($"🎭 {_selectedCard.cardName} : coût de {targetCard.cardName} modifié de {(delta > 0 ? "+" : "")}{delta} PA (maintenir Maj = +1, sinon -1).");
+        GameLog.Log($"🎭 {_selectedCard.cardName} : coût de {targetCard.cardName} modifié de {(delta > 0 ? "+" : "")}{delta} PA.");
+
+        combo?.OnCardResolved(_selectedCard); // avant PlayCard : son coût réel est encore connu
 
         int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
 
@@ -1019,6 +1126,10 @@ public class HandUIController : MonoBehaviour
         int effectiveCostPA = _playerDeckManager != null ? _playerDeckManager.GetEffectiveCost(card) : card.costPA;
         cardUIElement.RefreshCost(effectiveCostPA);
 
+        // Dégâts actuels d'une carte qui dépend des PA déjà dépensés ce tour (ex: Tapis de Raze)
+        if (card.scalesWithPASpentThisTurn && _boundChampion is IComboTracker combo)
+            cardUIElement.RefreshComboDamage(combo.PASpentThisTurn);
+
         // Vérification des PA
         if (effectiveCostPA > 0)
         {
@@ -1074,6 +1185,7 @@ public class HandUIController : MonoBehaviour
             if (cardUIElement != null)
             {
                 cardUIElement.SetSelected(false);
+                cardUIElement.SetTargetFrame(false);
             }
         }
     }

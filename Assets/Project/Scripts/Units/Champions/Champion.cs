@@ -80,14 +80,14 @@ public abstract class Champion : Unit, IActionPointsUser
         _actionPointsComponent.ReduceCurrentPA(amount);
     }
 
-    public void AddPA(int amount)
+    public void AddPA(int amount, bool canExceedMax = false)
     {
         if (_actionPointsComponent == null)
         {
             Debug.LogError($"{name} (Champion): ActionPointsComponent n'est pas initialisé !");
             return;
         }
-        _actionPointsComponent.AddPA(amount);
+        _actionPointsComponent.AddPA(amount, canExceedMax);
         if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
     }
 

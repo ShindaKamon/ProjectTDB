@@ -295,6 +295,17 @@ public static class CodexCardVisual
     }
 
     /// <summary>
+    /// Passif d'un champion pour l'affichage (fiche de sélection, stats en combat), ex.
+    /// « <b>Passif : Réflexe du grimpeur</b>\n… » (sans « Passif : » sous un titre qui le dit
+    /// déjà) ; vide si le champion n'en a pas.
+    /// </summary>
+    public static string PassiveText(ChampionData champion, bool withLabel = true)
+    {
+        if (champion == null || string.IsNullOrWhiteSpace(champion.passiveName)) return "";
+        return $"<b>{(withLabel ? "Passif : " : "")}{champion.passiveName}</b>\n{champion.passiveDescription}";
+    }
+
+    /// <summary>
     /// Pastilles de combat de la fiche d'un champion (écran de sélection) : attaque, armure,
     /// résistance magique, valeurs nulles comprises.
     /// </summary>

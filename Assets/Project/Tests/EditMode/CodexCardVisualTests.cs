@@ -11,6 +11,33 @@ namespace ProjectTDB.Tests
     {
         private readonly List<Object> _created = new List<Object>();
 
+        [Test]
+        public void RulesText_ComboCard_ShowsCurrentDamageInParentheses()
+        {
+            // Tapis : 40 + 8 par PA déjà dépensé ; 2 PA dépensés -> (56)
+            var card = NewCard(CardTargetType.Enemy, 1);
+            card.damageAmount = 40;
+            card.scalesWithPASpentThisTurn = true;
+            card.comboDamagePerPASpent = 8;
+
+            string Plain(string s) => System.Text.RegularExpressions.Regex.Replace(s, "<[^>]+>", "");
+            StringAssert.Contains("Inflige 40 (56)", Plain(CardRulesText.Build(card, 2)));
+            StringAssert.DoesNotContain("(", Plain(CardRulesText.Build(card)).Split('\n')[0]);
+        }
+
+        [Test]
+        public void PassiveText_NameInBold_ThenSummary_EmptyWithoutPassive()
+        {
+            var champion = ScriptableObject.CreateInstance<ChampionData>();
+            _created.Add(champion);
+            Assert.AreEqual("", CodexCardVisual.PassiveText(champion));
+
+            champion.passiveName = "Main gagnante";
+            champion.passiveDescription = "Résumé.";
+            Assert.AreEqual("<b>Passif : Main gagnante</b>\nRésumé.", CodexCardVisual.PassiveText(champion));
+            Assert.AreEqual("<b>Main gagnante</b>\nRésumé.", CodexCardVisual.PassiveText(champion, withLabel: false));
+        }
+
         private CardData NewCard(CardTargetType target, int range, CardAreaEffect area = CardAreaEffect.None, int radius = 0)
         {
             var card = ScriptableObject.CreateInstance<CardData>();

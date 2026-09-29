@@ -71,9 +71,9 @@ public class ChampionStatsUI : MonoBehaviour
         CardChipsView.Build(_statChipsContainer, CodexCardVisual.ChampionChips(champion), _chipBackground,
             chipFont, 28f, 32f);
 
-        // Description
+        // Passif du champion (à la place de son histoire)
         if (_descriptionText != null)
-            _descriptionText.text = champion.description ?? "";
+            _descriptionText.text = CodexCardVisual.PassiveText(champion, withLabel: false); // titre « PASSIF » au-dessus
 
         // Animation d'apparition
         if (_canvasGroup != null)

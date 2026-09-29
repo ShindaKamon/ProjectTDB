@@ -58,6 +58,19 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void ActionBonus_StrongestWins_AndIsConsumedAtNextTurnStart()
+        {
+            Unit unit = NewUnit(4);
+
+            ResourceDebuffManager.ApplyActionBonus(unit, 2, null);
+            ResourceDebuffManager.ApplyActionBonus(unit, 1, null);
+            Assert.AreEqual(2, ResourceDebuffManager.GetPendingActionBonus(unit), "Pas de cumul, le plus fort l'emporte");
+
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);
+            Assert.AreEqual(0, ResourceDebuffManager.GetPendingActionBonus(unit));
+        }
+
+        [Test]
         public void PmReduction_AppliesAtNextTurnStart_Once()
         {
             Unit unit = NewUnit(4);

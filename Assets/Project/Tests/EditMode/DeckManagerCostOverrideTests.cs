@@ -46,6 +46,19 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void ClearAllCostOverrides_UnplayedCardBackToNormalCost()
+        {
+            var deck = NewDeckManager();
+            var card = NewCard(3);
+            deck.ModifyCardCost(card, -1);
+            Assert.AreEqual(2, deck.GetEffectiveCost(card));
+
+            deck.ClearAllCostOverrides(); // début du tour suivant
+
+            Assert.AreEqual(3, deck.GetEffectiveCost(card));
+        }
+
+        [Test]
         public void GetEffectiveCost_ZeroCostCardWithoutOverride_StaysFree()
         {
             // Régression : le plancher "1 PA minimum" s'appliquait auparavant même sans

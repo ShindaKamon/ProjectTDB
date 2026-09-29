@@ -15,8 +15,7 @@ MonoBehaviour:
   cardName: Triche
   description: "Change de 1 PA le co\xFBt d'une autre carte de ta main : -1, ou +1
     en maintenant Maj. Minimum 1 PA."
-  specialText: "\u22121 PA au co\xFBt d'une autre carte de ta main (+1 en maintenant
-    Maj). Minimum 1 PA."
+  specialText: "\u22121 ou +1 PA \xE0 son co\xFBt, au choix (minimum 1 PA)."
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
@@ -24,7 +23,8 @@ MonoBehaviour:
   costPA: 1
   costHP: 0
   targetType: 0
-  targetRange: 1
+  targetRange: 0
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -35,17 +35,29 @@ MonoBehaviour:
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
-  atkIncreased: 0
-  defenseAmount: 0
+  damageAroundTarget: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
+  reactiveShield: 0
   armorAmount: 0
-  barrierAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 0
   paReduction: 0
   pmReduction: 0
+  removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
+  casterRetreat: 0
+  casterMovementGain: 0
+  casterActionGain: 0
+  casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
+  discardHandAttackBonusPerCard: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

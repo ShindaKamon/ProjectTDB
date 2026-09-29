@@ -12,6 +12,13 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     [SerializeField] private TextMeshProUGUI _cardDescriptionText;
     [SerializeField] private TextMeshProUGUI _cardCostText;
     [SerializeField] private Image _costDisk; // Pastille du coût, couleur de l'émotion (Signature : blanc)
+    [Tooltip("Liseré de la pastille quand le coût a été modifié (ex: Triche)")]
+    [SerializeField] private Color _modifiedCostOutline = new Color(1f, 0.85f, 0.1f, 1f);
+    private Outline _costOutline;
+    [Tooltip("Cadre de la carte, entouré en jaune quand elle est survolée comme cible d'une autre carte (ex: Triche)")]
+    [SerializeField] private Image _frame;
+    [SerializeField] private Color _targetFrameColor = new Color(1f, 0.85f, 0.1f, 1f);
+    private Outline _targetFrameOutline;
     [SerializeField] private Image _cardIllustrationImage; // Optionnel
     [SerializeField] private GameObject _selectionHighlight; // Surlignage visuel pour la sélection
     [SerializeField] private CanvasGroup _canvasGroup; // Pour griser la carte
@@ -39,6 +46,7 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     private Vector3 _originalScale; // Échelle d'origine
     private Quaternion _originalRotation; // Rotation d'origine
     private bool _isAffordable = true; // Indique si la carte peut être jouée
+    public bool IsAffordable => _isAffordable;
     private bool _isHovered = false;
     private bool _isSelected = false;
 
@@ -136,11 +144,47 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     /// Met à jour uniquement le texte de coût affiché (ex: après un override via Triche),
     /// sans retoucher le reste des données de la carte.
     /// </summary>
+    /// <summary>
+    /// Carte dont les dégâts dépendent des PA dépensés ce tour (ex: Tapis) : réaffiche son texte
+    /// avec les dégâts actuels entre parenthèses.
+    /// </summary>
+    public void RefreshComboDamage(int paSpentThisTurn)
+    {
+        if (_cardData != null && _cardData.scalesWithPASpentThisTurn)
+            CardTextView.Apply(_cardDescriptionText, _cardData, paSpentThisTurn);
+    }
+
+    /// <summary>Cadre jaune : la carte est la cible survolée d'une carte qui vise la main (ex: Triche).</summary>
+    public void SetTargetFrame(bool visible)
+    {
+        if (_frame == null) return;
+        if (_targetFrameOutline == null)
+        {
+            if (!visible) return;
+            if (!_frame.TryGetComponent(out _targetFrameOutline)) _targetFrameOutline = _frame.gameObject.AddComponent<Outline>();
+            _targetFrameOutline.effectColor = _targetFrameColor;
+            _targetFrameOutline.effectDistance = new Vector2(5f, -5f);
+        }
+        _targetFrameOutline.enabled = visible;
+    }
+
     public void RefreshCost(int effectiveCostPA)
     {
         if (_cardCostText != null)
         {
             _cardCostText.text = effectiveCostPA.ToString();
+        }
+
+        // Coût modifié (ex: Triche) : la pastille garde la couleur de son émotion, entourée d'un liseré
+        if (_costDisk != null && _cardData != null)
+        {
+            if (_costOutline == null)
+            {
+                if (!_costDisk.TryGetComponent(out _costOutline)) _costOutline = _costDisk.gameObject.AddComponent<Outline>();
+                _costOutline.effectColor = _modifiedCostOutline;
+                _costOutline.effectDistance = new Vector2(3f, -3f);
+            }
+            _costOutline.enabled = effectiveCostPA != _cardData.costPA;
         }
     }
 
@@ -229,13 +273,8 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
                 return;
             }
 
-            // Ne pas permettre de cliquer si la carte n'est pas jouable
-            if (!_isAffordable)
-            {
-                GameLog.LogWarning($"Pas assez de PA pour jouer {_cardData.cardName}");
-                return;
-            }
-
+            // Carte injouable : le clic est quand même transmis, HandUIController refuse de la
+            // sélectionner mais peut la viser (ex: Triche pour baisser le coût d'une carte trop chère)
             GameLog.Log($"Carte cliquée : {_cardData.cardName}");
             OnCardClicked?.Invoke(_cardData); // Déclencher l'événement avec les données de la carte
         }

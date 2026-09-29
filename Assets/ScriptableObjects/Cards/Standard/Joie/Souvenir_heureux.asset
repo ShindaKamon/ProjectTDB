@@ -10,19 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Voile_d_ombre
+  m_Name: Souvenir_heureux
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: Voile d'ombre
-  description: "Gagne un bouclier de 11 PV (jusqu'\xE0 \xE9puisement)."
+  cardName: Souvenir heureux
+  description: "Soigne 12 PV \xE0 toi ou \xE0 un alli\xE9 \xE0 1-5 cases et pioche
+    1 carte."
   specialText: 
   artwork: {fileID: 0}
-  emotionType: 5
+  emotionType: 7
   category: 0
   signatureOwner: {fileID: 0}
-  costPA: 1
+  costPA: 2
   costHP: 0
-  targetType: 1
-  targetRange: 0
+  targetType: 4
+  targetRange: 5
   targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
@@ -32,11 +33,11 @@ MonoBehaviour:
   damageAmount: 0
   damageType: 0
   damageSelf: 0
-  healAmount: 0
+  healAmount: 12
   lifestealFixedAmount: 0
   damageAroundTarget: 0
   nextAttackBonus: 0
-  shieldAmount: 11
+  shieldAmount: 0
   reactiveShield: 0
   armorAmount: 0
   magicResistanceAmount: 0
@@ -44,6 +45,8 @@ MonoBehaviour:
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 0
@@ -53,7 +56,8 @@ MonoBehaviour:
   casterActionGain: 0
   casterArmorAmount: 0
   casterMovementLoss: 0
-  drawAmount: 0
+  drawAmount: 1
+  discardHandAttackBonusPerCard: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0

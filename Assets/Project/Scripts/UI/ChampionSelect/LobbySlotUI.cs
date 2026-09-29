@@ -41,6 +41,27 @@ public class LobbySlotUI : MonoBehaviour
         }
     }
 
+    /// <summary>Salon réseau : joueur connecté qui n'a pas encore choisi son champion.</summary>
+    public void ShowChoosing(int playerIndex)
+    {
+        gameObject.SetActive(true);
+        if (_filledRoot != null) _filledRoot.SetActive(true);
+        if (_addButton != null) _addButton.gameObject.SetActive(false);
+
+        if (_playerLabel != null) _playerLabel.text = $"Joueur {playerIndex + 1}";
+        if (_championName != null) _championName.text = "Choisit son champion…";
+        if (_deckInfo != null) _deckInfo.text = "";
+        if (_portrait != null) _portrait.enabled = false;
+    }
+
+    /// <summary>Salon réseau : repère le joueur de ce PC et n'affiche que les boutons permis.</summary>
+    public void SetNetworkRole(bool isLocalPlayer)
+    {
+        if (_playerLabel != null && isLocalPlayer) _playerLabel.text += " · toi";
+        if (_changeButton != null) _changeButton.gameObject.SetActive(isLocalPlayer);
+        if (_removeButton != null) _removeButton.gameObject.SetActive(false); // chacun quitte depuis son PC
+    }
+
     public void ShowEmpty()
     {
         gameObject.SetActive(true);

@@ -497,6 +497,9 @@ public class Unit : MonoBehaviour
         return Mathf.Max(1, damage - defense);
     }
 
+    /// <summary>Prévient l'affichage qu'une stat dérivée d'un passif a changé.</summary>
+    protected void NotifyStatsModified() => OnStatsModified?.Invoke();
+
     // ========== BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ==========
 
     // Dégâts ajoutés à la prochaine carte qui inflige des dégâts, puis consommés ; cumulable,

@@ -113,8 +113,15 @@ public class ChampionSelectManager : MonoBehaviour
 
     void Start()
     {
+        // Multijoueur réseau : le salon suit la session (arrivées, départs, choix de chacun)
+        if (NetworkSession.IsActive)
+        {
+            NetworkSession.Instance.OnLobbyChanged += OnNetworkLobbyChanged;
+            OnNetworkLobbyChanged();
+            ShowLobby();
+        }
         // Multijoueur : on arrive sur le salon, le champion se choisit en ouvrant une case
-        if (CombatParty.IsMultiplayer)
+        else if (CombatParty.IsMultiplayer)
             _lobby?.Refresh();
         else
             SelectFirstAvailableChampion();
@@ -140,6 +147,8 @@ public class ChampionSelectManager : MonoBehaviour
 
     private bool IsTakenByAnotherPlayer(ChampionData champion)
     {
+        if (NetworkSession.IsActive)
+            return NetworkSession.Instance.Lobby.IsTakenByOther(champion.championName, NetworkSession.Instance.LocalClientId);
         if (!CombatParty.IsMultiplayer) return false;
         int owner = CombatParty.IndexOf(champion);
         return owner >= 0 && owner != _editingSlot;
@@ -147,6 +156,9 @@ public class ChampionSelectManager : MonoBehaviour
 
     void OnDestroy()
     {
+        if (NetworkSession.Instance != null)
+            NetworkSession.Instance.OnLobbyChanged -= OnNetworkLobbyChanged;
+
         if (_deckListUI != null)
             _deckListUI.OnDeckSelected -= OnDeckSelected;
 
@@ -375,6 +387,15 @@ public class ChampionSelectManager : MonoBehaviour
     /// <summary>Inscrit (ou modifie) le joueur de la case en cours puis revient au salon.</summary>
     private void ConfirmPlayer()
     {
+        // Réseau : le choix part chez l'hôte, qui le valide et le renvoie à tous
+        if (NetworkSession.IsActive)
+        {
+            var deckNames = _selectedDeck != null ? _selectedDeck.ConvertAll(c => c.cardName) : new List<string>();
+            NetworkSession.Instance.SubmitPick(_selectedChampion.championName, deckNames);
+            ShowLobby();
+            return;
+        }
+
         bool ok = _editingSlot >= CombatParty.Count
             ? CombatParty.TryAdd(_selectedChampion, _selectedDeck)
             : CombatParty.TryReplace(_editingSlot, _selectedChampion, _selectedDeck);
@@ -405,6 +426,12 @@ public class ChampionSelectManager : MonoBehaviour
 
         // Changer : on repart du champion actuel du joueur ; Ajouter : du premier libre
         ChampionData current = slot < CombatParty.Count ? CombatParty.Members[slot].Champion : null;
+        if (NetworkSession.IsActive)
+        {
+            var lobby = NetworkSession.Instance.Lobby;
+            int own = lobby.IndexOf(NetworkSession.Instance.LocalClientId);
+            current = own >= 0 && lobby.Members[own].HasPicked ? FindChampion(lobby.Members[own].ChampionName) : null;
+        }
         if (current != null && _championButtons.TryGetValue(current, out Button button))
             SelectChampion(current, button);
         else
@@ -419,13 +446,64 @@ public class ChampionSelectManager : MonoBehaviour
 
     private void ShowLobby()
     {
-        _lobby?.Refresh();
+        RefreshLobby();
         if (_flowController != null)
             _flowController.ShowScreen(ChampionSelectFlowController.Screen.Lobby);
     }
 
+    private void RefreshLobby()
+    {
+        if (_lobby == null) return;
+
+        if (NetworkSession.IsActive)
+        {
+            NetworkSession session = NetworkSession.Instance;
+            string info = session.IsHost ? $"Adresse à donner : {NetworkSession.LocalIPv4()}" : "En attente de l'hôte";
+            _lobby.RefreshNetwork(session.Lobby, session.LocalClientId, session.IsHost, FindChampion, info);
+        }
+        else
+        {
+            _lobby.Refresh();
+        }
+    }
+
+    // ========== MULTIJOUEUR (réseau local) ==========
+
+    private ChampionData FindChampion(string championName) =>
+        _allChampions != null ? _allChampions.Find(c => c != null && c.championName == championName) : null;
+
+    /// <summary>
+    /// Le salon réseau a changé : l'équipe du combat (CombatParty) suit les joueurs qui ont choisi,
+    /// dans l'ordre d'arrivée (= ordre des tours) ; elle est prête quand l'hôte lance le combat.
+    /// </summary>
+    private void OnNetworkLobbyChanged()
+    {
+        if (!NetworkSession.IsActive) return;
+
+        CombatParty.Clear();
+        CombatParty.IsMultiplayer = true;
+        CardCollection collection = _deckListUI != null ? _deckListUI.Collection : null;
+        foreach (LobbyState.Member member in NetworkSession.Instance.Lobby.Members)
+        {
+            ChampionData champion = member.HasPicked ? FindChampion(member.ChampionName) : null;
+            if (champion == null) continue;
+            CombatParty.TryAdd(champion, DeckSaveManager.GetCardsFromNames(member.DeckCardNames, collection));
+        }
+
+        // Rafraîchit le salon seulement s'il est affiché (pas pendant le choix du champion)
+        if (_flowController == null || _flowController.CurrentScreen == ChampionSelectFlowController.Screen.Lobby)
+            RefreshLobby();
+    }
+
     private void StartMultiplayerGame()
     {
+        if (NetworkSession.IsActive)
+        {
+            if (NetworkSession.Instance.StartCombat(_combatSceneName))
+                GameLog.Log($"Réseau : lancement du combat avec {CombatParty.Count} joueurs.");
+            return;
+        }
+
         if (CombatParty.Count < 2) return;
         GameLog.Log($"Lancement du combat avec {CombatParty.Count} joueurs.");
         SceneManager.LoadScene(_combatSceneName);
@@ -441,6 +519,8 @@ public class ChampionSelectManager : MonoBehaviour
 
     private void BackToMainMenu()
     {
+        // Réseau : on quitte la partie (l'hôte la ferme pour tout le monde)
+        if (NetworkSession.Instance != null) NetworkSession.Instance.Shutdown();
         SceneManager.LoadScene(_mainMenuSceneName);
     }
 }

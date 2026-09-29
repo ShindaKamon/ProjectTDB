@@ -35,6 +35,22 @@ public class TurnChangedEvent : GameEvent
 }
 
 /// <summary>
+/// Fin de tour refusée : le champion a plus de cartes en main que le maximum et doit
+/// d'abord en défausser Count (au choix du joueur)
+/// </summary>
+public class HandDiscardRequiredEvent : GameEvent
+{
+    public Unit Unit { get; private set; }
+    public int Count { get; private set; }
+
+    public HandDiscardRequiredEvent(Unit unit, int count)
+    {
+        Unit = unit;
+        Count = count;
+    }
+}
+
+/// <summary>
 /// Publié quand le joueur clique sur "Fin de tour"
 /// </summary>
 public class TurnEndRequestedEvent : GameEvent
@@ -160,7 +176,8 @@ public enum UnitEffect
     MovementPoints,         // idem ; int.MaxValue en négatif = tous les PM
     DamageTakenPercent,     // ex. -15 : dégâts subis réduits de 15 %
     NextAttackPercent,      // ex. +15 : prochaine carte de dégâts +15 %
-    PmImmune                // Ténacité (montant ignoré)
+    PmImmune,               // Ténacité (montant ignoré)
+    CardCancelled           // prochaine carte du monstre annulée (montant ignoré)
 }
 
 /// <summary>

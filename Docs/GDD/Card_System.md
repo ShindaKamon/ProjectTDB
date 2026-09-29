@@ -56,6 +56,53 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 - Le **niveau** du champion débloque des **slots de cartes**, mais n'augmente jamais la puissance des cartes (voir `Progression.md`)
 - Suivi de la composition : onglet « Suivi de deck » de l'Excel
 
+### Viabilité des couleurs et decks d'exemple (29/09/2026)
+
+Objectif : **chaque couleur est jouable seule** (chacune garde son point fort : Colère = dégâts, Peur = contrôle, Joie = soin) et **chaque champion a plusieurs decks viables aux façons de jouer différentes**. Pour que la Joie seule puisse finir un combat, deux cartes offensives bon marché lui ont été ajoutées : **Étincelle** (1 PA, 10 dégâts, portée 1-3) et **Rire lumineux** (2 PA, 13 dégâts au contact, vol de vie 13 — « soin + miroir dégâts » de l'Excel).
+
+Decks d'exemple (4 Signatures + 16 Standard). Le **deck de base** de chaque champion (ses cartes de départ, `ChampionData.startingDeck`) est son archétype principal : Écho de Colère (Evan), Grimpeur furieux (Crux), Suite (Raze) ; les deux autres sont enregistrés comme decks perso :
+
+| Champion | Deck | Couleurs | Façon de jouer | Cœur du deck |
+|---|---|---|---|---|
+| Evan | Écho de Colère | Colère | Multiplier les échos de Lyse (un par cible) | Frappe rapide ×4, Jet de rage ×3, Explosion de rage ×2, Éclat de rage ×2 |
+| Evan | Cauchemar partagé | Peur | Contrôle à plusieurs cibles, Lyse double les coups | Frappe hésitante ×4, Cauchemar collectif ×2, Aura de terreur ×2, Rumination ×2, Sidération ×1 |
+| Evan | Frère et sœur | Joie + Peur | Survie : soigner Evan et Lyse, grignoter à distance | Souffle apaisant ×3, Souvenir heureux ×2, Élan partagé ×1, Étincelle ×3, Ombre rampante ×3 |
+| Crux | Grimpeur furieux | Colère | Plonger au contact et frapper en zone | Poing ardent ×3, Balayage furieux ×3, Charge brutale ×3, Rage aveugle ×2, Bond percutant ×2 |
+| Crux | Harceleur | Peur | Frapper, ralentir, reculer | Piège et recul ×3, Piqûre d'angoisse ×4, Effroi partagé ×2, Réflexe de survie ×3 |
+| Crux | Premier de cordée | Joie | Soutien mobile : rejoindre l'équipe et la soigner en zone | Vague de bien-être ×3, Éclat de joie ×3, Rire lumineux ×3, Élan partagé ×2 |
+| Raze | Suite | Colère | Coûts en escalier (1, 2, 3) pour enchaîner les +1 PA | Coup de colère ×4, Frappe rapide ×3, Charge brutale ×2, Sang pour sang ×2, Rage totale ×1 |
+| Raze | Bluff | Colère + Peur | Alterner les émotions pour gagner un bouclier de 8 à chaque changement | Coup de colère ×3, Piqûre d'angoisse ×3, Frappe hésitante ×3, Silence glaçant ×2, Sang pour sang ×1 |
+| Raze | Paire | Joie + Colère | Cartes de même coût (3 PA) : la 2ᵉ ignore les réductions en % | Flamme de l'espoir ×3, Élan de joie ×2, Charge brutale ×3, Sang pour sang ×2, Jet de rage ×2 |
+
+
+### Identité des émotions dans les cartes (29/09/2026)
+
+Deux émotions ne partagent pas la même carte : **Colère** = les plus gros dégâts, payés par une contrepartie (contrecoup, PV), sans soin ni vol de vie ; **Peur** = dégâts moindres, mais chaque attaque contrôle (perte de PM, poussée) ; **Joie** = dégâts les plus faibles, mais chaque attaque soigne (vol de vie) ou apporte de la valeur (pioche).
+
+| Carte | Avant | Après |
+|---|---|---|
+| Ombre rampante (Peur) | 9 dégâts | 9 dégâts + perd 1 PM |
+| Étincelle (Joie) | 10 dégâts | 8 dégâts + vol de vie 8 |
+| Sang bouillonnant (Colère) | 18 + vol de vie 18 | 32 dégâts, contrecoup 7 |
+| Armure de rage (Colère) | Bouclier 23 | Armure +5 (1 tour) + 12 dégâts sur la prochaine carte offensive |
+| Flamme de l'espoir (Joie) | 38 dégâts | 32 dégâts + pioche 1 |
+| Onde radieuse (Joie) | 33 en ligne | 24 + vol de vie 6 par ennemi touché |
+| Rayonnement de joie (Joie) | 35 en cercle de 2 | 26 + vol de vie 5 par ennemi touché |
+| Éclat de rage / Explosion de rage / Jet de rage (Colère) | 27 / 32 / 23 | 33 / 40 / 27 (remontées au budget de l'Excel) |
+
+### Pool de base restreint et refontes (29/09/2026)
+
+Pas de nouvelles cartes : les cartes peu utiles ou en doublon sont **refondues** pour porter les mécaniques de profondeur (pioche, PA, défausse, annulation d'intention). Les idées de cartes supplémentaires iront dans une **extension**.
+
+| Ancienne carte | Nouvelle carte | Effet |
+|---|---|---|
+| Frénésie incontrôlée (Colère) | **Sang pour sang** | 0 PA, coûte 10 PV : +2 PA ce tour (au-delà du maximum) |
+| Déferlante (Colère) | **Rage aveugle** | 2 PA : défausse ta main, +8 dégâts sur ta prochaine carte offensive par carte défaussée |
+| Voile d'ombre (Peur) | **Rumination** | 1 PA : pioche 2, tu perds 1 PM pendant 1 tour |
+| Regard glaçant (Peur) | **Sidération** | 4 PA, 1-6 cases : le monstre ne joue pas sa prochaine carte (ni attaque de base) et passe à la suivante ; son aperçu l'affiche barrée |
+| Lumière bienveillante (Joie) | **Souvenir heureux** | 2 PA, toi ou un allié à 1-5 cases : soigne 12 et pioche 1 |
+| Renfort du cœur (Joie) | **Élan partagé** | 2 PA, toi ou un allié à 1-5 cases : +2 PA au prochain tour (au-delà du maximum, sans cumul) |
+
 ---
 
 ## Budget de Puissance
@@ -101,11 +148,11 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 | **Enemy** | Un ou plusieurs ennemis | Attaque |
 | **Ally** | Alliés (sauf soi) | Soigner un allié |
 | **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
-| **AllyorEnemy** | Alliés ET ennemis | Aucune carte pour l'instant (prévu pour Corde de rappel, voir `Technical_Specs.md`) |
+| **AllyorEnemy** | Alliés ET ennemis | Grappin (Crux) |
 | **AnyUnit** | N'importe quelle unité | Aucune carte pour l'instant |
 | **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (si Lyse est déjà là : cible Lyse pour la soigner), Écho évanescent (Evan), Bond percutant (bond) |
-| **AnyTile** | N'importe quelle tuile | Piolet d'ascension (Crux, charge en ligne droite) |
-| **EnemyOrTile** | Un ennemi ou une tuile | Éclat de rage |
+| **AnyTile** | N'importe quelle tuile | Aucune carte pour l'instant (Grappin, ex-Piolet d'ascension, cible désormais une unité : AllyorEnemy, charge en ligne droite jusqu'à elle) |
+| **EnemyOrTile** | Un ennemi ou une tuile | Éclat de rage, Balayage furieux |
 
 Option **ciblage en ligne droite** (`targetInStraightLine`) : la cible doit être sur la même ligne ou la même colonne que le lanceur, sans diagonale (Éclat de rage). On vise toujours une **case** : une unité ne masque jamais la case derrière elle.
 

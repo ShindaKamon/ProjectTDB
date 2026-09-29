@@ -455,6 +455,21 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void CanTargetTile_ChargeOnUnit_RequiresStraightLineAndRange()
+        {
+            // Piolet d'ascension : charge qui cible une unité, pas une case
+            var card = NewCard();
+            card.isChargeCard = true;
+            card.targetType = CardTargetType.AllyorEnemy;
+            card.targetRange = 5;
+            var source = NewUnit<Unit>(gridPos: Vector2Int.zero);
+
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, source, new Vector2Int(0, 3)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(2, 3)).IsValid, "hors ligne");
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(0, 6)).IsValid, "hors portée");
+        }
+
+        [Test]
         public void CanTargetTile_OutOfRange_Fails()
         {
             var card = NewCard();

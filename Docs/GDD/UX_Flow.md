@@ -165,7 +165,7 @@ Tout ce qui est gagné (XP, cartes, Or) est **conservé** — pas de remise à z
 **Séquence :**
 1. Message « À VOTRE TOUR » (0.5s)
 2. Restauration des ressources (PA, PM)
-3. Pioche 1 carte (main de départ 5, max 5)
+3. Pioche 1 carte (main de départ 5 ; au-delà de 5 en fin de tour, défausse au choix)
 4. Effets de début de tour (poison, régénération)
 5. Activation des contrôles
 

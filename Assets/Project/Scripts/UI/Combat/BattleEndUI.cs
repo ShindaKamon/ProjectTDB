@@ -70,6 +70,10 @@ public class BattleEndUI : MonoBehaviour
         _title.text = victory ? "VICTOIRE !" : "DÉFAITE";
         _title.color = victory ? _victoryColor : _defeatColor;
         _subtitle.text = victory ? "Tous les ennemis sont vaincus." : "Tous les champions sont tombés.";
+        // Réseau : « Rejouer » ne relancerait le combat que sur ce PC (étape 2 à venir)
+        Transform replay = _root.transform.Find("ReplayButton");
+        if (replay != null) replay.gameObject.SetActive(!NetworkSession.IsActive);
+
         _alliesTable.text = Table("Alliés", _stats.Allies);
         _enemiesTable.text = Table("Ennemis", _stats.Enemies);
         _root.SetActive(true);

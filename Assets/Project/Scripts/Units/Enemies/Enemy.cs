@@ -71,6 +71,34 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
         return _combatDeck[_currentCardIndex];
     }
 
+    /// <summary>
+    /// True si la prochaine carte est annulée (ex: Sidération) : à son prochain tour, le monstre
+    /// ne la joue pas (ni attaque de base) et passe à la suivante de son pattern
+    /// </summary>
+    public bool IsNextCardCancelled { get; private set; }
+
+    public void CancelNextCard()
+    {
+        if (GetNextCard() == null) return;
+        IsNextCardCancelled = true;
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.CardCancelled, 0));
+        OnNextCardChanged?.Invoke(GetNextCard()); // l'aperçu affiche la carte comme annulée
+    }
+
+    /// <summary>
+    /// Au tour du monstre : si sa carte était annulée, la saute et retourne true
+    /// </summary>
+    public bool ConsumeCancelledCard()
+    {
+        if (!IsNextCardCancelled) return false;
+        IsNextCardCancelled = false;
+        GetNextCard(); // boucle du pattern si besoin
+        _currentCardIndex++;
+        GameLog.Log($"{name} (Enemy) : carte annulée, passe à la suivante");
+        OnNextCardChanged?.Invoke(GetNextCard());
+        return true;
+    }
+
     // ========== INITIALISATION ==========
 
     /// <summary>
@@ -211,14 +239,14 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
         _actionPointsComponent.ReduceCurrentPA(amount);
     }
 
-    public void AddPA(int amount)
+    public void AddPA(int amount, bool canExceedMax = false)
     {
         if (_actionPointsComponent == null)
         {
             Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
             return;
         }
-        _actionPointsComponent.AddPA(amount);
+        _actionPointsComponent.AddPA(amount, canExceedMax);
         if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
     }
 

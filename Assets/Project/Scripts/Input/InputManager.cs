@@ -156,10 +156,9 @@ public class InputManager : MonoBehaviour
                         Tile unitTile = Services.Grid.GetTileAtPosition(targetPos);
                         int lineDist = GridGeometry.Distance(sourcePos, targetPos);
 
-                        // Valide si en ligne droite, dans la portée, et c'est un ennemi
+                        // Valide si en ligne droite, dans la portée, et une cible valide (ennemi ; allié aussi si la carte cible une unité)
                         if (currentSelectedCard.IsValidChargeTarget(unitTile, activeUnit) &&
-                            lineDist <= currentSelectedCard.targetRange &&
-                            hoveredUnit.GetFaction() != activeUnit.GetFaction())
+                            lineDist <= currentSelectedCard.targetRange)
                         {
                             hoveredPos = targetPos;
                             isValidHoverTarget = true;
@@ -275,6 +274,10 @@ public class InputManager : MonoBehaviour
                 // Autorise le clic sur le monde si ce n’est pas la main UI
                 if (_handUIController != null && _handUIController.SelectedCard != null)
                 {
+                    // Carte qui cible une carte de la main (ex: Triche) : un clic sur l'interface
+                    // (une carte de la main, le choix du coût) ne doit pas la désélectionner
+                    if (_handUIController.SelectedCard.targetsHandCard) return;
+
                     if (hoveredUI == null || hoveredUI.GetComponentInParent<HandUIController>() == null)
                     {
                         GameLog.Log("Clic gauche vers le monde, carte sélectionnée : tentative de jeu");
@@ -527,8 +530,8 @@ public class InputManager : MonoBehaviour
             return;
         }
 
-        // Cas spécial : Carte de charge ciblant un ennemi directement (doit être traité AVANT la vérification de portée classique)
-        if (selectedCard.isChargeCard && targetUnit != null && targetUnit.GetFaction() != activeUnit.GetFaction())
+        // Cas spécial : carte de charge ciblant une unité (ennemi, ou allié si la carte cible une unité) — avant la vérification de portée classique
+        if (selectedCard.isChargeCard && targetUnit != null && targetUnit != activeUnit)
         {
             Vector2Int sourcePos = activeUnit.GetCurrentGridPos();
             Vector2Int enemyPos = targetUnit.GetCurrentGridPos();

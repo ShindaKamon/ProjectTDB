@@ -46,6 +46,26 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void AllyOrEnemyCard_DamagesEnemy_ButNeverAlly()
+        {
+            // Corde de rappel : tire un allié ou un ennemi, seul l'ennemi prend les dégâts
+            var crux = NewUnit<CruxUnit>(new Vector2Int(0, 0));
+            var ally = NewUnit<EvanUnit>(new Vector2Int(0, 3));
+            var enemy = NewUnit<Enemy>(new Vector2Int(3, 0));
+            var card = ScriptableObject.CreateInstance<CardData>();
+            _created.Add(card);
+            card.targetType = CardTargetType.AllyorEnemy;
+            card.targetRange = 5;
+            card.damageAmount = 15;
+
+            card.ExecuteEffect(crux, ally);
+            card.ExecuteEffect(crux, enemy);
+
+            Assert.AreEqual(100, ally.GetHealth());
+            Assert.AreEqual(85, enemy.GetHealth());
+        }
+
+        [Test]
         public void FrappeRapide_TwoTargets_LyseEchoesEachTarget()
         {
             var evan = NewUnit<EvanUnit>(new Vector2Int(0, 0));

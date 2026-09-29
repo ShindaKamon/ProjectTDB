@@ -4,7 +4,7 @@ using UnityEngine;
 /// RazeUnit hérite de Champion et représente le champion Raze.
 /// Passif : Main gagnante — analyse la carte en cours par rapport à la précédente jouée ce
 /// tour et déclenche un bonus selon le motif reconnu par cette paire :
-/// - Bluff (émotions différentes) → -10% dégâts subis jusqu'au prochain tour.
+/// - Bluff (émotions différentes) → bouclier (comme celui des cartes, sans durée).
 /// - Suite (coûts N puis N+1) → +1 PA immédiat.
 /// - Paire (même coût) → cette carte ignore les réductions de dégâts en % de la cible.
 /// Le plus exigeant l'emporte si une paire remplit plusieurs critères à la fois (Bluff >
@@ -14,12 +14,12 @@ using UnityEngine;
 public class RazeUnit : Champion, IComboTracker
 {
     [Header("=== Main gagnante ===")]
-    [Tooltip("Réduction des dégâts subis quand le bouclier Bluff est actif (0.10 = -10%)")]
-    [SerializeField] private float _bluffDamageReduction = 0.10f;
+    [Tooltip("Bouclier gagné à chaque Bluff (PV absorbés, sans durée)")]
+    [SerializeField] private int _bluffShield = 8;
 
     private CardData _lastCardPlayedThisTurn;
+    private int _lastCardCost; // coût réellement payé (Triche comprise), noté avant que la carte quitte la main
     private int _paSpentThisTurn = 0;
-    private bool _hasBluffShield = false;
     private bool _ignoreReductionThisCard = false;
 
     public int PASpentThisTurn => _paSpentThisTurn;
@@ -36,14 +36,14 @@ public class RazeUnit : Champion, IComboTracker
             bool differentEmotion = card.emotionType != _lastCardPlayedThisTurn.emotionType
                 && card.emotionType != EmotionType.None
                 && _lastCardPlayedThisTurn.emotionType != EmotionType.None;
-            bool isSuite = card.costPA == _lastCardPlayedThisTurn.costPA + 1;
-            bool isPair = card.costPA == _lastCardPlayedThisTurn.costPA;
+            int cost = EffectiveCost(card);
+            bool isSuite = cost == _lastCardCost + 1;
+            bool isPair = cost == _lastCardCost;
 
             if (differentEmotion)
             {
-                _hasBluffShield = true;
-                GameLog.Log($"[Main gagnante] Bluff ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {name} réduit les prochains dégâts subis de {_bluffDamageReduction:P0} jusqu'à son prochain tour.");
-                EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.DamageTakenPercent, -Mathf.RoundToInt(_bluffDamageReduction * 100)));
+                GameLog.Log($"[Main gagnante] Bluff ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {name} gagne un bouclier de {_bluffShield}.");
+                AddShield(_bluffShield, this);
             }
             else if (isSuite)
             {
@@ -60,39 +60,24 @@ public class RazeUnit : Champion, IComboTracker
 
     public void OnCardResolved(CardData card)
     {
-        _paSpentThisTurn += card.costPA;
+        _lastCardCost = EffectiveCost(card);
+        _paSpentThisTurn += _lastCardCost;
+        NotifyStatsModified(); // la main réaffiche les dégâts de Tapis
         _lastCardPlayedThisTurn = card;
     }
 
-    // ========== BOUCLIER BLUFF (dégâts subis) ==========
-
-    public override void TakeDamage(int rawDamage)
-    {
-        if (_hasBluffShield && rawDamage > 0)
-        {
-            int reduced = Mathf.Max(1, Mathf.RoundToInt(rawDamage * (1f - _bluffDamageReduction)));
-            GameLog.Log($"[Main gagnante] {name} réduit {rawDamage} -> {reduced} dégâts (bouclier Bluff actif)");
-            base.TakeDamage(reduced);
-            return;
-        }
-
-        base.TakeDamage(rawDamage);
-    }
+    // Coût réel d'une carte en main, modification de Triche comprise
+    private int EffectiveCost(CardData card) =>
+        this.TryGetComponentSafe(out DeckManager deck) ? deck.GetEffectiveCost(card) : card.costPA;
 
     /// <summary>
-    /// Réinitialise l'historique de combo et le bouclier Bluff au début du tour de Raze
-    /// (protège tout le tour adverse, comme le Réflexe du grimpeur de Crux).
+    /// Réinitialise l'historique de combo au début du tour de Raze
     /// </summary>
     public override void OnOwnTurnStart()
     {
-        if (_hasBluffShield)
-        {
-            _hasBluffShield = false;
-            GameLog.Log($"[Main gagnante] Bouclier Bluff de {name} expiré (nouveau tour)");
-        }
-
         _lastCardPlayedThisTurn = null;
         _paSpentThisTurn = 0;
+        NotifyStatsModified();
 
         base.OnOwnTurnStart();
     }

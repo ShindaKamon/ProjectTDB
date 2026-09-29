@@ -223,6 +223,12 @@ public class CardData : ScriptableObject
     [Tooltip("Retire tous les PM de la cible au début de son prochain tour (ex: Terreur paralysante)")]
     public bool removeAllMovement = false;
 
+    [Tooltip("PA gagnés par la cible au début de son prochain tour, au-delà de son maximum (ex: Élan partagé ; le plus fort l'emporte, pas de cumul)")]
+    public int nextTurnActionGain = 0;
+
+    [Tooltip("Le monstre ciblé ne joue pas sa prochaine carte (ni attaque de base) et passe à la suivante de son pattern (ex: Sidération)")]
+    public bool cancelsEnemyNextCard = false;
+
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         6. EFFETS SPÉCIAUX                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
@@ -247,7 +253,7 @@ public class CardData : ScriptableObject
     [Tooltip("PM gagnés par le lanceur pour ce tour (« Élan tactique », ex: Piège et recul)")]
     public int casterMovementGain = 0;
 
-    [Tooltip("PA gagnés par le lanceur pour ce tour (sans dépasser son maximum)")]
+    [Tooltip("PA gagnés par le lanceur pour ce tour, au-delà de son maximum (ex: Sang pour sang)")]
     public int casterActionGain = 0;
 
     [Tooltip("Armure du lanceur pendant effectDuration tours (négatif = vulnérabilité, ex: Communion joyeuse)")]
@@ -263,6 +269,9 @@ public class CardData : ScriptableObject
     [Header("═══ GESTION DU DECK ═══")]
     [Tooltip("Nombre de cartes à piocher")]
     public int drawAmount = 0;
+
+    [Tooltip("Si > 0 : défausse le reste de la main du lanceur, qui gagne ce bonus de dégâts sur sa prochaine carte offensive par carte défaussée (ex: Rage aveugle)")]
+    public int discardHandAttackBonusPerCard = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         11. INVOCATION                                     ║
@@ -361,6 +370,14 @@ public class CardData : ScriptableObject
         Vector2Int sourcePos = source.GetCurrentGridPos();
         Vector2Int tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
 
+        // Charge qui cible une unité (ex: Grappin, allié ou ennemi) : il faut une cible
+        // valide au bout de la ligne ; sinon une case vide ou un ennemi
+        if (targetsUnit)
+        {
+            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(tilePos);
+            return unitOnTile != null && IsValidTarget(source, unitOnTile)
+                && ChargeHelper.IsValidChargeTarget(sourcePos, tilePos, source, allowAllyAtTarget: true);
+        }
         return ChargeHelper.IsValidChargeTarget(sourcePos, tilePos, source);
     }
 
@@ -583,6 +600,10 @@ public class CardData : ScriptableObject
 
         // Variables locales pour les valeurs finales (modifiables par boost)
         int finalDamage = damageAmount;
+        // Carte « allié ou ennemi » (ex: Corde de rappel) : jamais de dégâts sur un allié (le bonus
+        // de prochaine attaque n'est donc pas consommé non plus)
+        if (targetType == CardTargetType.AllyorEnemy && targetUnit != null && targetUnit.GetFaction() == source.GetFaction())
+            finalDamage = 0;
         int finalHeal = healAmount;
         int finalShield = shieldAmount;
         int finalDraw = drawAmount;
@@ -782,6 +803,28 @@ public class CardData : ScriptableObject
             }
         }
 
+        // 2. Défausse de la main contre un bonus de prochaine attaque (ex: Rage aveugle)
+        if (discardHandAttackBonusPerCard > 0 && !isAdditionalMultiTargetHit
+            && source.TryGetComponentSafe(out DeckManager discardDeck))
+        {
+            int discarded = discardDeck.DiscardHandExcept(this);
+            if (discarded > 0) source.AddNextAttackBonus(discarded * discardHandAttackBonusPerCard);
+            GameLog.Log($"{cardName} : {discarded} carte(s) défaussée(s), +{discarded * discardHandAttackBonusPerCard} dégâts sur la prochaine attaque");
+        }
+
+        // 3. Monstre ciblé : annule sa prochaine carte (ex: Sidération)
+        if (cancelsEnemyNextCard && targetUnit is Enemy cancelledEnemy)
+        {
+            cancelledEnemy.CancelNextCard();
+        }
+
+        // Gain de PA au prochain tour de la cible, ou du lanceur pour une carte sur soi (ex: Élan partagé)
+        if (nextTurnActionGain > 0)
+        {
+            Unit bonusTarget = (targetsUnit && targetUnit != null) ? targetUnit : source;
+            ResourceDebuffManager.ApplyActionBonus(bonusTarget, nextTurnActionGain, source);
+        }
+
         // 4. Bonus de prochaine attaque, armure, résistance magique, bouclier
         if (finalNextAttackBonus > 0 || finalShield != 0 || armorAmount != 0 || magicResistanceAmount != 0)
         {
@@ -845,7 +888,12 @@ public class CardData : ScriptableObject
                 Vector2 direction = pullsTowardCaster
                     ? (Vector2)(sourcePos - movedPos)
                     : (Vector2)(movedPos - sourcePos);
-                moved.ApplyKnockback(direction, knockbackDistance);
+                Vector2Int endPos = moved.ApplyKnockback(direction, knockbackDistance);
+
+                // Tirage qui amène l'unité au contact du lanceur (ex: Corde de rappel + Réflexe du grimpeur)
+                if (pullsTowardCaster && !isAdditionalMultiTargetHit && source is IContactReactor contactReactor
+                    && GridGeometry.Distance(endPos, sourcePos) == 1)
+                    contactReactor.OnContactCreated(moved);
             }
         }
 
@@ -877,7 +925,7 @@ public class CardData : ScriptableObject
         if (!isAdditionalMultiTargetHit)
         {
             if (casterMovementGain > 0) source.GainMovement(casterMovementGain);
-            if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain);
+            if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain, canExceedMax: true);
             if (casterArmorAmount != 0) source.ModifyStats(0, casterArmorAmount, 0, Mathf.Max(1, effectDuration), source);
             if (casterMovementLoss > 0) ResourceDebuffManager.ApplyDebuff(source, 0, casterMovementLoss, source);
 
@@ -955,10 +1003,10 @@ public class CardData : ScriptableObject
             }
         }
 
-        // Notifie l'unité de son atterrissage (ex: Réflexe du grimpeur de Crux)
-        if (source is IChargeLandingReactor landingReactor)
+        // Notifie l'unité de son atterrissage au contact (ex: Réflexe du grimpeur de Crux)
+        if (source is IContactReactor contactReactor)
         {
-            landingReactor.OnChargeLanded();
+            contactReactor.OnContactCreated(null);
         }
 
         // --- BONUS DE PROCHAINE ATTAQUE puis MODIFICATEUR DE DÉGÂTS SORTANTS ---
@@ -1050,8 +1098,8 @@ public class CardData : ScriptableObject
             yield return null;
 
             // Un bond est un déplacement rapide : il déclenche le Réflexe du grimpeur, comme la charge
-            if (source is IChargeLandingReactor landingReactor)
-                landingReactor.OnChargeLanded();
+            if (source is IContactReactor contactReactor)
+                contactReactor.OnContactCreated(null);
         }
         else
         {

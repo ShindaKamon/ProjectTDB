@@ -46,7 +46,8 @@ public interface IActionPointsUser
     void ReduceCurrentPA(int amount);
 
     /// <summary>
-    /// Ajoute des PA courants (ex: gain de PA d'une carte), sans dépasser le maximum
+    /// Ajoute des PA courants, sans dépasser le maximum ; canExceedMax = au-delà du maximum
+    /// (ex: Sang pour sang, Élan partagé)
     /// </summary>
-    void AddPA(int amount);
+    void AddPA(int amount, bool canExceedMax = false);
 }

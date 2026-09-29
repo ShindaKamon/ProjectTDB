@@ -16,6 +16,8 @@ public class ChampionHUD : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _pmText;
     [SerializeField] private TextMeshProUGUI _atkText;
     [SerializeField] private TextMeshProUGUI _defText;
+    [Tooltip("Résumé du passif du champion, sous les stats")]
+    [SerializeField] private TextMeshProUGUI _passiveText;
 
     [Header("Barres (optionnel)")]
     [SerializeField] private Slider _hpBar;
@@ -147,6 +149,8 @@ public class ChampionHUD : MonoBehaviour
         UpdatePM(_champion.GetCurrentMovementPoints(), _champion.GetMaxMovementPoints());
         UpdateAtk();
         UpdateDefense();
+
+        if (_passiveText != null) _passiveText.text = CodexCardVisual.PassiveText(_champion.championData);
     }
 
     private void UpdateHP(int current, int max)
@@ -200,6 +204,10 @@ public class ChampionHUD : MonoBehaviour
             // Bonus de prochaine attaque en attente (ex: Montée d'adrénaline) affiché à côté
             int bonus = _champion.GetNextAttackBonus();
             _atkText.text = bonus > 0 ? $"ATQ : {_champion.GetAttack()} (+{bonus})" : $"ATQ : {_champion.GetAttack()}";
+
+            // Bonus en % sur la prochaine carte de dégâts (ex: Réflexe du grimpeur de Crux), à côté aussi
+            if (_champion is IOutgoingDamageModifier modifier && modifier.GetDamageMultiplier() > 1f)
+                _atkText.text += $" (+{Mathf.RoundToInt((modifier.GetDamageMultiplier() - 1f) * 100)} %)";
         }
     }
 

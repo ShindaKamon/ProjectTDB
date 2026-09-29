@@ -89,12 +89,7 @@ public class DeckManager : MonoBehaviour
             }
         }
 
-        if (_hand.Count >= _maxHandSize)
-        {
-            GameLog.LogWarning("Main pleine. Impossible de piocher une nouvelle carte.");
-            return null; // La main est pleine, ne pioche pas
-        }
-
+        // Pas de limite pendant le tour : l'excédent sur _maxHandSize se défausse en fin de tour (ExcessCards)
         CardData drawnCard = _deck[0];
         _deck.RemoveAt(0);
         _hand.Add(drawnCard);
@@ -159,6 +154,17 @@ public class DeckManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Début du tour du propriétaire : les coûts modifiés (ex: Triche) des cartes non jouées
+    /// reviennent à leur valeur normale.
+    /// </summary>
+    public void ClearAllCostOverrides()
+    {
+        if (_costOverrides.Count == 0) return;
+        _costOverrides.Clear();
+        OnHandChanged?.Invoke(); // la main réaffiche les coûts
+    }
+
+    /// <summary>
     /// Retire tout override de coût sur une carte (ex: à la défausse/fin de partie).
     /// </summary>
     public void ClearCostOverride(CardData card)
@@ -190,6 +196,39 @@ public class DeckManager : MonoBehaviour
         _hand.Clear();
         OnHandChanged?.Invoke();
         OnDiscardChanged?.Invoke(_discardPile.Count);
+    }
+
+    /// <summary>Cartes à défausser avant de finir le tour (main au-delà du maximum).</summary>
+    public int ExcessCards => Mathf.Max(0, _hand.Count - _maxHandSize);
+
+    /// <summary>
+    /// Défausse une carte de la main choisie par le joueur (ex: excédent en fin de tour)
+    /// </summary>
+    public void DiscardFromHand(CardData card)
+    {
+        if (!_hand.Remove(card)) return;
+        ClearCostOverride(card);
+        _discardPile.Add(card);
+        OnHandChanged?.Invoke();
+        OnDiscardChanged?.Invoke(_discardPile.Count);
+        GameLog.Log("Carte défaussée : " + card.cardName);
+    }
+
+    /// <summary>
+    /// Défausse la main sauf un exemplaire de la carte en cours de résolution (défaussée ensuite
+    /// par PlayCard) ; retourne le nombre de cartes défaussées (ex: Rage aveugle)
+    /// </summary>
+    public int DiscardHandExcept(CardData kept)
+    {
+        bool hadKept = _hand.Remove(kept);
+        int discarded = _hand.Count;
+        DiscardHand();
+        if (hadKept)
+        {
+            _hand.Add(kept);
+            OnHandChanged?.Invoke();
+        }
+        return discarded;
     }
 
 }

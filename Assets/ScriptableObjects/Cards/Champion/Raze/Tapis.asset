@@ -13,23 +13,24 @@ MonoBehaviour:
   m_Name: Tapis
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Tapis
-  description: "Inflige 72 d\xE9g\xE2ts \xE0 2 ennemis au contact, +10 par PA d\xE9j\xE0
-    d\xE9pens\xE9 ce tour."
+  description: "Tout miser sur un ennemi au contact : 40 d\xE9g\xE2ts, +8 par PA
+    d\xE9j\xE0 d\xE9pens\xE9 ce tour."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
   category: 2
   signatureOwner: {fileID: 11400000, guid: da96a074e88a56a4a9cef20aa023f665, type: 2}
-  costPA: 5
+  costPA: 3
   costHP: 0
   targetType: 2
   targetRange: 1
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
   targetsHandCard: 0
-  targetCount: 2
-  damageAmount: 72
+  targetCount: 1
+  damageAmount: 40
   damageType: 0
   damageSelf: 0
   healAmount: 0
@@ -44,7 +45,10 @@ MonoBehaviour:
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
   casterRetreat: 0
@@ -53,8 +57,9 @@ MonoBehaviour:
   casterArmorAmount: 0
   casterMovementLoss: 0
   drawAmount: 0
+  discardHandAttackBonusPerCard: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 1
-  comboDamagePerPASpent: 10
+  comboDamagePerPASpent: 8

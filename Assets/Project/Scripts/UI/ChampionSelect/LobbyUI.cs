@@ -58,4 +58,34 @@ public class LobbyUI : MonoBehaviour
         if (_countText != null) _countText.text = $"{CombatParty.Count} / {CombatParty.MAX_PLAYERS}";
         if (_startButton != null) _startButton.interactable = CombatParty.Count >= 2;
     }
+
+    /// <summary>
+    /// Salon réseau : une case par PC connecté (dans l'ordre d'arrivée), le joueur local peut changer
+    /// son champion ; seul l'hôte lance le combat, une fois que tout le monde a choisi.
+    /// </summary>
+    public void RefreshNetwork(LobbyState lobby, ulong localClientId, bool isHost,
+        Func<string, ChampionData> findChampion, string info)
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            if (i >= lobby.Count)
+            {
+                _slots[i].Hide();
+                continue;
+            }
+
+            LobbyState.Member member = lobby.Members[i];
+            ChampionData champion = member.HasPicked ? findChampion(member.ChampionName) : null;
+            if (champion != null) _slots[i].ShowMember(i, champion, member.DeckCardNames.Count);
+            else _slots[i].ShowChoosing(i);
+            _slots[i].SetNetworkRole(member.ClientId == localClientId);
+        }
+
+        if (_countText != null) _countText.text = $"{lobby.Count} / {LobbyState.MAX_PLAYERS} · {info}";
+        if (_startButton != null)
+        {
+            _startButton.gameObject.SetActive(isHost);
+            _startButton.interactable = lobby.CanStart;
+        }
+    }
 }

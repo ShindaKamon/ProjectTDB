@@ -279,6 +279,7 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void OnHandDiscardRequired(HandDiscardRequiredEvent e)
     {
+        if (e.Unit != _boundChampion) return; // réseau : la défausse d'un autre PC se fait là-bas
         if (_selectedCard != null) DeselectCard();
         _cardsToDiscard = e.Count;
         UpdateDiscardPrompt();
@@ -309,12 +310,23 @@ public class HandUIController : MonoBehaviour
 
     private void TryInitialize()
     {
-        // Trouver le DeckManager du joueur actif
-        if (Services.Grid != null && Services.Grid.GetActiveUnit() != null)
+        // Au premier tour : la main du joueur actif s'il joue sur ce PC, sinon (réseau) celle du
+        // joueur de ce PC
+        Unit active = Services.Grid != null ? Services.Grid.GetActiveUnit() : null;
+        if (active == null) return;
+
+        Unit shown = IsLocalChampion(active) ? active : null;
+        foreach (Unit unit in Services.Grid.GetAllUnits())
         {
-            BindToUnit(Services.Grid.GetActiveUnit());
+            if (shown != null) break;
+            if (IsLocalChampion(unit)) shown = unit;
         }
+        if (shown != null) BindToUnit(shown);
     }
+
+    // Champion joué sur ce PC (tous en solo et en coop sur un seul PC)
+    private static bool IsLocalChampion(Unit unit) =>
+        unit is Champion champion && CombatParty.IsLocal(CombatParty.IndexOf(champion.championData));
 
     /// <summary>
     /// Coop : la main affichée suit le champion dont c'est le tour. Pendant le tour d'un
@@ -325,7 +337,8 @@ public class HandUIController : MonoBehaviour
         _cardsToDiscard = 0;
         UpdateDiscardPrompt();
 
-        if (!(e.NewActiveUnit is Champion) || e.NewActiveUnit == _boundChampion) return;
+        // Réseau : pendant le tour du joueur d'un autre PC, on garde la main du joueur de ce PC
+        if (!IsLocalChampion(e.NewActiveUnit) || e.NewActiveUnit == _boundChampion) return;
 
         if (_selectedCard != null) DeselectCard();
         Unbind();
@@ -742,6 +755,9 @@ public class HandUIController : MonoBehaviour
     private void HandleCardClicked(CardData clickedCard)
     {
         GameLog.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
+
+        // Réseau : la main du joueur de ce PC reste visible pendant le tour des autres, sans être jouable
+        if (Services.Commands == null || !Services.Commands.IsLocalTurn) return;
         if (_costChoicePopup != null) _costChoicePopup.Hide(); // un nouveau clic remplace un choix en cours
 
         // Défausse de fin de tour : le clic défausse la carte au lieu de la sélectionner
@@ -1039,7 +1055,8 @@ public class HandUIController : MonoBehaviour
     {
         if (cardUIElement == null || cardUIElement.CardData == null) return;
 
-        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        // PA et PV du champion dont la main est affichée (réseau : le sien, même pendant le tour des autres)
+        Unit activeUnit = _boundChampion != null ? _boundChampion : Services.Grid?.GetActiveUnit();
         CardData card = cardUIElement.CardData;
 
         bool canAfford = true;

@@ -16,6 +16,7 @@ namespace ProjectTDB.Tests
             CollectionAssert.AreEqual(expected.Tiles, actual.Tiles);
             Assert.AreEqual(expected.TargetCardName, actual.TargetCardName);
             Assert.AreEqual(expected.Delta, actual.Delta);
+            Assert.AreEqual(expected.Turn, actual.Turn);
         }
 
         [Test]
@@ -36,6 +37,7 @@ namespace ProjectTDB.Tests
         public void Triche_RoundTrip_KeepsNegativeDelta()
         {
             var command = CombatCommand.ChangeHandCardCost(2, "Triche", "Élan de joie, l'été", -1);
+            command.Turn = 17;
             AssertSame(command, CombatCommand.Deserialize(command.Serialize()));
         }
 

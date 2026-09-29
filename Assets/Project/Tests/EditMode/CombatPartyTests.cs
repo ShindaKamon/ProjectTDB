@@ -151,5 +151,17 @@ namespace ProjectTDB.Tests
             Assert.AreSame(second, CombatParty.Members[0].Champion);
             Assert.AreEqual(-1, CombatParty.IndexOf(first));
         }
+
+        [Test]
+        public void IsLocal_OnlyTheMembersPlayedOnThisPC()
+        {
+            CombatParty.TryAdd(NewChampion(), new List<CardData>(), isLocal: false); // joueur d'un autre PC
+            CombatParty.TryAdd(NewChampion(), new List<CardData>());                  // ce PC
+
+            Assert.IsFalse(CombatParty.IsLocal(0));
+            Assert.IsTrue(CombatParty.IsLocal(1));
+            Assert.IsFalse(CombatParty.IsLocal(-1), "hors tour de joueur");
+            Assert.IsFalse(CombatParty.IsLocal(2), "place vide");
+        }
     }
 }

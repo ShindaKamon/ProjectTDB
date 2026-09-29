@@ -30,6 +30,25 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void SameShuffleSeed_SameDeckOrder()
+        {
+            // Réseau : chaque PC mélange le deck d'un joueur avec la même graine
+            var cards = new List<CardData>();
+            for (int i = 0; i < 12; i++) cards.Add(NewCard("C" + i));
+            List<CardData> Deal(int seed)
+            {
+                var go = new GameObject("TestDeckManager");
+                _created.Add(go);
+                var deck = go.AddComponent<DeckManager>();
+                deck.SetShuffleSeed(seed);
+                deck.InitializeDeck(new List<CardData>(cards));
+                return new List<CardData>(deck.GetHand());
+            }
+
+            CollectionAssert.AreEqual(Deal(42), Deal(42));
+        }
+
+        [Test]
         public void Draw_HasNoHandLimit_AndExcessIsDiscardedByChoice()
         {
             var cards = new List<CardData>();

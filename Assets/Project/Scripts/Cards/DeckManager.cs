@@ -46,9 +46,16 @@ public class DeckManager : MonoBehaviour
         // L'initialisation se fera via GridManager.
     }
 
+    // Hasard du mélange : fixé par une graine en réseau, pour que les decks soient mélangés de la
+    // même façon sur tous les PC (voir SetShuffleSeed)
+    private System.Random _rng = new System.Random();
+
+    /// <summary>Mélanges reproductibles à partir d'une graine (à appeler avant InitializeDeck).</summary>
+    public void SetShuffleSeed(int seed) => _rng = new System.Random(seed);
+
     public void ShuffleDeck()
     {
-        System.Random rng = new System.Random();
+        System.Random rng = _rng;
         _deck = _deck.OrderBy(a => rng.Next()).ToList();
         GameLog.Log("Deck mélangé.");
     }

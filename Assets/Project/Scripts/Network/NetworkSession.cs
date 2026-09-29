@@ -12,13 +12,16 @@ using UnityEngine.SceneManagement;
 /// Partie en réseau local (LAN) : un PC héberge (Héberger), les autres le rejoignent par son IP
 /// (Rejoindre). Crée le NetworkManager (Netcode for GameObjects + Unity Transport) à la demande,
 /// tient le salon (LobbyState) — l'hôte fait foi et le renvoie à tous — et lance les scènes pour
-/// tout le monde. Étape 1 : salon et lancement ; le combat n'est pas encore synchronisé.
+/// tout le monde. En combat, relaie les actions des joueurs (CombatCommand) : l'hôte les vérifie,
+/// les renvoie à tous dans leur ordre d'arrivée, puis chaque PC les exécute.
 /// </summary>
 public class NetworkSession : MonoBehaviour
 {
     public const ushort Port = 7777;
     private const string MsgPick = "tdb.lobby.pick";
     private const string MsgState = "tdb.lobby.state";
+    private const string MsgCommand = "tdb.combat.command"; // client -> hôte : action proposée
+    private const string MsgExecute = "tdb.combat.execute"; // hôte -> clients : action à exécuter
     private const string MainMenuScene = "MainMenuScene";
 
     public static NetworkSession Instance { get; private set; }
@@ -137,6 +140,8 @@ public class NetworkSession : MonoBehaviour
     {
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgPick, OnPickReceived);
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgState, OnStateReceived);
+        _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgCommand, OnCommandReceived);
+        _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgExecute, OnExecuteReceived);
     }
 
     private void OnClientConnected(ulong clientId)
@@ -196,9 +201,52 @@ public class NetworkSession : MonoBehaviour
         if (!IsActive || !_manager.IsServer || !Lobby.CanStart) return false;
 
         _acceptingPlayers = false;
+        Lobby.Seed = new System.Random().Next(1, int.MaxValue); // mélange des decks commun à tous les PC
         BroadcastLobby();
         _manager.SceneManager.LoadScene(combatSceneName, LoadSceneMode.Single);
         return true;
+    }
+
+    // ========== COMBAT ==========
+
+    /// <summary>
+    /// Action d'un joueur de ce PC : envoyée à l'hôte, qui la vérifie et la renvoie à tous
+    /// (l'hôte la traite directement)
+    /// </summary>
+    public void SubmitCommand(CombatCommand command)
+    {
+        if (_manager.IsServer) AcceptCommand(LocalClientId, command);
+        else Send(MsgCommand, command.Serialize(), NetworkManager.ServerClientId);
+    }
+
+    private void OnCommandReceived(ulong senderClientId, FastBufferReader reader)
+    {
+        if (!_manager.IsServer) return;
+        reader.ReadValueSafe(out string data);
+        AcceptCommand(senderClientId, CombatCommand.Deserialize(data));
+    }
+
+    // Hôte : un joueur n'agit que pour son propre champion ; l'ordre d'arrivée fait foi pour tous
+    private void AcceptCommand(ulong senderClientId, CombatCommand command)
+    {
+        if (Lobby.IndexOf(senderClientId) != command.Actor)
+        {
+            GameLog.LogWarning($"Réseau : action refusée, le joueur {senderClientId} ne contrôle pas le joueur {command.Actor + 1} ({command}).");
+            return;
+        }
+
+        string data = command.Serialize();
+        foreach (ulong clientId in _manager.ConnectedClientsIds)
+        {
+            if (clientId != NetworkManager.ServerClientId) Send(MsgExecute, data, clientId);
+        }
+        Services.Commands?.Enqueue(command);
+    }
+
+    private void OnExecuteReceived(ulong senderClientId, FastBufferReader reader)
+    {
+        reader.ReadValueSafe(out string data);
+        Services.Commands?.Enqueue(CombatCommand.Deserialize(data));
     }
 
     private void OnPickReceived(ulong senderClientId, FastBufferReader reader)

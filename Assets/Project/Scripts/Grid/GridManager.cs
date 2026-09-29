@@ -351,6 +351,9 @@ public class GridManager : MonoBehaviour, IGridService
         {
             if (deck != null && deck.Count > 0)
             {
+                // Réseau : mélange commun à tous les PC (graine de l'hôte, une par joueur)
+                if (CombatParty.Seed != 0)
+                    playerDeckManager.SetShuffleSeed(CombatParty.Seed + 7919 * CombatParty.IndexOf(data));
                 playerDeckManager.InitializeDeck(deck);
                 GameLog.Log($"Deck de {champion.name} initialisé avec {deck.Count} cartes.");
             }
@@ -555,9 +558,11 @@ public class GridManager : MonoBehaviour, IGridService
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
-            _inputManager.enabled = true;
-            if (_endTurnButton != null) _endTurnButton.interactable = true;
-            GameLog.Log($"Tour du joueur : {unit.name}");
+            // Réseau : seul le PC du joueur dont c'est le tour peut agir ; les autres regardent
+            bool local = _commands != null && _commands.IsLocalTurn;
+            _inputManager.enabled = local;
+            if (_endTurnButton != null) _endTurnButton.interactable = local;
+            GameLog.Log($"Tour du joueur : {unit.name}{(local ? "" : " (autre PC)")}");
         }
         else // Ennemi
         {

@@ -469,7 +469,7 @@ public class ChampionSelectManager : MonoBehaviour
 
     // ========== MULTIJOUEUR (réseau local) ==========
 
-    private ChampionData FindChampion(string championName) =>
+    public ChampionData FindChampion(string championName) =>
         _allChampions != null ? _allChampions.Find(c => c != null && c.championName == championName) : null;
 
     /// <summary>
@@ -482,12 +482,15 @@ public class ChampionSelectManager : MonoBehaviour
 
         CombatParty.Clear();
         CombatParty.IsMultiplayer = true;
+        LobbyState lobby = NetworkSession.Instance.Lobby;
+        CombatParty.Seed = lobby.Seed;
         CardCollection collection = _deckListUI != null ? _deckListUI.Collection : null;
-        foreach (LobbyState.Member member in NetworkSession.Instance.Lobby.Members)
+        foreach (LobbyState.Member member in lobby.Members)
         {
             ChampionData champion = member.HasPicked ? FindChampion(member.ChampionName) : null;
             if (champion == null) continue;
-            CombatParty.TryAdd(champion, DeckSaveManager.GetCardsFromNames(member.DeckCardNames, collection));
+            bool isLocal = member.ClientId == NetworkSession.Instance.LocalClientId;
+            CombatParty.TryAdd(champion, DeckSaveManager.GetCardsFromNames(member.DeckCardNames, collection), isLocal);
         }
 
         // Rafraîchit le salon seulement s'il est affiché (pas pendant le choix du champion)

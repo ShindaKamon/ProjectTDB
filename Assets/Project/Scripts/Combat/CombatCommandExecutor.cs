@@ -16,14 +16,42 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
     private GridManager _grid;
     private PlacementPhase _placement;
 
+    // Numéro du tour en cours (0 = placement), compté pareil sur tous les PC : une commande ne vaut
+    // que pour le tour où elle a été décidée
+    private int _turn;
+
     public void Init(GridManager grid, PlacementPhase placement)
     {
         _grid = grid;
         _placement = placement;
         ServiceLocator.Instance.Register<ICombatCommandService>(this);
+        EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
     }
 
-    void OnDestroy() => ServiceLocator.Instance.Unregister<ICombatCommandService>();
+    void OnDestroy()
+    {
+        ServiceLocator.Instance.Unregister<ICombatCommandService>();
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+    }
+
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        _turn++;
+        if (NetworkSession.IsActive) GameLog.Log($"[État réseau] tour {_turn} : {DescribeState()}");
+    }
+
+    // État des unités (ordre des tours) : doit être identique sur tous les PC au même tour
+    private string DescribeState()
+    {
+        var parts = new List<string>();
+        foreach (Unit unit in _grid.GetAllUnits())
+        {
+            if (unit == null) continue;
+            int pa = unit is IActionPointsUser paUser ? paUser.GetCurrentPA() : 0;
+            parts.Add($"{unit.name}@{unit.GetCurrentGridPos()} PV{unit.GetHealth()} B{unit.GetShield()} PA{pa} PM{unit.GetCurrentMovementPoints()}");
+        }
+        return string.Join(" | ", parts);
+    }
 
     public int ActiveActor
     {
@@ -35,25 +63,44 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
         }
     }
 
+    public bool IsLocalTurn => CombatParty.IsLocal(ActiveActor);
+
     public void Submit(CombatCommand command)
+    {
+        if (command == null || !CombatParty.IsLocal(command.Actor)) return;
+        command.Turn = _turn;
+
+        // Réseau : l'hôte vérifie l'action et la renvoie à tous (y compris ce PC)
+        if (NetworkSession.IsActive) NetworkSession.Instance.SubmitCommand(command);
+        else Enqueue(command);
+    }
+
+    public void Enqueue(CombatCommand command)
     {
         if (command == null) return;
         _queue.Enqueue(command);
         if (!_running) StartCoroutine(ProcessQueue());
     }
 
+    // Réseau : un PC encore occupé par le tour des monstres attend le tour où l'action a été décidée
+    private const float WaitForTurnSeconds = 60f;
+
     private IEnumerator ProcessQueue()
     {
         _running = true;
         while (_queue.Count > 0)
         {
-            // La commande précédente doit être terminée (déplacement, charge, recul…)
-            yield return new WaitUntil(NoUnitMoving);
-
             CombatCommand command = _queue.Dequeue();
-            if (command.Actor != ActiveActor)
+
+            // La commande précédente doit être terminée (déplacement, charge, recul…), et ce PC doit
+            // avoir atteint le tour de la commande (en réseau, il peut avoir un peu de retard)
+            float deadline = Time.time + WaitForTurnSeconds;
+            yield return new WaitUntil(() => NoUnitMoving() && (_turn >= command.Turn || Time.time > deadline));
+
+            // Tour déjà terminé (ex: double clic sur Fin de tour) ou pas celui de ce joueur : ignorée
+            if (command.Turn != _turn || command.Actor != ActiveActor)
             {
-                GameLog.LogWarning($"Commande ignorée (ce n'est pas le tour du joueur {command.Actor + 1}) : {command}");
+                GameLog.LogWarning($"Commande ignorée (tour {command.Turn}, tour en cours {_turn}) : {command}");
                 continue;
             }
             GameLog.Log($"▶ Commande : {command}");

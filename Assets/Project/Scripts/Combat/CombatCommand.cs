@@ -27,6 +27,7 @@ public class CombatCommand
     public List<Vector2Int> Tiles = new List<Vector2Int>();
     public string TargetCardName = ""; // carte de la main visée (ex: Triche)
     public int Delta;                  // modification de coût choisie (ex: Triche −1 / +1)
+    public int Turn;                   // numéro du tour où l'action a été décidée (posé à l'envoi)
 
     public static CombatCommand Move(int actor, Vector2Int tile) =>
         new CombatCommand { Type = CombatCommandType.Move, Actor = actor, Tiles = { tile } };
@@ -61,7 +62,7 @@ public class CombatCommand
     {
         var tiles = new List<string>();
         foreach (Vector2Int t in Tiles) tiles.Add(t.x + "," + t.y);
-        return string.Join(FieldSep.ToString(), (int)Type, Actor, CardName, string.Join(TileSep.ToString(), tiles), TargetCardName, Delta);
+        return string.Join(FieldSep.ToString(), (int)Type, Actor, CardName, string.Join(TileSep.ToString(), tiles), TargetCardName, Delta, Turn);
     }
 
     public static CombatCommand Deserialize(string data)
@@ -73,7 +74,8 @@ public class CombatCommand
             Actor = int.Parse(f[1]),
             CardName = f[2],
             TargetCardName = f[4],
-            Delta = int.Parse(f[5])
+            Delta = int.Parse(f[5]),
+            Turn = int.Parse(f[6])
         };
         if (f[3].Length > 0)
         {

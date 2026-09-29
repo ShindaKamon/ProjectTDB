@@ -22,6 +22,9 @@ public class LobbyState
 
     private readonly List<Member> _members = new List<Member>();
 
+    /// <summary>Graine du mélange des decks, tirée par l'hôte au lancement du combat (0 = pas encore lancé).</summary>
+    public int Seed;
+
     public IReadOnlyList<Member> Members => _members;
     public int Count => _members.Count;
     public bool IsFull => _members.Count >= MAX_PLAYERS;
@@ -55,11 +58,12 @@ public class LobbyState
     }
 
     // Séparateurs de contrôle : absents des noms de champions et de cartes
-    private const char MemberSep = '\u001e', FieldSep = '\u001f', CardSep = '\u001d';
+    private const char MemberSep = '\u001e', FieldSep = '\u001f', CardSep = '\u001d', HeaderSep = '\u001c';
 
     public string Serialize()
     {
         var sb = new StringBuilder();
+        sb.Append(Seed).Append(HeaderSep);
         for (int i = 0; i < _members.Count; i++)
         {
             if (i > 0) sb.Append(MemberSep);
@@ -74,6 +78,14 @@ public class LobbyState
     {
         var state = new LobbyState();
         if (string.IsNullOrEmpty(data)) return state;
+
+        int header = data.IndexOf(HeaderSep);
+        if (header >= 0)
+        {
+            int.TryParse(data.Substring(0, header), out state.Seed);
+            data = data.Substring(header + 1);
+            if (data.Length == 0) return state;
+        }
 
         foreach (string entry in data.Split(MemberSep))
         {

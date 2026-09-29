@@ -143,8 +143,13 @@ public class PlacementPhase : MonoBehaviour
             Services.Grid.HighlightTile(cell, isCurrent ? _selectedCellColor : _startCellColor);
         }
 
+        // Réseau : seul le joueur qui se place agit (sur son PC) ; les autres attendent
+        bool local = CombatParty.IsLocal(CurrentIndex);
+        if (_launchButton != null) _launchButton.interactable = local;
         if (_instructionText != null)
-            _instructionText.text = $"Joueur {_currentIndex + 1} – {Current.championData.championName} : clique une case rouge pour te placer.";
+            _instructionText.text = local
+                ? $"Joueur {_currentIndex + 1} – {Current.championData.championName} : clique une case rouge pour te placer."
+                : $"Joueur {_currentIndex + 1} – {Current.championData.championName} se place…";
 
         TextMeshProUGUI label = _launchButton != null ? _launchButton.GetComponentInChildren<TextMeshProUGUI>() : null;
         if (label != null)

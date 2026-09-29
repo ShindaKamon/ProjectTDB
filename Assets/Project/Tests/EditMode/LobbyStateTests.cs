@@ -50,9 +50,11 @@ namespace ProjectTDB.Tests
             lobby.AddPlayer(0);
             lobby.AddPlayer(7);
             lobby.SetPick(7, "Raze", new List<string> { "Tapis", "Triche", "Coup de colère" });
+            lobby.Seed = 123456789;
 
             LobbyState copy = LobbyState.Deserialize(lobby.Serialize());
 
+            Assert.AreEqual(123456789, copy.Seed, "graine du mélange des decks");
             Assert.AreEqual(2, copy.Count);
             Assert.AreEqual(0ul, copy.Members[0].ClientId);
             Assert.IsFalse(copy.Members[0].HasPicked);

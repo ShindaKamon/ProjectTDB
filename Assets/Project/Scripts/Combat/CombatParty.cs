@@ -13,17 +13,27 @@ public static class CombatParty
     /// <summary>Choisi au menu principal : Multijoueur (salon local) ou Jouer (solo).</summary>
     public static bool IsMultiplayer { get; set; }
 
+    /// <summary>
+    /// Graine du mélange des decks (réseau : tirée par l'hôte, la même sur tous les PC) ; 0 = au hasard
+    /// </summary>
+    public static int Seed { get; set; }
+
     public readonly struct Member
     {
         public readonly ChampionData Champion;
         public readonly List<CardData> Deck;
+        public readonly bool IsLocal; // joué sur ce PC (réseau : le champion d'un autre PC ne l'est pas)
 
-        public Member(ChampionData champion, List<CardData> deck)
+        public Member(ChampionData champion, List<CardData> deck, bool isLocal = true)
         {
             Champion = champion;
             Deck = deck;
+            IsLocal = isLocal;
         }
     }
+
+    /// <summary>Le joueur à cette place joue sur ce PC (toujours vrai en solo et en coop sur un seul PC).</summary>
+    public static bool IsLocal(int index) => index >= 0 && index < _members.Count && _members[index].IsLocal;
 
     private static readonly List<Member> _members = new List<Member>();
 
@@ -44,10 +54,10 @@ public static class CombatParty
     }
 
     /// <summary>Ajoute un joueur ; refusé si le champion est absent, déjà pris ou si l'équipe est complète.</summary>
-    public static bool TryAdd(ChampionData champion, List<CardData> deck)
+    public static bool TryAdd(ChampionData champion, List<CardData> deck, bool isLocal = true)
     {
         if (champion == null || IsFull || Contains(champion)) return false;
-        _members.Add(new Member(champion, deck));
+        _members.Add(new Member(champion, deck, isLocal));
         return true;
     }
 
@@ -76,5 +86,6 @@ public static class CombatParty
     {
         _members.Clear();
         IsMultiplayer = false;
+        Seed = 0;
     }
 }

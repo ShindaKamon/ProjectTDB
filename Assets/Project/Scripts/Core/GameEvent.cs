@@ -35,6 +35,19 @@ public class TurnChangedEvent : GameEvent
 }
 
 /// <summary>
+/// Réseau : l'état du combat diffère entre l'hôte et un client au début de ce tour
+/// </summary>
+public class NetworkDesyncEvent : GameEvent
+{
+    public int Turn { get; private set; }
+
+    public NetworkDesyncEvent(int turn)
+    {
+        Turn = turn;
+    }
+}
+
+/// <summary>
 /// Fin de tour refusée : le champion a plus de cartes en main que le maximum et doit
 /// d'abord en défausser Count (au choix du joueur)
 /// </summary>

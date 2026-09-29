@@ -22,6 +22,8 @@ public class NetworkSession : MonoBehaviour
     private const string MsgState = "tdb.lobby.state";
     private const string MsgCommand = "tdb.combat.command"; // client -> hôte : action proposée
     private const string MsgExecute = "tdb.combat.execute"; // hôte -> clients : action à exécuter
+    private const string MsgTurnState = "tdb.combat.state";  // client -> hôte : empreinte de l'état au début d'un tour
+    private const string MsgDesync = "tdb.combat.desync";    // hôte -> clients : états différents à ce tour
     private const string MainMenuScene = "MainMenuScene";
 
     public static NetworkSession Instance { get; private set; }
@@ -39,6 +41,7 @@ public class NetworkSession : MonoBehaviour
     private NetworkManager _manager;
     private UnityTransport _transport;
     private bool _acceptingPlayers;
+    private DesyncDetector _desync = new DesyncDetector();
 
     public static NetworkSession GetOrCreate()
     {
@@ -142,6 +145,8 @@ public class NetworkSession : MonoBehaviour
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgState, OnStateReceived);
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgCommand, OnCommandReceived);
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgExecute, OnExecuteReceived);
+        _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgTurnState, OnTurnStateReceived);
+        _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgDesync, OnDesyncReceived);
     }
 
     private void OnClientConnected(ulong clientId)
@@ -202,6 +207,7 @@ public class NetworkSession : MonoBehaviour
 
         _acceptingPlayers = false;
         Lobby.Seed = new System.Random().Next(1, int.MaxValue); // mélange des decks commun à tous les PC
+        _desync = new DesyncDetector();
         BroadcastLobby();
         _manager.SceneManager.LoadScene(combatSceneName, LoadSceneMode.Single);
         return true;
@@ -247,6 +253,49 @@ public class NetworkSession : MonoBehaviour
     {
         reader.ReadValueSafe(out string data);
         Services.Commands?.Enqueue(CombatCommand.Deserialize(data));
+    }
+
+    // ========== CONTRÔLE DE SYNCHRONISATION ==========
+
+    private const char StateSep = '\u001f';
+
+    /// <summary>
+    /// Empreinte de l'état de ce PC au début d'un tour (CombatStateFingerprint) : l'hôte la garde,
+    /// un client l'envoie à l'hôte, qui signale à tous tout écart (NetworkDesyncEvent)
+    /// </summary>
+    public void ReportTurnState(int turn, string state)
+    {
+        if (_manager.IsServer) ReportMismatches(_desync.AddHost(turn, state));
+        else Send(MsgTurnState, turn + StateSep.ToString() + state, NetworkManager.ServerClientId);
+    }
+
+    private void OnTurnStateReceived(ulong senderClientId, FastBufferReader reader)
+    {
+        if (!_manager.IsServer) return;
+        reader.ReadValueSafe(out string data);
+        int sep = data.IndexOf(StateSep);
+        if (sep < 0 || !int.TryParse(data.Substring(0, sep), out int turn)) return;
+        ReportMismatches(_desync.AddClient(senderClientId, turn, data.Substring(sep + 1)));
+    }
+
+    private void ReportMismatches(List<DesyncDetector.Mismatch> mismatches)
+    {
+        foreach (DesyncDetector.Mismatch m in mismatches)
+        {
+            Debug.LogWarning($"Réseau : désynchronisation au tour {m.Turn} avec le joueur {m.ClientId}.\n" +
+                             $"Hôte  : {m.HostState}\nClient : {m.ClientState}");
+            foreach (ulong clientId in _manager.ConnectedClientsIds)
+            {
+                if (clientId != NetworkManager.ServerClientId) Send(MsgDesync, m.Turn.ToString(), clientId);
+            }
+            EventBus.Publish(new NetworkDesyncEvent(m.Turn));
+        }
+    }
+
+    private void OnDesyncReceived(ulong senderClientId, FastBufferReader reader)
+    {
+        reader.ReadValueSafe(out string data);
+        if (int.TryParse(data, out int turn)) EventBus.Publish(new NetworkDesyncEvent(turn));
     }
 
     private void OnPickReceived(ulong senderClientId, FastBufferReader reader)

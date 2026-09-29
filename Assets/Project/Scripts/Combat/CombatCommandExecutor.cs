@@ -37,20 +37,12 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
     private void OnTurnChanged(TurnChangedEvent e)
     {
         _turn++;
-        if (NetworkSession.IsActive) GameLog.Log($"[État réseau] tour {_turn} : {DescribeState()}");
-    }
 
-    // État des unités (ordre des tours) : doit être identique sur tous les PC au même tour
-    private string DescribeState()
-    {
-        var parts = new List<string>();
-        foreach (Unit unit in _grid.GetAllUnits())
-        {
-            if (unit == null) continue;
-            int pa = unit is IActionPointsUser paUser ? paUser.GetCurrentPA() : 0;
-            parts.Add($"{unit.name}@{unit.GetCurrentGridPos()} PV{unit.GetHealth()} B{unit.GetShield()} PA{pa} PM{unit.GetCurrentMovementPoints()}");
-        }
-        return string.Join(" | ", parts);
+        // Réseau : empreinte de l'état comparée à celle de l'hôte (voir DesyncDetector)
+        if (!NetworkSession.IsActive) return;
+        string state = CombatStateFingerprint.Describe(_grid.GetAllUnits());
+        GameLog.Log($"[État réseau] tour {_turn} : {state}");
+        NetworkSession.Instance.ReportTurnState(_turn, state);
     }
 
     public int ActiveActor
@@ -95,7 +87,7 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
             // La commande précédente doit être terminée (déplacement, charge, recul…), et ce PC doit
             // avoir atteint le tour de la commande (en réseau, il peut avoir un peu de retard)
             float deadline = Time.time + WaitForTurnSeconds;
-            yield return new WaitUntil(() => NoUnitMoving() && (_turn >= command.Turn || Time.time > deadline));
+            yield return new WaitUntil(() => (NoUnitMoving() && !PendingEffects.Any && _turn >= command.Turn) || Time.time > deadline);
 
             // Tour déjà terminé (ex: double clic sur Fin de tour) ou pas celui de ce joueur : ignorée
             if (command.Turn != _turn || command.Actor != ActiveActor)

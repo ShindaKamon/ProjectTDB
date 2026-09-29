@@ -57,7 +57,7 @@ public class SummonUnit : Unit
     public void DealEcho(Unit target, int damage, DamageType damageType)
     {
         if (_echoDelay > 0f && isActiveAndEnabled)
-            StartCoroutine(EchoAfterDelay(target, damage, damageType));
+            StartCoroutine(PendingEffects.Track(EchoAfterDelay(target, damage, damageType)));
         else
             ApplyEcho(target, damage, damageType);
     }

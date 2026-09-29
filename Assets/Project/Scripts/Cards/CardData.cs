@@ -962,7 +962,7 @@ public class CardData : ScriptableObject
         }
 
         // Lance la coroutine via le MonoBehaviour source
-        source.StartCoroutine(ExecuteChargeEffectCoroutine(source, targetTilePos, onComplete));
+        source.StartCoroutine(PendingEffects.Track(ExecuteChargeEffectCoroutine(source, targetTilePos, onComplete)));
     }
 
     /// <summary>
@@ -1080,7 +1080,7 @@ public class CardData : ScriptableObject
     /// </summary>
     public void ExecuteLeapEffect(Unit source, Vector2Int targetTilePos)
     {
-        source.StartCoroutine(ExecuteLeapEffectCoroutine(source, targetTilePos));
+        source.StartCoroutine(PendingEffects.Track(ExecuteLeapEffectCoroutine(source, targetTilePos)));
     }
 
     private System.Collections.IEnumerator ExecuteLeapEffectCoroutine(Unit source, Vector2Int targetTilePos)

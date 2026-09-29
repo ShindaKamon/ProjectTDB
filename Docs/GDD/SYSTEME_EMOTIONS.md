@@ -47,7 +47,7 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 | **Peur** | Vert #3F9D5C | Contrôle | Contrôle / tempo | **Retrait de PM** au prochain tour (-1 / -2 / -3 / total), poussée/tirage, boucliers |
 | **Joie** | Jaune #D9A91F | Soin / valeur | Survie, mais **lent** | Soins, boucliers, buffs de groupe, soin + dégâts miroir |
 
-- Pool Standard : **49 cartes** dans la bibliothèque de l'Excel et dans le code (17 Colère, 17 Peur, 15 Joie) ; la Roadmap de l'Excel parle de 12 par émotion (36) — à harmoniser.
+- Pool Standard : **51 cartes** dans le code (17 par émotion ; 49 dans la bibliothèque de l'Excel) ; la Roadmap de l'Excel parle de 12 par émotion (36) — à harmoniser.
 - Cartes **Neutres** : les cartes Signature des champions, jouables quelles que soient les émotions du deck.
 - **Oppositions d'émotions** (paires Plutchik, ex. Colère/Peur) : repoussées volontairement, à revisiter en phase 2-3.
 

@@ -34,7 +34,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 
 | Type | Règle |
 |------|-------|
-| **Standard** | Jouable avec des PA seulement. Pool de 49 cartes dans la bibliothèque de l'Excel et dans le code (17 Colère, 17 Peur, 15 Joie) ; la Roadmap de l'Excel parle de 36. |
+| **Standard** | Jouable avec des PA seulement. Pool de **51 cartes** dans le code (17 par émotion : les 49 de la bibliothèque de l'Excel + Étincelle et Rire lumineux, dont 6 refondues le 29/09) ; la Roadmap de l'Excel parle de 36. |
 | **Éveil** | Nécessite un seuil d'Éveil (jauge de l'émotion correspondante). Cartes fortes. À créer. |
 | **Signature** | Fixe, liée au champion (2 par champion), identité Neutre. |
 

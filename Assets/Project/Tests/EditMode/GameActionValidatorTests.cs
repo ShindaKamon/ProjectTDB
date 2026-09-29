@@ -457,7 +457,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanTargetTile_ChargeOnUnit_RequiresStraightLineAndRange()
         {
-            // Piolet d'ascension : charge qui cible une unité, pas une case
+            // Grappin : charge qui cible une unité, pas une case
             var card = NewCard();
             card.isChargeCard = true;
             card.targetType = CardTargetType.AllyorEnemy;

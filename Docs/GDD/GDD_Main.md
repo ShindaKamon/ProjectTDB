@@ -184,7 +184,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 
 **Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
 **Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Ilya, Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
-**Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) + Signatures des 3 champions.
+**Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 51 cartes Standard (17 par émotion) + Signatures des 3 champions.
 **Decks :** 20 cartes (4 Signature, soit 2 exemplaires de chacune des 2 Signatures du champion, + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
 **Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
 **UI :** écran de sélection de champion, éditeur de deck façon MTG Arena, HUD de combat, main en arc, ciblage (courbe + réticule), barre de vie de boss, preview des cartes ennemies, pop-ups de dégâts.
@@ -192,7 +192,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 
 ### Design fait (Excel)
 - [x] Système de budget de cartes + calculateur
-- [x] 49 cartes Standard (17 Colère, 17 Peur, 15 Joie) — la Roadmap de l'Excel dit encore 36
+- [x] 51 cartes Standard (17 par émotion, 29/09) — la Roadmap de l'Excel dit encore 36
 - [x] 3 champions complets (passif + 2 Signatures)
 - [x] Progression (PV, XP, budget PA/PM)
 - [x] Barème des monstres par niveau

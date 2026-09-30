@@ -16,6 +16,13 @@ public class HealthOrbController : MonoBehaviour
 
     private static Color ShieldColor => CodexCardVisual.ChipColor(ChipKind.Shield);
 
+    // Une Image Filled sans sprite ne se vide pas : on lui donne un carré blanc uni (barre rectangulaire)
+    void Awake()
+    {
+        if (_fillImage != null && _fillImage.sprite == null)
+            _fillImage.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, Texture2D.whiteTexture.width, Texture2D.whiteTexture.height), new Vector2(0.5f, 0.5f));
+    }
+
     // Appelée par BattleUIManager à chaque changement de PV ou de bouclier
     public void UpdateHealth(float currentHealth, float maxHealth, Color emotionColor, float shield = 0f)
     {

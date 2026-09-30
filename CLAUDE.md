@@ -63,6 +63,8 @@ Tests EditMode (`Assets/Project/Tests/EditMode/`) : une classe `XxxTests` par cl
 | **I** — Ségrégation des interfaces | Interfaces petites et ciblées (`IActionPointsUser`, `ISummonOwner`) ; un service (`IGridService`…) n'expose que ce que ses appelants utilisent. | Interface dont la plupart des implémentations ou des appelants n'utilisent qu'une partie ; membres jamais appelés. |
 | **D** — Inversion des dépendances | Les systèmes se parlent via `Services.X` (interfaces), l'`EventBus` ou des classes C# pures ; pas de `FindObjectOfType`, pas de singleton concret, pas de référence directe d'un système de jeu vers une classe d'UI. | Un système de jeu (`Unit`, `CardData`, `GridManager`) qui appelle une UI concrète ; `new` d'un manager dans une classe métier ; accès statique à l'état d'une autre scène. |
 
+**Dépassements connus du seuil de taille** (bilan du 30/09/2026 : jeu stable, 264 tests verts, aucun bug lié) : `HandUIController` (~1150 lignes), `CardData` (~1100), `Unit` (~1000), `GridManager` (~950), `InputManager` (~650). Ne pas les découper « pour la forme » : n'extraire une classe que lorsqu'une modification y est gênée (ex. la disposition en arc et l'animation de pioche de `HandUIController` seraient les premières candidates).
+
 ## Architecture
 
 ### Flux de scènes

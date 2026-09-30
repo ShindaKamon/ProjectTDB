@@ -6,6 +6,9 @@
 /// </summary>
 public interface IComboTracker
 {
+    /// <summary>Motif formé par la carte en cours d'exécution (None si aucun).</summary>
+    ComboPattern CurrentPattern { get; }
+
     /// <summary>PA dépensés ce tour AVANT la carte en cours d'exécution.</summary>
     int PASpentThisTurn { get; }
 
@@ -15,4 +18,13 @@ public interface IComboTracker
 
     void OnCardAboutToExecute(CardData card);
     void OnCardResolved(CardData card);
+}
+
+/// <summary>Motifs reconnus entre deux cartes jouées de suite (Main gagnante de Raze).</summary>
+public enum ComboPattern
+{
+    None,
+    Bluff,
+    Suite,
+    Pair
 }

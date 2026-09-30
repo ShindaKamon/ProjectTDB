@@ -60,6 +60,29 @@ public static class GameActionValidator
         return ValidationResult.Success();
     }
 
+    // ========== FUSION (ÉVEIL) ==========
+
+    /// <summary>
+    /// Valide qu'un champion peut fusionner avec une émotion : jauge pleine, pas déjà fusionné,
+    /// forme de fusion existante pour ce champion. Activation gratuite (coût en PA à trancher).
+    /// </summary>
+    public static ValidationResult CanActivateFusion(Unit unit, EmotionType emotion)
+    {
+        if (!(unit is Champion champion))
+            return ValidationResult.Fail("Seul un champion peut fusionner");
+
+        if (champion.Gauge.IsFused)
+            return ValidationResult.Fail("Déjà fusionné");
+
+        if (champion.GetFusion(emotion) == null)
+            return ValidationResult.Fail("Aucune forme de fusion pour cette émotion");
+
+        if (!champion.Gauge.IsFull(emotion))
+            return ValidationResult.Fail($"Jauge incomplète : {champion.Gauge.GetPoints(emotion)}/{EmotionGauge.MaxPoints}");
+
+        return ValidationResult.Success();
+    }
+
     /// <summary>
     /// Valide qu'une carte peut cibler une unité spécifique
     /// </summary>

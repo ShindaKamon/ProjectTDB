@@ -11,7 +11,8 @@ public enum CombatCommandType
     DiscardForTurnEnd, // défausser CardName (main trop pleine en fin de tour)
     EndTurn,           // fin du tour du champion actif
     PlacementMove,     // phase de placement : placer le champion courant sur Tiles[0]
-    PlacementNext      // phase de placement : joueur suivant, ou lancement du combat
+    PlacementNext,     // phase de placement : joueur suivant, ou lancement du combat
+    ActivateFusion     // fusionner avec l'émotion nommée par CardName (ex: "Fear")
 }
 
 /// <summary>
@@ -53,6 +54,9 @@ public class CombatCommand
 
     public static CombatCommand PlacementNext(int actor) =>
         new CombatCommand { Type = CombatCommandType.PlacementNext, Actor = actor };
+
+    public static CombatCommand ActivateFusion(int actor, EmotionType emotion) =>
+        new CombatCommand { Type = CombatCommandType.ActivateFusion, Actor = actor, CardName = emotion.ToString() };
 
     // ========== TEXTE (réseau) ==========
 

@@ -32,6 +32,10 @@ public class ChampionData : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("barrier")]
     public int magicResistance = 0;            // Résistance magique : réduit les dégâts magiques reçus (soustraction fixe)
 
+    [Header("Fusion (Éveil)")]
+    [Tooltip("Formes de fusion du champion : au plus une par émotion (Colère = Rage, Joie = Extase, Peur = Terreur)")]
+    public List<FusionData> fusions = new List<FusionData>();
+
     [Header("Deck de Depart")]
     public List<CardData> startingDeck = new List<CardData>();
 }

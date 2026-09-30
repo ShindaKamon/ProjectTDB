@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 758c01bb23fb10643b9da409f65a1b1e, type: 3}
+  m_Name: Raze_Extase
+  m_EditorClassIdentifier: ProjectTDB::ShareGainsFusion
+  emotion: 7
+  formName: Partage des gains
+  description: "Chaque combinaison soigne l'alli\xE9 le plus bless\xE9 (bouclier
+    s'il est en pleine forme) selon les PA d\xE9pens\xE9s."
+  healPerPA: 2

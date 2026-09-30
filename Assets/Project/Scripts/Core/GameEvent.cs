@@ -296,6 +296,19 @@ public class DamagePreviewEvent : GameEvent
 }
 
 /// <summary>
+/// Publié quand la jauge d'émotion ou la fusion d'un champion change (carte jouée, activation, début de tour)
+/// </summary>
+public class FusionChangedEvent : GameEvent
+{
+    public Champion Champion { get; private set; }
+
+    public FusionChangedEvent(Champion champion)
+    {
+        Champion = champion;
+    }
+}
+
+/// <summary>
 /// Publié quand un retrait de PA/PM est programmé contre une unité (appliqué à son prochain tour)
 /// </summary>
 public class ResourceDebuffChangedEvent : GameEvent

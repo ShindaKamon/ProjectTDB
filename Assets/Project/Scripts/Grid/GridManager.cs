@@ -553,6 +553,9 @@ public class GridManager : MonoBehaviour, IGridService
             u.TickEffectsOnTurnStartOf(unit);
         }
 
+        // Zones de fusion (ex. Appât d'Evan) : perte de PM pour qui commence son tour dedans
+        FusionZones.ApplyOnTurnStart(unit);
+
         // Retraits de PA/PM programmés contre cette unité (après la remise à niveau de ses PA/PM)
         ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);
 

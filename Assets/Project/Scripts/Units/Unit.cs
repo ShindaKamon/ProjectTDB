@@ -453,6 +453,21 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
+    /// Retire l'unité du combat sans qu'elle soit « morte » (ex. Lyse absorbée par Evan) : même nettoyage
+    /// que Die() (grille, invocateur), mais sans événement de mort (pas d'affichage de défaite).
+    /// </summary>
+    public void Despawn()
+    {
+        if (_unitState != null && _unitState.IsDead()) return;
+
+        _unitState?.SetDead();
+        OnUnitDied?.Invoke(this);
+
+        if (healthBar != null) Destroy(healthBar.gameObject);
+        Destroy(gameObject);
+    }
+
+    /// <summary>
     /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus)
     /// </summary>
     public void PayHealth(int amount)
@@ -693,6 +708,14 @@ public class Unit : MonoBehaviour
         {
             healthBar.UpdateHealth(_health, _maxHealth, _shield);
         }
+    }
+
+    /// <summary>Fixe les PV actuels (entre 1 et le maximum), sans événement de dégâts ni de soin.</summary>
+    public void SetCurrentHealth(int value)
+    {
+        _health = Mathf.Clamp(value, 1, _maxHealth);
+        OnHealthChanged?.Invoke(_health, _maxHealth);
+        if (healthBar != null) healthBar.UpdateHealth(_health, _maxHealth, _shield);
     }
 
     /// <summary>
@@ -986,4 +1009,4 @@ public class Unit : MonoBehaviour
 
         return finalPos;
     }
-} 
+} 

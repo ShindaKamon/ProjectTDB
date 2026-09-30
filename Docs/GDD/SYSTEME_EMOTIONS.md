@@ -63,7 +63,7 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 - La plupart des cartes Standard **génèrent** de la jauge ; les Signatures en génèrent au choix du joueur. **2 points par palier, 3 paliers maximum.**
 - **La jauge monte en jouant des cartes** de l'émotion. Combien par carte, et si le **coût en PA** compte (une carte chère remplit plus), reste **à tester**.
 - Les cartes ne **consomment** plus de paliers : le modificateur « consomme 1 / 2 / 3 paliers » a été retiré de l'Excel (30/09/2026).
-- **Pas de bi-fusion pour l'instant** : une seule fusion à la fois. Piste pour les decks bi-émotion (à définir) : enchaîner les deux émotions remplit plus vite, mais jouer l'autre émotion fait baisser la jauge.
+- **Pas de bi-fusion pour l'instant** : une seule fusion à la fois. **Decks bi-émotion (30/09/2026)** : pendant une fusion, jouer une carte d'une **autre émotion** retire 1 point à la jauge de la fusion (à 0, elle prend fin) tout en faisant monter la jauge de cette autre émotion ; les cartes neutres (Signatures) n'y touchent pas. On arbitre donc entre tenir sa fusion et progresser vers l'autre. À équilibrer en jeu (perte de 1 point par carte).
 
 **La fusion — mécanique « jauge qui brûle » :**
 - **Entrée** : jauge **pleine** (3 paliers) + **activation manuelle** par le joueur (une commande de combat, comme les autres actions), pour choisir le bon moment.
@@ -71,7 +71,7 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 - **Fin** : jauge à 0. Pas de durée fixe, pas de paliers de forme.
 - Le jeu normal n'est jamais bloqué : sans fusion, on joue ses cartes avec des PA.
 
-**Les 9 formes** (valeurs **à équilibrer en prototype** ; la grille reste carrée, 4 directions, distances de Manhattan) :
+**Les 9 formes** (**toutes codées le 30/09/2026** ; valeurs **à équilibrer en jeu** — ce sont des champs d'asset, voir « Valeurs retenues » ; la grille reste carrée, 4 directions, distances de Manhattan) :
 
 | | **Rage** (Colère) | **Extase** (Joie) | **Terreur** (Peur) |
 |---|---|---|---|
@@ -79,20 +79,32 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 | **Crux** | **Avalanche** — le Réflexe du grimpeur est permanent, et chaque déplacement en ligne devient une charge qui inflige des dégâts par case parcourue. | **Ascension** — chaque déplacement de Crux **fait avec une carte** (Grappin, Bond percutant, charge…) le **soigne** par case parcourue ; les alliés à **2 cases ou moins de son arrivée** sont soignés à **50 %**. Marche simple et déplacements forcés ne comptent pas. Plafond de soin par tour. Marche en solo (il se soigne), soutien en équipe. | **Vol de mouvement** — chaque carte de Crux qui touche un ennemi lui **retire 1 PM** (retrait normal : le plus fort remplace le plus faible) et **donne 1 PM à Crux** ce tour, plafonné à 2 PM par tour. |
 | **Raze** | **All-in** *(à tester, peut être abandonné)* — chaque carte compte comme une Suite pour la Main gagnante, avec des bonus de motifs doublés ; en contrepartie Raze subit un contrecoup proportionnel aux PA dépensés. | **Partage des gains** — chaque motif joué (Paire, Suite, Bluff) donne un **soin ou un bouclier à l'allié le plus blessé** (Raze compris), proportionnel aux PA dépensés dans le motif. Texte court : il s'affiche dans le panneau de forme, pas sur les cartes. | **Pioche et tempo** — le **premier ennemi touché de chaque tour** fait piocher 1 carte et rend 1 PA ; une **Suite** retire en plus 1 PA à la cible (au début de son prochain tour). Limité à une fois par tour (sans quoi une carte à 1 PA serait gratuite), *à surveiller avec la Triche*. |
 
+**Valeurs retenues (30/09/2026, champs des assets `Fusions/`, à ajuster en playtest) :**
+- **Deux en un** : Lyse est retirée du combat à l'activation ; chaque attaque d'Evan (une par cible touchée) est rejouée 0,5 s plus tard, à 100 % (défense de la cible appliquée). Retour de Lyse sur la case libre la plus proche d'Evan avec la moitié de ses PV d'absorption (au moins 1). Sans Lyse à l'activation, seule la seconde frappe joue.
+- **Écho soigneur** : 40 % des dégâts de l'attaque d'origine à chaque allié vivant (Evan, Lyse, autres champions).
+- **Appât** : ennemis attirés du plus proche au plus lointain (puis par x, y), en au plus deux tirs, jusqu'au contact ; zone de rayon 1 autour de Lyse (ou d'Evan sans Lyse) qui retire 1 PM au début du tour des ennemis qu'elle contient, jusqu'à la fin de la fusion ; puis Lyse rejoint Evan. Les zones (`FusionZones`) sont dans l'empreinte réseau.
+- **Avalanche** : 3 dégâts physiques par case parcourue à chaque ennemi au contact de la case d'arrivée ; bonus du Réflexe (+15 %) permanent et non consommé.
+- **Ascension** : 2 PV par case parcourue, plafond 10 PV par tour ; alliés à 2 cases ou moins de l'arrivée soignés à 50 %.
+- **All-in** : chaque carte est une Suite (+2 PA au lieu de +1) et les motifs se cumulent ; bonus chiffrés ×2 (Bluff : bouclier 16) ; contrecoup 1 PV par PA dépensé, jamais mortel (Raze reste à 1 PV au minimum).
+- **Partage des gains** : 2 PV par PA dépensé dans le motif, sur l'allié au plus faible ratio de PV ; si tous sont à pleine vie, la même valeur en bouclier. Le motif compte les PA de la carte et de la précédente.
+- **Pioche et tempo** : 1 carte + 1 PA à la première carte du tour qui touche un ennemi ; une carte qui forme une Suite retire 1 PA (prochain tour) à chaque ennemi touché.
+
+**Limites connues :** aucune représentation visuelle de la zone d'Appât ; aucune propriété « indéplaçable » pour les boss (un boss est attiré comme les autres) ; Lyse garde son Miroir fraternel pendant Appât et Écho soigneur (en Écho soigneur, il devient le soin).
+
 **Fil rouge par champion** (une seule idée, trois expressions) : Evan = **Lyse** (deux en un / écho soigneur / appât) ; Crux = **le déplacement** (dégâts par case / soin par case / PM volés) ; Raze = **les motifs de coûts** (doublés / partagés / tempo).
 
 **Règles d'implémentation retenues :**
 - Un état « fusionné » porté par le champion, activé par un type de commande (`CombatCommand`), jamais un effet appliqué depuis l'UI (prérequis du réseau) ; résultat déterministe (empreinte de désynchronisation).
 - **Un asset de données par (champion, émotion)** qui liste les modificateurs ; le code générique passe par des interfaces opt-in (`IOutgoingDamageModifier`, `IComboTracker`, `IContactReactor`, `ISummonOwner`…), pas par des `if` sur le type de champion.
 - Ordre fixe pour tout effet multi-cibles (attraction d'Appât : les ennemis les plus proches de Lyse d'abord, puis par coordonnées de case).
-- **Prototype recommandé** : le cadre de fusion (jauge, commande, asset) avec **Crux en Terreur** (Vol de mouvement : uniquement des briques existantes, `GainMovement` et `ResourceDebuffManager`), puis Evan.
+- **Ordre suivi** : cadre de fusion (jauge, commande, asset) avec **Crux en Terreur**, validé en jeu, puis les 8 autres formes.
 
 **À trancher :**
 - **Coût d'activation** de la fusion (gratuit, ou 1 PA ?).
-- **Appât** : rayon de la zone, distance d'attraction (jusqu'au contact de Lyse ?), effet de zone unique par ennemi et par tour ; ennemis **indéplaçables** selon le boss (propriété du boss) ; Lyse garde-t-elle son Miroir fraternel pendant la forme ?
-- **Ascension** : soin par case et plafond par tour (selon les cartes de déplacement, à voir en jeu).
+- ~~**Appât**~~ → **codé avec des valeurs par défaut (30/09)** : rayon 1, attraction jusqu'au contact, une seule zone compte par ennemi. Reste : ennemis **indéplaçables** selon le boss (propriété du boss, non codée) et représentation visuelle de la zone.
+- ~~**Ascension**~~ → **codé (30/09)** : 2 PV par case, plafond 10 par tour ; à régler en jeu selon les cartes de déplacement.
 - ~~**Avalanche** : mêmes règles de déplacement que l'Ascension~~ → **tranché (30/09)** : seuls les déplacements faits avec une carte comptent ; marche simple et déplacements forcés ne comptent pas.
-- **Deux en un** : PV de Lyse à son retour. Options : (a) inchangés ; (b) elle perd la moitié de ce qu'elle a. **Recommandation : (b)** — elle revient avec la moitié des PV qu'elle avait à l'absorption (≈ 25 % des PV d'Evan), au moins 1. Une fusion très forte doit avoir un coût, et (a) la rendrait gratuite et sûre ; (b) ne la tue pas, reste lisible, et ne touche pas la règle « PV de Lyse = moitié de ceux d'Evan » (seuls ses PV actuels baissent, son maximum reste recalculé).
+- ~~**Deux en un**~~ → **option (b) codée (30/09)**. PV de Lyse à son retour. Options : (a) inchangés ; (b) elle perd la moitié de ce qu'elle a. **Recommandation : (b)** — elle revient avec la moitié des PV qu'elle avait à l'absorption (≈ 25 % des PV d'Evan), au moins 1. Une fusion très forte doit avoir un coût, et (a) la rendrait gratuite et sûre ; (b) ne la tue pas, reste lisible, et ne touche pas la règle « PV de Lyse = moitié de ceux d'Evan » (seuls ses PV actuels baissent, son maximum reste recalculé).
 - **Format du deck** sans emplacements d'Éveil : 20 cartes (déjà dans le code : 4 Signature + 16 Standard) ou autre — voir `GDD_Main.md`.
 - Textes des formes : affichage de la jauge, de la fusion en cours et du texte de la forme dans le HUD (`UI_Design.md`).
 

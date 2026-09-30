@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -19,6 +20,11 @@ public class ChampionHUD : MonoBehaviour
     [Tooltip("Résumé du passif du champion, sous les stats")]
     [SerializeField] private TextMeshProUGUI _passiveText;
 
+    [Header("Statuts")]
+    [Tooltip("Rangée de pastilles de statuts (bonus, retraits de PA/PM…), au-dessus du panneau ; masquée si vide")]
+    [SerializeField] private RectTransform _statusStrip;
+    [SerializeField] private Sprite _chipBackground;
+
     [Header("Barres (optionnel)")]
     [SerializeField] private Slider _hpBar;
     [SerializeField] private Image _hpBarFill;
@@ -33,21 +39,45 @@ public class ChampionHUD : MonoBehaviour
     private Champion _champion;
     private bool _isConnected = false;
 
+    void Awake()
+    {
+        // Icônes du codex dans les libellés de stats (<sprite name="pa">…)
+        var icons = Resources.Load<TMP_SpriteAsset>(CardRulesText.IconSpriteAsset);
+        foreach (TextMeshProUGUI text in new[] { _paText, _pmText, _atkText, _defText })
+        {
+            if (text != null && icons != null) text.spriteAsset = icons;
+        }
+    }
+
     void Start()
     {
         // Essaie de se connecter immédiatement
         TryConnectToChampion();
     }
 
-    void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
-    void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+    void OnEnable()
+    {
+        EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Subscribe<ResourceDebuffChangedEvent>(OnStatusEvent);
+        EventBus.Subscribe<UnitEffectAppliedEvent>(OnStatusEvent);
+    }
+
+    void OnDisable()
+    {
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Unsubscribe<ResourceDebuffChangedEvent>(OnStatusEvent);
+        EventBus.Unsubscribe<UnitEffectAppliedEvent>(OnStatusEvent);
+    }
 
     // Coop sur un PC : le HUD suit le champion dont c'est le tour ; réseau : celui de ce PC (LocalView)
     private void OnTurnChanged(TurnChangedEvent e)
     {
         Champion champion = LocalView.ChampionToShow(e.NewActiveUnit); // réseau : toujours le sien
         if (champion != null && champion != _champion) SetChampion(champion);
+        UpdateStatuses();
     }
+
+    private void OnStatusEvent(GameEvent e) => UpdateStatuses();
 
     void Update()
     {
@@ -132,6 +162,7 @@ public class ChampionHUD : MonoBehaviour
     {
         UpdateDefense();
         UpdateAtk();
+        UpdateStatuses();
     }
 
     // ========== MISES À JOUR UI ==========
@@ -148,8 +179,18 @@ public class ChampionHUD : MonoBehaviour
         UpdatePM(_champion.GetCurrentMovementPoints(), _champion.GetMaxMovementPoints());
         UpdateAtk();
         UpdateDefense();
+        UpdateStatuses();
 
         if (_passiveText != null) _passiveText.text = CodexCardVisual.PassiveText(_champion.championData);
+    }
+
+    private void UpdateStatuses()
+    {
+        if (_statusStrip == null) return;
+
+        List<CardChip> chips = UnitStatusChips.Build(_champion);
+        _statusStrip.gameObject.SetActive(chips.Count > 0);
+        if (chips.Count > 0) CardChipsView.Build(_statusStrip, chips, _chipBackground, null, 18f, 20f);
     }
 
     private void UpdateHP(int current, int max)
@@ -180,11 +221,14 @@ public class ChampionHUD : MonoBehaviour
         }
     }
 
+    // Icône de stat dans la couleur de sa pastille d'effet sur les cartes
+    private static string Label(string icon, ChipKind kind) => CardRulesText.Icon(icon, kind);
+
     private void UpdatePA(int current, int max)
     {
         if (_paText != null)
         {
-            _paText.text = $"PA : {current}/{max}";
+            _paText.text = $"{Label("pa", ChipKind.ActionPoints)} {current}/{max}";
         }
     }
 
@@ -192,7 +236,7 @@ public class ChampionHUD : MonoBehaviour
     {
         if (_pmText != null)
         {
-            _pmText.text = $"PM : {current}/{max}";
+            _pmText.text = $"{Label("pm", ChipKind.MovementPoints)} {current}/{max}";
         }
     }
 
@@ -202,7 +246,8 @@ public class ChampionHUD : MonoBehaviour
         {
             // Bonus de prochaine attaque en attente (ex: Montée d'adrénaline) affiché à côté
             int bonus = _champion.GetNextAttackBonus();
-            _atkText.text = bonus > 0 ? $"ATQ : {_champion.GetAttack()} (+{bonus})" : $"ATQ : {_champion.GetAttack()}";
+            string atk = $"{Label("dmg", ChipKind.Damage)} {_champion.GetAttack()}";
+            _atkText.text = bonus > 0 ? $"{atk} (+{bonus})" : atk;
 
             // Bonus en % sur la prochaine carte de dégâts (ex: Réflexe du grimpeur de Crux), à côté aussi
             if (_champion is IOutgoingDamageModifier modifier && modifier.GetDamageMultiplier() > 1f)
@@ -215,7 +260,7 @@ public class ChampionHUD : MonoBehaviour
         if (_defText != null && _champion != null)
         {
             // Armure (physique) / résistance magique (magique), buffs compris
-            _defText.text = $"ARM : {_champion.GetArmor()}  RM : {_champion.GetMagicResistance()}";
+            _defText.text = $"{Label("armor", ChipKind.Defense)} {_champion.GetArmor()}   {Label("magicresist", ChipKind.Defense)} {_champion.GetMagicResistance()}";
         }
     }
 }

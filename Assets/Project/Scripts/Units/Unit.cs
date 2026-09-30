@@ -55,6 +55,7 @@ public class Unit : MonoBehaviour
 
     // Liste des buffs actifs sur l'unité
     protected List<StatBuff> _activeBuffs = new List<StatBuff>();
+    public IReadOnlyList<StatBuff> ActiveBuffs => _activeBuffs; // lecture seule, pour l'affichage des statuts
 
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
@@ -555,6 +556,8 @@ public class Unit : MonoBehaviour
     // juste avant que ce coup soit appliqué ; expire au prochain tour du lanceur s'il n'a pas servi.
     private int _reactiveShield;
     private Unit _reactiveShieldSource;
+
+    public int GetReactiveShield() => _reactiveShield;
 
     public void ArmReactiveShield(int amount, Unit source)
     {

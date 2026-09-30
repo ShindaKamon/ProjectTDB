@@ -823,6 +823,14 @@ public class GridManager : MonoBehaviour, IGridService
             tile.SetColor(_cardTargetColor);
         }
 
+        // Sa propre case n'est pas dans la portée (retirée par GetAttackTiles), mais une carte
+        // « allié ou soi-même » (ex: Souffle apaisant) peut viser le lanceur
+        if (range > 0 && card.targetsUnit && card.IsValidTarget(source, source))
+        {
+            Tile ownTile = GetTileAtPosition(sourcePos);
+            if (ownTile != null) ownTile.SetColor(_cardTargetColor);
+        }
+
         GameLog.Log($"Portée affichée pour {card.cardName} (portée: {range})");
     }
 

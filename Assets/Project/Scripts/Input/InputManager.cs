@@ -9,6 +9,11 @@ public class InputManager : MonoBehaviour
     private CardData _previousSelectedCard = null; // Pour tracker les changements de sélection
     private Vector2Int _lastHoveredTilePos = new Vector2Int(-1, -1); // Position de la dernière tuile survolée
 
+    private static void ClearDamagePreview() => EventBus.Publish(new DamagePreviewEvent(new List<DamagePreview.Entry>()));
+
+    // Tour terminé (le script est désactivé) : plus de prévision à l'écran
+    void OnDisable() => ClearDamagePreview();
+
     /// <summary>
     /// Tente d'extraire la position de grille d'un GameObject (tuile ou unité)
     /// </summary>
@@ -124,6 +129,7 @@ public class InputManager : MonoBehaviour
             }
             _previousSelectedCard = currentSelectedCard;
             _lastHoveredTilePos = new Vector2Int(-1, -1); // Reset hover
+            ClearDamagePreview();
         }
 
         // Preview hover d'une carte de déplacement d'invocation (ciblage en 2 étapes)
@@ -172,7 +178,9 @@ public class InputManager : MonoBehaviour
                         bool inLine = !currentSelectedCard.targetInStraightLine || GridGeometry.TryGetLine(sourcePos, targetPos, out _, out _);
 
                         // On survole une unité, elle est dans la portée ET c'est une cible valide
-                        if (tilesInRange.Contains(targetTile) && inLine && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
+                        // (soi-même : sa case n'est pas dans la portée mais reste ciblable, voir IsValidTarget)
+                        bool inRange = tilesInRange.Contains(targetTile) || hoveredUnit == activeUnit;
+                        if (inRange && inLine && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
                         {
                             hoveredPos = hoveredUnit.GetCurrentGridPos();
                             isValidHoverTarget = true;
@@ -213,6 +221,7 @@ public class InputManager : MonoBehaviour
 
                     // Réaffiche les cibles de base (OPTIMISATION Phase 3.2: EventBus)
                     ShowCardTargets(currentSelectedCard, activeUnit);
+                    EventBus.Publish(new DamagePreviewEvent(DamagePreview.Compute(currentSelectedCard, activeUnit, hoveredPos)));
 
                     // Si la carte est AOE, affiche la zone AOE
                     if (currentSelectedCard.isAOE && currentSelectedCard.aoeRadius > 0)
@@ -231,6 +240,7 @@ public class InputManager : MonoBehaviour
                     // Si on ne survole plus de cible valide, réaffiche juste les cibles de base (OPTIMISATION Phase 3.2: EventBus)
                     _lastHoveredTilePos = new Vector2Int(-1, -1);
                     ShowCardTargets(currentSelectedCard, activeUnit);
+                    ClearDamagePreview();
                 }
             }
             else if (_lastHoveredTilePos != new Vector2Int(-1, -1))
@@ -238,6 +248,7 @@ public class InputManager : MonoBehaviour
                 // Si le raycast ne touche rien, réinitialise (OPTIMISATION Phase 3.2: EventBus)
                 _lastHoveredTilePos = new Vector2Int(-1, -1);
                 ShowCardTargets(currentSelectedCard, activeUnit);
+                ClearDamagePreview();
             }
         }
         else if (currentSelectedCard == null)

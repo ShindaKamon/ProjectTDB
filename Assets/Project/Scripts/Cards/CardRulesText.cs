@@ -90,7 +90,7 @@ public static class CardRulesText
         return string.Join("\n", lines);
     }
 
-    static string Icon(string name, ChipKind kind) =>
+    public static string Icon(string name, ChipKind kind) =>
         $"<sprite name=\"{name}\" color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(kind))}>";
 
     static string Cases(int n) => n + (n > 1 ? " cases" : " case");

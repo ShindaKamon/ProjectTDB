@@ -268,6 +268,20 @@ public class ResetTileColorsEvent : GameEvent
 }
 
 /// <summary>
+/// Publié au survol d'une cible avec une carte sélectionnée : dégâts prévus par unité touchée
+/// (liste vide = plus rien à afficher)
+/// </summary>
+public class DamagePreviewEvent : GameEvent
+{
+    public System.Collections.Generic.IReadOnlyList<DamagePreview.Entry> Entries { get; private set; }
+
+    public DamagePreviewEvent(System.Collections.Generic.IReadOnlyList<DamagePreview.Entry> entries)
+    {
+        Entries = entries;
+    }
+}
+
+/// <summary>
 /// Publié quand un retrait de PA/PM est programmé contre une unité (appliqué à son prochain tour)
 /// </summary>
 public class ResourceDebuffChangedEvent : GameEvent

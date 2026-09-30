@@ -68,20 +68,23 @@ public class DeckDiscardUI : MonoBehaviour
         if (Services.IsGridServiceAvailable())
         {
             Unit activeUnit = Services.Grid.GetActiveUnit();
-            if (activeUnit != null)
+            Champion shown = activeUnit != null ? LocalView.ChampionToShow(activeUnit) : null;
+            if (shown != null)
             {
-                BindToUnit(activeUnit);
+                BindToUnit(shown);
             }
         }
     }
 
-    // Coop : la pioche et la défausse affichées suivent le champion dont c'est le tour.
+    // Coop sur un PC : la pioche et la défausse suivent le champion dont c'est le tour ; réseau :
+    // toujours celles du champion de ce PC (LocalView)
     private void OnTurnChanged(TurnChangedEvent e)
     {
-        if (!(e.NewActiveUnit is Champion)) return;
+        Champion shown = LocalView.ChampionToShow(e.NewActiveUnit);
+        if (shown == null || (_currentDeckManager != null && _currentDeckManager.gameObject == shown.gameObject)) return;
 
         Unbind();
-        BindToUnit(e.NewActiveUnit);
+        BindToUnit(shown);
     }
 
     private void BindToUnit(Unit unit)

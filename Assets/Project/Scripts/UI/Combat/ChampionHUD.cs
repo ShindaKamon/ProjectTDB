@@ -42,10 +42,11 @@ public class ChampionHUD : MonoBehaviour
     void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
     void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
 
-    // Coop : le HUD suit le champion dont c'est le tour.
+    // Coop sur un PC : le HUD suit le champion dont c'est le tour ; réseau : celui de ce PC (LocalView)
     private void OnTurnChanged(TurnChangedEvent e)
     {
-        if (e.NewActiveUnit is Champion champion) SetChampion(champion);
+        Champion champion = LocalView.ChampionToShow(e.NewActiveUnit); // réseau : toujours le sien
+        if (champion != null && champion != _champion) SetChampion(champion);
     }
 
     void Update()
@@ -62,10 +63,8 @@ public class ChampionHUD : MonoBehaviour
         if (Services.Grid == null) return;
 
         Unit activeUnit = Services.Grid.GetActiveUnit();
-        if (activeUnit is Champion champion)
-        {
-            SetChampion(champion);
-        }
+        Champion champion = activeUnit != null ? LocalView.ChampionToShow(activeUnit) : null;
+        if (champion != null) SetChampion(champion);
     }
 
     /// <summary>

@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Griffe_du_dessous
+  m_Name: Agrippe
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: Griffe du dessous
-  description: "Une main griffue surgit de sous le lit : 10 d\xE9g\xE2ts \xE0 un
-    champion \xE0 1-2 cases."
+  cardName: Agrippe
+  description: "Une main surgit de sous le lit et agrippe un champion \xE0 1-2 cases
+    : 10 d\xE9g\xE2ts."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0

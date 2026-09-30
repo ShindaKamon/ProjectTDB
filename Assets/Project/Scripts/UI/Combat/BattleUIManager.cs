@@ -262,10 +262,12 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
     void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
 
-    // L'orbe de vie montre le champion dont c'est le tour (coop : elle change de champion à chaque tour)
+    // L'orbe de vie montre le champion dont c'est le tour (coop sur un PC : elle change à chaque tour ;
+    // réseau : toujours le champion de ce PC, voir LocalView)
     private void OnTurnChanged(TurnChangedEvent e)
     {
-        if (e.NewActiveUnit is Champion champion) RegisterPlayer(champion);
+        Champion champion = LocalView.ChampionToShow(e.NewActiveUnit);
+        if (champion != null && champion != _currentPlayer) RegisterPlayer(champion);
     }
 
     /// <summary>

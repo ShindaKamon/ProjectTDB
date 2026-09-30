@@ -15,6 +15,11 @@ public abstract class Champion : Unit, IActionPointsUser
 
     public override string DisplayName => championData != null ? championData.championName : name;
 
+    [Header("Barre de vie")]
+    [Tooltip("Position de la barre de vie au-dessus du champion")]
+    [SerializeField] private Vector3 _healthBarOffset = new Vector3(0f, 2.1f, 0f);
+    [SerializeField] private Color _healthBarColor = new Color(0.3f, 0.8f, 0.4f);
+
     // ========== SYSTÈME PA (Points d'Action) ==========
     // Les champions utilisent leurs PA pour jouer des cartes de leur deck personnel
     // Utilise la composition avec ActionPointsComponent pour éviter la duplication de code
@@ -119,6 +124,10 @@ public abstract class Champion : Unit, IActionPointsUser
 
         // Initialise les aspects communs (Position, Faction, State) via Unit
         base.Initialize(initialGridPos);
+
+        // Barre de vie au-dessus de la tête : les PV des alliés restent visibles (l'orbe ne montre
+        // que le champion de ce PC)
+        CreateHealthBar(_healthBarOffset, _healthBarColor);
 
         GameLog.Log($"{name} (Champion): Stats initialisées - HP: {GetHealth()}/{GetMaxHealth()}, PA: {GetCurrentPA()}/{GetMaxPA()}, PM: {GetMaxMovementPoints()}");
     }

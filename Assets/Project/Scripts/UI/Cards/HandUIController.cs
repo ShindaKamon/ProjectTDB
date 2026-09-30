@@ -313,20 +313,9 @@ public class HandUIController : MonoBehaviour
         // Au premier tour : la main du joueur actif s'il joue sur ce PC, sinon (réseau) celle du
         // joueur de ce PC
         Unit active = Services.Grid != null ? Services.Grid.GetActiveUnit() : null;
-        if (active == null) return;
-
-        Unit shown = IsLocalChampion(active) ? active : null;
-        foreach (Unit unit in Services.Grid.GetAllUnits())
-        {
-            if (shown != null) break;
-            if (IsLocalChampion(unit)) shown = unit;
-        }
+        Champion shown = active != null ? LocalView.ChampionToShow(active) : null;
         if (shown != null) BindToUnit(shown);
     }
-
-    // Champion joué sur ce PC (tous en solo et en coop sur un seul PC)
-    private static bool IsLocalChampion(Unit unit) =>
-        unit is Champion champion && CombatParty.IsLocal(CombatParty.IndexOf(champion.championData));
 
     /// <summary>
     /// Coop : la main affichée suit le champion dont c'est le tour. Pendant le tour d'un
@@ -338,7 +327,7 @@ public class HandUIController : MonoBehaviour
         UpdateDiscardPrompt();
 
         // Réseau : pendant le tour du joueur d'un autre PC, on garde la main du joueur de ce PC
-        if (!IsLocalChampion(e.NewActiveUnit) || e.NewActiveUnit == _boundChampion) return;
+        if (!LocalView.IsLocalChampion(e.NewActiveUnit) || e.NewActiveUnit == _boundChampion) return;
 
         if (_selectedCard != null) DeselectCard();
         Unbind();

@@ -241,6 +241,8 @@ Tour 3 — PHASE ENNEMIE : [Ombre 1] → [Ombre 2] → [Boss]  (cycle : Zone ▸
 
 ### Barres de Santé
 
+**Forme :** toutes les barres de vie (alliés, ennemis, boss, panneau de stats) sont des **rectangles** aux angles droits, pas arrondies (30/09/2026).
+
 **Pour les Alliés (Côté Gauche) :**
 - Portrait du personnage
 - Barre de HP (couleur : vert → jaune → rouge selon %)

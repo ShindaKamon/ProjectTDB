@@ -363,7 +363,7 @@ public class UISetupWizard : EditorWindow
     public static void SetupCurrentScene()
     {
         // Trouver DeckEditorUI (zone Pool + Deck + Courbe PA de l'écran unifié)
-        DeckEditorUI deckEditor = FindFirstObjectByType<DeckEditorUI>();
+        DeckEditorUI deckEditor = FindAnyObjectByType<DeckEditorUI>();
         if (deckEditor != null)
         {
             SerializedObject so = new SerializedObject(deckEditor);
@@ -382,7 +382,7 @@ public class UISetupWizard : EditorWindow
         }
 
         // Trouver LoadoutTabsUI (barre d'onglets de loadout, ex-DeckListUI)
-        LoadoutTabsUI loadoutTabs = FindFirstObjectByType<LoadoutTabsUI>();
+        LoadoutTabsUI loadoutTabs = FindAnyObjectByType<LoadoutTabsUI>();
         if (loadoutTabs != null)
         {
             SerializedObject so = new SerializedObject(loadoutTabs);

@@ -1,6 +1,6 @@
 # Copie texte de l'Excel MVP — `TCG_Tactique_Systeme_de_calcul.xlsx`
 
-> **Copie du 23/09/2026, pour que Claude Code puisse lire le MVP sans le fichier Excel.** L'Excel (dans le projet claude.ai) reste la référence : si tu le modifies, mets à jour cette copie (ou remplace-la en ajoutant le `.xlsx` dans `Docs/`). Les cellules calculées par formule (valeurs finales des cartes, PV par niveau, barème) ne sont pas reprises ici : seules les entrées et les règles le sont.
+> **Copie du 23/09/2026, mise à jour le 30/09/2026 (Éveil, deck à 20, grille), pour que Claude Code puisse lire le MVP sans le fichier Excel.** L'Excel (dans le projet claude.ai) reste la référence : si tu le modifies, mets à jour cette copie (ou remplace-la en ajoutant le `.xlsx` dans `Docs/`). Les cellules calculées par formule (valeurs finales des cartes, PV par niveau, barème) ne sont pas reprises ici : seules les entrées et les règles le sont.
 
 ---
 
@@ -9,7 +9,7 @@
 **Valeur finale d'une carte = Baseline(coût en PA) × (1 + somme des modificateurs)**
 
 - Plus une carte a de portée / zone / ligne de vue / contrôle, moins elle fait de dégâts bruts.
-- L'Émotion (Éveil) se gagne en jouant certaines cartes et se dépense sur des cartes « ultimes ».
+- La jauge d'Émotion se remplit en jouant des cartes ; jauge pleine, le champion fusionne avec l'émotion (Éveil, voir `SYSTEME_EMOTIONS.md`). Plus de cartes « ultimes » ni de consommation de paliers (30/09/2026).
 - Le niveau des champions ne doit **jamais** augmenter la puissance des cartes : il augmente les PV, débloque des slots — jamais les stats des cartes.
 
 ---
@@ -32,11 +32,11 @@
 
 **F. Déplacement forcé (par case)** : Aucun 0 · Poussée / Tirage -0.08 · Téléportation -0.15
 
-**G. Émotion (Éveil)** : Aucune 0 · Génère -0.1 · Consomme 1 palier +0.3 · 2 paliers +0.5 · 3 paliers (max) +0.7
+**G. Jauge d'émotion (fusion)** : Aucune 0 · Génère -0.1 *(les options « Consomme N paliers » ont été retirées le 30/09/2026)*
 
 **H. Identité** : Colère = agressif · Peur = contrôle · Joie = soin / valeur · Neutre = Signature, jouable quelles que soient les émotions du deck
 
-**I. Type de carte** : Standard (PA seuls) · Éveil (seuil d'Émotion) · Signature (fixe, liée au personnage)
+**I. Type de carte** : Standard (PA seuls) · Signature (fixe, liée au personnage) *(type « Éveil » retiré le 30/09/2026)*
 
 **J. Type d'effet** : Dégâts 0 · Soin -0.1 · Soin + miroir dégâts -0.5 · Buff/Debuff 0 · Pioche 0
 
@@ -133,7 +133,7 @@ Colonnes : coût PA · portée · zone · statut · déplacement forcé · Évei
 
 ## Suivi de deck
 
-Cible : **24 cartes** = 2 Signature + 6 Éveil + 16 Standard.
+Cible : **20 cartes** = 4 Signature (2 exemplaires de chacune des 2 Signatures) + 16 Standard (30/09/2026 ; l'Excel disait 24 = 2/6/16).
 
 ---
 
@@ -156,7 +156,7 @@ Cible : **24 cartes** = 2 Signature + 6 Éveil + 16 Standard.
 
 ## Roadmap (décisions)
 
-**Actées :** budget PA+PM de 9 · grille « hexagonale façon Waven » *(⚠️ contredit par le Lisez-moi et le code : grille carrée)* · émotions de lancement Colère / Peur / Joie · decks mono ou bi-émotion, plusieurs decks par personnage · 24 cartes (2/6/16) · Éveil (concept ; mise en œuvre repoussée) · règle anti-lock · triangle Colère = burst sans sustain, Peur = contrôle/tempo, Joie = survie/lent · monstres de donjon (groupe) vs d'aventure (solo) · pool Standard « 36 cartes » *(⚠️ la bibliothèque en contient 49)* · 3 champions complets (Evan, Crux, Raze) · montée en niveau (XP 100 × niveau, XP monstre = 15 % des PV).
+**Actées :** budget PA+PM de 9 · grille carrée 4 directions · émotions de lancement Colère / Peur / Joie · decks mono ou bi-émotion, plusieurs decks par personnage · 20 cartes (4 Signature + 16 Standard) · Éveil = fusion champion × émotion (concept ; pas codé) · règle anti-lock · triangle Colère = burst sans sustain, Peur = contrôle/tempo, Joie = survie/lent · monstres de donjon (groupe) vs d'aventure (solo) · pool Standard « 36 cartes » *(⚠️ la bibliothèque en contient 49)* · 3 champions complets (Evan, Crux, Raze) · montée en niveau (XP 100 × niveau, XP monstre = 15 % des PV).
 
 **En attente :** équipement · système de stats (armure, résistances, critique) · oppositions d'émotions (repoussé) · faiblesses émotionnelles des monstres · cartes bi-émotion dédiées · main/pioche définitive (playtest : main de 3 + repioche à 3) · rythme de l'Éveil (base : 2 points par palier, jauge par émotion, les Signatures génèrent au choix).
 

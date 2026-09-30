@@ -16,10 +16,13 @@ public static class CombatStateFingerprint
             int pa = unit is IActionPointsUser paUser ? paUser.GetCurrentPA() : 0;
             string text = $"{unit.name}@{unit.GetCurrentGridPos()} PV{unit.GetHealth()} B{unit.GetShield()} PA{pa} PM{unit.GetCurrentMovementPoints()}"
                         + $" ARM{unit.GetArmor()} RM{unit.GetMagicResistance()} ATQ+{unit.GetNextAttackBonus()}";
+            if (unit is Champion champion)
+                text += $" {champion.Gauge.Describe()} c{champion.FusionTurnCounter}";
             if (unit.TryGetComponentSafe(out DeckManager deck))
                 text += $" main{deck.GetHand().Count} pioche{deck.GetDeckCount()} défausse{deck.GetDiscardCount()}";
             parts.Add(text);
         }
+        if (FusionZones.Count > 0) parts.Add($"zones {FusionZones.Describe()}");
         return string.Join(" | ", parts);
     }
 }

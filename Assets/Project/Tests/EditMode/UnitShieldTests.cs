@@ -117,7 +117,10 @@ namespace ProjectTDB.Tests
             var go = new GameObject("TestLyse");
             _createdGameObjects.Add(go);
             var lyse = go.AddComponent<LyseUnit>();
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true; // pas de grille en EditMode (placement ignoré)
+            // Pas de grille en EditMode : le placement de Lyse est ignoré et logue ces erreurs attendues
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ServiceLocator: Service IGridService non trouvé !");
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "Services: IGridService non enregistré ! GridManager a-t-il été initialisé?");
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "Services.Grid n'est pas disponible lors de l'initialisation de l'unité.");
             lyse.InitializeSummon(evan, Vector2Int.zero, 0);
             Assert.AreEqual(50, lyse.GetHealth());
 

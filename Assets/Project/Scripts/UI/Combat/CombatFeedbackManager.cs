@@ -51,20 +51,6 @@ public class CombatFeedbackManager : MonoBehaviour
 
     void Awake()
     {
-        // Trouve le canvas automatiquement si non assigné
-        if (_damageNumberCanvas == null)
-        {
-            _damageNumberCanvas = ComponentLocator.FindSingleObjectOfType<Canvas>("CombatFeedbackManager: Recherche Canvas");
-            if (_damageNumberCanvas != null)
-            {
-                GameLog.Log("CombatFeedbackManager: Canvas trouvé automatiquement");
-            }
-            else
-            {
-                Debug.LogError("CombatFeedbackManager: Aucun Canvas trouvé dans la scène!");
-            }
-        }
-
         // Crée un parent pour les popups si nécessaire
         if (_damageNumberCanvas != null)
         {

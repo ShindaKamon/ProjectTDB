@@ -30,6 +30,10 @@ MonoBehaviour:
   attackDamage: 0
   armor: 0
   magicResistance: 0
+  fusions:
+  - {fileID: 11400000, guid: ff85d1ee373170b47a1ac2fbc30991d9, type: 2}
+  - {fileID: 11400000, guid: 659a335b524caf8479b66328da21d72d, type: 2}
+  - {fileID: 11400000, guid: 9dc3ffdb018c40148885ca1834d195e8, type: 2}
   startingDeck:
   - {fileID: 11400000, guid: 199b005d500d0c64a82792ff9a622c9c, type: 2}
   - {fileID: 11400000, guid: 199b005d500d0c64a82792ff9a622c9c, type: 2}

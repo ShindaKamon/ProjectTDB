@@ -24,44 +24,76 @@ public class RazeUnit : Champion, IComboTracker
 
     public int PASpentThisTurn => _paSpentThisTurn;
     public bool ShouldIgnoreDamageReduction => _ignoreReductionThisCard;
+    public ComboPattern CurrentPattern { get; private set; }
 
     // ========== IComboTracker ==========
 
     public void OnCardAboutToExecute(CardData card)
     {
         _ignoreReductionThisCard = false;
+        CurrentPattern = ComboPattern.None;
 
-        if (_lastCardPlayedThisTurn != null)
+        // All-in (fusion) : toutes les combinaisons se cumulent, et chaque carte compte comme une Suite
+        AllInFusion allIn = ActiveFusion as AllInFusion;
+        int multiplier = allIn != null ? allIn.patternMultiplier : 1;
+
+        int cost = EffectiveCost(card);
+        bool hasPrevious = _lastCardPlayedThisTurn != null;
+        bool isBluff = hasPrevious && card.emotionType != _lastCardPlayedThisTurn.emotionType
+            && card.emotionType != EmotionType.None
+            && _lastCardPlayedThisTurn.emotionType != EmotionType.None;
+        bool isSuite = hasPrevious && cost == _lastCardCost + 1;
+        bool isPair = hasPrevious && cost == _lastCardCost;
+        if (allIn != null)
         {
-            bool differentEmotion = card.emotionType != _lastCardPlayedThisTurn.emotionType
-                && card.emotionType != EmotionType.None
-                && _lastCardPlayedThisTurn.emotionType != EmotionType.None;
-            int cost = EffectiveCost(card);
-            bool isSuite = cost == _lastCardCost + 1;
-            bool isPair = cost == _lastCardCost;
+            isSuite = true;
+        }
+        else
+        {
+            isSuite &= !isBluff;
+            isPair &= !isBluff && !isSuite;
+        }
 
-            if (differentEmotion)
-            {
-                GameLog.Log($"[Main gagnante] Bluff ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {name} gagne un bouclier de {_bluffShield}.");
-                AddShield(_bluffShield, this);
-            }
-            else if (isSuite)
-            {
-                AddPA(1); // hérité de Champion
-                GameLog.Log($"[Main gagnante] Suite ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {name} gagne 1 PA immédiat.");
-            }
-            else if (isPair)
-            {
-                _ignoreReductionThisCard = true;
-                GameLog.Log($"[Main gagnante] Paire ({_lastCardPlayedThisTurn.cardName} -> {card.cardName}) : {card.cardName} ignore les réductions de dégâts en % de la cible.");
-            }
+        int paSpent = cost + (hasPrevious ? _lastCardCost : 0);
+        string previousName = hasPrevious ? _lastCardPlayedThisTurn.cardName : "—";
+
+        if (isBluff)
+        {
+            GameLog.Log($"[Main gagnante] Bluff ({previousName} -> {card.cardName}) : {name} gagne un bouclier de {_bluffShield * multiplier}.");
+            AddShield(_bluffShield * multiplier, this);
+            FormPattern(ComboPattern.Bluff, paSpent);
+        }
+        if (isSuite)
+        {
+            AddPA(multiplier); // hérité de Champion
+            GameLog.Log($"[Main gagnante] Suite ({previousName} -> {card.cardName}) : {name} gagne {multiplier} PA immédiat.");
+            FormPattern(ComboPattern.Suite, paSpent);
+        }
+        if (isPair)
+        {
+            _ignoreReductionThisCard = true;
+            GameLog.Log($"[Main gagnante] Paire ({previousName} -> {card.cardName}) : {card.cardName} ignore les réductions de dégâts en % de la cible.");
+            FormPattern(ComboPattern.Pair, paSpent);
         }
     }
+
+    // Motif reconnu : retenu si c'est le plus exigeant de la carte (Bluff > Suite > Paire), et signalé à la fusion
+    private void FormPattern(ComboPattern pattern, int paSpent)
+    {
+        if (CurrentPattern == ComboPattern.None || PatternRank(pattern) > PatternRank(CurrentPattern)) CurrentPattern = pattern;
+        ActiveFusion?.OnComboPattern(this, pattern, paSpent);
+    }
+
+    private static int PatternRank(ComboPattern pattern) => pattern == ComboPattern.Bluff ? 3 : pattern == ComboPattern.Suite ? 2 : 1;
 
     public void OnCardResolved(CardData card)
     {
         _lastCardCost = EffectiveCost(card);
         _paSpentThisTurn += _lastCardCost;
+
+        // All-in : contrecoup en PV pour chaque PA dépensé (sans jamais tuer Raze)
+        if (ActiveFusion is AllInFusion allIn && allIn.recoilPerPA > 0)
+            PayHealth(Mathf.Min(allIn.recoilPerPA * _lastCardCost, GetHealth() - 1));
         NotifyStatsModified(); // la main réaffiche les dégâts de Tapis
         _lastCardPlayedThisTurn = card;
     }

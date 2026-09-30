@@ -69,7 +69,8 @@ public class CruxUnit : Champion, IContactReactor, IOutgoingDamageModifier
 
     // ========== IOutgoingDamageModifier (bonus prochaine carte) ==========
 
-    public float GetDamageMultiplier() => _hasNextCardBonus ? 1f + _nextCardDamageBonus : 1f;
+    // Avalanche (fusion) : le bonus est permanent tant que dure la fusion
+    public float GetDamageMultiplier() => _hasNextCardBonus || ActiveFusion is AvalancheFusion ? 1f + _nextCardDamageBonus : 1f;
 
     public void ConsumeDamageModifier()
     {

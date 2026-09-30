@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -94,6 +95,76 @@ public abstract class Champion : Unit, IActionPointsUser
         }
         _actionPointsComponent.AddPA(amount, canExceedMax);
         if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
+    }
+
+    // ========== FUSION (ÉVEIL) ==========
+
+    /// <summary>Points de jauge gagnés en jouant une carte d'une émotion.</summary>
+    public const int GaugePointsPerCard = 1;
+
+    /// <summary>Jauges d'émotion et fusion en cours (voir EmotionGauge).</summary>
+    public EmotionGauge Gauge { get; } = new EmotionGauge();
+
+    /// <summary>Compteur par tour à l'usage de la forme active, remis à zéro au début de chaque tour du champion.</summary>
+    public int FusionTurnCounter { get; set; }
+
+    /// <summary>Forme de fusion du champion pour cette émotion (null si elle n'en a pas).</summary>
+    public FusionData GetFusion(EmotionType emotion) =>
+        championData != null ? championData.fusions.Find(f => f != null && f.emotion == emotion) : null;
+
+    /// <summary>Forme de la fusion en cours (null si le champion n'est pas fusionné).</summary>
+    public FusionData ActiveFusion => Gauge.IsFused ? GetFusion(Gauge.ActiveFusion) : null;
+
+    /// <summary>
+    /// Une carte vient d'être jouée : sa jauge d'émotion monte. Pendant une fusion, une carte d'une autre
+    /// émotion (les cartes neutres n'y touchent pas) fait baisser la jauge de la fusion : à 0, elle prend fin.
+    /// </summary>
+    public void OnCardPlayed(CardData card)
+    {
+        if (card == null) return;
+
+        bool changed = false;
+        if (Gauge.IsFused && card.emotionType != EmotionType.None && card.emotionType != Gauge.ActiveFusion)
+        {
+            FusionData fusion = ActiveFusion;
+            changed = true;
+            if (Gauge.DrainActiveFusion(GaugePointsPerCard) != EmotionType.None) fusion?.OnEnded(this);
+        }
+
+        changed |= Gauge.AddPoints(card.emotionType, GaugePointsPerCard);
+        if (changed) EventBus.Publish(new FusionChangedEvent(this));
+    }
+
+    /// <summary>Fusionne avec l'émotion si c'est permis (jauge pleine, pas déjà fusionné, forme existante).</summary>
+    public bool TryActivateFusion(EmotionType emotion)
+    {
+        FusionData fusion = GetFusion(emotion);
+        if (fusion == null || !Gauge.TryActivate(emotion)) return false;
+
+        FusionTurnCounter = 0;
+        fusion.OnActivated(this);
+        EventBus.Publish(new FusionChangedEvent(this));
+        return true;
+    }
+
+    /// <summary>Une carte du champion vient d'infliger des dégâts à ces ennemis (hook de la fusion en cours).</summary>
+    public void OnCardHitEnemies(CardData card, IReadOnlyList<Unit> enemies, bool firstOfCard)
+    {
+        ActiveFusion?.OnEnemiesHit(this, card, enemies, firstOfCard);
+    }
+
+    public override void OnOwnTurnStart()
+    {
+        base.OnOwnTurnStart();
+
+        FusionTurnCounter = 0;
+        if (!Gauge.IsFused) return;
+
+        FusionData fusion = ActiveFusion;
+        EmotionType ended = Gauge.OnTurnStart();
+        if (ended != EmotionType.None) fusion?.OnEnded(this);
+        else fusion?.OnTurnStart(this);
+        EventBus.Publish(new FusionChangedEvent(this));
     }
 
     // Surcharge pour définir la faction automatiquement

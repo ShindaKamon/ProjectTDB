@@ -522,6 +522,10 @@ public class CardData : ScriptableObject
         SummonUnit summon = summonOwner.ActiveSummon;
         if (summon == null || IsDead(summon)) return;
 
+        // Fusion du lanceur : peut remplacer l'écho (ex. Écho soigneur d'Evan)
+        if (source is Champion fusedChampion && fusedChampion.ActiveFusion != null
+            && fusedChampion.ActiveFusion.ReplaceSummonEcho(fusedChampion, summon, attackDamage)) return;
+
         Vector2Int summonPos = summon.GetCurrentGridPos();
         bool IsValidEchoTarget(Unit unit) =>
             unit != null && unit != source && unit != summon && !IsDead(unit)
@@ -559,6 +563,24 @@ public class CardData : ScriptableObject
 
     // Cibles déjà touchées par un écho pendant la carte en cours (remis à zéro à sa 1re cible)
     [System.NonSerialized] private readonly HashSet<Unit> _echoTargetsThisCard = new HashSet<Unit>();
+
+    // Fusion (Éveil) du lanceur : ses cartes viennent de toucher ces ennemis
+    private void NotifyFusionOfHits(Unit source, List<Unit> enemies, bool firstOfCard)
+    {
+        if (enemies.Count > 0 && source is Champion champion)
+            champion.OnCardHitEnemies(this, enemies, firstOfCard);
+    }
+
+    private void NotifyFusionOfAttack(Unit source, Unit enemy, int attackDamage)
+    {
+        if (source is Champion champion) champion.ActiveFusion?.OnEnemyAttacked(champion, this, enemy, attackDamage);
+    }
+
+    private void NotifyFusionOfDisplacement(Unit source, int cases)
+    {
+        if (cases > 0 && source is Champion champion)
+            champion.ActiveFusion?.OnDisplacement(champion, this, source.GetCurrentGridPos(), cases);
+    }
 
     private static bool IsDead(Unit unit)
     {
@@ -705,6 +727,9 @@ public class CardData : ScriptableObject
         // déclencher que si - et en fonction de ce que - la carte a réellement infligé.
         int actualDamageDealt = 0;
 
+        // Ennemis ciblés par des dégâts de cette carte (même entièrement absorbés) : hook de la fusion
+        var hitEnemies = new List<Unit>();
+
         // Applique l'effet AOE si activé
         if (isAOE)
         {
@@ -718,6 +743,11 @@ public class CardData : ScriptableObject
                 bool damageDealt = false;
                 if (totalUnitDamage > 0)
                 {
+                    if (unit.GetFaction() != source.GetFaction())
+                    {
+                        hitEnemies.Add(unit);
+                        NotifyFusionOfAttack(source, unit, totalUnitDamage);
+                    }
                     int hpBefore = unit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
                         unit.TakeRawDamageFrom(unit.ReduceByDefense(totalUnitDamage, damageType), source); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
@@ -750,6 +780,11 @@ public class CardData : ScriptableObject
                 bool damageDealt = false;
                 if (totalTargetDamage > 0)
                 {
+                    if (targetUnit.GetFaction() != source.GetFaction())
+                    {
+                        hitEnemies.Add(targetUnit);
+                        NotifyFusionOfAttack(source, targetUnit, totalTargetDamage);
+                    }
                     int hpBefore = targetUnit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
                         targetUnit.TakeRawDamageFrom(targetUnit.ReduceByDefense(totalTargetDamage, damageType), source); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
@@ -777,6 +812,8 @@ public class CardData : ScriptableObject
                 GameLog.Log($"{source.name} se soigne de {finalHeal} PV avec {cardName}.");
             }
         }
+
+        NotifyFusionOfHits(source, hitEnemies, firstOfCard: !isAdditionalMultiTargetHit);
 
         // Passif "Miroir fraternel" (Evan) : écho à 40 % de l'attaque d'origine (finalDamage, avant
         // la défense de la cible) sur une cible à portée de l'invocation active, seulement si la carte
@@ -1009,6 +1046,8 @@ public class CardData : ScriptableObject
             contactReactor.OnContactCreated(null);
         }
 
+        NotifyFusionOfDisplacement(source, pathInfo.Path.Count);
+
         // --- BONUS DE PROCHAINE ATTAQUE puis MODIFICATEUR DE DÉGÂTS SORTANTS ---
         // Même traitement que dans ExecuteEffect, pour que les cartes de charge bénéficient
         // aussi de ces bonus (et les consomment).
@@ -1045,6 +1084,12 @@ public class CardData : ScriptableObject
             {
                 pathInfo.EnemyHit.TakeDamageFrom(pathInfo.EnemyHit.ReduceByDefense(finalChargeDamage, damageType), source);
                 GameLog.Log($"🏃 CHARGE ! {source.name} inflige {finalChargeDamage} dégâts à {pathInfo.EnemyHit.name}");
+            }
+
+            if (finalChargeDamage > 0)
+            {
+                NotifyFusionOfHits(source, new List<Unit> { pathInfo.EnemyHit }, firstOfCard: true);
+                NotifyFusionOfAttack(source, pathInfo.EnemyHit, finalChargeDamage);
             }
 
             // Applique le knockback APRÈS les dégâts et APRÈS le mouvement
@@ -1092,6 +1137,7 @@ public class CardData : ScriptableObject
         {
             GameLog.Log($"🦘 BOND ! {source.name} de {source.GetCurrentGridPos()} vers {targetTilePos}");
             Vector2Int direction = GridGeometry.SnapDirection(source.GetCurrentGridPos(), targetTilePos);
+            int leapDistance = GridGeometry.Distance(source.GetCurrentGridPos(), targetTilePos);
             source.TeleportTo(targetTilePos);
             if (direction != Vector2Int.zero)
                 source.transform.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0f, direction.y));
@@ -1100,6 +1146,8 @@ public class CardData : ScriptableObject
             // Un bond est un déplacement rapide : il déclenche le Réflexe du grimpeur, comme la charge
             if (source is IContactReactor contactReactor)
                 contactReactor.OnContactCreated(null);
+
+            NotifyFusionOfDisplacement(source, leapDistance);
         }
         else
         {

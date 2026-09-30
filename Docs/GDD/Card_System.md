@@ -35,7 +35,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 | Type | Règle |
 |------|-------|
 | **Standard** | Jouable avec des PA seulement. Pool de **51 cartes** dans le code (17 par émotion : les 49 de la bibliothèque de l'Excel + Étincelle et Rire lumineux, dont 6 refondues le 29/09) ; la Roadmap de l'Excel parle de 36. |
-| **Éveil** | Nécessite un seuil d'Éveil (jauge de l'émotion correspondante). Cartes fortes. À créer. |
+| **Éveil** | **Supprimé comme type de carte le 30/09/2026** : l'Éveil devient une fusion du champion avec l'émotion (jauge pleine), voir `SYSTEME_EMOTIONS.md`. `CardCategory.Awakening` n'est plus utilisée (ne pas renuméroter l'enum). |
 | **Signature** | Fixe, liée au champion (2 par champion), identité Neutre. |
 
 ### Rôles (répartition cible dans le deck)
@@ -50,7 +50,7 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 
 ## Deckbuilding
 
-- **24 cartes** : **2 Signature + 6 Éveil + 16 Standard** (code actuel : 20 cartes, 4 Signature + 16 Standard, les slots Éveil ne sont pas encore implémentés ; depuis le 28/09 les Signatures sont en 2 exemplaires, le format cible est à recompter)
+- **20 cartes** : **4 Signature (2 exemplaires de chacune des 2 Signatures) + 16 Standard**. L'Excel prévoyait 24 cartes (2 Signature + 6 Éveil + 16 Standard) ; les cartes d'Éveil ont été retirées du deck le 30/09/2026 (l'Éveil est devenu une fusion, voir `SYSTEME_EMOTIONS.md`), le format cible reste à confirmer
 - Deck : **1 ou 2 couleurs** choisies à sa création (cartes de ces couleurs uniquement ; un champion peut choisir n'importe lesquelles) ; **4 exemplaires max** par carte ; les **2 Signatures du champion obligatoires** (2 exemplaires chacune)
 - Plusieurs decks par champion, plusieurs champions par compte
 - Le **niveau** du champion débloque des **slots de cartes**, mais n'augmente jamais la puissance des cartes (voir `Progression.md`)
@@ -124,7 +124,7 @@ Pas de nouvelles cartes : les cartes peu utiles ou en doublon sont **refondues**
 | **Ligne de vue** | Requise (0) · Non requise (-0.15) |
 | **Statut (Peur)** | -1 PM (-0.1) · -2 PM (-0.3) · -3 PM (-0.35) · perte totale de PM (-1) |
 | **Déplacement forcé** | Poussée/Tirage (-0.08 par case) · Téléportation (-0.15 par case) |
-| **Éveil** | Génère (-0.1) · Consomme 1 / 2 / 3 paliers (+0.3 / +0.5 / +0.7) |
+| **Éveil** | Génère (-0.1) · ~~Consomme 1 / 2 / 3 paliers~~ (retiré le 30/09 : plus de cartes d'Éveil) |
 | **Type d'effet** | Dégâts (0) · Soin (-0.1) · Soin + miroir dégâts (-0.5) · Buff/Debuff (0) · Pioche (0) |
 | **Contrepartie** | Auto-dégâts (+0.25) · Vulnérabilité sur soi (+0.15) · Déplacement aléatoire sur soi (+0.2) · Touche aussi les alliés (+0.3) · Perd 1 PM au prochain tour (+0.15) · Vol de vie (-0.2) · Élan +2 PM (-0.2) · Bond offensif (-0.15) · Repli automatique (-0.15) |
 

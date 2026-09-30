@@ -1,7 +1,7 @@
 # Game Design Document - Émotions Tactics (nom de code : Project TDB)
 
-**Version :** 3.4
-**Date :** 23 Septembre 2026
+**Version :** 3.5
+**Date :** 30 Septembre 2026
 **Statut :** Document canon central. Réaligné le 23/09/2026 sur le classeur **`TCG_Tactique_Systeme_de_calcul.xlsx`**, qui fait office de **référence du MVP** (roster, émotions, deck, budget des cartes, progression, monstres).
 
 > Ce document est le point d'entrée du projet. Pour le détail, voir les documents listés ci-dessous. Les concepts abandonnés, mis en pause ou sortis du MVP sont conservés dans `archive/Concepts_Abandonnes.md` — rien n'est perdu, juste rangé.
@@ -111,7 +111,7 @@ Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 
 ### 1. Émotions et Couleur
 - Les cartes ont une **identité émotionnelle** ; le deck se construit autour d'1 ou 2 émotions
-- Les cartes génèrent de l'**Éveil** (une jauge par émotion) qui débloque des cartes fortes — concept acté, mise en œuvre concrète repoussée
+- Les cartes génèrent de l'**Éveil** (une jauge par émotion) ; jauge pleine, le champion **fusionne avec l'émotion** (Rage, Extase, Terreur) et gagne un gameplay propre à son couple champion × émotion — concept acté le 30/09/2026 (voir `SYSTEME_EMOTIONS.md`), pas encore codé
 - **La couleur est un pilier visuel autant que narratif** : un donjon est désaturé à l'entrée et retrouve sa couleur à la victoire (voir `UI_Design.md`)
 
 ### 2. Mécanique Signature par Champion (pas de système de classe)
@@ -124,7 +124,7 @@ Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 |-----------|-------|
 | **PA + PM** | **Budget fixe de 9 points par tour**, réparti par profil de personnage (min 3 PA, min 2 PM). Ex : brutal 6/3, équilibré 5/4, mobile 4/5. Identique à tous les niveaux. |
 | **PV** | 100 au niveau 1, +15 par niveau |
-| **Éveil** | Une jauge par émotion, alimentée par les cartes (voir `SYSTEME_EMOTIONS.md`) |
+| **Éveil** | Une jauge par émotion, alimentée par les cartes ; pleine, elle permet la fusion avec l'émotion (voir `SYSTEME_EMOTIONS.md`) |
 | **Armure / Résistance magique** | Réduction **fixe** des dégâts physiques (armure) ou magiques (résistance magique) ; type de dégâts choisi par carte ; stats de base des champions et monstres (0 par défaut), modifiables par les cartes (voir `Combat_System.md`) |
 | **Autres stats** (résistances, critique…) | **Non définies** — à trancher |
 
@@ -185,10 +185,10 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 **Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
 **Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Ilya, Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
 **Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 51 cartes Standard (17 par émotion) + Signatures des 3 champions.
-**Decks :** 20 cartes (4 Signature, soit 2 exemplaires de chacune des 2 Signatures du champion, + 16 Standard — les 6 slots Éveil ne sont pas encore implémentés), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
+**Decks :** 20 cartes (4 Signature, soit 2 exemplaires de chacune des 2 Signatures du champion, + 16 Standard — plus d'emplacements d'Éveil dans le deck depuis le 30/09), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
 **Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
 **UI :** écran de sélection de champion, éditeur de deck façon MTG Arena, HUD de combat, main en arc, ciblage (courbe + réticule), barre de vie de boss, preview des cartes ennemies, pop-ups de dégâts.
-**Pas encore dans le code :** jauge d'Éveil, cartes d'Éveil, profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), désaturation des donjons.
+**Pas encore dans le code :** jauge d'Éveil et fusion, profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), désaturation des donjons.
 
 ### Design fait (Excel)
 - [x] Système de budget de cartes + calculateur
@@ -199,11 +199,11 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - [x] Playtest papier (triangle Colère/Peur/Joie validé)
 
 ### Reste à faire pour le MVP
-- [ ] Cartes d'Éveil (6 par deck) — mise en œuvre de l'Éveil
+- [ ] Fusion (Éveil) : jauge, commande d'activation, 9 formes (prototype : Crux en Terreur)
 - [x] Règle de main/pioche : celle du code (départ 5, max 5, pioche 1/tour) — 24/09
 - [x] Grille carrée 4 directions (24/09) — reste à corriger la Roadmap de l'Excel (« hexagonale ») et le budget des zones (5 / 13 cases au lieu de 9 / 25)
 - [ ] Monstres de l'Orphelinat (stats selon le barème, patterns)
-- [ ] Adapter le code : Éveil (jauge + 6 slots de deck), cycle de boss (statuts de contrôle et anti-lock : faits le 25/09)
+- [ ] Adapter le code : Éveil (jauge + fusion), cycle de boss (statuts de contrôle et anti-lock : faits le 25/09)
 - [ ] Désaturation visuelle des donjons
 
 ## Objectifs de Design
@@ -253,7 +253,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Référence MVP** | **`TCG_Tactique_Systeme_de_calcul.xlsx`** | **23/09** |
 | **Roster MVP** | **Evan, Crux, Raze** (Ilya et Jumeaux hors MVP) | **23/09** |
 | **Émotions de lancement** | **Colère, Peur, Joie** | Excel |
-| **Deck** | **24 cartes : 2 Signature + 6 Éveil + 16 Standard ; 1 ou 2 couleurs par deck, choisies à sa création ; plusieurs decks par champion** | Excel |
+| **Deck** | **Signatures (2 exemplaires chacune) + 16 Standard, sans cartes d'Éveil depuis le 30/09 (l'Excel disait 24 cartes avec 6 Éveil ; le code est à 20, format cible à trancher) ; 1 ou 2 couleurs par deck, choisies à sa création ; plusieurs decks par champion** | Excel |
 | **Ressources** | **Budget PA+PM = 9 par profil, fixe quel que soit le niveau** | Excel |
 | **Progression** | **Le niveau n'augmente que PV, passifs, slots ; XP = 100 × niveau ; XP monstre = 15 % de ses PV** | Excel |
 | **Budget de cartes** | **Baseline par PA × (1 + modificateurs)** | Excel |
@@ -268,7 +268,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | **Pool Standard** | **49 cartes** (17 Colère, 17 Peur, 15 Joie) pour l'instant — la Roadmap de l'Excel dit 36, à corriger | 24/09 |
 | **Noms de familles** | **Abandonnés** (Déchaînés, Réprouvés, Éveillés…) : on parle directement des émotions | 24/09 |
 | **Palette des émotions** | **Celle du codex** (Colère #D64545, Peur #3F9D5C, Joie #D9A91F…), seule référence, codée dans `CodexCardVisual` ; l'ancienne (#CC0000, #006600, #FFEB00) est abandonnée | 24/09 |
-| Éveil | Mis de côté pour l'instant, à réfléchir plus tard | 24/09 |
+| **Éveil = fusion** | **L'Éveil sort du deck** (plus de cartes d'Éveil, plus de consommation de paliers) : jauge de l'émotion pleine → **activation manuelle de la fusion** ; la jauge perd 1 palier par tour et se recharge en jouant des cartes de l'émotion. **9 formes** : Rage (Colère), Extase (Joie), Terreur (Peur) × Evan, Crux, Raze — Evan : Deux en un / Écho soigneur / Appât ; Crux : Avalanche / Ascension / Vol de mouvement ; Raze : All-in (à tester) / Partage des gains / Pioche et tempo. Détail et points ouverts : `SYSTEME_EMOTIONS.md`. Chiffres à équilibrer en prototype (Crux en Terreur d'abord) ; Excel mis à jour le 30/09 (cartes d'Éveil et consommation de paliers retirées, deck à 20). La jauge monte en jouant des cartes (quantité et rôle du coût à tester) ; pas de bi-fusion pour l'instant ; Avalanche suit la règle de déplacement d'Ascension (cartes seulement) ; Deux en un : Lyse revient avec la moitié de ses PV (recommandé) | 30/09 |
 | Signatures renommées | « Il triche » → **Triche**, « Corde de rappel forcé » → **Corde de rappel**, « Écho de Lyse » → **Écho évanescent** (renommer aussi dans l'Excel) | 24/09 |
 | Écho évanescent | Ciblage en 2 étapes : choisir une invocation, puis une case libre à 1-3 cases d'elle (4 directions) ; injouable sans invocation | 24/09 |
 | Invocation de Lyse | Rejouée quand Lyse est déjà sur le terrain : la soigne de 15 PV au lieu de la réinvoquer ; elle cible alors **Lyse elle-même**, où qu'elle soit (28/09) | 24/09, 28/09 |
@@ -307,18 +307,18 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 ## Questions ouvertes
 
 **Issues de l'Excel (onglet Roadmap) :**
-- **Éveil** : rythme de remplissage (base : 2 points par palier, jauge par émotion) et contenu des 6 cartes d'Éveil — **mis de côté le 24/09/2026**, à réfléchir plus tard
+- **Éveil (fusion)** : points ouverts listés dans `SYSTEME_EMOTIONS.md` (coût d'activation, rayon et distance d'Appât, plafonds de soin d'Ascension, format du deck sans cartes d'Éveil, PV de Lyse après Deux en un) ; rythme de remplissage acté (2 points par palier, 3 paliers)
 - **Équipement** : existe-t-il ? Impact sur quoi ?
 - **Stats au-delà de PV/PA/PM/armure/résistance magique** (résistances, critique…) ; valeurs d'armure et de résistance magique des champions, des monstres et des cartes (type physique/magique de chaque carte) à caler en playtest
 - **Cartes bi-émotion dédiées**
 - **Oppositions d'émotions** (paires Plutchik) — repoussé volontairement
 
 **Relevées lors de la passe de cohérence :**
-- **Ilya** : le garder pour la suite ? Sa Rage devra devenir une variante de l'Éveil Colère.
+- **Ilya** : le garder pour la suite ? Sa Rage devra devenir sa forme Colère (fusion Rage).
 - **Plateforme** : PC seul ou PC + Mobile ?
 
 ---
 
-**Dernière mise à jour :** 24 Septembre 2026
-**Version GDD :** 3.4
+**Dernière mise à jour :** 30 Septembre 2026
+**Version GDD :** 3.5
 **Responsable :** Shinda + Claude

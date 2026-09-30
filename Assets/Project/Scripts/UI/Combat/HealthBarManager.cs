@@ -14,12 +14,6 @@ public class HealthBarManager : MonoBehaviour, IHealthBarService
             return;
         }
         ServiceLocator.Instance.Register<IHealthBarService>(this);
-
-        // Trouve le canvas si non assigné
-        if (_healthBarsCanvas == null)
-        {
-            _healthBarsCanvas = FindAnyObjectByType<Canvas>();
-        }
     }
 
     void OnDestroy()

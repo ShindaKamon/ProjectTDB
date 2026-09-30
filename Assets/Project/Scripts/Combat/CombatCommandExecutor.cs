@@ -199,6 +199,7 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
             case CombatCommandType.EndTurn: _grid.EndActiveTurn(); break;
             case CombatCommandType.PlacementMove: _placement.TryPlaceCurrent(command.Tiles[0]); break;
             case CombatCommandType.PlacementNext: _placement.Advance(); break;
+            case CombatCommandType.ActivateFusion: ExecuteActivateFusion(command); break;
         }
     }
 
@@ -375,6 +376,24 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
         deck.PlayCard(card);
         if (costPA > 0 && actor is IActionPointsUser paUser) paUser.SpendPA(costPA);
         if (card.costHP > 0) actor.PayHealth(card.costHP);
+        (actor as Champion)?.OnCardPlayed(card);
+    }
+
+    // ========== FUSION ==========
+
+    private void ExecuteActivateFusion(CombatCommand command)
+    {
+        Unit actor = _grid.GetActiveUnit();
+        if (!System.Enum.TryParse(command.CardName, out EmotionType emotion)) return;
+
+        ValidationResult canActivate = GameActionValidator.CanActivateFusion(actor, emotion);
+        if (!canActivate.IsValid)
+        {
+            GameLog.LogWarning($"❌ Fusion impossible : {canActivate.ErrorMessage}");
+            return;
+        }
+
+        ((Champion)actor).TryActivateFusion(emotion);
     }
 
     // ========== FIN DE TOUR ==========

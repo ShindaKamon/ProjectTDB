@@ -206,7 +206,7 @@ public class GridManager : MonoBehaviour, IGridService
 
         // 2. Trouve toutes les autres unités (ennemis) déjà présentes dans la scène
         // et les ajoute à la liste, en s'assurant de les initialiser si elles ne l'ont pas été.
-        Unit[] existingUnitsInScene = FindObjectsByType<Unit>(FindObjectsSortMode.None);
+        Unit[] existingUnitsInScene = FindObjectsByType<Unit>();
         // Ordre fixe (par position dans la scène) : c'est l'ordre des tours des monstres, qui doit
         // être le même sur tous les PC en réseau
         System.Array.Sort(existingUnitsInScene, (a, b) =>
@@ -552,6 +552,9 @@ public class GridManager : MonoBehaviour, IGridService
         {
             u.TickEffectsOnTurnStartOf(unit);
         }
+
+        // Zones de fusion (ex. Appât d'Evan) : perte de PM pour qui commence son tour dedans
+        FusionZones.ApplyOnTurnStart(unit);
 
         // Retraits de PA/PM programmés contre cette unité (après la remise à niveau de ses PA/PM)
         ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);

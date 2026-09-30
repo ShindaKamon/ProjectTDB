@@ -5,7 +5,7 @@ using UnityEngine;
 /// Pattern: Utility Class + Safe Component Access
 /// Responsabilités:
 /// - Fournir des méthodes d'accès sécurisées aux composants (avec null check)
-/// - Standardiser GetComponent, TryGetComponent, FindObjectOfType patterns
+/// - Standardiser GetComponent, TryGetComponent patterns
 /// - Logger les erreurs de composants manquants de manière cohérente
 /// - Éviter les références nulles et les erreurs runtime
 /// </summary>
@@ -160,23 +160,6 @@ public static class ComponentLocator
     public static bool TryGetComponentInChildrenSafe<T>(this Component sourceComponent, out T component, bool includeInactive = false) where T : Component
     {
         return sourceComponent.gameObject.TryGetComponentInChildrenSafe(out component, includeInactive);
-    }
-
-    // ========== FIND OBJECT OF TYPE (découragé - utiliser avec prudence) ==========
-
-    /// <summary>
-    /// ⚠️ DÉPRÉCIÉ: FindObjectOfType est lent et devrait être évité.
-    /// Utiliser uniquement pour setup initial ou debug.
-    /// Préférer l'injection de dépendances ou les singletons.
-    /// </summary>
-    public static T FindSingleObjectOfType<T>(string contextMessage = null) where T : Object
-    {
-        T obj = Object.FindAnyObjectByType<T>();
-        if (obj == null && !string.IsNullOrEmpty(contextMessage))
-        {
-            GameLog.LogWarning($"ComponentLocator: {typeof(T).Name} introuvable dans la scène - {contextMessage}");
-        }
-        return obj;
     }
 
     // ========== VALIDATION ==========

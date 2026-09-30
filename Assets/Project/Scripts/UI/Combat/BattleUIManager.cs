@@ -33,11 +33,6 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         ServiceLocator.Instance.Register<IBattleUIService>(this);
         GameLog.Log("BattleUIManager: Enregistré dans ServiceLocator comme IBattleUIService");
 
-        if (_playerHealthOrb == null)
-        {
-            _playerHealthOrb = ComponentLocator.FindSingleObjectOfType<HealthOrbController>("BatleUIManager setup");            
-        }
-
         // Récupère la couleur initiale de l'orbe pour ne pas l'écraser avec du blanc/rouge par défaut
         if (_playerHealthOrb != null)
         {
@@ -56,34 +51,6 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             {
                 _defaultOrbColor = orbImage.color;
                 GameLog.Log($"BattleUIManager: Couleur initiale de l'orbe détectée sur '{orbImage.name}': {_defaultOrbColor}");
-            }
-        }
-
-        // Trouve automatiquement les UI si non assignées
-        // OPTIMISATION Phase 3.3: ComponentLocator (découragé mais nécessaire pour setup initial)
-        if (_bossHealthBar == null)
-        {
-            _bossHealthBar = ComponentLocator.FindSingleObjectOfType<BossHealthBarUI>("BattleUIManager setup");
-            if (_bossHealthBar != null)
-            {
-                GameLog.Log("BattleUIManager: BossHealthBarUI trouvée automatiquement");
-            }
-            else
-            {
-                GameLog.LogWarning("BattleUIManager: BossHealthBarUI introuvable dans la scène!");
-            }
-        }
-        if (_enemyCardPreview == null)
-        {
-            // OPTIMISATION Phase 3.3: ComponentLocator (découragé mais nécessaire pour setup initial)
-            _enemyCardPreview = ComponentLocator.FindSingleObjectOfType<EnemyCardPreviewUI>("BattleUIManager setup");
-            if (_enemyCardPreview != null)
-            {
-                GameLog.Log("BattleUIManager: EnemyCardPreviewUI trouvée automatiquement");
-            }
-            else
-            {
-                GameLog.LogWarning("BattleUIManager: EnemyCardPreviewUI introuvable dans la scène!");
             }
         }
     }

@@ -342,7 +342,7 @@ public class NetworkSession : MonoBehaviour
     {
         foreach (DesyncDetector.Mismatch m in mismatches)
         {
-            Debug.LogWarning($"Réseau : désynchronisation au tour {m.Turn} avec le joueur {m.ClientId}.\n" +
+            GameLog.LogWarning($"Réseau : désynchronisation au tour {m.Turn} avec le joueur {m.ClientId}.\n" +
                              $"Hôte  : {m.HostState}\nClient : {m.ClientState}");
             foreach (ulong clientId in _manager.ConnectedClientsIds)
             {

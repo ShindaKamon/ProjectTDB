@@ -98,7 +98,11 @@ public class BattleEndUI : MonoBehaviour
 
     private void Replay() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
-    private void MainMenu() => SceneManager.LoadScene(_mainMenuSceneName);
+    private void MainMenu()
+    {
+        if (NetworkSession.IsActive) NetworkSession.LeaveToMenu();
+        else SceneManager.LoadScene(_mainMenuSceneName);
+    }
 
     private void Build()
     {

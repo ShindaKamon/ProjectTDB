@@ -48,6 +48,20 @@ public class NetworkDesyncEvent : GameEvent
 }
 
 /// <summary>
+/// Réseau : un joueur s'est déconnecté en plein combat ; son champion reste sur la grille et
+/// l'hôte passe ses tours. Actor = sa place dans CombatParty.
+/// </summary>
+public class NetworkPlayerLeftEvent : GameEvent
+{
+    public int Actor { get; private set; }
+
+    public NetworkPlayerLeftEvent(int actor)
+    {
+        Actor = actor;
+    }
+}
+
+/// <summary>
 /// Fin de tour refusée : le champion a plus de cartes en main que le maximum et doit
 /// d'abord en défausser Count (au choix du joueur)
 /// </summary>

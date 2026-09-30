@@ -20,18 +20,97 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
     // que pour le tour où elle a été décidée
     private int _turn;
 
+    // Réseau : désynchronisation constatée, les PC ne jouent plus la même partie : plus aucune action
+    // n'est exécutée (l'écran d'interruption renvoie les joueurs au menu)
+    private bool _halted;
+    private bool _battleOver;
+    private bool _passing;
+
     public void Init(GridManager grid, PlacementPhase placement)
     {
         _grid = grid;
         _placement = placement;
         ServiceLocator.Instance.Register<ICombatCommandService>(this);
         EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Subscribe<NetworkDesyncEvent>(OnDesync);
+        EventBus.Subscribe<BattleEndedEvent>(OnBattleEnded);
     }
 
     void OnDestroy()
     {
         ServiceLocator.Instance.Unregister<ICombatCommandService>();
         EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Unsubscribe<NetworkDesyncEvent>(OnDesync);
+        EventBus.Unsubscribe<BattleEndedEvent>(OnBattleEnded);
+    }
+
+    private void OnDesync(NetworkDesyncEvent e)
+    {
+        _halted = true;
+        _queue.Clear();
+    }
+
+    private void OnBattleEnded(BattleEndedEvent e) => _battleOver = true;
+
+    // ========== JOUEUR DÉCONNECTÉ ==========
+
+    private const float PassDelay = 0.6f;    // laisse voir le tour commencer avant de le passer
+    private const float PassTimeout = 10f;   // commande perdue ou ignorée : on la renvoie
+
+    // Hôte : le champion d'un joueur déconnecté reste sur la grille mais ne joue plus ; à son tour
+    // (ou à son tour de placement), l'hôte passe à sa place, avec les commandes habituelles
+    void Update()
+    {
+        if (_halted || _battleOver || _passing || !NetworkSession.IsActive) return;
+
+        NetworkSession session = NetworkSession.Instance;
+        if (!session.IsHost || !session.HasDeparted || !session.IsDeparted(ActiveActor)) return;
+        StartCoroutine(PassDepartedTurns(session));
+    }
+
+    private IEnumerator PassDepartedTurns(NetworkSession session)
+    {
+        _passing = true;
+        while (!_halted && !_battleOver && NetworkSession.IsActive && session.IsDeparted(ActiveActor))
+        {
+            yield return new WaitForSeconds(PassDelay);
+            int actor = ActiveActor;
+            if (!NetworkSession.IsActive || !session.IsDeparted(actor)) break;
+
+            foreach (CombatCommand command in PassCommands(actor))
+            {
+                command.Turn = _turn;
+                session.SubmitCommandForDeparted(command);
+            }
+
+            int turn = _turn;
+            float deadline = Time.time + PassTimeout;
+            yield return new WaitUntil(() => _turn != turn || ActiveActor != actor || _halted || _battleOver || Time.time > deadline);
+        }
+        _passing = false;
+    }
+
+    // Placement : joueur suivant ; combat : fin de tour, après avoir défaussé l'éventuel excédent de la main
+    private List<CombatCommand> PassCommands(int actor)
+    {
+        var commands = new List<CombatCommand>();
+        if (_placement != null && _placement.IsActive)
+        {
+            commands.Add(CombatCommand.PlacementNext(actor));
+            return commands;
+        }
+
+        Unit unit = _grid.GetActiveUnit();
+        int excess = unit != null && unit.TryGetComponentSafe(out DeckManager deck) ? deck.ExcessCards : 0;
+        if (excess == 0)
+        {
+            commands.Add(CombatCommand.EndTurn(actor));
+            return commands;
+        }
+
+        List<CardData> hand = unit.GetComponent<DeckManager>().GetHand();
+        for (int i = 0; i < excess; i++) commands.Add(CombatCommand.Discard(actor, hand[i].cardName));
+        return commands;
     }
 
     private void OnTurnChanged(TurnChangedEvent e)
@@ -59,7 +138,7 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
 
     public void Submit(CombatCommand command)
     {
-        if (command == null || !CombatParty.IsLocal(command.Actor)) return;
+        if (command == null || _halted || !CombatParty.IsLocal(command.Actor)) return;
         command.Turn = _turn;
 
         // Réseau : l'hôte vérifie l'action et la renvoie à tous (y compris ce PC)
@@ -69,7 +148,7 @@ public class CombatCommandExecutor : MonoBehaviour, ICombatCommandService
 
     public void Enqueue(CombatCommand command)
     {
-        if (command == null) return;
+        if (command == null || _halted) return;
         _queue.Enqueue(command);
         if (!_running) StartCoroutine(ProcessQueue());
     }

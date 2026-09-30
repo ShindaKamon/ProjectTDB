@@ -124,14 +124,6 @@ public class UnitState
     }
 
     /// <summary>
-    /// Vérifie si l'unité peut effectuer une action (jouer carte, attaquer)
-    /// </summary>
-    public bool CanAct()
-    {
-        return _currentState == UnitStateType.Active;
-    }
-
-    /// <summary>
     /// Vérifie si l'unité peut recevoir des dégâts
     /// </summary>
     public bool CanTakeDamage()

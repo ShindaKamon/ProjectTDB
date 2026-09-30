@@ -1,8 +1,9 @@
 # Champions - Émotions Tactics (Project TDB)
 
-**Version:** 3.0
-**Date:** 23 Septembre 2026
+**Version:** 3.1
+**Date:** 30 Septembre 2026
 **Statut:** Reflète la structure actuelle (ChampionData)
+**Changements :** v3.1 (30/09/2026) relecture d'audit — ATQ / armure / RM par niveau et fiche alignés sur le code.
 
 ## Vue d'Ensemble
 
@@ -50,5 +51,5 @@ Niveaux (max 20), PV, slots de cartes, XP : voir **`Progression.md`** et l'Excel
 
 
 **Dernière mise à jour:** 23 Septembre 2026
-**Version:** 3.0
+**Version:** 3.1
 **Responsable:** Shinda + Claude

@@ -1,11 +1,12 @@
 # 🌊 Flux d'Expérience Utilisateur - Émotions Tactics (Project TDB)
 
-**Version:** 1.3
-**Date:** 23 Septembre 2026
+**Version:** 1.4
+**Date:** 30 Septembre 2026
 **Changements :**
 - v1.1 (10/09/2026) : Ayla retirée de l'écran de sélection.
 - v1.2 (23/09/2026) : boucle roguelike (carte à nœuds, runs, événements aléatoires) remplacée par la **campagne façon Waven** ; écran de sélection avec les 3 champions du MVP ; barre d'initiative retirée (ordre par phases) ; raccourcis clavier unifiés (Espace = fin de tour) ; lien cassé vers `Tutorial.md` corrigé. Ce document est la **référence pour les raccourcis clavier**.
 - v1.3 (23/09/2026) : roster Evan / Crux / Raze (Excel MVP) ; deck de 24 cartes et plusieurs decks par champion ; donjon en équipe de 3 ; règle de main à trancher.
+- v1.4 (30/09/2026) : flux réellement codé ajouté (menu → sélection → exploration ↔ combat) ; main de 5 et deck de 20 alignés.
 
 ---
 
@@ -111,6 +112,8 @@ Statistiques & Récompenses (conservées)
 Donjon suivant débloqué → Écran de Campagne
 ```
 
+> **Flux réellement codé (30/09/2026)** : `MainMenuScene` → `ChampionSelectScene` → `ExplorationScene` ↔ `CombatScene`. Il n'y a pas encore d'écran de campagne, de préparation ni de récompenses : « Commencer » lance directement le donjon de l'Orphelinat (3 salles). En exploration, le joueur déplace un pion d'équipe à la souris, clique un groupe de monstres pour lancer le combat, puis une porte (qui s'ouvre une fois la salle vidée) pour passer à la salle suivante ; après une victoire, « Continuer » ramène à l'exploration. Détails : `Technical_Specs.md`, section « Donjon et exploration ».
+
 Tout ce qui est gagné (XP, cartes, Or) est **conservé** — pas de remise à zéro. En cas de défaite, on recommence le combat ou on revient à l'écran de campagne sans rien perdre de sa progression.
 
 ### Écran de Campagne
@@ -151,7 +154,7 @@ Tout ce qui est gagné (XP, cartes, Or) est **conservé** — pas de remise à z
 2. Grille apparaît (animation de matérialisation)
 3. Personnages se téléportent sur leurs positions
 4. Ennemis apparaissent (animation d'entrée)
-5. Mélange et pioche de la main de départ (taille à trancher, animation)
+5. Mélange et pioche de la main de départ (5 cartes, animation)
 
 **UI Visible :**
 - Grille de combat
@@ -401,7 +404,7 @@ Moments narratifs **placés à la main** dans un donjon (pas de tirage aléatoir
 
 ```
 ╔══════════════════════════════════════════════╗
-║     DECK « [NOM] » DE [CHAMPION] (24 cartes)║
+║     DECK « [NOM] » DE [CHAMPION] (20 cartes)║
 ╠══════════════════════════════════════════════╣
 ║                                              ║
 ║  [Signature 4] [Standard 16]                ║

@@ -1,9 +1,10 @@
 # Ennemis - Émotions Tactics (Project TDB)
 
-**Version:** 3.1
-**Date:** 24 Septembre 2026
+**Version:** 3.2
+**Date:** 30 Septembre 2026
 **Statut:** Reflète la structure actuelle (EnemyData)
 **Changements :** v2.1 (23/09/2026) encodage réparé, ennemis replacés dans le lore. **v3.0 (23/09/2026)** : réalignement sur l'Excel MVP (onglet « Barème monstres ») — monstres de donjon vs d'aventure, PV et dégâts en ratio des PV joueur, XP = 15 % des PV, cycle de boss Zone / Basique / Heal, règle anti-lock. Les anciennes formules de PV (tiers, chapitres) sont archivées. **v3.1 (24/09/2026)** : stats des monstres selon le nombre de joueurs, faiblesse émotionnelle.
+**v3.2 (30/09/2026) :** relecture d'audit — mise à l'échelle des monstres selon le nombre de joueurs (coop locale) rappelée.
 
 > **Chiffres de référence : l'Excel.** Ce document explique les règles.
 

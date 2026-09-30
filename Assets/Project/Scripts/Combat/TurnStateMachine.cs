@@ -158,14 +158,6 @@ public class TurnStateMachine
     }
 
     /// <summary>
-    /// Vérifie si l'ennemi peut agir
-    /// </summary>
-    public bool CanEnemyAct()
-    {
-        return _currentState == TurnState.EnemyTurn;
-    }
-
-    /// <summary>
     /// Vérifie si le combat est terminé
     /// </summary>
     public bool IsBattleOver()

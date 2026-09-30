@@ -1,7 +1,7 @@
 # 🔧 Spécifications Techniques - Émotions Tactics (Project TDB)
 
-**Version:** 2.8
-**Date:** 28 Septembre 2026
+**Version:** 2.9
+**Date:** 30 Septembre 2026
 **Statut:** Reflète l'architecture actuelle.
 **Changements :**
 - v2.1 (10/09/2026) : retrait des mentions Classes et Éléments.
@@ -12,6 +12,7 @@
 - v2.6 (24/09/2026) : scripts rangés par domaine (Core = infrastructure, Grid, Combat, Units/Champions|Enemies|Summons, UI/Combat…) ; palette des émotions unique (`CodexCardVisual`).
 - v2.7 (26/09/2026) : protections (bouclier en PV, armure / résistance magique, `DamageType`), texte des cartes généré (`CardRulesText`) et pastilles d'icônes, noms du code en anglais, revue Colère / Joie / Peur, anti-lock et Ténacité des monstres, ATQ option B (`nextAttackBonus`), bond (`leapToTarget`, Bond percutant), Tapis à 2 cibles ; écarts restants avec l'Excel dans « Adaptations à prévoir » (ligne Cartes MVP).
 - v2.8 (28/09/2026) : identifiants internes des champions renommés (`EvanUnit`, `CruxUnit`, `RazeUnit`, fiches, prefabs, matériaux) ; zone `Line` partant de la case visée, aperçu de zone fidèle à la forme réelle ; ciblage en ligne droite (`targetInStraightLine`) ; ciblage par case (les unités ne masquent plus la case derrière elles) ; bouclier sans durée, affiché sur l'orbe de vie ; textes flottants des bonus/malus (`UnitEffectAppliedEvent`), faux critiques retirés ; Signatures en 2 exemplaires (deck de 20 cartes), deck incomplet non jouable ; Invocation de Lyse cible Lyse pour la soigner ; poussée sans demi-tour.
+- v2.9 (30/09/2026) : donjon d'exploration (`Dungeon/`), modèles Quaternius animés, HUD de combat, ATQ / armure / RM par niveau, suppression du rôle affiché sur les cartes ; audit : scènes et taille de main corrigées, méthodes mortes retirées (`CanEnemyAct`, `GetGridDimensions`, `UnitState.CanAct`, `CombatFeedbackManager.ShowDamage/ShowHeal/ShowImmune`), tests `GridRepository` et `PendingEffects`.
 
 ---
 
@@ -56,7 +57,7 @@
 | **Assets/Project/Scripts/UI/** | `Combat/` (HUD, `BattleUIManager`, `HealthBarManager`, orbe de vie, barres de vie, retours de combat), `ChampionSelect/` (écrans de sélection et de decks, `ChampionSelectManager`, `ChampionSelectFlowController`), `Cards/` (main de cartes, ciblage), `DeckEditor/`, `Common/` |
 | **Assets/Project/Scripts/Editor/** | `UISetupWizard`, `DeckDebugMenu`, `PlayModeStartSceneSetup` |
 | **Assets/Project/Tests/EditMode/** | Tests NUnit (`GameActionValidatorTests`, `DeckManagerCostOverrideTests`, `ValidationResultTests`) |
-| **Assets/Project/Scenes/** | `ChampionSelectScene`, `CombatScene` |
+| **Assets/Project/Scenes/** | `MainMenuScene`, `ChampionSelectScene`, `ExplorationScene`, `CombatScene` |
 | **Assets/ScriptableObjects/** | Champions, cartes (Standard/Colere, Peur, Joie ; Champion/… ; Enemy/… ; Family/… reliquat), ennemis |
 | **Docs/GDD/** | Ce GDD |
 
@@ -74,7 +75,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 | **Variables publiques** | camelCase | cardName, costPA |
 | **Constantes** | UPPER_SNAKE_CASE | MAX_HAND_SIZE, DEFAULT_PA |
 
-> Taille de main : non tranchée (voir `Combat_System.md`) — la garder paramétrable. Budget PA+PM = 9, deck = 24 cartes (Excel).
+> Taille de main : 5 (actée le 24/09, voir `Combat_System.md`) — gardée paramétrable (`DeckManager._maxHandSize`). Budget PA+PM = 9 ; deck de 20 cartes dans le code (24 dans l’Excel, voir `Card_System.md`).
 
 #### Fichiers
 
@@ -148,7 +149,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 **Roster jouable :** Raze (« Le Tricheur »), Crux (« Le Grimpeur »), Evan (« Le Frère », + invocation Lyse), référencés dans `ChampionSelectManager._allChampions`. Seuls ces 3 champions existent (fiches dans `Assets/ScriptableObjects/Characters/Champion/`, prefabs dans `Assets/Project/Prefabs/Champions/`). Les 3 champions MVP ont 100 PV ; PA/PM : Evan 5/4, Crux 4/5, Raze 6/3. Chacun a un passif (`ChampionData.passiveName` / `passiveDescription`).
 
-**Ilya, Vylos, Calyx (hors MVP) : retirés du code le 24/09/2026.** Ilya y avait une version différente de `ilya_deck_simple.md` (carte Rage ajoutée à la main tous les 10 dégâts subis, stock max 5) ; Vylos portait la marque Stigmate. Le code reste consultable dans l'historique git (commit `00afe5d`, dernier état avant le nettoyage) si Ilya revient, sa Rage étant à réadapter à l'Éveil.
+**Ilya, Vylos, Calyx (hors MVP) : retirés du code le 24/09/2026.** Ilya y avait une version différente de `archive/ilya_deck_simple.md` (carte Rage ajoutée à la main tous les 10 dégâts subis, stock max 5) ; Vylos portait la marque Stigmate. Le code reste consultable dans l'historique git (commit `00afe5d`, dernier état avant le nettoyage) si Ilya revient, sa Rage étant à réadapter à l'Éveil.
 
 **Marques (poison…), partage de dégâts, recherche/ajout de cartes (hors MVP) : retirés du code le 25/09/2026**, aucune carte ne les utilisait. Récupérables dans l'historique git (dernier état : commit `d169a9d`) le jour où les statuts arriveront (voir « Statuts prévus hors MVP » dans `Combat_System.md`).
 **Nettoyage du 25/09/2026** : retirés aussi l'état « étourdi » et l'état « en action » de `UnitState` (statuts hors MVP), `CardEffectType` (la poussée dépend seulement de `knockbackDistance`), `movementAmount` (sans effet), les anciennes lignes de stats de la sélection (`StatDisplayUI`), une trentaine de méthodes jamais appelées, et les packages inutilisés (AI Navigation, Rider, modules Terrain, Cloth, Vehicles, Wind, VR/XR, Video, Tilemap, Physics 2D, Umbra, Vector Graphics, Adaptive Performance, Analytics, Android JNI). Gardés volontairement : `TurnStateMachine.EndBattle` / `IsBattleOver` (victoire et défaite à venir) et `costHP` (mécanique fonctionnelle, aucune carte ne l'utilise encore). Corrigé au passage : les retraits de PA/PM n'étaient jamais appliqués.

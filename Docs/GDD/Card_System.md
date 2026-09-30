@@ -1,10 +1,11 @@
 # Système de Cartes - Émotions Tactics (Project TDB)
 
-**Version:** 4.0
-**Date:** 23 Septembre 2026
+**Version:** 4.1
+**Date:** 30 Septembre 2026
 **Changements :**
 - v3.0 (10/09/2026) : dimensions Classe et Élément retirées.
 - v4.0 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`) — types de cartes Standard / Éveil / Signature, identité émotionnelle (Colère / Peur / Joie / Neutre), deck de 24 cartes, budget de puissance. L'ancien découpage Personnage / Famille / Neutre est archivé.
+- v4.1 (30/09/2026) : relecture d'audit — cohérent avec le code (Éveil = fusion, deck de 20, pool de 51 Standard).
 
 > **Les chiffres font foi dans l'Excel** (onglets « Références », « Calculateur », « Bibliothèque de cartes », « Suivi de deck »). Ce document explique les règles.
 
@@ -177,5 +178,5 @@ Dans le code (`CardAreaEffect`) : None, OneTile, Line, Cross, Circle, Cone (ouve
 ---
 
 **Dernière mise à jour:** 23 Septembre 2026
-**Version:** 4.0
+**Version:** 4.1
 **Responsable:** Shinda + Claude

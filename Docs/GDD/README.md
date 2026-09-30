@@ -17,7 +17,7 @@
 | [claude_md_coarchitect.md](claude_md_coarchitect.md) | Contrat de collaboration avec Claude : rôle et façon de travailler (importé par `CLAUDE.md`) |
 | [SYSTEME_EMOTIONS.md](SYSTEME_EMOTIONS.md) | 8 émotions, 3 de lancement (Colère, Peur, Joie), Éveil (fusion champion × émotion, 9 formes) |
 | [CHAMPIONS_CONCEPTS.md](CHAMPIONS_CONCEPTS.md) | Evan, Crux, Raze + concepts hors MVP |
-| [Card_System.md](Card_System.md) | Types de cartes, deck de 24, budget de puissance, ciblage |
+| [Card_System.md](Card_System.md) | Types de cartes, deck de 20, budget de puissance, ciblage |
 | [Combat_System.md](Combat_System.md) | Tours, main, ressources, statuts, anti-lock |
 | [Grid_System.md](Grid_System.md) | Grille (carrée dans le code) |
 | [Enemies.md](Enemies.md) | Monstres de donjon / d'aventure, barème, boss |
@@ -25,9 +25,9 @@
 | [UX_Flow.md](UX_Flow.md) | Parcours joueur, raccourcis clavier |
 | [UI_Design.md](UI_Design.md) | Interface, palette, désaturation des donjons |
 | [Characters.md](Characters.md) | Structure d'un champion (ChampionData) |
-| [ilya_deck_simple.md](ilya_deck_simple.md) | Ilya (hors MVP) |
-| [astra_noctis_simple.md](astra_noctis_simple.md) | Astra & Noctis (hors MVP) |
-| [personnages_a_developper.md](personnages_a_developper.md) | Réservoir de 100 concepts |
+| [ilya_deck_simple.md](archive/ilya_deck_simple.md) | Ilya (hors MVP) |
+| [astra_noctis_simple.md](archive/astra_noctis_simple.md) | Astra & Noctis (hors MVP) |
+| [personnages_a_developper.md](archive/personnages_a_developper.md) | Réservoir de 100 concepts |
 | [archive/Concepts_Abandonnes.md](archive/Concepts_Abandonnes.md) | Tout ce qui a été abandonné, mis en pause ou remplacé |
 
 ## Règle de cohérence

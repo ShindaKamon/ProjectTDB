@@ -1,10 +1,11 @@
 # 👥 CONCEPTS DE CHAMPIONS - Émotions Tactics
 
-**Version :** 5.0
-**Date :** 23 Septembre 2026
+**Version :** 5.1
+**Date :** 30 Septembre 2026
 **Changements :**
 - v4.0 (10/09/2026) : dimension Classe retirée de la méthodologie.
 - v5.0 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`, onglet « Champions ») — roster **Evan, Crux, Raze**. Ilya et les Jumeaux passent hors MVP.
+- v5.1 (30/09/2026) : relecture d'audit — fusions d'Éveil par champion, liens vers les concepts hors MVP déplacés dans `archive/`.
 
 > Les valeurs chiffrées (coûts, points de budget, pourcentages) font foi dans l'Excel. Ce document résume.
 
@@ -87,11 +88,11 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 ## 🗄️ CHAMPIONS HORS MVP
 
 ### ILYA — « Le Dévoué Enchaîné »
-Concept complet (Colère, système Rage, transformation Enchaîné ↔ Déchaîné, 12 cartes) : `ilya_deck_simple.md`. **Conçu avant l'Excel** : sa Rage devra devenir sa forme Colère (fusion Rage, voir `SYSTEME_EMOTIONS.md`), et son deck de 12 cartes passer au format du deck (Signatures + 16 Standard, sans cartes d'Éveil).
+Concept complet (Colère, système Rage, transformation Enchaîné ↔ Déchaîné, 12 cartes) : `archive/ilya_deck_simple.md`. **Conçu avant l'Excel** : sa Rage devra devenir sa forme Colère (fusion Rage, voir `SYSTEME_EMOTIONS.md`), et son deck de 12 cartes passer au format du deck (Signatures + 16 Standard, sans cartes d'Éveil).
 
 ### LES JUMEAUX — ASTRA & NOCTIS
 Deux concepts concurrents :
-- **Version 1** (dualité fusionnelle, 2 unités, PA partagés, fusion Éclipse) : `astra_noctis_simple.md`
+- **Version 1** (dualité fusionnelle, 2 unités, PA partagés, fusion Éclipse) : `archive/astra_noctis_simple.md`
 - **Version 2** (1 unité, 2 phases) : Astra (tank, Confiance, 120 HP / 15 ATK / 15 DEF) ↔ Noctis (DPS, Peur, 80 HP / 25 ATK / 5 DEF) ; changement de phase à définir ; deck 3 Astra + 3 Noctis + 3 Neutres.
 
 > Les stats ATK/DEF de ces concepts ne correspondent pas au système actuel (seuls PV, PA, PM sont définis) — à revoir si ces champions reviennent.

@@ -368,16 +368,6 @@ public class GridRepository
         return path;
     }
 
-    // ========== UTILITAIRES ==========
-
-    /// <summary>
-    /// Retourne les dimensions de la grille
-    /// </summary>
-    public (int width, int height) GetGridDimensions()
-    {
-        return (_width, _height);
-    }
-
     // ========== CACHE MANAGEMENT ==========
 
     /// <summary>

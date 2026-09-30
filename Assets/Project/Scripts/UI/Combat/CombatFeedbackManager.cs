@@ -315,40 +315,6 @@ public class CombatFeedbackManager : MonoBehaviour
     // ========== API PUBLIQUE ==========
 
     /// <summary>
-    /// Affiche manuellement un nombre de dégâts
-    /// </summary>
-    public void ShowDamage(int damage, Vector3 worldPosition)
-    {
-        ShowDamageNumber(damage, DamageNumberPopup.PopupType.Damage, worldPosition);
-    }
-
-    /// <summary>
-    /// Affiche manuellement un nombre de soins
-    /// </summary>
-    public void ShowHeal(int healAmount, Vector3 worldPosition)
-    {
-        ShowDamageNumber(healAmount, DamageNumberPopup.PopupType.Heal, worldPosition);
-    }
-
-    /// <summary>
-    /// Affiche "IMMUNE" pour un coup bloqué
-    /// </summary>
-    public void ShowImmune(Vector3 worldPosition)
-    {
-        if (_damageNumberPrefab == null || _damageNumberParent == null) return;
-
-        Vector3 spawnPosition = worldPosition + _damageNumberOffset;
-
-        GameObject popupObj = Instantiate(_damageNumberPrefab, _damageNumberParent);
-        DamageNumberPopup popup = popupObj.GetComponent<DamageNumberPopup>();
-
-        if (popup != null)
-        {
-            popup.Show(0, DamageNumberPopup.PopupType.Immune, spawnPosition);
-        }
-    }
-
-    /// <summary>
     /// Shake manuel d'une unité
     /// </summary>
     public void ShakeTransform(Transform target, float duration = -1f, float intensity = -1f)

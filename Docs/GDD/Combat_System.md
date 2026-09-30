@@ -1,10 +1,11 @@
 # Système de Combat - Émotions Tactics (Project TDB)
 
-**Version:** 3.1
-**Date:** 23 Septembre 2026
+**Version:** 3.3
+**Date:** 30 Septembre 2026
 **Statut:** **Référence pour les règles de combat** (tour, main, ressources, statuts, contrôle, difficulté). Les **chiffres** (budget des cartes, profils PA/PM, barème monstres) font foi dans l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`.
 **v3.1 (23/09/2026) :** réalignement sur l'Excel — budget PA+PM de 9 par profil, échelle de dégâts = baseline de l'Excel, statuts de contrôle de la Peur, règle anti-lock, règle de main redevenue question ouverte (hypothèse de playtest : main de 3).
 **v3.0 (23/09/2026) :** encodage réparé ; ancienne jauge -100/+100 retirée. **v3.2 :** ordre des tours et règles de main alignés sur le code réel (voir « État du code » dans `Technical_Specs.md`).
+**v3.3 (30/09/2026) :** relecture d'audit — règle de main actée (5 cartes) rappelée dans le tableau de tour.
 
 ## Vue d'Ensemble
 
@@ -33,7 +34,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **Setup de la grille**  | Génération de la grille de combat         |
 | **Placement unités**    | Boss à sa position fixe ; phase de placement des champions sur les cases de départ, puis « Lancer le combat » (voir `Grid_System.md`, « Zones de Départ ») |
 | **Init des decks**      | Mélange des decks des champions           |
-| **Pioche initiale**     | Main de départ (code : 5 cartes — règle à trancher) |
+| **Pioche initiale**     | Main de départ (5 cartes, règle actée le 24/09) |
 | **Ressources initiales**| Attribution des PA, PM de départ          |
 
 **Différence Champions vs Ennemis :**

@@ -1,11 +1,12 @@
 # 🎨 Design de l'Interface Utilisateur - Émotions Tactics (Project TDB)
 
-**Version:** 1.3
-**Date:** 23 Septembre 2026
+**Version:** 1.4
+**Date:** 30 Septembre 2026
 **Changements :**
 - v1.1 (11/09/2026) : ajout de la section « Désaturation Narrative des Donjons ».
 - v1.2 (23/09/2026) : barre d'initiative remplacée par un indicateur de phase (ordre des tours par phases) ; « Mana » retiré du HUD (ressource signature propre à chaque champion) ; affichage Rage corrigé (jauge 0→5) ; raccourci Fin de Tour = Espace ; glow de sélection unifié (doré) ; couleur de l'Orphelinat corrigée (Peur = vert foncé) ; table des couleurs de familles renvoyée vers `SYSTEME_EMOTIONS.md`.
 - v1.3 (23/09/2026) : réalignement sur l'Excel MVP — jauges d'Éveil par émotion dans le HUD, invocations (Lyse), exemple de tooltip avec une carte Standard, taille de main à trancher.
+- v1.4 (30/09/2026) : taille de main actée (5) ; cartes de la main sans pictogramme de rôle (zone d'illustration neutre, essai abandonné) ; HUD de combat en panneau unique.
 
 ---
 
@@ -24,7 +25,8 @@ L'interface utilisateur d'**Émotions Tactics** doit être :
 ### Layout en Arc (Limbus Company Style)
 
 **Implémentation Actuelle :**
-- Cartes disposées en arc au bas de l'écran (taille de main à trancher, voir `Combat_System.md`)
+- Cartes disposées en arc au bas de l'écran (main de 5 cartes max, voir `Combat_System.md`)
+- Face d'une carte : coût, nom, zone d'illustration (cadre gris neutre tant qu'il n'y a pas d'illustration), texte de règles ; le **rôle** (Attaque, Soin…) n'est plus affiché — pictogramme et fond teinté testés puis retirés le 30/09/2026, jugés peu pratiques
 - Centre de l'arc : position centrale en bas
 - Rayon de l'arc : ajustable (défaut : 800 pixels)
 - Espacement : calculé dynamiquement selon le nombre de cartes

@@ -1,10 +1,11 @@
 # 📈 Système de Progression - Émotions Tactics (Project TDB)
 
-**Version:** 2.0
-**Date:** 23 Septembre 2026
+**Version:** 2.1
+**Date:** 30 Septembre 2026
 **Changements :**
 - v1.2 (23/09/2026) : structure campagne façon Waven (progression persistante, pas de roguelike).
 - v2.0 (23/09/2026) : réalignement sur l'Excel MVP (`TCG_Tactique_Systeme_de_calcul.xlsx`, onglets « Progression champions » et « Barème monstres ») — niveau max 20, PV +15/niveau, PA/PM fixés par profil, XP = 100 × niveau, XP monstre = 15 % de ses PV. L'ancienne table de niveaux d'Ilya et l'arbre de talents sont archivés (ils augmentaient les PA, contraire à la règle d'or).
+- v2.1 (30/09/2026) : relecture d'audit — ATQ / armure / RM par niveau alignés sur `GDD_Main.md` et le code.
 
 > **Chiffres de référence : l'Excel.** Ce document explique les règles.
 > Rappel : pas de gacha (10/09/2026). Les Gemmes ne sont pas un tirage aléatoire mais restent à revalider avec le modèle de monétisation.

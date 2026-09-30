@@ -24,6 +24,7 @@ public class NetworkSession : MonoBehaviour
     private const string MsgExecute = "tdb.combat.execute"; // hôte -> clients : action à exécuter
     private const string MsgTurnState = "tdb.combat.state";  // client -> hôte : empreinte de l'état au début d'un tour
     private const string MsgDesync = "tdb.combat.desync";    // hôte -> clients : états différents à ce tour
+    private const string MsgLeft = "tdb.combat.left";        // hôte -> clients : un joueur s'est déconnecté en combat
     private const string MainMenuScene = "MainMenuScene";
 
     public static NetworkSession Instance { get; private set; }
@@ -42,6 +43,16 @@ public class NetworkSession : MonoBehaviour
     private UnityTransport _transport;
     private bool _acceptingPlayers;
     private DesyncDetector _desync = new DesyncDetector();
+
+    // Hôte : places (CombatParty) des joueurs déconnectés en plein combat ; le salon garde leur place
+    // pour que les autres joueurs conservent la leur
+    private readonly HashSet<int> _departed = new HashSet<int>();
+
+    /// <summary>Le joueur à cette place s'est déconnecté en plein combat (connu de l'hôte seulement).</summary>
+    public bool IsDeparted(int actor) => _departed.Contains(actor);
+
+    /// <summary>Au moins un joueur a quitté le combat (connu de l'hôte seulement).</summary>
+    public bool HasDeparted => _departed.Count > 0;
 
     public static NetworkSession GetOrCreate()
     {
@@ -147,6 +158,7 @@ public class NetworkSession : MonoBehaviour
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgExecute, OnExecuteReceived);
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgTurnState, OnTurnStateReceived);
         _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgDesync, OnDesyncReceived);
+        _manager.CustomMessagingManager.RegisterNamedMessageHandler(MsgLeft, OnLeftReceived);
     }
 
     private void OnClientConnected(ulong clientId)
@@ -167,6 +179,12 @@ public class NetworkSession : MonoBehaviour
     {
         if (_manager.IsServer)
         {
+            if (!_acceptingPlayers)
+            {
+                PlayerLeftCombat(clientId);
+                return;
+            }
+
             Lobby.RemovePlayer(clientId);
             GameLog.Log($"Réseau : joueur {clientId} parti.");
             BroadcastLobby();
@@ -175,7 +193,13 @@ public class NetworkSession : MonoBehaviour
 
         // Côté client : l'hôte a fermé la partie ou la connexion a échoué
         GameLog.LogWarning("Réseau : connexion à l'hôte perdue, retour au menu.");
-        Shutdown();
+        LeaveToMenu();
+    }
+
+    /// <summary>Ferme la session réseau (si active) et retourne au menu principal.</summary>
+    public static void LeaveToMenu()
+    {
+        if (IsActive) Instance.Shutdown();
         CombatParty.Clear();
         SceneManager.LoadScene(MainMenuScene);
     }
@@ -208,6 +232,7 @@ public class NetworkSession : MonoBehaviour
         _acceptingPlayers = false;
         Lobby.Seed = new System.Random().Next(1, int.MaxValue); // mélange des decks commun à tous les PC
         _desync = new DesyncDetector();
+        _departed.Clear();
         BroadcastLobby();
         _manager.SceneManager.LoadScene(combatSceneName, LoadSceneMode.Single);
         return true;
@@ -241,12 +266,47 @@ public class NetworkSession : MonoBehaviour
             return;
         }
 
+        BroadcastCommand(command);
+    }
+
+    /// <summary>
+    /// Hôte : action décidée par l'hôte lui-même pour un joueur absent (passer son tour), renvoyée à
+    /// tous comme n'importe quelle action.
+    /// </summary>
+    public void SubmitCommandForDeparted(CombatCommand command)
+    {
+        if (_manager.IsServer && IsDeparted(command.Actor)) BroadcastCommand(command);
+    }
+
+    private void BroadcastCommand(CombatCommand command)
+    {
         string data = command.Serialize();
         foreach (ulong clientId in _manager.ConnectedClientsIds)
         {
             if (clientId != NetworkManager.ServerClientId) Send(MsgExecute, data, clientId);
         }
         Services.Commands?.Enqueue(command);
+    }
+
+    // Hôte : un joueur part en plein combat. Son champion reste sur la grille ; tous sont prévenus
+    // et l'hôte passera ses tours (CombatCommandExecutor).
+    private void PlayerLeftCombat(ulong clientId)
+    {
+        int actor = Lobby.IndexOf(clientId);
+        if (actor < 0 || !_departed.Add(actor)) return;
+
+        GameLog.Log($"Réseau : joueur {clientId} (place {actor + 1}) déconnecté en plein combat.");
+        foreach (ulong other in _manager.ConnectedClientsIds)
+        {
+            if (other != NetworkManager.ServerClientId) Send(MsgLeft, actor.ToString(), other);
+        }
+        EventBus.Publish(new NetworkPlayerLeftEvent(actor));
+    }
+
+    private void OnLeftReceived(ulong senderClientId, FastBufferReader reader)
+    {
+        reader.ReadValueSafe(out string data);
+        if (int.TryParse(data, out int actor)) EventBus.Publish(new NetworkPlayerLeftEvent(actor));
     }
 
     private void OnExecuteReceived(ulong senderClientId, FastBufferReader reader)

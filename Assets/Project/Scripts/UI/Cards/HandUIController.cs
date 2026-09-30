@@ -28,6 +28,33 @@ public class HandUIController : MonoBehaviour
     [SerializeField] private Color _curveColor = new Color(0f, 1f, 1f, 0.8f); // Couleur cyan avec transparence
     [SerializeField] private Color _reticleColor = new Color(1f, 1f, 0f, 0.9f); // Couleur jaune avec transparence
 
+    [Header("Pioche")]
+    [Tooltip("Tas de pioche d'où partent les cartes piochées (à défaut, elles montent du bas de l'écran)")]
+    [SerializeField] private RectTransform _drawOrigin;
+    [Tooltip("Durée du trajet d'une carte, de la pioche à la main (secondes)")]
+    [SerializeField] private float _drawDuration = 0.3f;
+    [Tooltip("Délai entre deux cartes piochées d'affilée : elles arrivent une par une (secondes)")]
+    [SerializeField] private float _drawInterval = 0.15f;
+
+    // Animation de pioche, par position dans la main : départ prévu, trajet et échelle finale
+    private readonly List<float> _drawStartTimes = new List<float>();
+    private readonly List<Vector2> _drawFrom = new List<Vector2>();
+    private readonly List<Vector2> _drawTo = new List<Vector2>();
+    private readonly List<Vector3> _drawScale = new List<Vector3>();
+    private readonly List<bool> _drawDone = new List<bool>();
+    private float _nextDrawTime;
+
+    [Header("Triche")]
+    [Tooltip("Choix −1 / +1 PA affiché au-dessus de la carte visée par une carte qui modifie un coût (ex: Triche)")]
+    [SerializeField] private CardCostChoicePopup _costChoicePopup;
+
+    [Header("Défausse de fin de tour")]
+    [Tooltip("Message « Défausse N cartes » affiché tant que la main dépasse le maximum en fin de tour (optionnel)")]
+    [SerializeField] private TextMeshProUGUI _discardPrompt;
+
+    // Cartes encore à défausser avant de finir le tour (0 = pas en mode défausse)
+    private int _cardsToDiscard;
+
     private DeckManager _playerDeckManager;
     private List<GameObject> _instantiatedCardUIs = new List<GameObject>();
     private CardData _selectedCard = null; // La carte actuellement sélectionnée par le joueur
@@ -43,6 +70,9 @@ public class HandUIController : MonoBehaviour
     // Propriété publique pour que l'InputManager puisse accéder à la carte sélectionnée
     public CardData SelectedCard => _selectedCard;
 
+    /// <summary>Cibles déjà choisies pour la carte à cibles multiples en cours (ex: Frappe rapide).</summary>
+    public IReadOnlyList<Unit> PendingMultiTargets => _pendingMultiTargets;
+
     // Carte de déplacement d'invocation (ex: Écho évanescent) : invocation choisie à la 1re étape
     // du ciblage ; null tant que le joueur n'en a pas choisi (il doit alors cliquer une invocation).
     private SummonUnit _summonToMove;
@@ -50,6 +80,7 @@ public class HandUIController : MonoBehaviour
 
     public void DeselectCard()
     {
+        if (_costChoicePopup != null) _costChoicePopup.Hide();
         if (_selectedCard != null)
         {
             GameLog.Log($"Carte {_selectedCard.cardName} désélectionnée via appel externe.");
@@ -156,26 +187,28 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void ExecutePendingMultiTargetCard(Unit activeUnit)
     {
-        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
-        if (!canPlayResult.IsValid)
-        {
-            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
-            DeselectCard();
-            return;
-        }
+        var tiles = _pendingMultiTargets.ConvertAll(t => t.GetCurrentGridPos());
+        SubmitCardAndEndSelection(activeUnit, CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, tiles.ToArray()));
+    }
 
-        bool isFirstTarget = true;
-        foreach (Unit target in _pendingMultiTargets)
-        {
-            // Seule la 1ère cible déclenche les effets "une fois par carte jouée" (combo
-            // tracker, invocation, dégâts sur soi, pioche, fetch, ajout au deck, écho de Lyse) —
-            // voir CardData.ExecuteEffect(isAdditionalMultiTargetHit).
-            _selectedCard.ExecuteEffect(activeUnit, target, default, !isFirstTarget);
-            isFirstTarget = false;
-        }
+    // Place dans CombatParty du joueur dont c'est le tour (-1 si aucun)
+    private static int ActiveActor => Services.Commands != null ? Services.Commands.ActiveActor : -1;
 
-        PayCostsAndEndCardPlay(activeUnit);
-        GameLog.Log($"✅ Carte à cibles multiples jouée avec succès");
+    /// <summary>
+    /// Envoie la carte jouée aux commandes de combat (validation, effet et paiement : voir
+    /// CombatCommandExecutor), puis remet à zéro la sélection et les affichages de ciblage.
+    /// </summary>
+    private void SubmitCardAndEndSelection(Unit activeUnit, CombatCommand command)
+    {
+        if (command.Actor >= 0) Services.Commands.Submit(command);
+
+        _pendingMultiTargets.Clear();
+        _summonToMove = null;
+        _selectedCard = null;
+        ResetSelectedCardUIPosition();
+        ResetCardHighlights();
+        EventBus.Publish(new ResetTileColorsEvent());
+        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
     }
 
     /// <summary>
@@ -210,14 +243,7 @@ public class HandUIController : MonoBehaviour
         Unit activeUnit = Services.Grid?.GetActiveUnit();
         if (activeUnit == null) return;
 
-        ValidationResult canPlayResult = GameActionValidator.CanPlayCard(activeUnit, _selectedCard);
-        if (!canPlayResult.IsValid)
-        {
-            GameLog.LogWarning($"❌ Impossible de jouer {_selectedCard.cardName} : {canPlayResult.ErrorMessage}");
-            DeselectCard();
-            return;
-        }
-
+        // Case invalide : rien ne se passe, le joueur peut recliquer (sans attendre l'exécution)
         bool isFree = Services.Grid.GetTileAtPosition(destination) != null && Services.Grid.GetUnitAtGridPos(destination) == null;
         ValidationResult moveResult = GameActionValidator.CanMoveSummonTo(_selectedCard, _summonToMove, destination, isFree);
         if (!moveResult.IsValid)
@@ -226,38 +252,8 @@ public class HandUIController : MonoBehaviour
             return;
         }
 
-        _selectedCard.ExecuteEffect(activeUnit, _summonToMove, destination);
-        PayCostsAndEndCardPlay(activeUnit);
-        GameLog.Log($"✅ Invocation déplacée avec succès");
-    }
-
-    /// <summary>
-    /// Fin commune d'une carte jouée : défausse, paiement des PA (coût effectif, overrides compris)
-    /// et des PV, puis remise à zéro de la sélection et des affichages de ciblage.
-    /// </summary>
-    private void PayCostsAndEndCardPlay(Unit activeUnit)
-    {
-        // Coût effectif (tient compte d'un éventuel override, ex: Triche)
-        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
-        _playerDeckManager.PlayCard(_selectedCard);
-
-        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
-        {
-            paUser.SpendPA(effectiveCostPA);
-        }
-
-        if (_selectedCard.costHP > 0)
-        {
-            activeUnit.PayHealth(_selectedCard.costHP);
-        }
-
-        _pendingMultiTargets.Clear();
-        _summonToMove = null;
-        _selectedCard = null;
-        ResetSelectedCardUIPosition();
-        ResetCardHighlights();
-        EventBus.Publish(new ResetTileColorsEvent());
-        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
+        SubmitCardAndEndSelection(activeUnit,
+            CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, _summonToMove.GetCurrentGridPos(), destination));
     }
 
     void OnEnable()
@@ -266,6 +262,7 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardHoverEnter += HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit += HandleCardHoverExit;
         EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Subscribe<HandDiscardRequiredEvent>(OnHandDiscardRequired);
     }
 
     void OnDisable()
@@ -274,6 +271,32 @@ public class HandUIController : MonoBehaviour
         CardUIElement.OnCardHoverEnter -= HandleCardHoverEnter;
         CardUIElement.OnCardHoverExit -= HandleCardHoverExit;
         EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Unsubscribe<HandDiscardRequiredEvent>(OnHandDiscardRequired);
+    }
+
+    /// <summary>
+    /// Fin de tour avec trop de cartes : chaque clic sur une carte la défausse, puis le tour se termine
+    /// </summary>
+    private void OnHandDiscardRequired(HandDiscardRequiredEvent e)
+    {
+        if (e.Unit != _boundChampion) return; // réseau : la défausse d'un autre PC se fait là-bas
+        if (_selectedCard != null) DeselectCard();
+        _cardsToDiscard = e.Count;
+        UpdateDiscardPrompt();
+    }
+
+    // La défausse est une action du joueur (commande) : le compteur est remis à jour par
+    // HandDiscardRequiredEvent, ou le tour se termine une fois la main revenue au maximum
+    private void DiscardForEndOfTurn(CardData card)
+    {
+        if (ActiveActor >= 0) Services.Commands.Submit(CombatCommand.Discard(ActiveActor, card.cardName));
+    }
+
+    private void UpdateDiscardPrompt()
+    {
+        if (_discardPrompt == null) return;
+        _discardPrompt.gameObject.SetActive(_cardsToDiscard > 0);
+        _discardPrompt.text = $"Main pleine : défausse {_cardsToDiscard} carte{(_cardsToDiscard > 1 ? "s" : "")} pour finir ton tour";
     }
 
     private bool _isInitialized = false;
@@ -287,11 +310,11 @@ public class HandUIController : MonoBehaviour
 
     private void TryInitialize()
     {
-        // Trouver le DeckManager du joueur actif
-        if (Services.Grid != null && Services.Grid.GetActiveUnit() != null)
-        {
-            BindToUnit(Services.Grid.GetActiveUnit());
-        }
+        // Au premier tour : la main du joueur actif s'il joue sur ce PC, sinon (réseau) celle du
+        // joueur de ce PC
+        Unit active = Services.Grid != null ? Services.Grid.GetActiveUnit() : null;
+        Champion shown = active != null ? LocalView.ChampionToShow(active) : null;
+        if (shown != null) BindToUnit(shown);
     }
 
     /// <summary>
@@ -300,7 +323,11 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void OnTurnChanged(TurnChangedEvent e)
     {
-        if (!(e.NewActiveUnit is Champion) || e.NewActiveUnit == _boundChampion) return;
+        _cardsToDiscard = 0;
+        UpdateDiscardPrompt();
+
+        // Réseau : pendant le tour du joueur d'un autre PC, on garde la main du joueur de ce PC
+        if (!LocalView.IsLocalChampion(e.NewActiveUnit) || e.NewActiveUnit == _boundChampion) return;
 
         if (_selectedCard != null) DeselectCard();
         Unbind();
@@ -314,6 +341,7 @@ public class HandUIController : MonoBehaviour
         if (_playerDeckManager != null)
         {
             _playerDeckManager.OnHandChanged += UpdateHandUI; // S'abonner à l'événement de changement de main
+            _drawStartTimes.Clear(); // la main de ce joueur est distribuée carte par carte
             UpdateHandUI(); // Mettre à jour l'UI immédiatement après l'abonnement
             GameLog.Log($"HandUIController: main de {unit.name} affichée");
         }
@@ -328,6 +356,7 @@ public class HandUIController : MonoBehaviour
         if (_boundChampion != null)
         {
             _boundChampion.OnActionPointsChanged += HandlePAChanged;
+            _boundChampion.OnStatsModified += RefreshCardAffordability; // ex: PA dépensés ce tour (Tapis)
         }
 
         _isInitialized = true;
@@ -343,6 +372,7 @@ public class HandUIController : MonoBehaviour
         if (_boundChampion != null)
         {
             _boundChampion.OnActionPointsChanged -= HandlePAChanged;
+            _boundChampion.OnStatsModified -= RefreshCardAffordability;
         }
     }
 
@@ -373,7 +403,7 @@ public class HandUIController : MonoBehaviour
         }
 
         // Si une carte est sélectionnée et nécessite une cible, la positionner à gauche en mode preview
-        if (_selectedCard != null && (_selectedCard.targetsUnit || _selectedCard.targetsTile) && _selectedCardUIObject != null)
+        if (_selectedCard != null && (_selectedCard.targetsUnit || _selectedCard.targetsTile || _selectedCard.targetsHandCard) && _selectedCardUIObject != null)
         {
             // Cache le RectTransform si pas déjà fait
             if (_selectedCardRect == null)
@@ -494,6 +524,9 @@ public class HandUIController : MonoBehaviour
         // Arranger les cartes en arc
         ArrangeCardsInArc();
 
+        // Cartes nouvellement piochées : elles partent de la pioche, une par une
+        ScheduleDrawAnimations();
+
         // BUGFIX: si une carte ciblant une unité/tuile était sélectionnée (détachée du
         // HandContainer et attachée au Canvas avec un sorting order élevé) au moment du
         // rafraîchissement, son GameObject UI a été détruit et réinstancié ci-dessus : il a donc
@@ -503,6 +536,86 @@ public class HandUIController : MonoBehaviour
         if (_selectedCard != null && _selectedCardUIObject != null)
         {
             AttachSelectedCardUIToCanvas();
+        }
+    }
+
+    /// <summary>
+    /// Après chaque reconstruction de la main : les cartes au-delà de celles déjà vues sont
+    /// nouvelles et reçoivent un départ décalé (une par une) ; toutes reprennent leur trajet
+    /// pioche → place dans l'arc (les GameObjects viennent d'être recréés).
+    /// </summary>
+    private void ScheduleDrawAnimations()
+    {
+        int count = _instantiatedCardUIs.Count;
+        if (_drawStartTimes.Count > count)
+        {
+            _drawStartTimes.RemoveRange(count, _drawStartTimes.Count - count);
+            _drawDone.RemoveRange(count, _drawDone.Count - count);
+        }
+        while (_drawStartTimes.Count < count)
+        {
+            float start = Mathf.Max(Time.time, _nextDrawTime);
+            _drawStartTimes.Add(start);
+            _drawDone.Add(false);
+            _nextDrawTime = start + _drawInterval;
+        }
+
+        _drawFrom.Clear();
+        _drawTo.Clear();
+        _drawScale.Clear();
+        var handRect = (RectTransform)_handContainer;
+        for (int i = 0; i < count; i++)
+        {
+            var rect = (RectTransform)_instantiatedCardUIs[i].transform;
+            Vector2 to = rect.anchoredPosition;
+            Vector2 from = to + Vector2.down * 400f;
+            if (_drawOrigin != null)
+            {
+                Vector3 originLocal = handRect.InverseTransformPoint(_drawOrigin.position);
+                from = to + (Vector2)(originLocal - rect.localPosition);
+            }
+            _drawFrom.Add(from);
+            _drawTo.Add(to);
+            _drawScale.Add(rect.localScale);
+        }
+
+        ApplyDrawAnimations();
+    }
+
+    // Après les Update (CardUIElement anime aussi l'échelle) : place les cartes en cours de pioche
+    void LateUpdate() => ApplyDrawAnimations();
+
+    private void ApplyDrawAnimations()
+    {
+        int count = Mathf.Min(_instantiatedCardUIs.Count, _drawTo.Count);
+        for (int i = 0; i < count; i++)
+        {
+            if (_drawDone[i]) continue;
+
+            GameObject card = _instantiatedCardUIs[i];
+            if (card == null || card == _selectedCardUIObject) { _drawDone[i] = true; continue; }
+
+            var rect = (RectTransform)card.transform;
+            float t = (Time.time - _drawStartTimes[i]) / Mathf.Max(0.01f, _drawDuration);
+            if (t >= 1f)
+            {
+                rect.anchoredPosition = _drawTo[i];
+                rect.localScale = _drawScale[i];
+                _drawDone[i] = true;
+                continue;
+            }
+
+            if (t < 0f)
+            {
+                // Pas encore son tour : invisible, sur la pioche
+                rect.anchoredPosition = _drawFrom[i];
+                rect.localScale = Vector3.zero;
+                continue;
+            }
+
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+            rect.anchoredPosition = Vector2.LerpUnclamped(_drawFrom[i], _drawTo[i], eased);
+            rect.localScale = _drawScale[i] * Mathf.Lerp(0.3f, 1f, eased);
         }
     }
 
@@ -576,7 +689,17 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void HandleCardHoverEnter(GameObject cardUI)
     {
+        // Carte qui vise la main (ex: Triche) : cadre jaune sur la carte survolée, cible valide
+        if (_selectedCard != null && _selectedCard.targetsHandCard && cardUI != _selectedCardUIObject
+            && cardUI.TryGetComponentSafe(out CardUIElement target) && target.CardData != _selectedCard)
+            target.SetTargetFrame(true);
+
         if (_hoveredCard != null || cardUI == _selectedCardUIObject) return;
+
+        // Carte encore en vol depuis la pioche : sa position n'est pas finale, la mémoriser la
+        // ferait revenir au mauvais endroit (cartes qui se chevauchent) à la sortie du survol
+        int index = _instantiatedCardUIs.IndexOf(cardUI);
+        if (index >= 0 && index < _drawDone.Count && !_drawDone[index]) return;
 
         _hoveredCard = cardUI;
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
@@ -603,6 +726,8 @@ public class HandUIController : MonoBehaviour
     /// </summary>
     private void HandleCardHoverExit(GameObject cardUI)
     {
+        if (cardUI.TryGetComponentSafe(out CardUIElement target)) target.SetTargetFrame(false);
+
         if (_hoveredCard != cardUI) return;
 
         RectTransform cardRect = cardUI.GetComponent<RectTransform>();
@@ -620,11 +745,31 @@ public class HandUIController : MonoBehaviour
     {
         GameLog.Log($"HandUIController a reçu un clic sur : {clickedCard.cardName}");
 
+        // Réseau : la main du joueur de ce PC reste visible pendant le tour des autres, sans être jouable
+        if (Services.Commands == null || !Services.Commands.IsLocalTurn) return;
+        if (_costChoicePopup != null) _costChoicePopup.Hide(); // un nouveau clic remplace un choix en cours
+
+        // Défausse de fin de tour : le clic défausse la carte au lieu de la sélectionner
+        if (_cardsToDiscard > 0 && _playerDeckManager != null)
+        {
+            DiscardForEndOfTurn(clickedCard);
+            return;
+        }
+
         // Cas spécial : une carte "cible une carte de la main" (ex: Triche) est sélectionnée
         // et on clique sur une AUTRE carte -> c'est le ciblage, pas un changement de sélection.
         if (_selectedCard != null && _selectedCard.targetsHandCard && clickedCard != _selectedCard)
         {
             PlayHandCardTargetingCard(clickedCard);
+            return;
+        }
+
+        // Carte injouable (PA, PV…) : pas de sélection (re-cliquer la carte sélectionnée la désélectionne)
+        RectTransform clickedUI = FindCardUI(clickedCard);
+        if (clickedCard != _selectedCard && clickedUI != null
+            && clickedUI.TryGetComponentSafe(out CardUIElement clickedElement) && !clickedElement.IsAffordable)
+        {
+            GameLog.LogWarning($"Pas assez de PA pour jouer {clickedCard.cardName}");
             return;
         }
 
@@ -773,31 +918,19 @@ public class HandUIController : MonoBehaviour
             }
         }
 
-        // Toutes les validations passées, exécuter la carte
-        if (_selectedCard.isChargeCard)
-        {
-            // Carte de charge : le lanceur se déplace vers la cible (case vide ou ennemi)
-            // Si targetUnit est défini, utilise sa position comme cible
-            Vector2Int chargeTarget = targetUnit != null ? targetUnit.GetCurrentGridPos() : targetTile;
-            _selectedCard.ExecuteChargeEffect(activeUnit, chargeTarget);
-        }
-        else if (_selectedCard.leapToTarget)
-        {
-            // Bond : le lanceur saute sur la case, puis l'effet part de son point d'arrivée
-            _selectedCard.ExecuteLeapEffect(activeUnit, targetTile);
-        }
-        else
-        {
-            _selectedCard.ExecuteEffect(activeUnit, targetUnit, targetTile);
-        }
-
-        PayCostsAndEndCardPlay(activeUnit);
-        GameLog.Log($"✅ Carte jouée avec succès");
+        // Vérifications passées : la carte devient une commande (cible = sa case : celle de l'unité
+        // visée, ou la case visée ; aucune pour une carte sans cible)
+        CombatCommand command = targetUnit != null
+            ? CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, targetUnit.GetCurrentGridPos())
+            : _selectedCard.targetsTile
+                ? CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName, targetTile)
+                : CombatCommand.PlayCard(ActiveActor, _selectedCard.cardName);
+        SubmitCardAndEndSelection(activeUnit, command);
     }
 
     /// <summary>
     /// Joue une carte qui cible une autre carte de la main (ex: Triche sur "targetCard").
-    /// Maintenir Maj pendant le clic augmente le coût de +1 PA au lieu de le réduire de -1 PA.
+    /// Le joueur choisit ensuite −1 ou +1 PA dans CardCostChoicePopup, au-dessus de la carte visée.
     /// </summary>
     private void PlayHandCardTargetingCard(CardData targetCard)
     {
@@ -817,31 +950,35 @@ public class HandUIController : MonoBehaviour
             return;
         }
 
-        int delta = (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed) ? 1 : -1;
-        _playerDeckManager.ModifyCardCost(targetCard, delta);
-        GameLog.Log($"🎭 {_selectedCard.cardName} : coût de {targetCard.cardName} modifié de {(delta > 0 ? "+" : "")}{delta} PA (maintenir Maj = +1, sinon -1).");
-
-        int effectiveCostPA = _playerDeckManager.GetEffectiveCost(_selectedCard);
-
-        _playerDeckManager.PlayCard(_selectedCard);
-
-        if (effectiveCostPA > 0 && activeUnit is IActionPointsUser paUser)
+        // Le joueur choisit −1 ou +1 PA au-dessus de la carte visée (sans popup : −1)
+        RectTransform anchor = FindCardUI(targetCard);
+        if (_costChoicePopup == null || anchor == null)
         {
-            paUser.SpendPA(effectiveCostPA);
+            ApplyHandCardCostChange(activeUnit, targetCard, -1);
+            return;
         }
+        _costChoicePopup.Show(anchor, _playerDeckManager.GetEffectiveCost(targetCard),
+            delta => ApplyHandCardCostChange(activeUnit, targetCard, delta));
+    }
 
-        if (_selectedCard.costHP > 0)
+    private RectTransform FindCardUI(CardData card)
+    {
+        foreach (GameObject cardUI in _instantiatedCardUIs)
         {
-            activeUnit.PayHealth(_selectedCard.costHP);
+            if (cardUI.TryGetComponentSafe(out CardUIElement element) && element.CardData == card)
+                return (RectTransform)cardUI.transform;
         }
+        return null;
+    }
 
-        _selectedCard = null;
-        ResetSelectedCardUIPosition();
-        ResetCardHighlights();
-        RefreshCardAffordability(); // le coût de targetCard a changé, rafraîchit son affichage en main
-        EventBus.Publish(new ShowMovementRangeEvent(activeUnit));
-
-        GameLog.Log($"✅ Carte jouée avec succès");
+    /// <summary>
+    /// Choix fait (±1 PA sur targetCard) : la carte jouée (ex: Triche) devient une commande
+    /// </summary>
+    private void ApplyHandCardCostChange(Unit activeUnit, CardData targetCard, int delta)
+    {
+        if (_selectedCard == null) return;
+        SubmitCardAndEndSelection(activeUnit,
+            CombatCommand.ChangeHandCardCost(ActiveActor, _selectedCard.cardName, targetCard.cardName, delta));
     }
 
     /// <summary>
@@ -907,7 +1044,8 @@ public class HandUIController : MonoBehaviour
     {
         if (cardUIElement == null || cardUIElement.CardData == null) return;
 
-        Unit activeUnit = Services.Grid?.GetActiveUnit();
+        // PA et PV du champion dont la main est affichée (réseau : le sien, même pendant le tour des autres)
+        Unit activeUnit = _boundChampion != null ? _boundChampion : Services.Grid?.GetActiveUnit();
         CardData card = cardUIElement.CardData;
 
         bool canAfford = true;
@@ -915,6 +1053,10 @@ public class HandUIController : MonoBehaviour
         // Coût effectif (tient compte d'un éventuel override, ex: Triche)
         int effectiveCostPA = _playerDeckManager != null ? _playerDeckManager.GetEffectiveCost(card) : card.costPA;
         cardUIElement.RefreshCost(effectiveCostPA);
+
+        // Dégâts actuels d'une carte qui dépend des PA déjà dépensés ce tour (ex: Tapis de Raze)
+        if (card.scalesWithPASpentThisTurn && _boundChampion is IComboTracker combo)
+            cardUIElement.RefreshComboDamage(combo.PASpentThisTurn);
 
         // Vérification des PA
         if (effectiveCostPA > 0)
@@ -971,6 +1113,7 @@ public class HandUIController : MonoBehaviour
             if (cardUIElement != null)
             {
                 cardUIElement.SetSelected(false);
+                cardUIElement.SetTargetFrame(false);
             }
         }
     }

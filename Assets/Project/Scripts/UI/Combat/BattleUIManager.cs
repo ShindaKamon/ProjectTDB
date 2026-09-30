@@ -11,6 +11,8 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     [Header("UI References")]
     [SerializeField] private BossHealthBarUI _bossHealthBar;
     [SerializeField] private EnemyCardPreviewUI _enemyCardPreview;
+    [Tooltip("Aperçus (plus petits, sous celui du boss) de la prochaine carte des monstres ordinaires, un par monstre")]
+    [SerializeField] private EnemyCardPreviewUI[] _minionCardPreviews;
     [SerializeField] private HealthOrbController _playerHealthOrb;
 
     [Header("Settings")]
@@ -18,6 +20,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
 
     private Enemy _currentTrackedEnemy;
     private Enemy _currentBoss;
+    private readonly Dictionary<Enemy, EnemyCardPreviewUI> _minionPreviews = new Dictionary<Enemy, EnemyCardPreviewUI>();
     private Champion _currentPlayer;
 
     void Awake()
@@ -169,6 +172,14 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
             GameLog.Log($"  -> Ce n'est PAS un boss");
         }
 
+        // Le boss a le grand aperçu ; chaque monstre ordinaire prend un petit aperçu libre
+        if (enemy.IsBoss())
+        {
+            TrackEnemyCards(enemy);
+            return;
+        }
+        if (TryTrackMinionCards(enemy)) return;
+
         // Si aucun ennemi n'est tracké pour la preview, track celui-ci
         if (_currentTrackedEnemy == null)
         {
@@ -181,12 +192,36 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         }
     }
 
+    // Petit aperçu libre pour un monstre ordinaire ; false s'il n'y en a plus
+    private bool TryTrackMinionCards(Enemy enemy)
+    {
+        if (_minionCardPreviews == null) return false;
+
+        foreach (EnemyCardPreviewUI preview in _minionCardPreviews)
+        {
+            if (preview == null || _minionPreviews.ContainsValue(preview)) continue;
+
+            _minionPreviews[enemy] = preview;
+            preview.SetTrackedEnemy(enemy);
+            return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Nettoie les références quand un ennemi meurt
     /// </summary>
     public void OnEnemyDied(Enemy enemy)
     {
         if (enemy == null) return;
+
+        // Monstre ordinaire : son petit aperçu disparaît
+        if (_minionPreviews.TryGetValue(enemy, out EnemyCardPreviewUI minionPreview))
+        {
+            minionPreview.HidePreview();
+            _minionPreviews.Remove(enemy);
+            return;
+        }
 
         // Si c'était le boss, cache la barre
         if (enemy == _currentBoss && _bossHealthBar != null)
@@ -227,10 +262,12 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     void OnEnable() => EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
     void OnDisable() => EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
 
-    // L'orbe de vie montre le champion dont c'est le tour (coop : elle change de champion à chaque tour)
+    // L'orbe de vie montre le champion dont c'est le tour (coop sur un PC : elle change à chaque tour ;
+    // réseau : toujours le champion de ce PC, voir LocalView)
     private void OnTurnChanged(TurnChangedEvent e)
     {
-        if (e.NewActiveUnit is Champion champion) RegisterPlayer(champion);
+        Champion champion = LocalView.ChampionToShow(e.NewActiveUnit);
+        if (champion != null && champion != _currentPlayer) RegisterPlayer(champion);
     }
 
     /// <summary>
@@ -244,12 +281,14 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         if (_currentPlayer != null)
         {
             _currentPlayer.OnHealthChanged -= OnPlayerHealthChanged;
+            _currentPlayer.OnShieldChanged -= OnPlayerShieldChanged;
         }
 
         _currentPlayer = player;
 
         // Abonnements aux événements
         _currentPlayer.OnHealthChanged += OnPlayerHealthChanged;
+        _currentPlayer.OnShieldChanged += OnPlayerShieldChanged;
 
         // Mise à jour initiale
         UpdatePlayerOrbUI();
@@ -258,18 +297,20 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
 
     private void OnPlayerHealthChanged(int current, int max) => UpdatePlayerOrbUI();
 
+    private void OnPlayerShieldChanged(int shield) => UpdatePlayerOrbUI();
+
     private void UpdatePlayerOrbUI()
     {
         if (_currentPlayer == null) return;
 
-        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), _defaultOrbColor);
+        UpdatePlayerOrb(_currentPlayer.GetHealth(), _currentPlayer.GetMaxHealth(), _defaultOrbColor, _currentPlayer.GetShield());
     }
 
-    private void UpdatePlayerOrb(float currentHP, float maxHP, Color emotionColor)
+    private void UpdatePlayerOrb(float currentHP, float maxHP, Color emotionColor, float shield)
     {
         if (_playerHealthOrb != null)
         {
-            _playerHealthOrb.UpdateHealth(currentHP, maxHP, emotionColor);
+            _playerHealthOrb.UpdateHealth(currentHP, maxHP, emotionColor, shield);
         }
     }
 }

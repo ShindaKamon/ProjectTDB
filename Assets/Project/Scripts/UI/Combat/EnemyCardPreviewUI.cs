@@ -15,15 +15,45 @@ public class EnemyCardPreviewUI : MonoBehaviour
     [SerializeField] private Image _cardIllustrationImage; // Optionnel
     [SerializeField] private GameObject _previewContainer; // Container à masquer quand pas de carte
 
+    [Tooltip("Durée du retournement de la carte quand le monstre passe à sa carte suivante (secondes)")]
+    [SerializeField] private float _flipDuration = 0.35f;
+
 
     private Enemy _trackedEnemy;
+
+    // Pas d'aperçu avant le premier tour (pendant la phase de placement, le combat n'a pas commencé)
+    private bool _battleStarted;
+
+    // Abonné du réveil à la destruction (pas OnEnable/OnDisable) : l'aperçu se cache lui-même
+    // (_previewContainer est souvent ce GameObject) et doit quand même recevoir le premier tour
+    void Awake()
+    {
+        EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        if (_previewContainer != null) _baseScale = _previewContainer.transform.localScale;
+    }
+
+    // Échelle d'origine de la carte (les aperçus des mobs sont réduits) : le retournement la respecte
+    private Vector3 _baseScale = Vector3.one;
+
+    private void OnTurnChanged(TurnChangedEvent e)
+    {
+        if (_battleStarted) return;
+
+        _battleStarted = true;
+        if (_trackedEnemy != null) UpdatePreview(_trackedEnemy.GetNextCard());
+    }
 
     void Start()
     {
         GameLog.Log("EnemyCardPreviewUI: Start() appelé");
 
-        // Cache le preview au démarrage
-        if (_previewContainer != null)
+        // Cache le preview au démarrage. Start peut n'arriver qu'au lancement du combat (aperçu
+        // masqué avant son premier Start) : il ne doit pas alors recacher la carte qui vient de s'afficher
+        if (_previewContainer != null && _battleStarted)
+        {
+            // rien à faire : l'aperçu est déjà à jour
+        }
+        else if (_previewContainer != null)
         {
             _previewContainer.SetActive(false);
             GameLog.Log("EnemyCardPreviewUI: Container caché au démarrage");
@@ -36,6 +66,8 @@ public class EnemyCardPreviewUI : MonoBehaviour
 
     void OnDestroy()
     {
+        EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+
         // Désabonne des événements
         if (_trackedEnemy != null)
         {
@@ -75,11 +107,53 @@ public class EnemyCardPreviewUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Met à jour l'affichage avec la prochaine carte
+    /// Met à jour l'affichage avec la prochaine carte : retournement de carte si l'aperçu est déjà
+    /// visible (le monstre vient de jouer, même si la carte suivante est identique), sinon direct
     /// </summary>
     private void UpdatePreview(CardData nextCard)
     {
-        if (nextCard == null)
+        bool visible = _previewContainer != null && _previewContainer.activeInHierarchy && isActiveAndEnabled;
+        if (visible && nextCard != null && _battleStarted)
+        {
+            if (_flip != null) StopCoroutine(_flip);
+            _flip = StartCoroutine(FlipTo(nextCard));
+            return;
+        }
+        ShowCard(nextCard);
+    }
+
+    private Coroutine _flip;
+
+    // Désactivé en plein retournement (coroutine interrompue) : la carte reprend sa taille
+    void OnDisable()
+    {
+        _flip = null;
+        if (_previewContainer != null) _previewContainer.transform.localScale = _baseScale;
+    }
+
+    // Demi-tour (la carte se referme), changement de contenu, puis demi-tour inverse
+    private System.Collections.IEnumerator FlipTo(CardData nextCard)
+    {
+        Transform card = _previewContainer.transform;
+        float half = _flipDuration / 2f;
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            card.localScale = new Vector3(_baseScale.x * (1f - t / half), _baseScale.y, _baseScale.z);
+            yield return null;
+        }
+        ShowCard(nextCard);
+        for (float t = 0f; t < half; t += Time.deltaTime)
+        {
+            card.localScale = new Vector3(_baseScale.x * t / half, _baseScale.y, _baseScale.z);
+            yield return null;
+        }
+        card.localScale = _baseScale;
+        _flip = null;
+    }
+
+    private void ShowCard(CardData nextCard)
+    {
+        if (nextCard == null || !_battleStarted)
         {
             // Pas de carte à afficher
             if (_previewContainer != null)
@@ -98,7 +172,9 @@ public class EnemyCardPreviewUI : MonoBehaviour
         // Met à jour les textes
         if (_cardNameText != null)
         {
-            _cardNameText.text = nextCard.cardName;
+            // Carte annulée (ex: Sidération) : nom barré, le monstre ne la jouera pas
+            bool cancelled = _trackedEnemy != null && _trackedEnemy.IsNextCardCancelled;
+            _cardNameText.text = cancelled ? $"<s>{nextCard.cardName}</s> (annulée)" : nextCard.cardName;
         }
 
         if (_cardDescriptionText != null)
@@ -131,6 +207,10 @@ public class EnemyCardPreviewUI : MonoBehaviour
     /// </summary>
     public void HidePreview()
     {
+        // Un retournement en cours réafficherait la carte : on l'arrête
+        if (_flip != null) { StopCoroutine(_flip); _flip = null; }
+        if (_previewContainer != null) _previewContainer.transform.localScale = _baseScale;
+
         if (_previewContainer != null)
         {
             _previewContainer.SetActive(false);

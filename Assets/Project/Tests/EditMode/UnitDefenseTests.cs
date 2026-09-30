@@ -32,6 +32,24 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void ArmorReduction_BenefitsEveryAttacker_UntilCastersNextTurn()
+        {
+            // Rugissement destructeur d'Evan : -7 d'armure au boss pendant 1 tour d'Evan (coop)
+            Unit boss = NewUnit(armor: 0, magicResistance: 0);
+            Unit evan = NewUnit(0, 0);
+            Unit crux = NewUnit(0, 0);
+            boss.ModifyStats(0, -7, 0, 1, evan);
+
+            boss.TickEffectsOnTurnStartOf(crux);
+            Assert.AreEqual(27, boss.ReduceByDefense(20, DamageType.Physical), "Crux profite de la réduction");
+            boss.TickEffectsOnTurnStartOf(boss);
+            Assert.AreEqual(27, boss.ReduceByDefense(20, DamageType.Physical), "toujours là après le tour du boss");
+
+            boss.TickEffectsOnTurnStartOf(evan);
+            Assert.AreEqual(20, boss.ReduceByDefense(20, DamageType.Physical), "expire au prochain tour d'Evan");
+        }
+
+        [Test]
         public void Armor_ReducesPhysicalOnly()
         {
             Unit unit = NewUnit(armor: 7, magicResistance: 0);
@@ -136,7 +154,7 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void UnitChips_ShowAttackAndNonZeroProtections()
+        public void UnitChips_ShowAttack_AndProtectionsEvenAtZero()
         {
             Unit unit = NewUnit(armor: 5, magicResistance: 0);
             unit.ModifyStats(30, 0, 0, 0);
@@ -144,10 +162,12 @@ namespace ProjectTDB.Tests
 
             var chips = CodexCardVisual.UnitChips(unit);
 
-            Assert.AreEqual(new[] { "dmg", "armor", "shield", "pm" }, chips.ConvertAll(c => c.Icon), "Ordre ATQ, DEFP, DEFM, bouclier, PA, PM ; PM toujours affichés (0 compris)");
+            Assert.AreEqual(new[] { "dmg", "armor", "magicresist", "shield", "pm" }, chips.ConvertAll(c => c.Icon),
+                "Ordre ATQ, DEFP, DEFM, bouclier, PA, PM ; armure, résistance magique et PM toujours affichés (0 compris)");
             Assert.AreEqual("30", chips[0].Text);
             Assert.AreEqual(ChipKind.Defense, chips[1].Kind, "Armure en gris");
-            Assert.AreEqual(ChipKind.MovementPoints, chips[3].Kind, "PM en vert");
+            Assert.AreEqual("0", chips[2].Text, "Résistance magique affichée même à 0");
+            Assert.AreEqual(ChipKind.MovementPoints, chips[4].Kind, "PM en vert");
         }
 
         [Test]

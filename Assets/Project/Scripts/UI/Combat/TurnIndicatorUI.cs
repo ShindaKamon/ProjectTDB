@@ -58,7 +58,7 @@ public class TurnIndicatorUI : MonoBehaviour
         switch (state)
         {
             case TurnState.PlayerTurn:
-                SetVisible(true, _playerTurnLabel);
+                SetVisible(true, PlayerTurnLabel());
                 break;
 
             case TurnState.EnemyTurn:
@@ -75,6 +75,15 @@ public class TurnIndicatorUI : MonoBehaviour
                 SetVisible(false, string.Empty);
                 break;
         }
+    }
+
+    // « Votre tour » si le champion actif joue sur ce PC, sinon (réseau) « Tour de Crux »
+    private string PlayerTurnLabel()
+    {
+        ICombatCommandService commands = Services.Commands;
+        if (commands == null || commands.IsLocalTurn) return _playerTurnLabel;
+        Unit active = Services.Grid.GetActiveUnit();
+        return active != null ? $"Tour de {active.DisplayName}" : _playerTurnLabel;
     }
 
     private void SetVisible(bool visible, string text)

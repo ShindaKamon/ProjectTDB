@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// - Un deck séquentiel (pas de mélange) qui boucle
 /// - Un comportement prévisible pour le joueur
 /// </summary>
-public class Enemy : Unit, IActionPointsUser
+public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
 {
     // ========== ENEMY DATA ==========
 
@@ -49,6 +49,7 @@ public class Enemy : Unit, IActionPointsUser
     public int GetMaxPA() => _actionPointsComponent?.GetMaxPA() ?? 0;
     public EnemyData GetEnemyData() => _enemyData;
     public bool IsBoss() => _enemyData != null && _enemyData.isBoss;
+    public override string DisplayName => _enemyData != null ? _enemyData.enemyName : name;
 
     // Surcharge pour définir la faction automatiquement
     public override UnitFaction GetFaction() => UnitFaction.Enemy;
@@ -68,6 +69,34 @@ public class Enemy : Unit, IActionPointsUser
         }
 
         return _combatDeck[_currentCardIndex];
+    }
+
+    /// <summary>
+    /// True si la prochaine carte est annulée (ex: Sidération) : à son prochain tour, le monstre
+    /// ne la joue pas (ni attaque de base) et passe à la suivante de son pattern
+    /// </summary>
+    public bool IsNextCardCancelled { get; private set; }
+
+    public void CancelNextCard()
+    {
+        if (GetNextCard() == null) return;
+        IsNextCardCancelled = true;
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.CardCancelled, 0));
+        OnNextCardChanged?.Invoke(GetNextCard()); // l'aperçu affiche la carte comme annulée
+    }
+
+    /// <summary>
+    /// Au tour du monstre : si sa carte était annulée, la saute et retourne true
+    /// </summary>
+    public bool ConsumeCancelledCard()
+    {
+        if (!IsNextCardCancelled) return false;
+        IsNextCardCancelled = false;
+        GetNextCard(); // boucle du pattern si besoin
+        _currentCardIndex++;
+        GameLog.Log($"{name} (Enemy) : carte annulée, passe à la suivante");
+        OnNextCardChanged?.Invoke(GetNextCard());
+        return true;
     }
 
     // ========== INITIALISATION ==========
@@ -145,6 +174,29 @@ public class Enemy : Unit, IActionPointsUser
         }
     }
 
+    // ========== NOMBRE DE JOUEURS (coop) ==========
+
+    private float _damageMultiplier = 1f;
+
+    /// <summary>
+    /// Adapte le monstre au nombre de joueurs (EnemyScaling) : PV max et dégâts de ses cartes.
+    /// Appelé par GridManager au lancement du combat ; le barème d'EnemyData est celui d'un joueur.
+    /// </summary>
+    public void ScaleForPlayers(int playerCount)
+    {
+        if (_enemyData == null) return;
+        _damageMultiplier = EnemyScaling.DamageMultiplier(playerCount);
+        SetMaxHealth(EnemyScaling.ScaledHealth(_enemyData.maxHealth, playerCount));
+        GameLog.Log($"{name} adapté à {playerCount} joueur(s) : PV {_maxHealth}, dégâts x{_damageMultiplier:F2}");
+    }
+
+    // ========== IMPLÉMENTATION INTERFACE IOutgoingDamageModifier ==========
+    // Multiplicateur permanent (nombre de joueurs) : rien à consommer.
+
+    public float GetDamageMultiplier() => _damageMultiplier;
+
+    public void ConsumeDamageModifier() { }
+
     // ========== IMPLÉMENTATION INTERFACE IActionPointsUser ==========
 
     public bool SpendPA(int amount)
@@ -187,14 +239,15 @@ public class Enemy : Unit, IActionPointsUser
         _actionPointsComponent.ReduceCurrentPA(amount);
     }
 
-    public void AddPA(int amount)
+    public void AddPA(int amount, bool canExceedMax = false)
     {
         if (_actionPointsComponent == null)
         {
             Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
             return;
         }
-        _actionPointsComponent.AddPA(amount);
+        _actionPointsComponent.AddPA(amount, canExceedMax);
+        if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
     }
 
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========

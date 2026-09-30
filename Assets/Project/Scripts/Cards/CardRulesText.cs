@@ -13,21 +13,25 @@ public static class CardRulesText
     /// <summary>
     /// Texte complet d'une carte, une ligne par élément.
     /// Ex. « ↗ Inflige 33 / Cible : 1 ennemi · au contact / Zone : cercle de 1 (ennemis) ».
+    /// paSpentThisTurn : PA déjà dépensés ce tour par le lanceur (main en combat) ; une carte dont
+    /// les dégâts en dépendent (ex: Tapis) affiche alors ses dégâts actuels, « Inflige 40 (56) ».
     /// </summary>
-    public static string Build(CardData card)
+    public static string Build(CardData card, int paSpentThisTurn = 0)
     {
         var lines = new List<string>();
-        void Effect(string icon, ChipKind kind, string text) => lines.Add(Icon(icon, kind) + " " + text);
+        void Effect(string icon, ChipKind kind, string text) => lines.Add(Icon(icon, kind) + " " + ColorValue(text, kind));
         string Turns() => card.effectDuration > 0 ? $" ({card.effectDuration} tour{(card.effectDuration > 1 ? "s" : "")})" : "";
 
         if (card.damageAmount > 0)
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage,
-                "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : ""));
+                "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : "")
+                + (card.targetType == CardTargetType.AllyorEnemy ? " à un ennemi" : "")
+                + (card.scalesWithPASpentThisTurn && paSpentThisTurn > 0 ? $" ({card.damageAmount + card.comboDamagePerPASpent * paSpentThisTurn})" : ""));
         if (card.scalesWithPASpentThisTurn && card.comboDamagePerPASpent > 0)
             Effect("dmg", ChipKind.Damage, $"+{card.comboDamagePerPASpent} dégâts par PA déjà dépensé ce tour");
         // Carte d'invocation : le soin ne sert que si l'invocation est déjà sur le terrain (voir ExecuteEffect)
         if (card.healAmount > 0 && !card.isSummonCard) Effect("heal", ChipKind.Heal, "Soigne " + card.healAmount);
-        if (card.lifestealFixedAmount > 0) Effect("drain", ChipKind.Heal, "Vol de vie " + card.lifestealFixedAmount);
+        if (card.lifestealFixedAmount > 0) Effect("drain", ChipKind.Heal, "Vol de vie " + card.lifestealFixedAmount + (card.isAOE ? " par ennemi touché" : ""));
         if (card.damageAroundTarget > 0)
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage, $"Inflige {card.damageAroundTarget} aux ennemis au contact de la cible");
         if (card.shieldAmount > 0)
@@ -35,13 +39,19 @@ public static class CardRulesText
         if (card.nextAttackBonus > 0) Effect("buff", ChipKind.Damage, $"+{card.nextAttackBonus} dégâts sur la prochaine carte offensive");
         if (card.armorAmount != 0) Effect("armor", ChipKind.Defense, "Armure " + card.armorAmount.ToString("+#;−#") + Turns());
         if (card.magicResistanceAmount != 0) Effect("magicresist", ChipKind.Defense, "Résistance magique " + card.magicResistanceAmount.ToString("+#;−#") + Turns());
-        if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Retire tous les PM au prochain tour");
-        else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Retire {card.pmReduction} PM au prochain tour");
-        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Retire {card.paReduction} PA au prochain tour");
+        // Malus de la cible, formulés comme les autres malus : « Perd 1 PM pendant 1 tour »
+        if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Perd tous ses PM pendant " + DebuffTurns(card));
+        else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Perd {card.pmReduction} PM pendant " + DebuffTurns(card));
+        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Perd {card.paReduction} PA pendant " + DebuffTurns(card));
+        if (card.nextTurnActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.nextTurnActionGain} PA au prochain tour");
+        if (card.cancelsEnemyNextCard) Effect("lock", ChipKind.Mute, "Le monstre ne joue pas sa prochaine carte");
         if (card.knockbackDistance > 0)
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));
-        if (card.isChargeCard) Effect("bond", ChipKind.Push, "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
+        if (card.isChargeCard)
+            Effect("bond", ChipKind.Push, card.targetsUnit
+                ? "Te hisse jusqu'à la cible (" + Cases(CodexCardVisual.Range(card)) + " max)" // ex: Grappin
+                : "Bond jusqu'à " + Cases(CodexCardVisual.Range(card)));
         if (card.leapToTarget) Effect("bond", ChipKind.Push, "Bondis sur la case visée");
         if (card.isSummonCard)
         {
@@ -51,6 +61,8 @@ public static class CardRulesText
         if (card.isRepositionSummonCard) Effect("summon", ChipKind.Mute, "Déplace ton invocation");
         if (card.targetsHandCard) Effect("hand", ChipKind.Mute, "Cible une carte de ta main");
         if (card.drawAmount > 0) Effect("hand", ChipKind.Mute, "Pioche " + card.drawAmount);
+        if (card.discardHandAttackBonusPerCard > 0)
+            Effect("buff", ChipKind.Damage, $"Défausse ta main : +{card.discardHandAttackBonusPerCard} dégâts sur ta prochaine carte offensive par carte défaussée");
         if (card.casterMovementGain > 0) Effect("pm", ChipKind.MovementPoints, $"+{card.casterMovementGain} PM ce tour");
         if (card.casterActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.casterActionGain} PA ce tour");
         if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Defense, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));
@@ -70,7 +82,7 @@ public static class CardRulesText
 
         if (card.damageSelf > 0) Warn("self", $"Contrecoup : tu subis {card.damageSelf}");
         if (card.casterArmorAmount < 0) Warn("armor", $"Contrecoup : ton armure {card.casterArmorAmount.ToString("+#;−#")}" + CasterTurns(card));
-        if (card.casterMovementLoss > 0) Warn("pm", $"Contrecoup : tu perds {card.casterMovementLoss} PM au prochain tour");
+        if (card.casterMovementLoss > 0) Warn("pm", $"Contrecoup : tu perds {card.casterMovementLoss} PM pendant 1 tour");
 
         if (!string.IsNullOrWhiteSpace(card.specialText))
             lines.Add("<i>Spécial :</i> " + card.specialText.Trim());
@@ -78,10 +90,30 @@ public static class CardRulesText
         return string.Join("\n", lines);
     }
 
-    static string Icon(string name, ChipKind kind) =>
+    public static string Icon(string name, ChipKind kind) =>
         $"<sprite name=\"{name}\" color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(kind))}>";
 
     static string Cases(int n) => n + (n > 1 ? " cases" : " case");
+
+    // Valeur d'un effet (1er nombre de la ligne, signe compris) dans la couleur de sa stat, comme
+    // l'icône : « Inflige <rouge>27</rouge> », « Perd <vert>1</vert> PM pendant 1 tour ». Les
+    // effets sans stat (pioche, invocation…) gardent la couleur du texte.
+    static readonly System.Text.RegularExpressions.Regex FirstValue =
+        new System.Text.RegularExpressions.Regex(@"[+−-]?\d+%?");
+
+    public static string ColorValue(string text, ChipKind kind)
+    {
+        if (kind == ChipKind.Mute) return text;
+        string hex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(kind));
+        return FirstValue.Replace(text, m => $"<color=#{hex}>{m.Value}</color>", 1);
+    }
+
+    // Durée d'un retrait de PA/PM (au moins 1 tour), ex. « 1 tour »
+    static string DebuffTurns(CardData card)
+    {
+        int turns = Mathf.Max(1, card.effectDuration);
+        return $"{turns} tour{(turns > 1 ? "s" : "")}";
+    }
 
     // Durée d'un effet sur le lanceur (au moins 1 tour : jusqu'à son prochain tour)
     static string CasterTurns(CardData card)
@@ -113,7 +145,8 @@ public static class CardRulesText
         };
         if (who == "" || card.targetType == CardTargetType.Self) return who;
         if (card.isChargeCard) return who + " en ligne droite";
-        return who + " · " + (CodexCardVisual.Range(card) <= 1 ? "au contact" : "portée 1-" + CodexCardVisual.Range(card));
+        return who + (card.targetInStraightLine ? " en ligne droite" : "") + " · "
+            + (CodexCardVisual.Range(card) <= 1 ? "au contact" : "portée 1-" + CodexCardVisual.Range(card));
     }
 
     static string ZoneText(CardData card)

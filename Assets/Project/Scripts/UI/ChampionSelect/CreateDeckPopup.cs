@@ -25,6 +25,10 @@ public class CreateDeckPopup : MonoBehaviour
 
     public System.Action<string, EmotionType, EmotionType> OnDeckCreated; // (nom, emotion1, emotion2)
 
+    // Mode « modifier les couleurs » d'un deck existant (ShowEdit) : rappel à la validation
+    private System.Action<string, EmotionType, EmotionType> _onEdited;
+    private string _createLabel;
+
     void Awake()
     {
         if (_createButton != null)
@@ -134,8 +138,39 @@ public class CreateDeckPopup : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Modifie un deck existant : nom et couleurs pré-remplis (1 ou 2, jamais plus). Ses cartes ne
+    /// changent pas : celles qui ne sont plus de ses couleurs restent, signalées (voir DeckRules).
+    /// </summary>
+    public void ShowEdit(string deckName, EmotionType emotion1, EmotionType emotion2,
+        System.Action<string, EmotionType, EmotionType> onEdited)
+    {
+        Show();
+        _onEdited = onEdited;
+        SetConfirmLabel("Valider");
+
+        if (_nameInput != null) _nameInput.text = deckName;
+        foreach (var pair in _buttonToEmotion)
+        {
+            if (pair.Value == emotion1 || pair.Value == emotion2)
+                SelectEmotion(pair.Value, pair.Key);
+        }
+        UpdateCreateButtonState();
+    }
+
+    private void SetConfirmLabel(string text)
+    {
+        var label = _createButton != null ? _createButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+        if (label == null) return;
+        if (_createLabel == null) _createLabel = label.text;
+        label.text = text ?? _createLabel;
+    }
+
     public void Show()
     {
+        _onEdited = null;
+        SetConfirmLabel(null);
+
         GameLog.Log($"CreateDeckPopup.Show() appelé. GameObject actuel: {gameObject.name}");
 
         // Vérifier si un parent est désactivé
@@ -189,7 +224,10 @@ public class CreateDeckPopup : MonoBehaviour
             return;
 
         EmotionType emotion2 = _selectedEmotions.Count > 1 ? _selectedEmotions[1] : EmotionType.None;
-        OnDeckCreated?.Invoke(_nameInput.text.Trim(), _selectedEmotions[0], emotion2);
+        if (_onEdited != null)
+            _onEdited.Invoke(_nameInput.text.Trim(), _selectedEmotions[0], emotion2);
+        else
+            OnDeckCreated?.Invoke(_nameInput.text.Trim(), _selectedEmotions[0], emotion2);
         Hide();
     }
 }

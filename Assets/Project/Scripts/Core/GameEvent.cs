@@ -35,6 +35,35 @@ public class TurnChangedEvent : GameEvent
 }
 
 /// <summary>
+/// Réseau : l'état du combat diffère entre l'hôte et un client au début de ce tour
+/// </summary>
+public class NetworkDesyncEvent : GameEvent
+{
+    public int Turn { get; private set; }
+
+    public NetworkDesyncEvent(int turn)
+    {
+        Turn = turn;
+    }
+}
+
+/// <summary>
+/// Fin de tour refusée : le champion a plus de cartes en main que le maximum et doit
+/// d'abord en défausser Count (au choix du joueur)
+/// </summary>
+public class HandDiscardRequiredEvent : GameEvent
+{
+    public Unit Unit { get; private set; }
+    public int Count { get; private set; }
+
+    public HandDiscardRequiredEvent(Unit unit, int count)
+    {
+        Unit = unit;
+        Count = count;
+    }
+}
+
+/// <summary>
 /// Publié quand le joueur clique sur "Fin de tour"
 /// </summary>
 public class TurnEndRequestedEvent : GameEvent
@@ -103,13 +132,15 @@ public class UnitDamagedEvent : GameEvent
 {
     public Unit Target { get; private set; }
     public Unit Source { get; private set; }
-    public int Damage { get; private set; }
+    public int Damage { get; private set; }          // coup reçu (chiffre affiché)
+    public int EffectiveDamage { get; private set; } // réellement retiré (bouclier + PV, sans l'excédent au-delà des PV)
 
-    public UnitDamagedEvent(Unit target, Unit source, int damage)
+    public UnitDamagedEvent(Unit target, Unit source, int damage, int effectiveDamage = -1)
     {
         Target = target;
         Source = source;
         Damage = damage;
+        EffectiveDamage = effectiveDamage >= 0 ? effectiveDamage : damage;
     }
 }
 
@@ -120,11 +151,62 @@ public class UnitHealedEvent : GameEvent
 {
     public Unit Target { get; private set; }
     public int HealAmount { get; private set; }
+    public Unit Source { get; private set; } // qui soigne (la cible elle-même par défaut)
 
-    public UnitHealedEvent(Unit target, int healAmount)
+    public UnitHealedEvent(Unit target, int healAmount, Unit source = null)
     {
         Target = target;
         HealAmount = healAmount;
+        Source = source ?? target;
+    }
+}
+
+/// <summary>
+/// Publié quand le combat se termine (voir BattleOutcome) : victoire ou défaite
+/// </summary>
+public class BattleEndedEvent : GameEvent
+{
+    public BattleResult Result { get; private set; }
+
+    public BattleEndedEvent(BattleResult result)
+    {
+        Result = result;
+    }
+}
+
+/// <summary>
+/// Bonus ou malus appliqué à une unité (hors dégâts et soins), pour le retour visuel
+/// </summary>
+public enum UnitEffect
+{
+    Shield,
+    ReactiveShield,
+    NextAttackBonus,
+    Attack,
+    Armor,
+    MagicResistance,
+    ActionPoints,           // montant négatif = retrait au prochain tour
+    MovementPoints,         // idem ; int.MaxValue en négatif = tous les PM
+    DamageTakenPercent,     // ex. -15 : dégâts subis réduits de 15 %
+    NextAttackPercent,      // ex. +15 : prochaine carte de dégâts +15 %
+    PmImmune,               // Ténacité (montant ignoré)
+    CardCancelled           // prochaine carte du monstre annulée (montant ignoré)
+}
+
+/// <summary>
+/// Publié quand un bonus ou un malus est appliqué à une unité (montant signé)
+/// </summary>
+public class UnitEffectAppliedEvent : GameEvent
+{
+    public Unit Target { get; private set; }
+    public UnitEffect Effect { get; private set; }
+    public int Amount { get; private set; }
+
+    public UnitEffectAppliedEvent(Unit target, UnitEffect effect, int amount)
+    {
+        Target = target;
+        Effect = effect;
+        Amount = amount;
     }
 }
 
@@ -183,6 +265,20 @@ public class ShowAOEZoneEvent : GameEvent
 public class ResetTileColorsEvent : GameEvent
 {
     // Événement simple sans données
+}
+
+/// <summary>
+/// Publié au survol d'une cible avec une carte sélectionnée : dégâts prévus par unité touchée
+/// (liste vide = plus rien à afficher)
+/// </summary>
+public class DamagePreviewEvent : GameEvent
+{
+    public System.Collections.Generic.IReadOnlyList<DamagePreview.Entry> Entries { get; private set; }
+
+    public DamagePreviewEvent(System.Collections.Generic.IReadOnlyList<DamagePreview.Entry> entries)
+    {
+        Entries = entries;
+    }
 }
 
 /// <summary>

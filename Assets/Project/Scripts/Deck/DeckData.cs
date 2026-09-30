@@ -8,9 +8,9 @@ using UnityEngine;
 [Serializable]
 public class DeckData
 {
-    // Structure de deck cible : 2 Signature + 16 Standard (les 6 slots Éveil sont
-    // différés tant que le système de seuil d'émotion n'existe pas).
-    public const int SIGNATURE_SLOTS = 2;
+    // Structure de deck : 4 Signature (les 2 du champion, 2 exemplaires chacune) + 16 Standard
+    // (les 6 slots Éveil sont différés tant que le système de seuil d'émotion n'existe pas).
+    public const int SIGNATURE_SLOTS = 4;
     public const int STANDARD_SLOTS = 16;
     public const int TOTAL_SLOTS = SIGNATURE_SLOTS + STANDARD_SLOTS;
 

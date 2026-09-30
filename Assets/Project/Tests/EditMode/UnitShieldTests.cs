@@ -87,30 +87,51 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void Shield_ExpiresOnlyAtSourceTurnStart()
+        public void Shield_HasNoDuration_LastsUntilDepleted()
         {
+            // Armure de rage : bouclier de 23, 20 dégâts → reste 3, quels que soient les tours écoulés
             Unit caster = NewUnit();
             Unit ally = NewUnit();
-            ally.AddShield(20, caster);
+            ally.AddShield(23, caster);
 
             ally.TickEffectsOnTurnStartOf(ally);
-            Assert.AreEqual(20, ally.GetShield(), "Le tour du porteur ne doit pas retirer un bouclier donné par un autre");
-
             ally.TickEffectsOnTurnStartOf(caster);
+            Object.DestroyImmediate(caster.gameObject);
+            ally.TickEffectsOnTurnStartOf(ally);
+            Assert.AreEqual(23, ally.GetShield(), "Ni les tours ni la mort du lanceur ne retirent le bouclier");
+
+            ally.TakeDamage(20);
+            Assert.AreEqual(3, ally.GetShield());
+            Assert.AreEqual(100, ally.GetHealth());
+
+            ally.TakeDamage(10);
             Assert.AreEqual(0, ally.GetShield());
+            Assert.AreEqual(93, ally.GetHealth());
         }
 
         [Test]
-        public void Shield_ExpiresWhenSourceIsGone()
+        public void Lyse_ShieldAbsorbsBeforeHealth_AndSurvivesEvanHealthChanges()
         {
-            Unit caster = NewUnit();
-            Unit ally = NewUnit();
-            ally.AddShield(20, caster);
+            // Lyse (PV = moitié de ceux d'Evan) : les dégâts entament d'abord son bouclier
+            Unit evan = NewUnit(maxHealth: 100);
+            var go = new GameObject("TestLyse");
+            _createdGameObjects.Add(go);
+            var lyse = go.AddComponent<LyseUnit>();
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true; // pas de grille en EditMode (placement ignoré)
+            lyse.InitializeSummon(evan, Vector2Int.zero, 0);
+            Assert.AreEqual(50, lyse.GetHealth());
 
-            Object.DestroyImmediate(caster.gameObject);
-            ally.TickEffectsOnTurnStartOf(ally);
+            lyse.AddShield(10, evan);
+            lyse.TakeDamage(6);
+            Assert.AreEqual(4, lyse.GetShield(), "le bouclier baisse");
+            Assert.AreEqual(50, lyse.GetHealth(), "la vie ne bouge pas");
 
-            Assert.AreEqual(0, ally.GetShield());
+            evan.TakeDamage(20); // Evan à 80 → Lyse recalculée à 40 PV max
+            Assert.AreEqual(4, lyse.GetShield(), "le recalcul des PV de Lyse ne touche pas au bouclier");
+
+            lyse.TakeDamage(10);
+            Assert.AreEqual(0, lyse.GetShield());
+            Assert.AreEqual(40 - 6, lyse.GetHealth(), "le reste (6) passe sur la vie");
         }
 
         [Test]
@@ -126,7 +147,7 @@ namespace ProjectTDB.Tests
 
             unit.TickEffectsOnTurnStartOf(unit);
             unit.TakeDamage(10);
-            Assert.AreEqual(90, unit.GetHealth(), "Pas de second déclenchement");
+            Assert.AreEqual(93, unit.GetHealth(), "Pas de second déclenchement : seul le reste de 3 absorbe");
         }
 
         [Test]

@@ -78,7 +78,7 @@ public static class ChargeHelper
     /// <summary>
     /// Vérifie si une position cible est valide pour une charge (chemin non bloqué)
     /// </summary>
-    public static bool IsValidChargeTarget(Vector2Int sourcePos, Vector2Int targetPos, Unit source)
+    public static bool IsValidChargeTarget(Vector2Int sourcePos, Vector2Int targetPos, Unit source, bool allowAllyAtTarget = false)
     {
         if (!TryGetChargeDirection(sourcePos, targetPos, out Vector2Int stepDirection, out int distance))
         {
@@ -96,8 +96,8 @@ public static class ChargeHelper
                 // Il y a une unité sur le chemin
                 if (checkPos == targetPos)
                 {
-                    // C'est la case cible : valide seulement si c'est un ennemi
-                    return unitOnPath.GetFaction() != source.GetFaction();
+                    // C'est la case cible : valide si c'est un ennemi (ou un allié si la carte le permet)
+                    return allowAllyAtTarget ? unitOnPath != source : unitOnPath.GetFaction() != source.GetFaction();
                 }
                 else
                 {

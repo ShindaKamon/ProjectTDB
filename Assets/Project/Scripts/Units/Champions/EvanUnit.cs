@@ -1,0 +1,81 @@
+using UnityEngine;
+
+/// <summary>
+/// EvanUnit hérite de Champion et représente le champion Evan.
+/// Passif : Miroir fraternel — géré côté carte (voir CardData.TryTriggerSummonEcho), qui
+/// consulte l'invocation active d'Evan via ISummonOwner.
+/// </summary>
+public class EvanUnit : Champion, ISummonOwner
+{
+    private SummonUnit _activeSummon;
+    public SummonUnit ActiveSummon => _activeSummon;
+
+    // ========== ISummonOwner ==========
+
+    public void RegisterSummon(SummonUnit summon)
+    {
+        if (_activeSummon != null)
+        {
+            _activeSummon.OnUnitDied -= HandleSummonDied;
+        }
+
+        _activeSummon = summon;
+        summon.OnUnitDied += HandleSummonDied;
+        GameLog.Log($"{name}: invocation active enregistrée -> {summon.name}");
+    }
+
+    public void RepositionSummon(SummonUnit summon, Vector2Int newPos)
+    {
+        if (summon == null || summon.Owner != this)
+        {
+            GameLog.LogWarning($"{name}: aucune de ses invocations à repositionner.");
+            return;
+        }
+
+        if (Services.Grid.GetUnitAtGridPos(newPos) != null)
+        {
+            GameLog.LogWarning($"{name}: case {newPos} occupée, repositionnement annulé.");
+            return;
+        }
+
+        summon.TeleportTo(newPos);
+        GameLog.Log($"{name}: {summon.name} repositionnée à {newPos}");
+    }
+
+    private void HandleSummonDied(Unit diedUnit)
+    {
+        if ((Unit)_activeSummon == diedUnit)
+        {
+            _activeSummon = null;
+        }
+    }
+
+    /// <summary>
+    /// Si Evan meurt, son invocation active (Lyse) doit mourir immédiatement avec lui plutôt
+    /// que de rester orpheline sur le terrain (décision produit). On capture la référence avant
+    /// base.Die() (qui ne touche pas _activeSummon) puis on tue la summon via son propre Die(),
+    /// pour que le nettoyage habituel (GridManager.HandleUnitDied, EventBus, UI) s'applique
+    /// aussi à elle. Pas de risque de boucle : la mort de la summon ne redéclenche pas celle
+    /// d'Evan (HandleSummonDied se contente de nettoyer la référence).
+    /// </summary>
+    protected override void Die()
+    {
+        SummonUnit summonToKill = _activeSummon;
+
+        base.Die();
+
+        if (summonToKill != null)
+        {
+            GameLog.Log($"{name}: mort de l'invocateur -> {summonToKill.name} meurt aussi.");
+            summonToKill.Kill();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (_activeSummon != null)
+        {
+            _activeSummon.OnUnitDied -= HandleSummonDied;
+        }
+    }
+}

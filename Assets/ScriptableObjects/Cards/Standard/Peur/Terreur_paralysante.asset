@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Terreur_paralysante
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Terreur paralysante
-  description: Un ennemi au contact perd tous ses PM au prochain tour.
+  description: "Un ennemi \xE0 1-3 cases perd tous ses PM pendant 1 tour."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 5
@@ -22,7 +22,8 @@ MonoBehaviour:
   costPA: 5
   costHP: 0
   targetType: 2
-  targetRange: 1
+  targetRange: 3
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -34,22 +35,24 @@ MonoBehaviour:
   healAmount: 0
   lifestealFixedAmount: 0
   damageAroundTarget: 0
-  atkIncreased: 0
-  defenseAmount: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
   reactiveShield: 0
   armorAmount: 0
-  barrierAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 1
   paReduction: 0
   pmReduction: 0
   removeAllMovement: 1
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
   casterRetreat: 0
   casterMovementGain: 0
   casterActionGain: 0
   casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}

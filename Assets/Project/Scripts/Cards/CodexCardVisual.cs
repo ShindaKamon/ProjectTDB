@@ -132,6 +132,37 @@ public static class CodexCardVisual
         _ => Hex("#9c97b5"),
     };
 
+    // ===== Rôle de la carte (pictogramme et bandeau en main) =====
+
+    public static string RoleName(CardRole role) => role switch
+    {
+        CardRole.Attack => "Attaque",
+        CardRole.Heal => "Soin",
+        CardRole.Movement => "Mouvement",
+        CardRole.Control => "Contrôle",
+        _ => "Soutien",
+    };
+
+    /// <summary>Icône du codex (Sprite Asset CodexIcons), la même que dans le texte de la carte.</summary>
+    public static string RoleIcon(CardRole role) => role switch
+    {
+        CardRole.Attack => "dmg",
+        CardRole.Heal => "heal",
+        CardRole.Movement => "bond",
+        CardRole.Control => "lock",
+        _ => "buff",
+    };
+
+    /// <summary>Couleur du rôle, prise dans la palette des pastilles (pas celle des émotions).</summary>
+    public static ChipKind RoleChipKind(CardRole role) => role switch
+    {
+        CardRole.Attack => ChipKind.Damage,
+        CardRole.Heal => ChipKind.Heal,
+        CardRole.Movement => ChipKind.Push,
+        CardRole.Control => ChipKind.MovementPoints,
+        _ => ChipKind.ActionPoints,
+    };
+
     // ===== Textes =====
 
     /// <summary>« Colère · Standard » ou « Neutre · Signature · Evan ».</summary>
@@ -215,7 +246,11 @@ public static class CodexCardVisual
             {
                 case CardAreaEffect.Circle: Box(tx, ty, radius); break;
                 case CardAreaEffect.Line: for (int k = 0; k < 3; k++) Add(tx + k, ty); break;
-                case CardAreaEffect.Cone: Add(tx, ty); Add(tx + 1, ty - 1); Add(tx + 1, ty + 1); Add(tx + 1, ty); break;
+                case CardAreaEffect.Cone:
+                    // Rangées de 1, 3, 5… cases à partir de la case visée (comme CardData.IsInAOEShape)
+                    for (int row = 0; row < Mathf.Max(1, card.aoeRadius); row++)
+                        for (int side = -row; side <= row; side++) Add(tx + row, ty + side);
+                    break;
                 case CardAreaEffect.Cross: Add(tx, ty); Add(tx - 1, ty); Add(tx + 1, ty); Add(tx, ty - 1); Add(tx, ty + 1); break;
                 case CardAreaEffect.WholeTeam: Team(); break;
                 default:
@@ -256,8 +291,9 @@ public static class CodexCardVisual
 
         // Ordre : ATQ, armure (DEFP), résistance magique (DEFM), bouclier, PA, PM, Ténacité
         if (unit.GetAttack() != 0) chips.Add(new CardChip("dmg", unit.GetAttack().ToString(), ChipKind.Damage));
-        if (unit.GetArmor() != 0) chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Defense));
-        if (unit.GetMagicResistance() != 0) chips.Add(new CardChip("magicresist", unit.GetMagicResistance().ToString(), ChipKind.Defense));
+        // Armure et résistance magique toujours affichées (0 compris) : des cartes peuvent les baisser
+        chips.Add(new CardChip("armor", unit.GetArmor().ToString(), ChipKind.Defense));
+        chips.Add(new CardChip("magicresist", unit.GetMagicResistance().ToString(), ChipKind.Defense));
         if (unit.GetShield() > 0) chips.Add(new CardChip("shield", unit.GetShield().ToString(), ChipKind.Shield));
 
         if (unit is IActionPointsUser paUser)
@@ -287,6 +323,17 @@ public static class CodexCardVisual
         chips.Add(new CardChip("pm", champion.movementRange.ToString(), ChipKind.MovementPoints, "PM"));
         chips.Add(new CardChip("pa", champion.maxActionPoints.ToString(), ChipKind.ActionPoints, "PA"));
         return chips;
+    }
+
+    /// <summary>
+    /// Passif d'un champion pour l'affichage (fiche de sélection, stats en combat), ex.
+    /// « <b>Passif : Réflexe du grimpeur</b>\n… » (sans « Passif : » sous un titre qui le dit
+    /// déjà) ; vide si le champion n'en a pas.
+    /// </summary>
+    public static string PassiveText(ChampionData champion, bool withLabel = true)
+    {
+        if (champion == null || string.IsNullOrWhiteSpace(champion.passiveName)) return "";
+        return $"<b>{(withLabel ? "Passif : " : "")}{champion.passiveName}</b>\n{champion.passiveDescription}";
     }
 
     /// <summary>

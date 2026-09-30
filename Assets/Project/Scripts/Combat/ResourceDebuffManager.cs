@@ -7,11 +7,15 @@ using UnityEngine;
 /// un plus faible n'écrase jamais un plus fort en attente (PA et PM comptés séparément).
 /// Ténacité (monstres) : après une perte totale de PM, un monstre ignore les retraits de PM à son
 /// tour suivant, pour qu'on ne puisse pas l'immobiliser indéfiniment (même à plusieurs joueurs).
+/// Gains de PA au prochain tour (ex: Élan partagé) : même principe, au-delà du maximum, sans cumul.
 /// </summary>
 public static class ResourceDebuffManager
 {
     // Retraits en attente par unité : (PA, PM)
     private static Dictionary<Unit, (int pa, int pm)> _pending = new Dictionary<Unit, (int pa, int pm)>();
+
+    // Gains de PA en attente par unité
+    private static Dictionary<Unit, int> _paBonus = new Dictionary<Unit, int>();
 
     // Monstres immunisés aux retraits de PM à leur prochain tour (Ténacité)
     private static HashSet<Unit> _pmImmune = new HashSet<Unit>();
@@ -23,8 +27,28 @@ public static class ResourceDebuffManager
     private static void ResetStaticData()
     {
         _pending = new Dictionary<Unit, (int pa, int pm)>();
+        _paBonus = new Dictionary<Unit, int>();
         _pmImmune = new HashSet<Unit>();
     }
+
+    /// <summary>
+    /// Programme un gain de PA pour le prochain tour de la cible (le plus fort l'emporte)
+    /// </summary>
+    public static void ApplyActionBonus(Unit target, int amount, Unit source)
+    {
+        if (target == null || amount <= 0) return;
+
+        _paBonus.TryGetValue(target, out int current);
+        _paBonus[target] = Mathf.Max(current, amount);
+        GameLog.Log($"[Gain] {source?.name ?? "Effet"} : {target.name} gagnera {_paBonus[target]} PA à son prochain tour");
+        EventBus.Publish(new UnitEffectAppliedEvent(target, UnitEffect.ActionPoints, amount));
+    }
+
+    /// <summary>
+    /// Gain de PA en attente pour une unité (0 si aucun)
+    /// </summary>
+    public static int GetPendingActionBonus(Unit unit) =>
+        unit != null && _paBonus.TryGetValue(unit, out int bonus) ? bonus : 0;
 
     /// <summary>
     /// Programme un retrait de PA/PM pour le prochain tour de la cible
@@ -38,6 +62,10 @@ public static class ResourceDebuffManager
         _pending[target] = (Mathf.Max(current.pa, paReduction), Mathf.Max(current.pm, pmReduction));
         GameLog.Log($"[Retrait] {source?.name ?? "Effet"} : {target.name} perdra {_pending[target].pa} PA / {(IsPmImmune(target) ? "0 (Ténacité)" : _pending[target].pm.ToString())} PM à son prochain tour");
         EventBus.Publish(new ResourceDebuffChangedEvent(target));
+
+        // Retour visuel à l'impact (le retrait lui-même tombe au prochain tour de la cible)
+        if (paReduction > 0) EventBus.Publish(new UnitEffectAppliedEvent(target, UnitEffect.ActionPoints, -paReduction));
+        if (pmReduction > 0 && !IsPmImmune(target)) EventBus.Publish(new UnitEffectAppliedEvent(target, UnitEffect.MovementPoints, -pmReduction));
     }
 
     /// <summary>
@@ -65,6 +93,16 @@ public static class ResourceDebuffManager
         // La Ténacité couvre ce tour-ci : les retraits de PM en attente sont ignorés, puis elle s'arrête
         bool immune = _pmImmune.Remove(unit);
 
+        if (_paBonus.TryGetValue(unit, out int bonus))
+        {
+            _paBonus.Remove(unit);
+            if (unit is IActionPointsUser bonusUser)
+            {
+                bonusUser.AddPA(bonus, canExceedMax: true);
+                GameLog.Log($"⚡ {unit.name} gagne {bonus} PA ce tour");
+            }
+        }
+
         if (!_pending.TryGetValue(unit, out var debuff)) return;
         _pending.Remove(unit);
 
@@ -87,6 +125,7 @@ public static class ResourceDebuffManager
             {
                 _pmImmune.Add(unit);
                 GameLog.Log($"🛡 {unit.name} est tenace : retraits de PM ignorés à son prochain tour");
+                EventBus.Publish(new UnitEffectAppliedEvent(unit, UnitEffect.PmImmune, 0));
             }
 
             unit.SpendMovement(debuff.pm);

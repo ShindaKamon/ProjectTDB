@@ -29,9 +29,7 @@ public class DamageNumberPopup : MonoBehaviour
     [Header("Colors")]
     [SerializeField] private Color _damageColor = new Color(1f, 0.2f, 0.2f);      // Rouge pour dégâts
     [SerializeField] private Color _healColor = new Color(0.2f, 1f, 0.2f);        // Vert pour soins
-    [SerializeField] private Color _criticalColor = new Color(1f, 0.5f, 0f);      // Orange pour critiques
     [SerializeField] private Color _immuneColor = new Color(0.7f, 0.7f, 0.7f);    // Gris pour immunité
-    [SerializeField] private Color _echoColor = new Color(0.4f, 0.9f, 1f);        // Cyan pour l'écho d'une invocation (Lyse)
 
     // ========== COMPOSANTS ==========
 
@@ -51,9 +49,7 @@ public class DamageNumberPopup : MonoBehaviour
     {
         Damage,
         Heal,
-        Critical,
-        Immune,
-        Echo        // Dégâts d'écho d'une invocation (Miroir fraternel)
+        Immune
     }
 
     // ========== INITIALISATION ==========
@@ -78,7 +74,7 @@ public class DamageNumberPopup : MonoBehaviour
     /// Configure et affiche le popup de dégâts/soins
     /// </summary>
     /// <param name="value">Valeur à afficher (nombre)</param>
-    /// <param name="type">Type de popup (Damage, Heal, Critical, Immune)</param>
+    /// <param name="type">Type de popup (Damage, Heal, Immune)</param>
     /// <param name="worldPosition">Position monde où afficher le popup</param>
     public void Show(int value, PopupType type, Vector3 worldPosition)
     {
@@ -95,20 +91,9 @@ public class DamageNumberPopup : MonoBehaviour
                 _text.color = _healColor;
                 break;
 
-            case PopupType.Critical:
-                _text.text = $"-{value}!";
-                _text.color = _criticalColor;
-                _text.fontSize = _text.fontSize * 1.2f; // Plus gros pour critiques
-                break;
-
             case PopupType.Immune:
                 _text.text = "IMMUNE";
                 _text.color = _immuneColor;
-                break;
-
-            case PopupType.Echo:
-                _text.text = $"-{value}";
-                _text.color = _echoColor;
                 break;
         }
 

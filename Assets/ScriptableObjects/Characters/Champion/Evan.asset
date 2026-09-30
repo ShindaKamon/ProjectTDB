@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
+  m_Name: Evan
+  m_EditorClassIdentifier: ProjectTDB::ChampionData
+  championName: Evan
+  title: "Le Fr\xE8re"
+  description: "Evan a perdu sa s\u0153ur jumelle, Lyse. Sa pr\xE9sence n'a jamais
+    vraiment disparu : un id\xE9al \xE9ph\xE9m\xE8re qu'il n'arrive pas \xE0 l\xE2cher,
+    et qu'il fait revivre un instant \xE0 chaque combat."
+  passiveName: Miroir fraternel
+  passiveDescription: "\xC9cho : Lyse renvoie 40 % de chaque attaque d'Evan (cible
+    \xE0 sa port\xE9e)"
+  portrait: {fileID: 0}
+  fullBodyArt: {fileID: 21300000, guid: 52182fb0aa09a43468adf6d344b0dc45, type: 3}
+  prefab: {fileID: 545175965259311260, guid: c05e030ecd6eb1645a8613c759d83c57, type: 3}
+  emotionType: 0
+  maxHealth: 100
+  movementRange: 4
+  maxActionPoints: 5
+  attackDamage: 0
+  armor: 0
+  magicResistance: 0
+  startingDeck:
+  - {fileID: 11400000, guid: 199b005d500d0c64a82792ff9a622c9c, type: 2}
+  - {fileID: 11400000, guid: 199b005d500d0c64a82792ff9a622c9c, type: 2}
+  - {fileID: 11400000, guid: 00fb335e554dfcb45b08f74b4e3c7908, type: 2}
+  - {fileID: 11400000, guid: 00fb335e554dfcb45b08f74b4e3c7908, type: 2}
+  - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
+  - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
+  - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
+  - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
+  - {fileID: 11400000, guid: e7e9f62f8e10f8043b0d304858622ab2, type: 2}
+  - {fileID: 11400000, guid: e7e9f62f8e10f8043b0d304858622ab2, type: 2}
+  - {fileID: 11400000, guid: e7e9f62f8e10f8043b0d304858622ab2, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: e22ed21666f0ce14ba5ecaef674b3421, type: 2}
+  - {fileID: 11400000, guid: e22ed21666f0ce14ba5ecaef674b3421, type: 2}
+  - {fileID: 11400000, guid: 38f65b0d9dcf8cc43a76ef0763d89aec, type: 2}
+  - {fileID: 11400000, guid: 38f65b0d9dcf8cc43a76ef0763d89aec, type: 2}
+  - {fileID: 11400000, guid: 6162996745c56074abfb9f7ea1428815, type: 2}
+  - {fileID: 11400000, guid: 6162996745c56074abfb9f7ea1428815, type: 2}

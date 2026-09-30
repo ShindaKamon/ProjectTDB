@@ -31,7 +31,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | Action                  | Description                               |
 |-------------------------|-------------------------------------------|
 | **Setup de la grille**  | Génération de la grille de combat         |
-| **Placement unités**    | Champions et ennemis placés sur la grille |
+| **Placement unités**    | Boss à sa position fixe ; phase de placement des champions sur les cases de départ, puis « Lancer le combat » (voir `Grid_System.md`, « Zones de Départ ») |
 | **Init des decks**      | Mélange des decks des champions           |
 | **Pioche initiale**     | Main de départ (code : 5 cartes — règle à trancher) |
 | **Ressources initiales**| Attribution des PA, PM de départ          |
@@ -53,7 +53,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **Effets de début** | Résolution des effets en cours                     |
 
 **Règles de main — ✅ actée le 24/09/2026 : celle du code**
-- **Code actuel** (`DeckManager`) : main de départ **5**, maximum **5**, **1 carte piochée** au début de chaque tour, pioche sautée si la main est pleine
+- **Code actuel** (`DeckManager`) : main de départ **5**, maximum **5**, **1 carte piochée** au début de chaque tour sauf le premier (29/09/2026 : la main de départ suffit) ; **pioche sans limite** pendant le tour, mais en fin de tour le joueur **défausse au choix** les cartes au-delà de 5 avant que le tour se termine (29/09/2026)
 - Écartée : main de 3, repioche jusqu'à 3 à chaque tour (hypothèse du playtest papier de l'Excel)
 - Ancienne règle (conçue pour Ilya) : main de départ 5, 7 max, pioche 1 carte/tour, pioche bloquée si main pleine — archivée
 
@@ -99,6 +99,8 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 |--------------------------------|----------|
 | **Tous les ennemis vaincus**   | Victoire |
 | **Tous les champions vaincus** | Défaite  |
+
+**Code (28/09/2026)** : `BattleOutcome` (les invocations comme Lyse ne comptent pas ; si les deux arrivent en même temps, c'est une victoire), vérifié à chaque mort par `GridManager` ; écran de fin MVP `BattleEndUI` : « VICTOIRE ! » / « DÉFAITE », puis **Rejouer** (même équipe) ou **Menu principal**.
 
 **Récompenses (à implémenter)** : XP, cartes, Or — voir `Progression.md`. Dans un donjon, la victoire contribue au retour de la couleur (voir `UI_Design.md`).
 
@@ -154,7 +156,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 - Téléportation possible (ignore obstacles)
 - Déplacement forcé (poussée/tirage), repli automatique
 - Bond offensif (Bond percutant) : saut sur une case vide à portée, par-dessus les unités, puis zone autour du point d'arrivée ; charge (Piolet d'ascension) : ligne droite, arrêtée par la première unité
-- Grappin (Piolet d'ascension de Crux)
+- Grappin (carte Signature de Crux, ex-Piolet d'ascension)
 
 
 ### Santé (HP)

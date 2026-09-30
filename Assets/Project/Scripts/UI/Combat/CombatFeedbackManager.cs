@@ -23,7 +23,6 @@ public class CombatFeedbackManager : MonoBehaviour
     [Header("Shake Settings")]
     [SerializeField] private float _damageShakeDuration = 0.2f;
     [SerializeField] private float _damageShakeIntensity = 0.15f;
-    [SerializeField] private float _criticalShakeIntensity = 0.3f;
 
     [Header("Flash Settings")]
     [SerializeField] private float _damageFlashDuration = 0.15f;
@@ -33,17 +32,20 @@ public class CombatFeedbackManager : MonoBehaviour
     [Header("Offset")]
     [SerializeField] private Vector3 _damageNumberOffset = new Vector3(0, 2f, 0); // Offset au-dessus de l'unité
 
-    [Header("Critical Hit")]
-    [SerializeField] private int _criticalDamageThreshold = 15; // TODO: Implémenter système de critiques
 
     [Header("Écho d'invocation (Miroir fraternel)")]
-    [SerializeField] private float _echoLungeDuration = 0.12f;  // durée de l'aller (et du retour)
-    [SerializeField, Range(0f, 1f)] private float _echoLungeRatio = 0.4f; // part du trajet parcourue vers la cible
-    [SerializeField] private Vector3 _echoNumberExtraOffset = new Vector3(0.6f, 0.5f, 0f); // décale le chiffre de celui du lanceur
+    [SerializeField] private Vector3 _echoNumberExtraOffset = new Vector3(0f, 0.5f, 0f); // au-dessus du chiffre du lanceur, pas vers une case voisine
+    [Header("Bonus / malus")]
+    [Tooltip("Écart vertical entre les textes de bonus/malus apparus en même temps sur une unité (au-dessus du chiffre de dégâts)")]
+    [SerializeField] private float _effectTextSpacing = 0.5f;
 
     // ========== ÉTAT ==========
 
     private Transform _damageNumberParent;
+
+    // Textes de bonus/malus déjà affichés ce frame, par unité (pour les empiler)
+    private readonly System.Collections.Generic.Dictionary<Unit, int> _effectTextsThisFrame = new System.Collections.Generic.Dictionary<Unit, int>();
+    private int _effectTextsFrame = -1;
 
     // ========== INITIALISATION ==========
 
@@ -78,6 +80,7 @@ public class CombatFeedbackManager : MonoBehaviour
         EventBus.Subscribe<UnitDamagedEvent>(OnUnitDamaged);
         EventBus.Subscribe<UnitHealedEvent>(OnUnitHealed);
         EventBus.Subscribe<UnitDiedEvent>(OnUnitDied);
+        EventBus.Subscribe<UnitEffectAppliedEvent>(OnUnitEffectApplied);
     }
 
     void OnDisable()
@@ -86,10 +89,56 @@ public class CombatFeedbackManager : MonoBehaviour
         EventBus.Unsubscribe<UnitDamagedEvent>(OnUnitDamaged);
         EventBus.Unsubscribe<UnitHealedEvent>(OnUnitHealed);
         EventBus.Unsubscribe<UnitDiedEvent>(OnUnitDied);
+        EventBus.Unsubscribe<UnitEffectAppliedEvent>(OnUnitEffectApplied);
     }
 
 
     // ========== EVENT HANDLERS ==========
+
+    /// <summary>
+    /// Appelé quand un bonus ou un malus est appliqué : texte flottant, empilé au-dessus du
+    /// chiffre de dégâts si plusieurs effets tombent en même temps sur la même unité
+    /// </summary>
+    private void OnUnitEffectApplied(UnitEffectAppliedEvent evt)
+    {
+        if (evt.Target == null) return;
+
+        if (_effectTextsFrame != Time.frameCount)
+        {
+            _effectTextsFrame = Time.frameCount;
+            _effectTextsThisFrame.Clear();
+        }
+        _effectTextsThisFrame.TryGetValue(evt.Target, out int index);
+        _effectTextsThisFrame[evt.Target] = index + 1;
+
+        var (text, kind) = DescribeEffect(evt.Effect, evt.Amount);
+        Vector3 offset = Vector3.up * _effectTextSpacing * (index + 1);
+        ShowCustomText(text, CodexCardVisual.ChipColor(kind), evt.Target.transform.position + offset);
+    }
+
+    /// <summary>
+    /// Texte et famille de couleur d'un bonus/malus, ex. « +5 bouclier », « -1 PA »
+    /// </summary>
+    public static (string text, ChipKind kind) DescribeEffect(UnitEffect effect, int amount)
+    {
+        string signed = amount >= 0 ? "+" + amount : amount.ToString();
+        return effect switch
+        {
+            UnitEffect.Shield => (signed + " bouclier", ChipKind.Shield),
+            UnitEffect.ReactiveShield => (signed + " bouclier réactif", ChipKind.Shield),
+            UnitEffect.NextAttackBonus => (signed + " prochaine attaque", ChipKind.Damage),
+            UnitEffect.Attack => (signed + " ATQ", ChipKind.Damage),
+            UnitEffect.Armor => (signed + " armure", ChipKind.Defense),
+            UnitEffect.MagicResistance => (signed + " résistance magique", ChipKind.Defense),
+            UnitEffect.ActionPoints => (signed + " PA", ChipKind.ActionPoints),
+            UnitEffect.MovementPoints => (amount == -int.MaxValue ? "-tous les PM" : signed + " PM", ChipKind.MovementPoints),
+            UnitEffect.DamageTakenPercent => (signed + "% dégâts subis", ChipKind.Shield),
+            UnitEffect.NextAttackPercent => (signed + "% prochaine attaque", ChipKind.Damage),
+            UnitEffect.PmImmune => ("Tenace", ChipKind.Mute),
+            UnitEffect.CardCancelled => ("Carte annulée", ChipKind.Mute),
+            _ => (signed, ChipKind.Mute)
+        };
+    }
 
     /// <summary>
     /// Appelé quand une unité prend des dégâts
@@ -98,26 +147,20 @@ public class CombatFeedbackManager : MonoBehaviour
     {
         if (evt.Target == null) return;
 
-        // Écho d'une invocation (Miroir fraternel) : retour visuel dédié, distinct du coup du lanceur
+        // Écho d'une invocation (Miroir fraternel, infligé un peu après le coup du lanceur) :
+        // l'invocation se tourne vers la cible, le chiffre apparaît au-dessus de celui du lanceur
+        Vector3 numberPosition = evt.Target.transform.position;
         if (evt.Source is SummonUnit summon)
         {
-            StartCoroutine(PlaySummonEcho(summon.transform, evt.Target.transform, evt.Damage));
-            return;
+            FaceTarget(summon, evt.Target);
+            numberPosition += _echoNumberExtraOffset;
         }
 
-        // Détermine si c'est un coup critique (pour l'instant, détection simple)
-        bool isCritical = evt.Damage > _criticalDamageThreshold;
-
         // 1. Affiche le nombre de dégâts
-        ShowDamageNumber(
-            evt.Damage,
-            isCritical ? DamageNumberPopup.PopupType.Critical : DamageNumberPopup.PopupType.Damage,
-            evt.Target.transform.position
-        );
+        ShowDamageNumber(evt.Damage, DamageNumberPopup.PopupType.Damage, numberPosition);
 
         // 2. Shake de l'unité
-        float shakeIntensity = isCritical ? _criticalShakeIntensity : _damageShakeIntensity;
-        StartCoroutine(ShakeUnit(evt.Target.transform, _damageShakeDuration, shakeIntensity));
+        StartCoroutine(ShakeUnit(evt.Target.transform, _damageShakeDuration, _damageShakeIntensity));
 
         // 3. Flash rouge (optionnel - nécessite SpriteRenderer ou Material)
         StartCoroutine(FlashUnit(evt.Target.transform, _damageFlashColor, _damageFlashDuration));
@@ -204,39 +247,14 @@ public class CombatFeedbackManager : MonoBehaviour
     /// Fait trembler une unité (shake effect)
     /// </summary>
     /// <summary>
-    /// Écho d'une invocation : elle bondit vers sa cible puis revient ; le chiffre (cyan) apparaît
-    /// à l'impact, décalé de celui du coup du lanceur qui tombe au même moment sur la même cible.
-    /// Purement visuel : les dégâts sont déjà appliqués.
+    /// Écho d'une invocation : elle se tourne vers l'ennemi qu'elle frappe (4 directions, sans bouger).
+    /// Purement visuel : les dégâts sont déjà appliqués et affichés sur la cible.
     /// </summary>
-    private IEnumerator PlaySummonEcho(Transform summon, Transform target, int damage)
+    private static void FaceTarget(Unit summon, Unit target)
     {
-        if (summon == null || target == null) yield break;
-
-        Vector3 origin = summon.position;
-        Vector3 lungeTo = Vector3.Lerp(origin, new Vector3(target.position.x, origin.y, target.position.z), _echoLungeRatio);
-
-        yield return MoveTransform(summon, origin, lungeTo, _echoLungeDuration);
-
-        if (target != null)
-        {
-            ShowDamageNumber(damage, DamageNumberPopup.PopupType.Echo, target.position + _echoNumberExtraOffset);
-            StartCoroutine(ShakeUnit(target, _damageShakeDuration, _damageShakeIntensity));
-        }
-
-        yield return MoveTransform(summon, lungeTo, origin, _echoLungeDuration);
-    }
-
-    private IEnumerator MoveTransform(Transform t, Vector3 from, Vector3 to, float duration)
-    {
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            if (t == null) yield break;
-            elapsed += Time.deltaTime;
-            t.position = Vector3.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
-            yield return null;
-        }
-        if (t != null) t.position = to;
+        Vector2Int dir = GridGeometry.SnapDirection(summon.GetCurrentGridPos(), target.GetCurrentGridPos());
+        if (dir != Vector2Int.zero)
+            summon.transform.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.y));
     }
 
     private IEnumerator ShakeUnit(Transform target, float duration, float intensity)

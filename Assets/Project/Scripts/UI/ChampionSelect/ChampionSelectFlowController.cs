@@ -14,13 +14,16 @@ public class ChampionSelectFlowController : MonoBehaviour
     {
         ChampionSelect,
         DeckSelect,
-        DeckManager
+        DeckManager,
+        Lobby
     }
 
     [Header("Écrans plein écran (un seul actif à la fois)")]
     [SerializeField] private GameObject _screenChampionSelectRoot;
     [SerializeField] private GameObject _screenDeckSelectRoot;
     [SerializeField] private GameObject _screenDeckManagerRoot;
+    [Tooltip("Salon local (Multijoueur) : une case par joueur.")]
+    [SerializeField] private GameObject _screenLobbyRoot;
 
     [Header("Boutons Retour")]
     [Tooltip("Écran Choix du deck -> écran Sélection du champion.")]
@@ -60,7 +63,8 @@ public class ChampionSelectFlowController : MonoBehaviour
 
     void Start()
     {
-        ShowScreen(Screen.ChampionSelect);
+        // Multijoueur : on arrive sur le salon ; solo : directement sur la sélection du champion
+        ShowScreen(CombatParty.IsMultiplayer ? Screen.Lobby : Screen.ChampionSelect);
     }
 
     /// <summary>
@@ -78,6 +82,9 @@ public class ChampionSelectFlowController : MonoBehaviour
 
         if (_screenDeckManagerRoot != null)
             _screenDeckManagerRoot.SetActive(screen == Screen.DeckManager);
+
+        if (_screenLobbyRoot != null)
+            _screenLobbyRoot.SetActive(screen == Screen.Lobby);
     }
 
     /// <summary>

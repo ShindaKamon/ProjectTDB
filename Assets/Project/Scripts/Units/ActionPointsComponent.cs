@@ -100,11 +100,11 @@ public class ActionPointsComponent : IActionPointsUser
     /// Ajoute des PA courants (utilisé par les passifs)
     /// </summary>
     /// <param name="amount">Montant de PA à ajouter</param>
-    public void AddPA(int amount)
+    public void AddPA(int amount, bool canExceedMax = false)
     {
         if (amount <= 0) return;
 
-        _currentActionPoints = Mathf.Min(_maxActionPoints, _currentActionPoints + amount);
+        _currentActionPoints = canExceedMax ? _currentActionPoints + amount : Mathf.Min(_maxActionPoints, _currentActionPoints + amount);
         OnActionPointsChanged?.Invoke(_currentActionPoints, _maxActionPoints);
         GameLog.Log($"{_unitName}: PA ajoutés ({amount}). Total: {_currentActionPoints}/{_maxActionPoints}");
     }

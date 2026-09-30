@@ -46,7 +46,7 @@ public class EnemyAI : MonoBehaviour
             yield break;
         }
 
-        Unit closestPlayerUnit = FindClosestPlayer(playerUnits);
+        Unit closestPlayerUnit = FindClosestPlayer(playerUnits, GetMaxCardRange());
 
         if (closestPlayerUnit == null)
         {
@@ -117,7 +117,9 @@ public class EnemyAI : MonoBehaviour
 
         // 3. PHASE CARTES: Tente de jouer une carte APRÈS le déplacement (si Enemy avec cartes)
         bool cardPlayed = false;
-        if (_enemy != null)
+        // Carte annulée (ex: Sidération) : pas de carte ni d'attaque de base ce tour
+        bool cardCancelled = _enemy != null && _enemy.ConsumeCancelledCard();
+        if (_enemy != null && !cardCancelled)
         {
             CardData nextCard = _enemy.GetNextCard();
             if (nextCard != null && _enemy.GetCurrentPA() >= nextCard.costPA)
@@ -154,9 +156,11 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // 4. Règle anti-lock : bloqué par un contrôle (PA ou PM retirés), le monstre fait son
-        // attaque de base (0 PA) ; sa carte prévue reste pour le prochain tour
-        if (!cardPlayed && controlled)
+        // 4. Attaque de base (0 PA) quand la carte prévue n'a pas pu être jouée ; la carte reste pour
+        // le prochain tour. Boss : seulement s'il est bloqué par un contrôle (règle anti-lock).
+        // Monstres ordinaires : dès que la carte est injouable, contrôlés ou non (décision du 28/09/2026)
+        bool isMinion = _enemy != null && !_enemy.IsBoss();
+        if (!cardPlayed && !cardCancelled && (controlled || isMinion))
         {
             yield return StartCoroutine(TryBasicAttack());
         }
@@ -174,7 +178,7 @@ public class EnemyAI : MonoBehaviour
         CardData basicAttack = _enemy.GetEnemyData()?.basicAttack;
         if (basicAttack == null)
         {
-            GameLog.LogWarning($"{_enemy.name}: bloqué par un contrôle mais aucune attaque de base définie (EnemyData.basicAttack)");
+            GameLog.LogWarning($"{_enemy.name}: carte injouable mais aucune attaque de base définie (EnemyData.basicAttack)");
             yield break;
         }
 
@@ -184,50 +188,61 @@ public class EnemyAI : MonoBehaviour
             yield break;
         }
 
-        GameLog.Log($"{_enemy.name} est bloqué par un contrôle : attaque de base ({basicAttack.cardName})");
+        GameLog.Log($"{_enemy.name} ne peut pas jouer sa carte : attaque de base ({basicAttack.cardName})");
         yield return StartCoroutine(ExecuteEnemyCard(basicAttack));
     }
 
-    // Calcule un chemin complet vers la cible en utilisant tous les points de mouvement disponibles
+    // Calcule le chemin du tour vers la cible, en contournant les unités (voir PathTowards)
     private List<Tile> CalculatePathTowardsTarget(Vector2Int targetPos)
     {
-        List<Tile> path = new List<Tile>();
-        Vector2Int currentPos = _enemyUnit.GetCurrentGridPos();
-        int remainingMovement = _enemyUnit.GetCurrentMovementPoints();
+        List<Vector2Int> cells = PathTowards(_enemyUnit.GetCurrentGridPos(), targetPos, GetMaxCardRange(),
+            _enemyUnit.GetCurrentMovementPoints(),
+            p => Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
+        return cells.ConvertAll(p => Services.Grid.GetTileAtPosition(p));
+    }
 
-        // Obtient la portée max des cartes de l'ennemi (si c'est un Enemy avec cartes)
-        int maxCardRange = GetMaxCardRange();
+    /// <summary>
+    /// Chemin (sans la case de départ, au plus « movement » cases) vers la case libre la plus
+    /// proche de la cible — à portée d'attaque si possible —, en contournant les unités (recherche
+    /// en largeur, 4 directions) : un monstre bloqué derrière un autre fait le tour. Vide s'il est
+    /// déjà à portée ou n'a aucun chemin.
+    /// </summary>
+    public static List<Vector2Int> PathTowards(Vector2Int start, Vector2Int target, int attackRange, int movement,
+        System.Func<Vector2Int, bool> isFree)
+    {
+        var path = new List<Vector2Int>();
+        int range = Mathf.Max(1, attackRange); // sans carte : au contact
+        int Gap(Vector2Int p) => Mathf.Max(0, GridGeometry.Distance(p, target) - range);
+        if (movement <= 0 || Gap(start) == 0) return path;
 
-        // Construire le chemin case par case jusqu'à épuisement des points de mouvement
-        // ou jusqu'à être à portée de carte
-        for (int i = 0; i < remainingMovement; i++)
+        // Largeur d'abord : la première case trouvée à un écart donné est aussi la plus proche en pas
+        var parent = new Dictionary<Vector2Int, Vector2Int> { [start] = start };
+        var queue = new Queue<Vector2Int>();
+        queue.Enqueue(start);
+        Vector2Int best = start;
+        int bestGap = Gap(start);
+        while (queue.Count > 0)
         {
-            // Si l'ennemi a des cartes, s'arrête à portée de carte
-            if (maxCardRange > 0)
+            Vector2Int p = queue.Dequeue();
+            int gap = Gap(p);
+            if (gap < bestGap)
             {
-                int distance = GridGeometry.Distance(currentPos, targetPos);
-                if (distance <= maxCardRange)
-                {
-                    GameLog.Log($"À portée de carte ({maxCardRange}) après {i} mouvements, distance: {distance}");
-                    break; // On est assez proche pour jouer une carte
-                }
+                best = p;
+                bestGap = gap;
+                if (gap == 0) break;
             }
-
-            // Trouver le meilleur prochain mouvement
-            Vector2Int nextMove = FindBestMoveFrom(currentPos, targetPos);
-
-            if (nextMove == Vector2Int.zero)
+            foreach (Vector2Int dir in GridGeometry.Directions4)
             {
-                GameLog.Log($"Bloqué après {i} mouvements");
-                break; // Bloqué, on ne peut plus avancer
+                Vector2Int next = p + dir;
+                if (parent.ContainsKey(next) || !isFree(next)) continue;
+                parent[next] = p;
+                queue.Enqueue(next);
             }
-
-            // Ajouter cette case au chemin
-            Tile nextTile = Services.Grid.GetTileAtPosition(nextMove);
-            path.Add(nextTile);
-            currentPos = nextMove; // Mettre à jour la position simulée
         }
 
+        for (Vector2Int p = best; p != start; p = parent[p]) path.Add(p);
+        path.Reverse();
+        if (path.Count > movement) path.RemoveRange(movement, path.Count - movement);
         return path;
     }
 
@@ -244,56 +259,35 @@ public class EnemyAI : MonoBehaviour
         return nextCard.targetRange;
     }
 
-    // Trouve le meilleur mouvement depuis une position donnée vers une cible (4 directions) :
-    // la case libre la plus proche en cases, départagée par la distance réelle (trajet plus droit).
-    private Vector2Int FindBestMoveFrom(Vector2Int fromPos, Vector2Int targetPos)
+    // Cible du monstre pour une attaque de portée attackRange (voir ChooseTarget)
+    private Unit FindClosestPlayer(List<Unit> playerUnits, int attackRange) =>
+        ChooseTarget(_enemyUnit.GetCurrentGridPos(), playerUnits, attackRange);
+
+    /// <summary>
+    /// Ciblage de base des monstres (décision du 28/09/2026, pourra varier selon le boss) : toutes
+    /// les cibles à portée de l'attaque comptent comme aussi proches, et parmi elles le monstre vise
+    /// celle qui a le moins de PV ; si aucune n'est à portée, la plus proche (cases en 4 directions),
+    /// puis le moins de PV à distance égale.
+    /// </summary>
+    public static Unit ChooseTarget(Vector2Int from, IEnumerable<Unit> candidates, int attackRange = 0)
     {
-        Vector2Int bestMove = Vector2Int.zero;
-        int bestDistance = GridGeometry.Distance(fromPos, targetPos);
-        float bestTieBreak = float.MaxValue;
+        Unit best = null;
+        int bestDistance = int.MaxValue;
 
-        foreach (Vector2Int dir in GridGeometry.Directions4)
+        foreach (Unit unit in candidates)
         {
-            Vector2Int nextPos = fromPos + dir;
+            if (unit == null) continue;
 
-            if (Services.Grid.GetTileAtPosition(nextPos) == null) continue; // Case hors grille
-            if (Services.Grid.GetUnitAtGridPos(nextPos) != null) continue;   // Case occupée
-
-            int distance = GridGeometry.Distance(nextPos, targetPos);
-            float tieBreak = Vector2.Distance(nextPos, targetPos);
-
-            // Ne recule jamais : il faut se rapprocher (ou rester à distance égale en contournant)
-            if (distance > bestDistance) continue;
-            if (distance < bestDistance || tieBreak < bestTieBreak)
+            // À portée = aussi proche que n'importe quelle autre cible à portée
+            int distance = Mathf.Max(attackRange, GridGeometry.Distance(from, unit.GetCurrentGridPos()));
+            if (distance < bestDistance || (distance == bestDistance && unit.GetHealth() < best.GetHealth()))
             {
                 bestDistance = distance;
-                bestTieBreak = tieBreak;
-                bestMove = nextPos;
+                best = unit;
             }
         }
 
-        return bestMove;
-    }
-
-    // Trouve le joueur le plus proche
-    private Unit FindClosestPlayer(List<Unit> playerUnits)
-    {
-        Unit closestPlayerUnit = null;
-        float minDistance = float.MaxValue;
-
-        foreach (Unit playerUnit in playerUnits)
-        {
-            // Distance en cases (4 directions), départagée par la distance réelle
-            float distance = GridGeometry.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos())
-                             + 0.001f * Vector2.Distance(_enemyUnit.GetCurrentGridPos(), playerUnit.GetCurrentGridPos());
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                closestPlayerUnit = playerUnit;
-            }
-        }
-
-        return closestPlayerUnit;
+        return best;
     }
 
     /// <summary>
@@ -315,7 +309,7 @@ public class EnemyAI : MonoBehaviour
             return false; // Pas de cible disponible
         }
 
-        Unit closestPlayer = FindClosestPlayer(playerUnits);
+        Unit closestPlayer = FindClosestPlayer(playerUnits, card.targetRange);
         if (closestPlayer == null)
         {
             return false;
@@ -351,7 +345,7 @@ public class EnemyAI : MonoBehaviour
         List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
         if (playerUnits != null && playerUnits.Count > 0)
         {
-            Unit closestPlayer = FindClosestPlayer(playerUnits);
+            Unit closestPlayer = FindClosestPlayer(playerUnits, card.targetRange);
 
             // Vérifie si la carte cible une unité
             if (card.targetsUnit)

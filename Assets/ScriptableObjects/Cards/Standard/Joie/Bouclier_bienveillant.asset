@@ -22,8 +22,9 @@ MonoBehaviour:
   signatureOwner: {fileID: 0}
   costPA: 3
   costHP: 0
-  targetType: 3
+  targetType: 4
   targetRange: 3
+  targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -45,6 +46,7 @@ MonoBehaviour:
   pmReduction: 0
   removeAllMovement: 0
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
   casterRetreat: 0

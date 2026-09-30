@@ -20,10 +20,10 @@ public enum CardAreaEffect
 {
     None,           // Aucune zone
     OneTile,        // Une case (l'épicentre uniquement)
-    Line,           // Ligne de aoeRadius cases depuis le lanceur, dans la direction de l'épicentre
+    Line,           // Ligne de aoeRadius cases partant de l'épicentre (compris), dans la direction lanceur → épicentre
     Cross,          // Croix de aoeRadius cases de rayon centrée sur l'épicentre (axes seulement)
     Circle,         // Cercle de aoeRadius cases de rayon centré sur l'épicentre
-    Cone,           // Cône de aoeRadius cases de portée depuis le lanceur, ouverture 90°
+    Cone,           // Cône partant de l'épicentre : aoeRadius rangées de 1, 3, 5… cases, en s'éloignant du lanceur
     WholeTeam       // Toute l'équipe du lanceur, sans portée ni ligne de vue (ex: Communion joyeuse)
 }
 
@@ -127,6 +127,9 @@ public class CardData : ScriptableObject
     [Tooltip("Portée maximale de la carte")]
     public int targetRange = 0;
 
+    [Tooltip("Cible uniquement en ligne droite depuis le lanceur (4 directions, pas de diagonale)")]
+    public bool targetInStraightLine = false;
+
     [Space(5)]
     [Tooltip("Forme de la zone d'effet")]
     public CardAreaEffect areaEffect = CardAreaEffect.None;
@@ -153,8 +156,9 @@ public class CardData : ScriptableObject
     /// True si la carte nécessite une sélection manuelle de plusieurs cibles distinctes
     /// (ex: Frappe rapide) au lieu du ciblage classique une-cible-un-clic.
     /// </summary>
-    public bool isMultiTarget => targetCount > 1 && targetsUnit;
-    public bool isAOE => areaEffect != CardAreaEffect.None && aoeRadius > 0;
+    public bool isMultiTarget => targetCount > 1 && targetsUnit && targetType != CardTargetType.Self; // une carte sur soi n'a qu'une cible
+    // Zone : une forme avec un rayon, ou toute l'équipe (qui n'en a pas besoin)
+    public bool isAOE => areaEffect == CardAreaEffect.WholeTeam || (areaEffect != CardAreaEffect.None && aoeRadius > 0);
     public bool affectsSelf => affectedTarget == CardAffectedTarget.Self || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AnyUnit;
     public bool affectsAllies => affectedTarget == CardAffectedTarget.Ally || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;
     public bool affectsEnemies => affectedTarget == CardAffectedTarget.Enemies || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;
@@ -192,7 +196,7 @@ public class CardData : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("atkIncreased")]
     public int nextAttackBonus = 0;
 
-    [Tooltip("Bouclier : réserve de PV qui absorbe les dégâts avant les PV (une seule fois, tous types), jusqu'au début du prochain tour du lanceur. ≠ armure, qui réduit chaque coup physique")]
+    [Tooltip("Bouclier : réserve de PV qui absorbe les dégâts avant les PV (tous types), sans durée : reste jusqu'à être consommé. ≠ armure, qui réduit chaque coup physique")]
     [UnityEngine.Serialization.FormerlySerializedAs("defenseAmount")]
     public int shieldAmount = 0;
 
@@ -219,6 +223,12 @@ public class CardData : ScriptableObject
     [Tooltip("Retire tous les PM de la cible au début de son prochain tour (ex: Terreur paralysante)")]
     public bool removeAllMovement = false;
 
+    [Tooltip("PA gagnés par la cible au début de son prochain tour, au-delà de son maximum (ex: Élan partagé ; le plus fort l'emporte, pas de cumul)")]
+    public int nextTurnActionGain = 0;
+
+    [Tooltip("Le monstre ciblé ne joue pas sa prochaine carte (ni attaque de base) et passe à la suivante de son pattern (ex: Sidération)")]
+    public bool cancelsEnemyNextCard = false;
+
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         6. EFFETS SPÉCIAUX                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
@@ -243,7 +253,7 @@ public class CardData : ScriptableObject
     [Tooltip("PM gagnés par le lanceur pour ce tour (« Élan tactique », ex: Piège et recul)")]
     public int casterMovementGain = 0;
 
-    [Tooltip("PA gagnés par le lanceur pour ce tour (sans dépasser son maximum)")]
+    [Tooltip("PA gagnés par le lanceur pour ce tour, au-delà de son maximum (ex: Sang pour sang)")]
     public int casterActionGain = 0;
 
     [Tooltip("Armure du lanceur pendant effectDuration tours (négatif = vulnérabilité, ex: Communion joyeuse)")]
@@ -259,6 +269,9 @@ public class CardData : ScriptableObject
     [Header("═══ GESTION DU DECK ═══")]
     [Tooltip("Nombre de cartes à piocher")]
     public int drawAmount = 0;
+
+    [Tooltip("Si > 0 : défausse le reste de la main du lanceur, qui gagne ce bonus de dégâts sur sa prochaine carte offensive par carte défaussée (ex: Rage aveugle)")]
+    public int discardHandAttackBonusPerCard = 0;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         11. INVOCATION                                     ║
@@ -276,7 +289,7 @@ public class CardData : ScriptableObject
     public bool isRepositionSummonCard = false;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
-    // ║                         12. COMBO (Ace)                                    ║
+    // ║                         12. COMBO (Raze)                                    ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
 
     [Header("═══ COMBO ═══")]
@@ -357,6 +370,14 @@ public class CardData : ScriptableObject
         Vector2Int sourcePos = source.GetCurrentGridPos();
         Vector2Int tilePos = Services.Grid.GetGridPosFromWorldPos(tile.transform.position);
 
+        // Charge qui cible une unité (ex: Grappin, allié ou ennemi) : il faut une cible
+        // valide au bout de la ligne ; sinon une case vide ou un ennemi
+        if (targetsUnit)
+        {
+            Unit unitOnTile = Services.Grid.GetUnitAtGridPos(tilePos);
+            return unitOnTile != null && IsValidTarget(source, unitOnTile)
+                && ChargeHelper.IsValidChargeTarget(sourcePos, tilePos, source, allowAllyAtTarget: true);
+        }
         return ChargeHelper.IsValidChargeTarget(sourcePos, tilePos, source);
     }
 
@@ -374,7 +395,7 @@ public class CardData : ScriptableObject
     {
         List<Unit> affectedUnits = new List<Unit>();
 
-        if (!isAOE || aoeRadius <= 0)
+        if (!isAOE)
         {
             return affectedUnits;
         }
@@ -416,10 +437,10 @@ public class CardData : ScriptableObject
 
     /// <summary>
     /// Détermine si une case donnée est couverte par la forme de zone de la carte
-    /// (Circle/OneTile centrés sur l'épicentre ; Line/Cone tracés depuis le lanceur en
-    /// direction de l'épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
+    /// (Circle/OneTile centrés sur l'épicentre ; Line et Cone partent de l'épicentre, dans la
+    /// direction lanceur → épicentre, sur 4 directions ; WholeTeam ignore position/épicentre).
     /// </summary>
-    private bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
+    public bool IsInAOEShape(Unit source, Vector2Int epicenter, Vector2Int tilePos)
     {
         switch (areaEffect)
         {
@@ -440,38 +461,28 @@ public class CardData : ScriptableObject
 
             case CardAreaEffect.Line:
             {
-                Vector2Int lineSourcePos = source.GetCurrentGridPos();
-                // La case du lanceur (origine de la ligne) est considérée "dans la forme" ;
-                // c'est affectsSelf (géré par l'appelant) qui décide si elle est réellement affectée.
-                if (tilePos == lineSourcePos) return true;
-
-                Vector2Int dir = GetSnappedDirection(lineSourcePos, epicenter);
+                // Part de la case visée (pas du lanceur) et s'éloigne du lanceur : aoeRadius cases, cible comprise
+                Vector2Int dir = GetSnappedDirection(source.GetCurrentGridPos(), epicenter);
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
-                Vector2Int cur = lineSourcePos;
-                for (int i = 1; i <= aoeRadius; i++)
+                for (int i = 0; i < aoeRadius; i++)
                 {
-                    cur += dir;
-                    if (cur == tilePos) return true;
+                    if (epicenter + dir * i == tilePos) return true;
                 }
                 return false;
             }
 
             case CardAreaEffect.Cone:
             {
-                Vector2Int sourcePos = source.GetCurrentGridPos();
-                // La case du lanceur (origine du cône) est considérée "dans la forme" ;
-                // c'est affectsSelf (géré par l'appelant) qui décide si elle est réellement affectée.
-                if (tilePos == sourcePos) return true;
-
-                Vector2Int dir = GetSnappedDirection(sourcePos, epicenter);
+                // Part de la case visée et s'élargit en s'éloignant du lanceur : aoeRadius rangées de
+                // 1, 3, 5… cases (2 de plus à chaque rangée) — décision du 28/09/2026
+                Vector2Int dir = GetSnappedDirection(source.GetCurrentGridPos(), epicenter);
                 if (dir == Vector2Int.zero) return tilePos == epicenter;
 
-                Vector2Int toTile = tilePos - sourcePos;
-                if (GridGeometry.Distance(sourcePos, tilePos) > aoeRadius) return false;
-
-                float angle = Vector2.Angle(dir, toTile);
-                return angle <= 45f; // ouverture totale de 90°
+                Vector2Int rel = tilePos - epicenter;
+                int forward = rel.x * dir.x + rel.y * dir.y;            // rangée (0 = case visée)
+                int lateral = Mathf.Abs(rel.x * dir.y - rel.y * dir.x); // écart sur les côtés
+                return forward >= 0 && forward < aoeRadius && lateral <= forward;
             }
 
             case CardAreaEffect.WholeTeam:
@@ -489,18 +500,23 @@ public class CardData : ScriptableObject
         GridGeometry.SnapDirection(from, to);
 
     /// <summary>
-    /// Passif "Miroir fraternel" (Soren) : si le lanceur a une invocation active avec un ennemi à
-    /// portée, elle inflige un écho à 40% des dégâts réellement infligés (après réduction/boucliers).
+    /// Passif "Miroir fraternel" (Evan) : si le lanceur a une invocation active avec un ennemi à
+    /// portée, elle inflige un écho à 40 % des dégâts d'origine de l'attaque (avant la défense de la
+    /// cible d'Evan) ; la défense de la cible de l'écho s'applique ensuite (décision du 28/09/2026).
+    /// L'écho n'a lieu que si l'attaque d'Evan a réellement infligé des dégâts.
     /// Règles (décision du 24/09/2026) :
     /// - portée = celle de la carte jouée, mesurée depuis l'invocation, en 4 directions comme toute
     ///   la grille : on place Lyse selon la carte qu'on veut jouer ;
     /// - cible : l'ennemi visé par le lanceur s'il est à portée de l'invocation (et encore en vie),
     ///   sinon l'ennemi le plus proche de l'invocation ;
+    /// - carte à cibles multiples : un écho par cible touchée, chacun sur un ennemi différent
+    ///   (décision du 28/09/2026 : Lyse renvoie la même attaque qu'Evan) ;
     /// - déclenchement automatique (le choix manuel de la cible est prévu pour la V2).
     /// </summary>
-    private void TryTriggerSummonEcho(Unit source, int appliedDamage, Unit sourceTarget)
+    private void TryTriggerSummonEcho(Unit source, int appliedDamage, int attackDamage, Unit sourceTarget, bool firstHitOfCard)
     {
-        if (appliedDamage <= 0) return;
+        if (firstHitOfCard) _echoTargetsThisCard.Clear();
+        if (appliedDamage <= 0 || attackDamage <= 0) return;
         if (!(source is ISummonOwner summonOwner)) return;
 
         SummonUnit summon = summonOwner.ActiveSummon;
@@ -509,6 +525,7 @@ public class CardData : ScriptableObject
         Vector2Int summonPos = summon.GetCurrentGridPos();
         bool IsValidEchoTarget(Unit unit) =>
             unit != null && unit != source && unit != summon && !IsDead(unit)
+            && !_echoTargetsThisCard.Contains(unit) // un ennemi différent par écho d'une même carte
             && unit.GetFaction() != summon.GetFaction() // uniquement les ennemis de l'invocation
             && GridGeometry.Distance(summonPos, unit.GetCurrentGridPos()) <= targetRange;
 
@@ -531,11 +548,17 @@ public class CardData : ScriptableObject
         }
 
         if (echoTarget == null) return;
+        _echoTargetsThisCard.Add(echoTarget);
 
-        int echoDamage = Mathf.Max(1, Mathf.RoundToInt(appliedDamage * 0.4f));
-        echoTarget.TakeDamageFrom(echoTarget.ReduceByDefense(echoDamage, damageType), summon);
-        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts (40% de {appliedDamage}) sur {echoTarget.name}");
+        // 40 % de l'attaque d'origine ; la défense de la cible de l'écho est retirée à l'impact
+        // (sans minimum : un écho entièrement absorbé fait 0, affiché « -0 »)
+        int echoDamage = Mathf.RoundToInt(attackDamage * 0.4f);
+        summon.DealEcho(echoTarget, echoDamage, damageType); // après un court délai, pour le distinguer du coup du lanceur
+        GameLog.Log($"[Miroir fraternel] {summon.name} renvoie un écho de {echoDamage} dégâts avant défense (40% de {attackDamage}) sur {echoTarget.name}");
     }
+
+    // Cibles déjà touchées par un écho pendant la carte en cours (remis à zéro à sa 1re cible)
+    [System.NonSerialized] private readonly HashSet<Unit> _echoTargetsThisCard = new HashSet<Unit>();
 
     private static bool IsDead(Unit unit)
     {
@@ -549,14 +572,14 @@ public class CardData : ScriptableObject
     /// multiples déjà résolue pour une cible précédente (voir HandUIController.ExecutePendingMultiTargetCard,
     /// qui appelle ExecuteEffect une fois par cible). Dans ce cas, les effets qui doivent se
     /// produire une seule fois par carte jouée (et non une fois par cible) sont sautés :
-    /// combo tracker (Main gagnante d'Ace), invocation/repositionnement, dégâts sur soi, pioche,
-    /// écho de Miroir fraternel.
+    /// combo tracker (Main gagnante de Raze), invocation/repositionnement, dégâts sur soi, pioche.
+    /// L'écho de Miroir fraternel, lui, se déclenche pour chaque cible (sur un ennemi différent).
     /// </param>
     public virtual void ExecuteEffect(Unit source, Unit targetUnit = null, Vector2Int targetTile = default, bool isAdditionalMultiTargetHit = false)
     {
         GameLog.Log($"Exécution de l'effet de la carte {cardName} par {source.name}.");
 
-        // Passif "Main gagnante" (Ace) : détecte un motif avec la carte précédente AVANT de
+        // Passif "Main gagnante" (Raze) : détecte un motif avec la carte précédente AVANT de
         // résoudre les effets, pour que le bonus s'applique à CETTE carte (ex: Paire).
         // Ne s'exécute qu'une fois par carte jouée, pas une fois par cible (sinon la carte se
         // comparerait à elle-même sur la 2e cible d'une carte à cibles multiples).
@@ -577,13 +600,17 @@ public class CardData : ScriptableObject
 
         // Variables locales pour les valeurs finales (modifiables par boost)
         int finalDamage = damageAmount;
+        // Carte « allié ou ennemi » (ex: Corde de rappel) : jamais de dégâts sur un allié (le bonus
+        // de prochaine attaque n'est donc pas consommé non plus)
+        if (targetType == CardTargetType.AllyorEnemy && targetUnit != null && targetUnit.GetFaction() == source.GetFaction())
+            finalDamage = 0;
         int finalHeal = healAmount;
         int finalShield = shieldAmount;
         int finalDraw = drawAmount;
         int finalNextAttackBonus = nextAttackBonus;
         int finalLifesteal = lifestealFixedAmount;
 
-        // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis d'Ace) ---
+        // --- SCALING PAR PA DÉPENSÉS CE TOUR (ex: Tapis de Raze) ---
         if (scalesWithPASpentThisTurn && comboDamagePerPASpent > 0 && comboTracker != null)
         {
             int bonus = comboDamagePerPASpent * comboTracker.PASpentThisTurn;
@@ -628,14 +655,14 @@ public class CardData : ScriptableObject
         {
             if (isSummonCard && summonPrefab != null)
             {
-                // Si l'invocation du lanceur est déjà active et vivante (ex: Lyse pour Soren),
+                // Si l'invocation du lanceur est déjà active et vivante (ex: Lyse pour Evan),
                 // on ne réinvoque pas une deuxième copie : on la soigne à la place (décision produit).
                 SummonUnit existingSummon = (source is ISummonOwner existingSummonOwner) ? existingSummonOwner.ActiveSummon : null;
                 UnitState existingSummonState = existingSummon != null ? existingSummon.GetUnitState() : null;
 
                 if (existingSummon != null && (existingSummonState == null || !existingSummonState.IsDead()))
                 {
-                    existingSummon.Heal(healAmount);
+                    existingSummon.HealFrom(healAmount, source);
                     GameLog.Log($"{cardName} : {existingSummon.name} est déjà invoquée, elle est soignée de {healAmount} PV au lieu d'être réinvoquée.");
                 }
                 else
@@ -679,7 +706,7 @@ public class CardData : ScriptableObject
         int actualDamageDealt = 0;
 
         // Applique l'effet AOE si activé
-        if (isAOE && aoeRadius > 0)
+        if (isAOE)
         {
             List<Unit> affectedUnits = GetAOEAffectedUnits(source, effectEpicenter);
             GameLog.Log($"🔥 AOE {cardName} : {affectedUnits.Count} unités affectées dans un rayon de {aoeRadius}");
@@ -693,9 +720,9 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = unit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        unit.TakeRawDamage(unit.ReduceByDefense(totalUnitDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
+                        unit.TakeRawDamageFrom(unit.ReduceByDefense(totalUnitDamage, damageType), source); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
-                        unit.TakeDamage(unit.ReduceByDefense(totalUnitDamage, damageType));
+                        unit.TakeDamageFrom(unit.ReduceByDefense(totalUnitDamage, damageType), source);
                     int hpAfter = unit.GetHealth();
                     if (hpAfter < hpBefore) damageDealt = true;
                     actualDamageDealt += hpBefore - hpAfter;
@@ -703,7 +730,7 @@ public class CardData : ScriptableObject
                 }
                 if (finalHeal > 0)
                 {
-                    unit.Heal(finalHeal);
+                    unit.HealFrom(finalHeal, source);
                     GameLog.Log($"  → {unit.name} récupère {finalHeal} PV AOE");
                 }
                 if (finalLifesteal > 0 && damageDealt)
@@ -725,9 +752,9 @@ public class CardData : ScriptableObject
                 {
                     int hpBefore = targetUnit.GetHealth();
                     if (comboTracker != null && comboTracker.ShouldIgnoreDamageReduction)
-                        targetUnit.TakeRawDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType)); // Paire (Ace) : ignore bouclier et réductions en %, pas l'armure/résistance magique
+                        targetUnit.TakeRawDamageFrom(targetUnit.ReduceByDefense(totalTargetDamage, damageType), source); // Paire (Raze) : ignore bouclier et réductions en %, pas l'armure/résistance magique
                     else
-                        targetUnit.TakeDamage(targetUnit.ReduceByDefense(totalTargetDamage, damageType));
+                        targetUnit.TakeDamageFrom(targetUnit.ReduceByDefense(totalTargetDamage, damageType), source);
                     int hpAfter = targetUnit.GetHealth();
                     if (hpAfter < hpBefore) damageDealt = true;
                     actualDamageDealt += hpBefore - hpAfter;
@@ -735,7 +762,7 @@ public class CardData : ScriptableObject
                 }
                 if (finalHeal > 0)
                 {
-                    targetUnit.Heal(finalHeal);
+                    targetUnit.HealFrom(finalHeal, source);
                     GameLog.Log($"{source.name} soigne {targetUnit.name} de {finalHeal} PV avec {cardName}.");
                 }
                 if (finalLifesteal > 0 && damageDealt)
@@ -751,16 +778,11 @@ public class CardData : ScriptableObject
             }
         }
 
-        // Passif "Miroir fraternel" (Soren) : écho à 40% de puissance sur une cible à portée
-        // de l'invocation active, si la carte jouée inflige réellement des dégâts.
-        // Basé sur les dégâts réellement appliqués (après réduction/boucliers), pas sur
-        // finalDamage (théorique, avant résolution) - sinon l'écho se déclenchait même quand
-        // la cible était entièrement protégée.
-        // Une seule fois par carte jouée (pas une fois par cible).
-        if (!isAdditionalMultiTargetHit)
-        {
-            TryTriggerSummonEcho(source, actualDamageDealt, targetUnit);
-        }
+        // Passif "Miroir fraternel" (Evan) : écho à 40 % de l'attaque d'origine (finalDamage, avant
+        // la défense de la cible) sur une cible à portée de l'invocation active, seulement si la carte
+        // a réellement infligé des dégâts (pas d'écho si la cible était entièrement protégée).
+        // Une fois par cible touchée : pour une carte à cibles multiples, Lyse renvoie la même attaque.
+        TryTriggerSummonEcho(source, actualDamageDealt, finalDamage, targetUnit, firstHitOfCard: !isAdditionalMultiTargetHit);
 
         // Dégâts sur soi-même (ex: cartes puissantes mais risquées)
         // Une seule fois par carte jouée (pas une fois par cible).
@@ -781,6 +803,28 @@ public class CardData : ScriptableObject
             }
         }
 
+        // 2. Défausse de la main contre un bonus de prochaine attaque (ex: Rage aveugle)
+        if (discardHandAttackBonusPerCard > 0 && !isAdditionalMultiTargetHit
+            && source.TryGetComponentSafe(out DeckManager discardDeck))
+        {
+            int discarded = discardDeck.DiscardHandExcept(this);
+            if (discarded > 0) source.AddNextAttackBonus(discarded * discardHandAttackBonusPerCard);
+            GameLog.Log($"{cardName} : {discarded} carte(s) défaussée(s), +{discarded * discardHandAttackBonusPerCard} dégâts sur la prochaine attaque");
+        }
+
+        // 3. Monstre ciblé : annule sa prochaine carte (ex: Sidération)
+        if (cancelsEnemyNextCard && targetUnit is Enemy cancelledEnemy)
+        {
+            cancelledEnemy.CancelNextCard();
+        }
+
+        // Gain de PA au prochain tour de la cible, ou du lanceur pour une carte sur soi (ex: Élan partagé)
+        if (nextTurnActionGain > 0)
+        {
+            Unit bonusTarget = (targetsUnit && targetUnit != null) ? targetUnit : source;
+            ResourceDebuffManager.ApplyActionBonus(bonusTarget, nextTurnActionGain, source);
+        }
+
         // 4. Bonus de prochaine attaque, armure, résistance magique, bouclier
         if (finalNextAttackBonus > 0 || finalShield != 0 || armorAmount != 0 || magicResistanceAmount != 0)
         {
@@ -799,7 +843,7 @@ public class CardData : ScriptableObject
                 if (armorAmount != 0 || magicResistanceAmount != 0)
                     statTarget.ModifyStats(0, armorAmount, magicResistanceAmount, effectDuration, source);
 
-                // Bouclier en PV (jusqu'au début du prochain tour du lanceur), ou bouclier
+                // Bouclier en PV (sans durée, jusqu'à épuisement), ou bouclier
                 // réactif qui ne se déclenche qu'au premier coup ennemi (ex: Réflexe de survie)
                 if (finalShield > 0)
                 {
@@ -818,7 +862,7 @@ public class CardData : ScriptableObject
                 if (unit == targetUnit || unit.GetFaction() == source.GetFaction() || IsDead(unit)) continue;
                 if (GridGeometry.Distance(around, unit.GetCurrentGridPos()) != 1) continue;
 
-                unit.TakeDamage(unit.ReduceByDefense(damageAroundTarget, damageType));
+                unit.TakeDamageFrom(unit.ReduceByDefense(damageAroundTarget, damageType), source);
                 GameLog.Log($"{cardName} : {unit.name} (au contact de {targetUnit.name}) subit {damageAroundTarget} dégâts");
             }
         }
@@ -844,7 +888,12 @@ public class CardData : ScriptableObject
                 Vector2 direction = pullsTowardCaster
                     ? (Vector2)(sourcePos - movedPos)
                     : (Vector2)(movedPos - sourcePos);
-                moved.ApplyKnockback(direction, knockbackDistance);
+                Vector2Int endPos = moved.ApplyKnockback(direction, knockbackDistance);
+
+                // Tirage qui amène l'unité au contact du lanceur (ex: Corde de rappel + Réflexe du grimpeur)
+                if (pullsTowardCaster && !isAdditionalMultiTargetHit && source is IContactReactor contactReactor
+                    && GridGeometry.Distance(endPos, sourcePos) == 1)
+                    contactReactor.OnContactCreated(moved);
             }
         }
 
@@ -854,7 +903,7 @@ public class CardData : ScriptableObject
             // Détermine les cibles pour la réduction
             List<Unit> debuffTargets = new List<Unit>();
 
-            if (isAOE && aoeRadius > 0)
+            if (isAOE)
             {
                 debuffTargets = GetAOEAffectedUnits(source, effectEpicenter);
             }
@@ -876,7 +925,7 @@ public class CardData : ScriptableObject
         if (!isAdditionalMultiTargetHit)
         {
             if (casterMovementGain > 0) source.GainMovement(casterMovementGain);
-            if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain);
+            if (casterActionGain > 0 && source is IActionPointsUser paUser) paUser.AddPA(casterActionGain, canExceedMax: true);
             if (casterArmorAmount != 0) source.ModifyStats(0, casterArmorAmount, 0, Mathf.Max(1, effectDuration), source);
             if (casterMovementLoss > 0) ResourceDebuffManager.ApplyDebuff(source, 0, casterMovementLoss, source);
 
@@ -913,7 +962,7 @@ public class CardData : ScriptableObject
         }
 
         // Lance la coroutine via le MonoBehaviour source
-        source.StartCoroutine(ExecuteChargeEffectCoroutine(source, targetTilePos, onComplete));
+        source.StartCoroutine(PendingEffects.Track(ExecuteChargeEffectCoroutine(source, targetTilePos, onComplete)));
     }
 
     /// <summary>
@@ -921,8 +970,8 @@ public class CardData : ScriptableObject
     /// </summary>
     private System.Collections.IEnumerator ExecuteChargeEffectCoroutine(Unit source, Vector2Int targetTilePos, System.Action onComplete)
     {
-        // Passif "Main gagnante" (Ace) / système de combo : mêmes hooks que ExecuteEffect,
-        // pour que les cartes de charge (ex: L'Alpiniste) participent au combo.
+        // Passif "Main gagnante" (Raze) / système de combo : mêmes hooks que ExecuteEffect,
+        // pour que les cartes de charge (ex: Crux) participent au combo.
         IComboTracker comboTracker = source as IComboTracker;
         comboTracker?.OnCardAboutToExecute(this);
 
@@ -954,10 +1003,10 @@ public class CardData : ScriptableObject
             }
         }
 
-        // Notifie l'unité de son atterrissage (ex: Réflexe du grimpeur de L'Alpiniste)
-        if (source is IChargeLandingReactor landingReactor)
+        // Notifie l'unité de son atterrissage au contact (ex: Réflexe du grimpeur de Crux)
+        if (source is IContactReactor contactReactor)
         {
-            landingReactor.OnChargeLanded();
+            contactReactor.OnContactCreated(null);
         }
 
         // --- BONUS DE PROCHAINE ATTAQUE puis MODIFICATEUR DE DÉGÂTS SORTANTS ---
@@ -994,7 +1043,7 @@ public class CardData : ScriptableObject
             // Applique les dégâts de la charge
             if (finalChargeDamage > 0)
             {
-                pathInfo.EnemyHit.TakeDamage(pathInfo.EnemyHit.ReduceByDefense(finalChargeDamage, damageType));
+                pathInfo.EnemyHit.TakeDamageFrom(pathInfo.EnemyHit.ReduceByDefense(finalChargeDamage, damageType), source);
                 GameLog.Log($"🏃 CHARGE ! {source.name} inflige {finalChargeDamage} dégâts à {pathInfo.EnemyHit.name}");
             }
 
@@ -1031,23 +1080,26 @@ public class CardData : ScriptableObject
     /// </summary>
     public void ExecuteLeapEffect(Unit source, Vector2Int targetTilePos)
     {
-        source.StartCoroutine(ExecuteLeapEffectCoroutine(source, targetTilePos));
+        source.StartCoroutine(PendingEffects.Track(ExecuteLeapEffectCoroutine(source, targetTilePos)));
     }
 
     private System.Collections.IEnumerator ExecuteLeapEffectCoroutine(Unit source, Vector2Int targetTilePos)
     {
-        // Chemin d'une seule case : le lanceur va droit sur la case, par-dessus ce qui se trouve entre
+        // Le lanceur se téléporte sur la case (par-dessus ce qui se trouve entre), tourné dans le sens
+        // du saut ; l'animation viendra avec les assets adéquats
         Tile landing = Services.Grid.GetTileAtPosition(targetTilePos);
         if (landing != null && Services.Grid.GetUnitAtGridPos(targetTilePos) == null)
         {
             GameLog.Log($"🦘 BOND ! {source.name} de {source.GetCurrentGridPos()} vers {targetTilePos}");
-            source.MoveToTile(new List<Tile> { landing });
-            while (source.IsMoving())
-                yield return null;
+            Vector2Int direction = GridGeometry.SnapDirection(source.GetCurrentGridPos(), targetTilePos);
+            source.TeleportTo(targetTilePos);
+            if (direction != Vector2Int.zero)
+                source.transform.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0f, direction.y));
+            yield return null;
 
             // Un bond est un déplacement rapide : il déclenche le Réflexe du grimpeur, comme la charge
-            if (source is IChargeLandingReactor landingReactor)
-                landingReactor.OnChargeLanded();
+            if (source is IContactReactor contactReactor)
+                contactReactor.OnContactCreated(null);
         }
         else
         {

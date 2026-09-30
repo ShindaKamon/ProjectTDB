@@ -80,6 +80,10 @@ public static class GameActionValidator
         if (target == null)
             return ValidationResult.Fail($"{card.cardName} nécessite une cible");
 
+        // Ciblage en ligne droite (même ligne ou même colonne que le lanceur)
+        if (card.targetInStraightLine && !GridGeometry.TryGetLine(source.GetCurrentGridPos(), target.GetCurrentGridPos(), out _, out _))
+            return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
+
         // Validation de la portée (4 directions, voir GridGeometry)
         int distance = GridGeometry.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
         if (distance > card.targetRange)
@@ -149,14 +153,25 @@ public static class GameActionValidator
         if (source == null)
             return ValidationResult.Fail("Source null - impossible de valider le ciblage");
 
-        // Si la carte ne cible pas de tuile, c'est OK
-        if (!card.targetsTile)
+        // Si la carte ne cible pas de tuile, c'est OK — sauf une charge sur une unité (ex:
+        // Grappin), dont la case de la cible doit rester en ligne droite et à portée
+        if (!card.targetsTile && !card.isChargeCard)
             return ValidationResult.Success();
+
+        // Carte d'invocation alors que l'invocation est déjà là : on la cible elle-même pour la
+        // soigner, où qu'elle soit (ex: Invocation de Lyse)
+        if (HealsActiveSummon(card, source))
+        {
+            SummonUnit summon = ((ISummonOwner)source).ActiveSummon;
+            return targetTilePos == summon.GetCurrentGridPos()
+                ? ValidationResult.Success()
+                : ValidationResult.Fail($"{summon.name} est déjà invoquée : cible-la pour la soigner");
+        }
 
         Vector2Int sourcePos = source.GetCurrentGridPos();
 
-        // Charge : ligne droite uniquement (même ligne ou même colonne)
-        if (card.isChargeCard && !GridGeometry.TryGetLine(sourcePos, targetTilePos, out _, out _))
+        // Charge ou ciblage en ligne droite : même ligne ou même colonne
+        if ((card.isChargeCard || card.targetInStraightLine) && !GridGeometry.TryGetLine(sourcePos, targetTilePos, out _, out _))
         {
             return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
         }
@@ -180,6 +195,13 @@ public static class GameActionValidator
     {
         return caster is ISummonOwner owner && owner.ActiveSummon != null && !IsDead(owner.ActiveSummon);
     }
+
+    /// <summary>
+    /// Carte d'invocation jouée alors que l'invocation du lanceur est déjà en vie : elle la soigne
+    /// au lieu d'en invoquer une autre, et ne cible alors que cette invocation.
+    /// </summary>
+    public static bool HealsActiveSummon(CardData card, Unit caster) =>
+        card != null && card.isSummonCard && HasSummonToMove(caster);
 
     /// <summary>Étape 1 : la cible cliquée est-elle une invocation vivante du lanceur ?</summary>
     public static ValidationResult CanSelectSummonToMove(CardData card, Unit caster, Unit target)

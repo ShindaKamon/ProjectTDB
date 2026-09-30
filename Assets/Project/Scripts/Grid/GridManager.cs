@@ -16,9 +16,16 @@ public class GridManager : MonoBehaviour, IGridService
     [SerializeField] private int _width = 10;
     [SerializeField] private int _height = 10;
     [SerializeField] private GameObject _tilePrefab;
-    [SerializeField] private Vector2Int _playerSpawnGridPos = new Vector2Int(0,0); // Position de la grille où le joueur apparaîtra
-    [SerializeField] private Vector2Int _secondPlayerSpawnGridPos = new Vector2Int(1,0); // Coop : position du second champion
-    
+    [Tooltip("Cases de départ des champions (en rouge pendant le placement) ; chaque joueur apparaît sur la case de son rang, puis peut changer de case")]
+    [SerializeField] private Vector2Int[] _startCells =
+    {
+        new Vector2Int(3, 1), new Vector2Int(5, 1), new Vector2Int(7, 1),
+        new Vector2Int(2, 0), new Vector2Int(4, 0), new Vector2Int(6, 0)
+    };
+    [Tooltip("Phase de placement avant le premier tour (vide = le combat démarre directement)")]
+    [SerializeField] private PlacementPhase _placementPhase;
+    private CombatCommandExecutor _commands;
+
     [Header("=== Couleurs Portées ===")]
     [SerializeField] private Color _moveColor = Color.blue;
     [SerializeField] private Color _cardTargetColor = Color.yellow; // Couleur pour les cibles de carte
@@ -32,6 +39,7 @@ public class GridManager : MonoBehaviour, IGridService
     // ===== DONNÉES INTERNES =====
     private Dictionary<Vector2Int, Tile> _tiles;
     private List<Unit> _units;
+    private readonly HashSet<Unit> _unitsWhoPlayed = new HashSet<Unit>(); // unités ayant déjà eu un tour (pioche dès le 2e)
     private Unit _activeUnit;
 
     // ===== REPOSITORY PATTERN =====
@@ -67,6 +75,10 @@ public class GridManager : MonoBehaviour, IGridService
         ServiceLocator.Instance.Register<IGridService>(this);
         GameLog.Log("GridManager: Enregistré dans ServiceLocator comme IGridService");
 
+        // Actions des joueurs (déplacement, cartes, fin de tour, placement) : voir CombatCommandExecutor
+        _commands = gameObject.AddComponent<CombatCommandExecutor>();
+        _commands.Init(this, _placementPhase);
+
         // S'abonne aux événements de l'EventBus
         EventBus.Subscribe<TurnEndRequestedEvent>(OnTurnEndRequested);
         EventBus.Subscribe<ShowMovementRangeEvent>(OnShowMovementRange);
@@ -100,7 +112,7 @@ public class GridManager : MonoBehaviour, IGridService
     private void OnTurnEndRequested(TurnEndRequestedEvent e)
     {
         GameLog.Log($"[EventBus] Fin de tour demandée par {e.RequestingUnit?.name ?? "Inconnu"}");
-        OnEndTurnButtonClick();
+        EndActiveTurn();
     }
 
     /// <summary>
@@ -174,23 +186,20 @@ public class GridManager : MonoBehaviour, IGridService
     {
         // _units est déjà initialisé dans Awake() et partagé avec GridRepository
 
-        // 1. Instancie le champion sélectionné (si disponible)
-        if (ChampionSelectManager.SelectedChampion != null)
+        // 1. Instancie les champions de l'équipe sur les cases de départ, dans l'ordre des joueurs
+        // (= ordre des tours dans _units)
+        int playerCount = Mathf.Min(CombatParty.Count, _startCells.Length);
+        var champions = new List<Champion>();
+        for (int i = 0; i < playerCount; i++)
         {
+            CombatParty.Member member = CombatParty.Members[i];
             // Utiliser le deck personnalisé s'il existe, sinon le startingDeck
-            var deckToUse = ChampionSelectManager.SelectedDeck != null && ChampionSelectManager.SelectedDeck.Count > 0
-                ? ChampionSelectManager.SelectedDeck
-                : ChampionSelectManager.SelectedChampion.startingDeck;
-
-            _activeUnit = SpawnChampion(ChampionSelectManager.SelectedChampion, deckToUse, _playerSpawnGridPos);
-
-            // Coop : le second champion joue juste après le premier (ordre de _units)
-            if (ChampionSelectManager.SecondChampion != null)
-            {
-                SpawnChampion(ChampionSelectManager.SecondChampion, ChampionSelectManager.SecondChampion.startingDeck, _secondPlayerSpawnGridPos);
-            }
+            var deckToUse = member.Deck != null && member.Deck.Count > 0 ? member.Deck : member.Champion.startingDeck;
+            Champion champion = SpawnChampion(member.Champion, deckToUse, _startCells[i]);
+            if (champion != null) champions.Add(champion);
         }
-        else
+
+        if (playerCount == 0)
         {
             GameLog.LogWarning("Aucun champion sélectionné. Le jeu commencera sans unité joueur initialement.");
         }
@@ -198,6 +207,14 @@ public class GridManager : MonoBehaviour, IGridService
         // 2. Trouve toutes les autres unités (ennemis) déjà présentes dans la scène
         // et les ajoute à la liste, en s'assurant de les initialiser si elles ne l'ont pas été.
         Unit[] existingUnitsInScene = FindObjectsByType<Unit>(FindObjectsSortMode.None);
+        // Ordre fixe (par position dans la scène) : c'est l'ordre des tours des monstres, qui doit
+        // être le même sur tous les PC en réseau
+        System.Array.Sort(existingUnitsInScene, (a, b) =>
+        {
+            Vector3 pa = a.transform.position, pb = b.transform.position;
+            int byX = pa.x.CompareTo(pb.x);
+            return byX != 0 ? byX : pa.z.CompareTo(pb.z);
+        });
         foreach (Unit unit in existingUnitsInScene)
         {
             if (!_units.Contains(unit)) // Évite d'ajouter le joueur si déjà instancié
@@ -213,6 +230,9 @@ public class GridManager : MonoBehaviour, IGridService
                         enemy.InitializeEnemy(enemy.GetEnemyData(), GetGridPosFromWorldPos(enemy.transform.position));
                         GameLog.Log($"Ennemi initialisé: {enemy.name}");
                     }
+
+                    // PV et dégâts selon le nombre de joueurs (1 en solo : barème inchangé)
+                    enemy.ScaleForPlayers(playerCount);
 
                     // Notifie le BattleUIManager pour connecter les UI
                     GameLog.Log($"GridManager: Tentative de connexion UI pour {enemy.name}...");
@@ -244,7 +264,22 @@ public class GridManager : MonoBehaviour, IGridService
                 _units.Add(unit);
             }
         }
-        
+
+        // 3. Placement des champions (façon Dofus) avant le premier tour ; le boss garde sa case.
+        // Pas d'unité active pendant le placement : InputManager ne réagit pas.
+        if (_placementPhase != null && champions.Count > 0)
+            _placementPhase.Begin(champions, _startCells, () => StartBattle(champions[0]));
+        else
+            StartBattle(champions.Count > 0 ? champions[0] : null);
+    }
+
+    /// <summary>
+    /// Démarre le premier tour (après la phase de placement s'il y en a une).
+    /// </summary>
+    private void StartBattle(Unit firstUnit)
+    {
+        _activeUnit = firstUnit;
+
         if (_units.Count > 0)
         {
             // Si aucun champion n'a été sélectionné ET qu'il n'y a pas d'unité active, prend la première unité trouvée comme active
@@ -303,7 +338,7 @@ public class GridManager : MonoBehaviour, IGridService
         GameObject playerUnitGO = Instantiate(data.prefab);
 
         // On récupère le composant Champion pour appeler son initialisation.
-        // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (SorenUnit, AlpinisteUnit, AceUnit)
+        // NOTE: Le prefab du champion doit avoir un script dérivé de Champion (EvanUnit, CruxUnit, RazeUnit)
         Champion champion = playerUnitGO.GetRequiredComponent<Champion>("Champion sélectionné");
         if (champion == null) return null;
 
@@ -316,6 +351,9 @@ public class GridManager : MonoBehaviour, IGridService
         {
             if (deck != null && deck.Count > 0)
             {
+                // Réseau : mélange commun à tous les PC (graine de l'hôte, une par joueur)
+                if (CombatParty.Seed != 0)
+                    playerDeckManager.SetShuffleSeed(CombatParty.Seed + 7919 * CombatParty.IndexOf(data));
                 playerDeckManager.InitializeDeck(deck);
                 GameLog.Log($"Deck de {champion.name} initialisé avec {deck.Count} cartes.");
             }
@@ -355,10 +393,18 @@ public class GridManager : MonoBehaviour, IGridService
 
         // Pioche une carte si l'unité a un DeckManager (unités joueur uniquement)
         // OPTIMISATION Phase 3.3: ComponentLocator (optionnel car les ennemis n'ont pas de DeckManager)
+        // Pas de pioche au premier tour de chaque champion : sa main de départ (5) suffit
+        bool firstTurn = _unitsWhoPlayed.Add(_activeUnit);
         if (_activeUnit.TryGetComponentSafe(out DeckManager deckManager))
         {
-            deckManager.DrawCard();
-            GameLog.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
+            // Coûts modifiés (ex: Triche) non joués : retour au coût normal
+            deckManager.ClearAllCostOverrides();
+
+            if (!firstTurn)
+            {
+                deckManager.DrawCard();
+                GameLog.Log($"{_activeUnit.name} : Pioche une carte au début du tour");
+            }
         }
     }
 
@@ -450,8 +496,44 @@ public class GridManager : MonoBehaviour, IGridService
         HandleTurnStart(_activeUnit);
     }
     
+    /// <summary>
+    /// Arrête le combat : plus aucun tour ne démarre, l'écran de fin (BattleEndUI) s'affiche.
+    /// </summary>
+    private void EndBattle(BattleResult result)
+    {
+        if (_turnStateMachine.IsBattleOver()) return;
+
+        GameLog.Log($"=== Fin du combat : {(result == BattleResult.Victory ? "VICTOIRE" : "DÉFAITE")} ===");
+        _turnStateMachine.EndBattle();
+        ResetAllTileColors();
+        EventBus.Publish(new BattleEndedEvent(result));
+    }
+
+    /// <summary>
+    /// Bouton « Fin de tour » : action du joueur, qui passe par les commandes (voir CombatCommandExecutor)
+    /// </summary>
     public void OnEndTurnButtonClick()
     {
+        int actor = _commands != null ? _commands.ActiveActor : -1;
+        if (actor >= 0 && _activeUnit != null) _commands.Submit(CombatCommand.EndTurn(actor));
+    }
+
+    /// <summary>
+    /// Termine le tour de l'unité active : commande Fin de tour, fin du tour d'un monstre, mort de l'unité active
+    /// </summary>
+    public void EndActiveTurn()
+    {
+        // Phase de placement : pas encore d'unité active, rien à terminer ; combat fini : plus de tour
+        if (_activeUnit == null || _turnStateMachine.IsBattleOver()) return;
+
+        // Main au-delà du maximum : le joueur défausse d'abord l'excédent (au choix), puis le tour
+        // se termine (l'UI de la main redemande la fin de tour). Pas pour une unité morte.
+        if (_units.Contains(_activeUnit) && _activeUnit.TryGetComponentSafe(out DeckManager hand) && hand.ExcessCards > 0)
+        {
+            EventBus.Publish(new HandDiscardRequiredEvent(_activeUnit, hand.ExcessCards));
+            return;
+        }
+
         GameLog.Log("=== Fin de tour ===");
         ResetAllTileColors();
         NextTurn();
@@ -476,9 +558,11 @@ public class GridManager : MonoBehaviour, IGridService
 
         if (unit.GetFaction() == Unit.UnitFaction.Player)
         {
-            _inputManager.enabled = true;
-            if (_endTurnButton != null) _endTurnButton.interactable = true;
-            GameLog.Log($"Tour du joueur : {unit.name}");
+            // Réseau : seul le PC du joueur dont c'est le tour peut agir ; les autres regardent
+            bool local = _commands != null && _commands.IsLocalTurn;
+            _inputManager.enabled = local;
+            if (_endTurnButton != null) _endTurnButton.interactable = local;
+            GameLog.Log($"Tour du joueur : {unit.name}{(local ? "" : " (autre PC)")}");
         }
         else // Ennemi
         {
@@ -492,7 +576,7 @@ public class GridManager : MonoBehaviour, IGridService
             else
             {
                 Debug.LogError($"{unit.name} n'a pas de composant EnemyAI !");
-                OnEndTurnButtonClick();
+                EndActiveTurn();
             }
         }
     }
@@ -513,11 +597,19 @@ public class GridManager : MonoBehaviour, IGridService
         diedUnit.OnUnitDied -= HandleUnitDied;
         
         _units.Remove(diedUnit);
-        
+
+        // Fin du combat : plus d'ennemi (victoire) ou plus de champion (défaite)
+        BattleResult result = BattleOutcome.Evaluate(_units);
+        if (result != BattleResult.Ongoing)
+        {
+            EndBattle(result);
+            return;
+        }
+
         if (_activeUnit == diedUnit)
         {
             GameLog.Log("L'unité active est morte. Passage au tour suivant.");
-            OnEndTurnButtonClick();
+            EndActiveTurn();
         }
         else
         {
@@ -687,6 +779,9 @@ public class GridManager : MonoBehaviour, IGridService
 
         ResetAllTileColors();
 
+        // Carte qui cible une carte de la main (ex: Triche) : aucune case à montrer
+        if (card.targetsHandCard) return;
+
         // Carte de déplacement d'invocation (ex: Écho évanescent), ciblage en 2 étapes :
         // source = lanceur -> étape 1, on montre ses invocations ; source = l'invocation choisie
         // -> étape 2, on montre les cases d'arrivée autour d'elle.
@@ -702,20 +797,38 @@ public class GridManager : MonoBehaviour, IGridService
         Vector2Int sourcePos = source.GetCurrentGridPos();
         int range = card.targetRange;
 
+        // Carte d'invocation alors que l'invocation est déjà là : seule sa case est ciblable (soin)
+        if (GameActionValidator.HealsActiveSummon(card, source))
+        {
+            Tile summonTile = GetTileAtPosition(((ISummonOwner)source).ActiveSummon.GetCurrentGridPos());
+            if (summonTile != null) summonTile.SetColor(_cardTargetColor);
+            return;
+        }
+
         // Pour les cartes de charge, affiche uniquement les cases en ligne droite
         if (card.isChargeCard)
         {
-            ShowChargeTargets(sourcePos, range, source);
+            ShowChargeTargets(card, sourcePos, range, source);
             return;
         }
 
         // Obtient toutes les tuiles dans la portée de la carte
         List<Tile> tilesInRange = GetAttackTiles(sourcePos, range, source);
 
-        // Colorie TOUTES les tuiles dans la portée en jaune
+        // Colorie TOUTES les tuiles dans la portée en jaune (seulement les lignes droites si la carte l'exige)
         foreach (Tile tile in tilesInRange)
         {
+            if (card.targetInStraightLine && !GridGeometry.TryGetLine(sourcePos, GetGridPosFromWorldPos(tile.transform.position), out _, out _))
+                continue;
             tile.SetColor(_cardTargetColor);
+        }
+
+        // Sa propre case n'est pas dans la portée (retirée par GetAttackTiles), mais une carte
+        // « allié ou soi-même » (ex: Souffle apaisant) peut viser le lanceur
+        if (range > 0 && card.targetsUnit && card.IsValidTarget(source, source))
+        {
+            Tile ownTile = GetTileAtPosition(sourcePos);
+            if (ownTile != null) ownTile.SetColor(_cardTargetColor);
         }
 
         GameLog.Log($"Portée affichée pour {card.cardName} (portée: {range})");
@@ -749,7 +862,7 @@ public class GridManager : MonoBehaviour, IGridService
     /// Affiche les cases vides ET les cases avec ennemis comme cibles valides (jaune)
     /// L'ennemi sera surligné en rouge uniquement au hover (géré par InputManager)
     /// </summary>
-    private void ShowChargeTargets(Vector2Int sourcePos, int range, Unit source)
+    private void ShowChargeTargets(CardData card, Vector2Int sourcePos, int range, Unit source)
     {
         // 4 directions : haut, bas, gauche, droite
         foreach (Vector2Int dir in GridGeometry.Directions4)
@@ -765,18 +878,18 @@ public class GridManager : MonoBehaviour, IGridService
                 if (unitOnTile != null)
                 {
                     // Il y a une unité
-                    if (unitOnTile.GetFaction() != source.GetFaction())
+                    if (card.targetsUnit ? card.IsValidTarget(source, unitOnTile) : unitOnTile.GetFaction() != source.GetFaction())
                     {
-                        // C'est un ennemi : cible valide (jaune comme les autres cases)
-                        // La tuile rouge n'apparaîtra qu'au hover
+                        // Cible valide (ennemi, ou allié si la carte cible une unité) : jaune comme
+                        // les autres cases, la tuile rouge n'apparaîtra qu'au hover
                         tile.SetColor(_cardTargetColor);
                     }
                     // On s'arrête ici (on ne peut pas cibler au-delà d'une unité)
                     break;
                 }
 
-                // Case vide valide, on la colorie en jaune
-                tile.SetColor(_cardTargetColor);
+                // Case vide valide, on la colorie en jaune (pas pour une charge qui cible une unité)
+                if (!card.targetsUnit) tile.SetColor(_cardTargetColor);
             }
         }
 
@@ -784,18 +897,19 @@ public class GridManager : MonoBehaviour, IGridService
     }
 
     /// <summary>
-    /// Affiche la zone AOE autour d'une position donnée
+    /// Affiche la zone AOE de la carte (ligne, cercle, cône…) pour un épicentre donné
     /// </summary>
     public void ShowAOEZone(Vector2Int epicenter, int radius, CardData card, Unit source)
     {
         if (radius <= 0) return;
 
-        // Obtient toutes les tuiles dans le rayon AOE
-        List<Tile> aoeArea = GetAttackTiles(epicenter, radius, null);
-
-        foreach (Tile tile in aoeArea)
+        // Même forme que celle utilisée pour appliquer l'effet (CardData.IsInAOEShape)
+        foreach (var entry in _tiles)
         {
-            Vector2Int tilePos = GetGridPosFromWorldPos(tile.transform.position);
+            Vector2Int tilePos = entry.Key;
+            if (!card.IsInAOEShape(source, epicenter, tilePos)) continue;
+
+            Tile tile = entry.Value;
             Unit unitOnTile = GetUnitAtGridPos(tilePos);
 
             // Colore différemment selon si une unité sera affectée

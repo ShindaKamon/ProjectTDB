@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72090345da0f07743a892b94685da9ac, type: 3}
+  m_Name: Crux
+  m_EditorClassIdentifier: ProjectTDB::ChampionData
+  championName: Crux
+  title: Le Grimpeur
+  description: "Lors d'une ascension film\xE9e et sponsoris\xE9e, un mousqueton a
+    c\xE9d\xE9 : toute son \xE9quipe est rest\xE9e suspendue deux jours avant les
+    secours. Personne n'est mort, mais l'humiliation publique et la perte de confiance
+    en son jugement l'ont bris\xE9. Depuis, il s\xE9curise tout deux fois et ne supporte
+    plus de laisser quelqu'un hors de sa port\xE9e."
+  passiveName: "R\xE9flexe du grimpeur"
+  passiveDescription: "Contact (grappin, bond, tirage) :\nAlli\xE9 : bouclier 15\nEnnemi
+    : +15 % prochaine attaque"
+  portrait: {fileID: 0}
+  fullBodyArt: {fileID: 21300000, guid: 4944a782646e6554a86f82b6cabe54b2, type: 3}
+  prefab: {fileID: 8911284436020867190, guid: ece5be0747ba1a348841f328d1f0f102, type: 3}
+  emotionType: 0
+  maxHealth: 100
+  movementRange: 5
+  maxActionPoints: 4
+  attackDamage: 0
+  armor: 0
+  magicResistance: 0
+  startingDeck:
+  - {fileID: 11400000, guid: fe8b0db1170891a40bea02d940b1b388, type: 2}
+  - {fileID: 11400000, guid: fe8b0db1170891a40bea02d940b1b388, type: 2}
+  - {fileID: 11400000, guid: 94d2ea7b35d06274c8a862193e0b629d, type: 2}
+  - {fileID: 11400000, guid: 94d2ea7b35d06274c8a862193e0b629d, type: 2}
+  - {fileID: 11400000, guid: 00812ce6755a37043b02d06d8764a6ed, type: 2}
+  - {fileID: 11400000, guid: 00812ce6755a37043b02d06d8764a6ed, type: 2}
+  - {fileID: 11400000, guid: 00812ce6755a37043b02d06d8764a6ed, type: 2}
+  - {fileID: 11400000, guid: 5665e9041dbf1c34bab9e65a95492d9b, type: 2}
+  - {fileID: 11400000, guid: 5665e9041dbf1c34bab9e65a95492d9b, type: 2}
+  - {fileID: 11400000, guid: 5665e9041dbf1c34bab9e65a95492d9b, type: 2}
+  - {fileID: 11400000, guid: 07510badea6a55641831c0eed57eadff, type: 2}
+  - {fileID: 11400000, guid: 07510badea6a55641831c0eed57eadff, type: 2}
+  - {fileID: 11400000, guid: 07510badea6a55641831c0eed57eadff, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
+  - {fileID: 11400000, guid: 50188b1ac6da08d43b3a00f9788c9325, type: 2}
+  - {fileID: 11400000, guid: 50188b1ac6da08d43b3a00f9788c9325, type: 2}
+  - {fileID: 11400000, guid: 3fb026bf49ad1ee4fa693373ecbd8f08, type: 2}
+  - {fileID: 11400000, guid: 3fb026bf49ad1ee4fa693373ecbd8f08, type: 2}

@@ -372,6 +372,25 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void CanTargetUnit_StraightLineCard_OnlyAlignedTargets()
+        {
+            // Ex. Éclat de rage : cible en croix depuis le lanceur, jamais en diagonale
+            var card = NewCard();
+            card.targetType = CardTargetType.Enemy;
+            card.targetRange = 5;
+            card.targetInStraightLine = true;
+            var source = NewUnit<Unit>(new Vector2Int(2, 2));
+
+            Assert.IsTrue(GameActionValidator.CanTargetUnit(card, source, NewUnit<Enemy>(new Vector2Int(2, 5))).IsValid);
+            Assert.IsTrue(GameActionValidator.CanTargetUnit(card, source, NewUnit<Enemy>(new Vector2Int(0, 2))).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetUnit(card, source, NewUnit<Enemy>(new Vector2Int(3, 3))).IsValid, "diagonale");
+
+            card.targetType = CardTargetType.AnyTile;
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, source, new Vector2Int(5, 2)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(4, 3)).IsValid, "case hors ligne");
+        }
+
+        [Test]
         public void CanTargetUnit_AllyType_TargetingSelf_Fails()
         {
             var card = NewCard();
@@ -433,6 +452,21 @@ namespace ProjectTDB.Tests
             var result = GameActionValidator.CanTargetTile(card, source, new Vector2Int(9, 9));
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        }
+
+        [Test]
+        public void CanTargetTile_ChargeOnUnit_RequiresStraightLineAndRange()
+        {
+            // Grappin : charge qui cible une unité, pas une case
+            var card = NewCard();
+            card.isChargeCard = true;
+            card.targetType = CardTargetType.AllyorEnemy;
+            card.targetRange = 5;
+            var source = NewUnit<Unit>(gridPos: Vector2Int.zero);
+
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, source, new Vector2Int(0, 3)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(2, 3)).IsValid, "hors ligne");
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, source, new Vector2Int(0, 6)).IsValid, "hors portée");
         }
 
         [Test]
@@ -840,21 +874,40 @@ namespace ProjectTDB.Tests
             return card;
         }
 
-        private (SorenUnit soren, SummonUnit summon) NewSorenWithSummon(Vector2Int summonPos)
+        private (EvanUnit evan, SummonUnit summon) NewEvanWithSummon(Vector2Int summonPos)
         {
-            var soren = NewUnit<SorenUnit>(new Vector2Int(0, 0));
+            var evan = NewUnit<EvanUnit>(new Vector2Int(0, 0));
             var summon = NewUnit<SummonUnit>(summonPos);
-            summon.SetOwner(soren);
-            SetField(soren, "_activeSummon", summon);
-            return (soren, summon);
+            summon.SetOwner(evan);
+            SetField(evan, "_activeSummon", summon);
+            return (evan, summon);
+        }
+
+        [Test]
+        public void SummonCard_WithSummonAlreadyThere_TargetsOnlyTheSummon()
+        {
+            // Invocation de Lyse, Lyse déjà sur le terrain : on la cible elle (même hors portée) pour la soigner
+            var card = NewCard("Invocation de Lyse");
+            card.targetType = CardTargetType.EmptyTile;
+            card.targetRange = 3;
+            card.isSummonCard = true;
+            var (evan, summon) = NewEvanWithSummon(new Vector2Int(6, 6));
+
+            Assert.IsTrue(GameActionValidator.HealsActiveSummon(card, evan));
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, evan, new Vector2Int(6, 6)).IsValid);
+            Assert.IsFalse(GameActionValidator.CanTargetTile(card, evan, new Vector2Int(1, 0)).IsValid, "case vide à portée");
+
+            SetField(evan, "_activeSummon", null);
+            Assert.IsFalse(GameActionValidator.HealsActiveSummon(card, evan));
+            Assert.IsTrue(GameActionValidator.CanTargetTile(card, evan, new Vector2Int(1, 0)).IsValid, "sans Lyse : ciblage normal");
         }
 
         [Test]
         public void CanPlayCard_RepositionWithoutSummon_Fails()
         {
-            var soren = NewUnit<SorenUnit>();
+            var evan = NewUnit<EvanUnit>();
 
-            var result = GameActionValidator.CanPlayCard(soren, NewRepositionCard());
+            var result = GameActionValidator.CanPlayCard(evan, NewRepositionCard());
 
             Assert.IsFalse(result.IsValid);
             StringAssert.Contains("Aucune invocation", result.ErrorMessage);
@@ -863,9 +916,9 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanPlayCard_RepositionWithSummon_Succeeds()
         {
-            var (soren, _) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var (evan, _) = NewEvanWithSummon(new Vector2Int(2, 2));
 
-            var result = GameActionValidator.CanPlayCard(soren, NewRepositionCard());
+            var result = GameActionValidator.CanPlayCard(evan, NewRepositionCard());
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }
@@ -873,26 +926,26 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanSelectSummonToMove_OwnSummon_Succeeds()
         {
-            var (soren, summon) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var (evan, summon) = NewEvanWithSummon(new Vector2Int(2, 2));
 
-            Assert.IsTrue(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, summon).IsValid);
+            Assert.IsTrue(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), evan, summon).IsValid);
         }
 
         [Test]
         public void CanSelectSummonToMove_NotASummon_Fails()
         {
-            var (soren, _) = NewSorenWithSummon(new Vector2Int(2, 2));
+            var (evan, _) = NewEvanWithSummon(new Vector2Int(2, 2));
             var enemy = NewUnit<Enemy>(new Vector2Int(3, 3));
 
-            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, enemy).IsValid);
-            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), soren, soren).IsValid);
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), evan, enemy).IsValid);
+            Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), evan, evan).IsValid);
         }
 
         [Test]
         public void CanSelectSummonToMove_SomeoneElsesSummon_Fails()
         {
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(2, 2));
-            var otherCaster = NewUnit<SorenUnit>(new Vector2Int(5, 5));
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(2, 2));
+            var otherCaster = NewUnit<EvanUnit>(new Vector2Int(5, 5));
 
             Assert.IsFalse(GameActionValidator.CanSelectSummonToMove(NewRepositionCard(), otherCaster, summon).IsValid);
         }
@@ -900,8 +953,8 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanMoveSummonTo_RangeMeasuredFromSummon_NotFromCaster()
         {
-            // Soren en (0,0), invocation en (6,6) : (6,9) est à 3 cases de l'invocation, 15 de Soren
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(6, 6));
+            // Evan en (0,0), invocation en (6,6) : (6,9) est à 3 cases de l'invocation, 15 d'Evan
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(6, 6));
 
             Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(3), summon, new Vector2Int(6, 9), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(3), summon, new Vector2Int(1, 0), true).IsValid);
@@ -910,7 +963,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanMoveSummonTo_DiagonalCountsAsTwo()
         {
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(5, 5));
 
             Assert.IsTrue(GameActionValidator.CanMoveSummonTo(NewRepositionCard(2), summon, new Vector2Int(6, 6), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(1), summon, new Vector2Int(6, 6), true).IsValid);
@@ -919,7 +972,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanMoveSummonTo_SameTileOrOccupied_Fails()
         {
-            var (_, summon) = NewSorenWithSummon(new Vector2Int(5, 5));
+            var (_, summon) = NewEvanWithSummon(new Vector2Int(5, 5));
 
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 5), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 6), false).IsValid);

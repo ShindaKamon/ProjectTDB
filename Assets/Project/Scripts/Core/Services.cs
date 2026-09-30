@@ -59,6 +59,14 @@ public static class Services
         return ServiceLocator.Instance.IsRegistered<IBattleUIService>();
     }
 
+    // ========== COMMANDES DE COMBAT ==========
+
+    /// <summary>
+    /// Actions des joueurs en combat (voir CombatCommandExecutor) ; null hors combat
+    /// </summary>
+    public static ICombatCommandService Commands =>
+        ServiceLocator.Instance.IsRegistered<ICombatCommandService>() ? ServiceLocator.Instance.Get<ICombatCommandService>() : null;
+
     // ========== HEALTH BAR SERVICE ==========
 
     /// <summary>

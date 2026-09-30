@@ -297,7 +297,7 @@ public class ResourceDisplay : MonoBehaviour
 
 ### Bouton « Fin de Tour »
 
-**Position :** Bas droite, à côté des ressources
+**Position :** Bas droite, au-dessus de la pioche ; bouton rond « Fin de tour » (30/09/2026)
 
 **États :**
 - **Normal :** Gris/Blanc, cliquable

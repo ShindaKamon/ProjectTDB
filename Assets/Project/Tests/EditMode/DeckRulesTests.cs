@@ -58,13 +58,22 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void CanAdd_OnlyOneCopyOfASignature()
+        public void CanAdd_TwoCopiesOfASignature()
         {
             var champion = NewChampion();
             var signature = NewCard("Tapis", CardCategory.Signature, champion);
 
             Assert.IsTrue(DeckRules.CanAddCard(new List<CardData>(), signature, champion).IsValid);
-            Assert.IsFalse(DeckRules.CanAddCard(Copies(signature, 1), signature, champion).IsValid);
+            Assert.IsTrue(DeckRules.CanAddCard(Copies(signature, 1), signature, champion).IsValid);
+            Assert.IsFalse(DeckRules.CanAddCard(Copies(signature, 2), signature, champion).IsValid);
+        }
+
+        [Test]
+        public void IsComplete_OnlyFromTotalSlots()
+        {
+            Assert.IsFalse(DeckRules.IsComplete(DeckData.TOTAL_SLOTS - 1));
+            Assert.IsTrue(DeckRules.IsComplete(DeckData.TOTAL_SLOTS));
+            Assert.AreEqual(20, DeckData.TOTAL_SLOTS);
         }
 
         [Test]
@@ -130,8 +139,9 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void EnforceColors_RemovesOffColorCardsOnly()
+        public void CountOffColor_IgnoresSignatures()
         {
+            // Deck passé de Peur à Colère : la carte Peur est hors couleurs, la Signature jamais
             var champion = NewChampion();
             var deck = new List<CardData>
             {
@@ -140,10 +150,24 @@ namespace ProjectTDB.Tests
                 NewCard("Sig", CardCategory.Signature, champion, EmotionType.None),
             };
 
-            int removed = DeckRules.EnforceColors(deck, new List<EmotionType> { EmotionType.Anger });
+            Assert.AreEqual(1, DeckRules.CountOffColor(deck, new List<EmotionType> { EmotionType.Anger }));
+            Assert.AreEqual(0, DeckRules.CountOffColor(deck, new List<EmotionType> { EmotionType.Anger, EmotionType.Fear }));
+        }
 
-            Assert.AreEqual(1, removed);
-            CollectionAssert.AreEquivalent(new[] { "Rouge", "Sig" }, deck.ConvertAll(c => c.cardName));
+        [Test]
+        public void IsPlayable_CompleteAndNoOffColorCard()
+        {
+            var anger = new List<EmotionType> { EmotionType.Anger };
+            var deck = new List<CardData>();
+            for (int i = 0; i < DeckData.TOTAL_SLOTS; i++) deck.Add(NewCard("Rouge" + i, emotion: EmotionType.Anger));
+
+            Assert.IsTrue(DeckRules.IsPlayable(deck, anger));
+
+            deck[0] = NewCard("Vert", emotion: EmotionType.Fear);
+            Assert.IsFalse(DeckRules.IsPlayable(deck, anger), "une carte hors couleurs bloque le deck");
+
+            deck.RemoveAt(0);
+            Assert.IsFalse(DeckRules.IsPlayable(deck, anger), "incomplet");
         }
 
         [Test]
@@ -153,13 +177,13 @@ namespace ProjectTDB.Tests
             var roar = NewCard("Rugissement destructeur");
             var signature = NewCard("Tapis", CardCategory.Signature, champion);
             var deck = Copies(roar, 9);
-            deck.AddRange(Copies(signature, 2));
+            deck.AddRange(Copies(signature, 3));
 
             int removed = DeckRules.EnforceCopyLimits(deck);
 
             Assert.AreEqual(6, removed); // 5 Rugissement + 1 Signature en trop
             Assert.AreEqual(4, deck.FindAll(c => c == roar).Count);
-            Assert.AreEqual(1, deck.FindAll(c => c == signature).Count);
+            Assert.AreEqual(2, deck.FindAll(c => c == signature).Count);
         }
 
         [Test]
@@ -172,11 +196,24 @@ namespace ProjectTDB.Tests
             var theirs = NewCard("Piolet", CardCategory.Signature, other);
             var standard = NewCard("Coup de colère");
 
-            var missing = DeckRules.MissingSignatures(new List<CardData> { sig1, standard }, me,
+            var missing = DeckRules.MissingSignatures(new List<CardData> { sig1, sig1, standard }, me,
                 new[] { sig1, sig2, theirs, standard });
 
-            Assert.AreEqual(1, missing.Count);
+            Assert.AreEqual(2, missing.Count); // 2 exemplaires de Tapis
             Assert.AreSame(sig2, missing[0]);
+            Assert.AreSame(sig2, missing[1]);
+        }
+
+        [Test]
+        public void MissingSignatures_CompletesSecondCopy()
+        {
+            var me = NewChampion();
+            var sig = NewCard("Triche", CardCategory.Signature, me);
+
+            var missing = DeckRules.MissingSignatures(new List<CardData> { sig }, me, new[] { sig });
+
+            Assert.AreEqual(1, missing.Count);
+            Assert.AreSame(sig, missing[0]);
         }
 
         [Test]

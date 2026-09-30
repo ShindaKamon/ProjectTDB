@@ -19,6 +19,7 @@ public class Unit : MonoBehaviour
     // Variables pour le déplacement fluide.
     private Vector3 _targetWorldPosition; // La position mondiale cible de l'unité.
     private bool _isMoving = false; // Indique si l'unité est en cours de déplacement.
+    private bool _keepFacing = false; // Déplacement subi (poussée, tirage, recul) : l'unité ne se retourne pas
     private List<Tile> _path; // Le chemin que l'unité doit suivre.
 
     // Événement déclenché à chaque fois que l'unité termine une étape de son mouvement.
@@ -54,6 +55,7 @@ public class Unit : MonoBehaviour
 
     // Liste des buffs actifs sur l'unité
     protected List<StatBuff> _activeBuffs = new List<StatBuff>();
+    public IReadOnlyList<StatBuff> ActiveBuffs => _activeBuffs; // lecture seule, pour l'affichage des statuts
 
     // Nouvelles propriétés pour les statistiques de l'unité.
     protected int _maxHealth;
@@ -222,6 +224,7 @@ public class Unit : MonoBehaviour
 
         _path = path; // Stocke le chemin.
         _isMoving = true; // Active le mouvement.
+        _keepFacing = forceMove;
         _targetWorldPosition = _path[0].gameObject.transform.position + new Vector3(0, 0.5f, 0); // La première tuile du chemin est la première cible.
         GameLog.Log($"Déplacement de {name} le long d'un chemin de {path.Count} tuiles.");
     }
@@ -239,7 +242,7 @@ public class Unit : MonoBehaviour
             // Applique la rotation seulement si on a une direction horizontale significative.
             // Snap immédiat sur la direction cardinale dominante (Nord/Sud/Est/Ouest) : pas de Slerp, donc pas
             // de passage transitoire par un angle en diagonale pendant les virages.
-            if (direction.sqrMagnitude > 0.001f)
+            if (!_keepFacing && direction.sqrMagnitude > 0.001f)
             {
                 Vector2Int snapped = GridGeometry.SnapDirection(new Vector2(direction.x, direction.z));
                 transform.rotation = Quaternion.LookRotation(new Vector3(snapped.x, 0, snapped.y));
@@ -304,12 +307,15 @@ public class Unit : MonoBehaviour
         transform.rotation = targetRotation; // Snap final pour la précision
     }
 
+    /// <summary>Nom affiché en jeu (infobulle, récapitulatif) : surchargé par les champions, monstres et invocations.</summary>
+    public virtual string DisplayName => name;
+
     // Origine des dégâts en cours d'application (voir TakeDamageFrom), relayée dans UnitDamagedEvent
     private Unit _incomingDamageSource;
 
     /// <summary>
-    /// Inflige des dégâts en précisant leur origine (ex: écho de Lyse), pour que les retours
-    /// visuels puissent les distinguer. Passe par TakeDamage, surcharges comprises (boucliers).
+    /// Inflige des dégâts en précisant leur origine (ex: écho de Lyse, carte d'un champion), pour
+    /// les retours visuels et le récapitulatif du combat. Passe par TakeDamage, surcharges comprises (boucliers).
     /// </summary>
     public void TakeDamageFrom(int damage, Unit source)
     {
@@ -321,6 +327,37 @@ public class Unit : MonoBehaviour
         finally
         {
             _incomingDamageSource = null;
+        }
+    }
+
+    /// <summary>Comme TakeRawDamage, en précisant l'origine des dégâts (voir TakeDamageFrom).</summary>
+    public void TakeRawDamageFrom(int damage, Unit source)
+    {
+        _incomingDamageSource = source;
+        try
+        {
+            TakeRawDamage(damage);
+        }
+        finally
+        {
+            _incomingDamageSource = null;
+        }
+    }
+
+    // Origine du soin en cours (voir HealFrom), relayée dans UnitHealedEvent ; null = l'unité soignée elle-même
+    private Unit _incomingHealSource;
+
+    /// <summary>Soigne en précisant qui soigne (récapitulatif du combat).</summary>
+    public void HealFrom(int amount, Unit source)
+    {
+        _incomingHealSource = source;
+        try
+        {
+            Heal(amount);
+        }
+        finally
+        {
+            _incomingHealSource = null;
         }
     }
 
@@ -336,13 +373,15 @@ public class Unit : MonoBehaviour
 
         TriggerReactiveShield();
         int damageToSelf = AbsorbWithShield(damage);
+        int healthBefore = _health;
         _health = Mathf.Clamp(_health - damageToSelf, 0, _maxHealth);
         GameLog.Log($"{name} a pris {damageToSelf} dégâts (Total initial: {damage}). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        // Source connue seulement via TakeDamageFrom (null sinon)
-        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
+        // Source connue seulement via TakeDamageFrom (null sinon) ; effectif = bouclier absorbé + PV perdus
+        int effective = (damage - damageToSelf) + (healthBefore - _health);
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage, effective));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -369,12 +408,13 @@ public class Unit : MonoBehaviour
             return;
         }
 
+        int healthBefore = _health;
         _health = Mathf.Clamp(_health - damage, 0, _maxHealth);
         GameLog.Log($"{name} a pris {damage} dégâts bruts (ignore bouclier et réductions en %). PV restants : {_health}/{_maxHealth}");
         OnHealthChanged?.Invoke(_health, _maxHealth);
 
         // Phase 4.1: Publie l'événement de dégâts pour le système de combat visuals
-        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage));
+        EventBus.Publish(new UnitDamagedEvent(this, _incomingDamageSource, damage, healthBefore - _health));
 
         // Met à jour la barre de vie
         if (healthBar != null)
@@ -458,6 +498,9 @@ public class Unit : MonoBehaviour
         return Mathf.Max(1, damage - defense);
     }
 
+    /// <summary>Prévient l'affichage qu'une stat dérivée d'un passif a changé.</summary>
+    protected void NotifyStatsModified() => OnStatsModified?.Invoke();
+
     // ========== BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ==========
 
     // Dégâts ajoutés à la prochaine carte qui inflige des dégâts, puis consommés ; cumulable,
@@ -473,6 +516,7 @@ public class Unit : MonoBehaviour
         _nextAttackBonus += amount;
         GameLog.Log($"{name}: +{amount} dégâts sur sa prochaine carte offensive (total {_nextAttackBonus})");
         OnStatsModified?.Invoke();
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.NextAttackBonus, amount));
     }
 
     /// <summary>
@@ -492,9 +536,8 @@ public class Unit : MonoBehaviour
     // ========== BOUCLIER (PV temporaires) ==========
 
     // Absorbe les dégâts avant les PV (pas les dégâts bruts, ex: Paire de Raze).
-    // Dure jusqu'au début du prochain tour de celui qui l'a donné ; les boucliers se cumulent.
+    // Sans durée : reste jusqu'à être entièrement consommé ; les boucliers se cumulent.
     private int _shield;
-    private Unit _shieldSource;
 
     public event System.Action<int> OnShieldChanged;
     public int GetShield() => _shield;
@@ -504,15 +547,17 @@ public class Unit : MonoBehaviour
         if (amount <= 0) return;
 
         _shield += amount;
-        _shieldSource = source;
-        GameLog.Log($"{name} gagne un bouclier de {amount} (total {_shield}), jusqu'au prochain tour de {source?.name}");
+        GameLog.Log($"{name} gagne un bouclier de {amount} (total {_shield}) de {source?.name ?? name}, jusqu'à épuisement");
         NotifyShieldChanged();
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.Shield, amount));
     }
 
     // Bouclier réactif (ex: Réflexe de survie) : se déclenche au premier coup reçu d'un ennemi,
     // juste avant que ce coup soit appliqué ; expire au prochain tour du lanceur s'il n'a pas servi.
     private int _reactiveShield;
     private Unit _reactiveShieldSource;
+
+    public int GetReactiveShield() => _reactiveShield;
 
     public void ArmReactiveShield(int amount, Unit source)
     {
@@ -521,6 +566,7 @@ public class Unit : MonoBehaviour
         _reactiveShield = amount;
         _reactiveShieldSource = source;
         GameLog.Log($"{name}: bouclier réactif de {amount} armé (au premier coup ennemi)");
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ReactiveShield, amount));
     }
 
     // Déclenche le bouclier réactif si le coup vient d'un ennemi (tour d'une unité d'une autre
@@ -539,8 +585,9 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// Le bouclier (et le bouclier réactif non déclenché) expire au début du prochain tour
-    /// de celui qui l'a donné, ou tout de suite si celui-ci est mort.
+    /// Le bouclier réactif non déclenché expire au début du prochain tour de celui qui l'a donné,
+    /// ou tout de suite si celui-ci est mort. Le bouclier lui-même n'a pas de durée (décision du
+    /// 28/09/2026) : il reste tant qu'il n'a pas été entièrement consommé par les dégâts.
     /// </summary>
     private void ExpireShieldsOf(Unit turnUnit)
     {
@@ -550,14 +597,6 @@ public class Unit : MonoBehaviour
             _reactiveShield = 0;
             _reactiveShieldSource = null;
         }
-
-        if (_shield <= 0) return;
-        if (_shieldSource != turnUnit && !IsGone(_shieldSource)) return;
-
-        GameLog.Log($"{name}: bouclier de {_shield} expiré");
-        _shield = 0;
-        _shieldSource = null;
-        NotifyShieldChanged();
     }
 
     /// <summary>
@@ -606,7 +645,7 @@ public class Unit : MonoBehaviour
         // Phase 4.1: Publie l'événement de soins pour le système de combat visuals
         if (actualHealAmount > 0)
         {
-            EventBus.Publish(new UnitHealedEvent(this, actualHealAmount));
+            EventBus.Publish(new UnitHealedEvent(this, actualHealAmount, _incomingHealSource ?? this));
         }
 
         // Met à jour la barre de vie
@@ -683,6 +722,7 @@ public class Unit : MonoBehaviour
         _currentMovementPoints += amount;
         GameLog.Log($"{name} gagne {amount} PM ce tour. Total : {_currentMovementPoints}");
         OnMovementPointsChanged?.Invoke(_currentMovementPoints, _maxMovementPoints);
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.MovementPoints, amount));
     }
 
     // Méthode pour réinitialiser les PM au début du tour
@@ -756,6 +796,19 @@ public class Unit : MonoBehaviour
         return _currentGridPos;
     }
 
+    /// <summary>
+    /// Téléporte l'unité directement sur une nouvelle case (pas de pathfinding/animation —
+    /// utilisé par les cartes de repositionnement comme Écho évanescent et par la phase de placement).
+    /// </summary>
+    public virtual void TeleportTo(Vector2Int newPos)
+    {
+        Tile tile = Services.Grid.GetTileAtPosition(newPos);
+        if (tile == null) return;
+
+        _currentGridPos = newPos;
+        transform.position = tile.transform.position + new Vector3(0, 0.5f, 0);
+    }
+
     // Getter pour vérifier si l'unité est en mouvement.
     public bool IsMoving()
     {
@@ -794,6 +847,9 @@ public class Unit : MonoBehaviour
         }
 
         OnStatsModified?.Invoke();
+        if (atk != 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.Attack, atk));
+        if (armor != 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.Armor, armor));
+        if (magicResistance != 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.MagicResistance, magicResistance));
     }
 
     /// <summary>

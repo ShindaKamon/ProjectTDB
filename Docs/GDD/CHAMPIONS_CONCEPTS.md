@@ -54,7 +54,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 
 | Carte Signature | PA | Effet |
 |-----------------|----|-------|
-| **Piolet d'ascension** (cœur de gameplay) | 2 | Se propulse au grappin adjacent à une unité (alliée ou ennemie), portée 4-5 ; déclenche le Réflexe du grimpeur |
+| **Grappin** (ex-Piolet d'ascension, cœur de gameplay) | 2 | Se propulse au grappin adjacent à une unité (alliée ou ennemie), portée 4-5 ; déclenche le Réflexe du grimpeur |
 | **Corde de rappel** (coup de maître) | 4 | Portée 2-3, tire la cible de 2 cases vers lui. Ennemi : 35 dégâts + tiré au contact. Allié : aucun dégât, juste tiré (sauvetage) |
 
 ---

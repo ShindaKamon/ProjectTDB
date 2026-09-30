@@ -68,6 +68,9 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         layoutElement.minHeight = layoutElement.preferredHeight = _preferredHeight;
     }
 
+    // Cartes qui ne sont plus des couleurs du deck (après un changement de couleurs)
+    private int _offColorCount;
+
     /// <summary>Initialise la tuile avec le deck et ses couleurs (voir DeckRules.DeckColors).</summary>
     public void Setup(DeckData deckData, int index, IEnumerable<EmotionType> colors)
     {
@@ -75,6 +78,13 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         _deckIndex = index;
         _colors.Clear();
         if (colors != null) _colors.AddRange(colors);
+        UpdateDisplay();
+    }
+
+    /// <summary>Nombre de cartes hors des couleurs du deck (affiché en rouge : deck injouable).</summary>
+    public void SetOffColorCount(int count)
+    {
+        _offColorCount = count;
         UpdateDisplay();
     }
 
@@ -91,7 +101,20 @@ public class DeckSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         if (_cardCountText != null)
         {
             int count = _deckData.cardNames.Count;
-            _cardCountText.text = $"{count} carte{(count > 1 ? "s" : "")}";
+            string countText = $"{count} carte{(count > 1 ? "s" : "")}";
+            // Deck incomplet : non jouable, le compteur l'indique en orange (« 17/20 cartes »)
+            if (!DeckRules.IsComplete(count))
+            {
+                string warnHex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Warn));
+                countText = $"<color=#{warnHex}>{count}/{DeckData.TOTAL_SLOTS} cartes</color>";
+            }
+            // Cartes gardées après un changement de couleurs : à retirer pour jouer le deck
+            if (_offColorCount > 0)
+            {
+                string redHex = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Damage));
+                countText += $"\n<color=#{redHex}>{_offColorCount} hors couleurs</color>";
+            }
+            _cardCountText.text = countText;
         }
 
         if (_colorsText != null)

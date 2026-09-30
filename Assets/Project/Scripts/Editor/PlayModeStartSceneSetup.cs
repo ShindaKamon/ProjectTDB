@@ -4,15 +4,15 @@ using UnityEngine;
 
 /// <summary>
 /// Force le lancement du Play Mode a toujours demarrer sur la scene principale du jeu
-/// (ChampionSelectScene), quelle que soit la scene actuellement ouverte dans l'editeur
+/// (MainMenuScene), quelle que soit la scene actuellement ouverte dans l'editeur
 /// (ex: CombatScene). Activable/desactivable via Tools/Play Mode Start Scene.
 /// </summary>
 [InitializeOnLoad]
 public static class PlayModeStartSceneSetup
 {
-    private const string MainScenePath = "Assets/Project/Scenes/ChampionSelectScene.unity";
+    private const string MainScenePath = "Assets/Project/Scenes/MainMenuScene.unity";
     private const string EditorPrefKey = "ProjectTDB.ForcePlayModeStartScene";
-    private const string MenuPath = "Tools/Play Mode Start Scene/Toujours demarrer sur ChampionSelectScene";
+    private const string MenuPath = "Tools/Play Mode Start Scene/Toujours demarrer sur MainMenuScene";
 
     static PlayModeStartSceneSetup()
     {

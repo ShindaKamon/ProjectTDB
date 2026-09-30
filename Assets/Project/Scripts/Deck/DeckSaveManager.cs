@@ -278,6 +278,22 @@ public static class DeckSaveManager
     }
 
     /// <summary>
+    /// Change les couleurs d'un deck perso (1 ou 2). Ses cartes ne changent pas : celles qui ne
+    /// sont plus de ses couleurs restent, signalées, jusqu'à ce que le joueur les retire.
+    /// </summary>
+    public static void SetDeckColors(ChampionData champion, int deckIndex, EmotionType emotion1, EmotionType emotion2)
+    {
+        var championDecks = GetDecksForChampion(champion);
+
+        if (deckIndex < 0 || deckIndex >= championDecks.decks.Count || championDecks.decks[deckIndex].isDefault)
+            return;
+
+        championDecks.decks[deckIndex].Emotion1 = emotion1;
+        championDecks.decks[deckIndex].Emotion2 = emotion2;
+        SaveAllDecks();
+    }
+
+    /// <summary>
     /// Sélectionne un deck pour un champion
     /// </summary>
     public static void SelectDeck(ChampionData champion, int deckIndex)
@@ -353,6 +369,8 @@ public static class DeckSaveManager
         { "Corde de rappel forcé", "Corde de rappel" },
         { "Écho de Lyse", "Écho évanescent" },
         { "Écho evanescent", "Écho évanescent" }, // orthographe provisoire du 24/09/2026
+        { "Vision cauchemardesque", "Hantise" }, // nom trop long pour la carte (29/09/2026)
+        { "Piolet d'ascension", "Grappin" }, // 29/09/2026 : un piolet ne fait pas bondir
     };
 
     /// <summary>Nom actuel d'une carte (suit les renommages successifs).</summary>
@@ -402,9 +420,10 @@ public static class DeckSaveManager
         var cards = GetCardsFromNames(deck.cardNames, collection);
 
         // Mise en conformité avec les règles de construction (DeckRules), sauvegardée si besoin :
-        // cartes hors des couleurs du deck et exemplaires en trop retirés, Signatures ajoutées.
-        int removed = DeckRules.EnforceColors(cards, DeckRules.DeckColors(deck, cards));
-        removed += DeckRules.EnforceCopyLimits(cards);
+        // exemplaires en trop retirés, Signatures ajoutées. Les cartes hors des couleurs du deck
+        // (après un changement de couleurs) sont gardées : signalées dans l'éditeur, elles rendent
+        // le deck injouable jusqu'à ce que le joueur les retire (DeckRules.IsPlayable).
+        int removed = DeckRules.EnforceCopyLimits(cards);
         int added = 0;
         if (collection != null)
         {
@@ -417,7 +436,7 @@ public static class DeckSaveManager
         {
             deck.cardNames = cards.ConvertAll(c => c.cardName);
             SaveAllDecks();
-            GameLog.Log($"Deck « {deck.deckName} » mis en conformité : {removed} carte(s) hors couleurs ou en trop retirée(s), {added} Signature(s) ajoutée(s).");
+            GameLog.Log($"Deck « {deck.deckName} » mis en conformité : {removed} carte(s) en trop retirée(s), {added} Signature(s) ajoutée(s).");
         }
         return cards;
     }

@@ -11,6 +11,33 @@ namespace ProjectTDB.Tests
     {
         private readonly List<Object> _created = new List<Object>();
 
+        [Test]
+        public void RulesText_ComboCard_ShowsCurrentDamageInParentheses()
+        {
+            // Tapis : 40 + 8 par PA déjà dépensé ; 2 PA dépensés -> (56)
+            var card = NewCard(CardTargetType.Enemy, 1);
+            card.damageAmount = 40;
+            card.scalesWithPASpentThisTurn = true;
+            card.comboDamagePerPASpent = 8;
+
+            string Plain(string s) => System.Text.RegularExpressions.Regex.Replace(s, "<[^>]+>", "");
+            StringAssert.Contains("Inflige 40 (56)", Plain(CardRulesText.Build(card, 2)));
+            StringAssert.DoesNotContain("(", Plain(CardRulesText.Build(card)).Split('\n')[0]);
+        }
+
+        [Test]
+        public void PassiveText_NameInBold_ThenSummary_EmptyWithoutPassive()
+        {
+            var champion = ScriptableObject.CreateInstance<ChampionData>();
+            _created.Add(champion);
+            Assert.AreEqual("", CodexCardVisual.PassiveText(champion));
+
+            champion.passiveName = "Main gagnante";
+            champion.passiveDescription = "Résumé.";
+            Assert.AreEqual("<b>Passif : Main gagnante</b>\nRésumé.", CodexCardVisual.PassiveText(champion));
+            Assert.AreEqual("<b>Main gagnante</b>\nRésumé.", CodexCardVisual.PassiveText(champion, withLabel: false));
+        }
+
         private CardData NewCard(CardTargetType target, int range, CardAreaEffect area = CardAreaEffect.None, int radius = 0)
         {
             var card = ScriptableObject.CreateInstance<CardData>();
@@ -88,6 +115,26 @@ namespace ProjectTDB.Tests
             Assert.AreEqual(0, Count(cells, DiagramCell.Area));
         }
 
+        // Texte sans les balises de couleur (les valeurs des effets sont colorées, voir ColorValue)
+        private static string WithoutColors(string text) =>
+            System.Text.RegularExpressions.Regex.Replace(text, "</?color[^>]*>", "");
+
+        [Test]
+        public void RulesText_EffectValueInStatColor()
+        {
+            var card = NewCard(CardTargetType.Enemy, 1);
+            card.damageAmount = 27;
+            card.pmReduction = 1;
+            card.effectDuration = 1;
+
+            string text = CardRulesText.Build(card);
+            string red = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Damage));
+            string green = ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.MovementPoints));
+
+            StringAssert.Contains($"Inflige <color=#{red}>27</color>", text);
+            StringAssert.Contains($"Perd <color=#{green}>1</color> PM pendant 1 tour", text, "seule la valeur est colorée, pas la durée");
+        }
+
         [Test]
         public void RulesText_DamageTargetZone()
         {
@@ -97,7 +144,7 @@ namespace ProjectTDB.Tests
             card.aoeRadius = 1;
             card.affectedTarget = CardAffectedTarget.Enemies;
 
-            string text = CardRulesText.Build(card);
+            string text = WithoutColors(CardRulesText.Build(card));
 
             StringAssert.Contains("<sprite name=\"dmg\"", text);
             StringAssert.Contains("Inflige 33", text);
@@ -115,7 +162,7 @@ namespace ProjectTDB.Tests
             card.damageSelf = 5;
             card.specialText = "Règle maison.";
 
-            string text = CardRulesText.Build(card);
+            string text = WithoutColors(CardRulesText.Build(card));
 
             StringAssert.Contains("Bouclier 10", text);
             StringAssert.Contains("<sprite name=\"pull\"", text);
@@ -135,7 +182,7 @@ namespace ProjectTDB.Tests
             card.aoeRadius = 1;
             card.affectedTarget = CardAffectedTarget.Enemies;
 
-            string text = CardRulesText.Build(card);
+            string text = WithoutColors(CardRulesText.Build(card));
 
             StringAssert.Contains("Armure −7 (1 tour)", text);
             StringAssert.DoesNotContain("Cible", text);
@@ -150,7 +197,7 @@ namespace ProjectTDB.Tests
             card.damageType = DamageType.Magical;
             card.targetCount = 2;
 
-            string text = CardRulesText.Build(card);
+            string text = WithoutColors(CardRulesText.Build(card));
 
             StringAssert.Contains("<sprite name=\"magic\"", text);
             StringAssert.Contains("Inflige 16 (magique)", text);

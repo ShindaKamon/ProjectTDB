@@ -132,15 +132,16 @@ int HexDistance(Vector3Int a, Vector3Int b)
 
 ### Zones de Départ
 
-**Placement Allié :**
-- Bord gauche de la grille
-- 2-3 rangées de profondeur
-- Positions prédéfinies selon le nombre de personnages
+**Phase de placement (façon Dofus, codée le 27/09/2026, solo comme coop) :**
+- Avant le premier tour, **6 cases de départ** (en rouge) sur le bord des joueurs, opposé au boss ; plus de cases que de joueurs (3 max) pour laisser un choix tactique.
+- Chaque champion apparaît sur la case de son rang, puis **chaque joueur place son champion à tour de rôle, comme en solo** : son champion est sélectionné d'office et chaque clic sur une case rouge libre l'y déplace ; on ne peut pas déplacer le champion d'un autre joueur. Le bouton affiche « Joueur suivant », puis « Lancer le combat » pour le dernier joueur (ou en solo).
+- Pendant le placement, seules la barre du boss et sa carte prévue restent affichées (main, pioche, fin de tour et HUD masqués).
+- « Lancer le combat » termine la phase (pas de chrono en local) ; l'ordre des tours reste celui du salon (pas d'initiative).
+- Cases de départ réglées dans l'Inspector de la scène de combat (`GridManager._startCells`) ; plus tard, une liste par carte de donjon.
 
 **Placement Ennemi :**
-- Bord droit de la grille
-- Disposition variable selon le type de combat
-- Boss au centre ou au fond
+- **Boss** : position fixe, posée dans la scène.
+- **Monstres ordinaires** (pas encore de monstre ordinaire au 27/09/2026) : prévus au hasard sur des cases bleues, comme dans Dofus — à coder avec le premier monstre ordinaire.
 
 ---
 

@@ -8,7 +8,12 @@ public class ChampionData : ScriptableObject
     public string championName = "Nouveau Champion";
     public string title = "";                  // Titre/sous-titre du champion
     [TextArea(3, 8)]
-    public string description = "";            // Histoire du champion (affichée à la sélection)
+    public string description = "";            // Histoire du champion (plus affichée : la fiche montre le passif)
+    [Tooltip("Nom du passif (ex: Réflexe du grimpeur)")]
+    public string passiveName = "";
+    [TextArea(2, 4)]
+    [Tooltip("Résumé du passif, affiché sur la fiche de sélection et sous les stats en combat")]
+    public string passiveDescription = "";
     public Sprite portrait;                    // Portrait pour l'UI de selection
     [Tooltip("Illustration du champion en pied, plein cadre (1000x1600, pieds ancres a 90% de la hauteur). " +
              "Utilisee en fond plein ecran dans l'ecran de selection de champion. Distincte de 'portrait'.")]

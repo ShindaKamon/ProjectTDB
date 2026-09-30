@@ -132,7 +132,7 @@ Guide technique détaillé pour Claude Code : `CLAUDE.md` à la racine du repo.
 
 ### 5. Émotions
 
-> ⚠️ Il **n'y a pas** de `EmotionSystem` dans le code (contrairement aux anciennes versions de ce document). Les émotions existent comme **identité des cartes** (`EmotionType` sur `CardData`) ; chaque deck a 1 ou 2 couleurs (choisies à sa création) qui filtrent le pool du gestionnaire (`DeckRules.DeckColors`). La **jauge d'Éveil** (une jauge par émotion, paliers de 2 points) est **à implémenter**.
+> ⚠️ Il **n'y a pas** de `EmotionSystem` dans le code (contrairement aux anciennes versions de ce document). Les émotions existent comme **identité des cartes** (`EmotionType` sur `CardData`) ; chaque deck a 1 ou 2 couleurs (choisies à sa création) qui filtrent le pool du gestionnaire (`DeckRules.DeckColors`). La **jauge d'Éveil** (une jauge par émotion, paliers de 2 points) et la **fusion** champion × émotion (9 formes, voir `SYSTEME_EMOTIONS.md`) sont **à implémenter** ; `CardCategory.Awakening` n'est plus utilisée.
 
 ---
 
@@ -181,11 +181,11 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 |-------|-------------|----------------|
 | Ressources | `maxActionPoints` / `movementRange` par champion (Raze, Crux, Evan : 5 / 4) | Profil PA/PM avec budget total de 9 — déjà respecté, la règle n'est pas vérifiée par le code |
 | Émotion | Identité de carte (`EmotionType`), pas de jauge | Jauges d'Éveil par émotion, paliers |
-| Cartes | `CardData` avec émotion et catégorie | + génération/consommation d'Éveil |
-| Deck | 20 cartes (4 Signature + 16 Standard), 1 base + 3 perso | 24 cartes (2 / 6 / 16) |
+| Cartes | `CardData` avec émotion et catégorie | + génération d'Éveil (plus de consommation ni de cartes d'Éveil depuis le 30/09) |
+| Deck | 20 cartes (4 Signature + 16 Standard), 1 base + 3 perso | Idem : plus de slots d'Éveil (30/09), format cible à confirmer |
 | Statuts | Bouclier en PV (`Unit.AddShield`, `shieldAmount` des cartes, jauge bleue de `HealthBar`) ; armure/résistance magique (`Unit.ReduceByDefense`, `CardData.damageType`, `armorAmount`/`magicResistanceAmount`) ; bouclier réactif, vulnérabilité (`casterArmorAmount`), recul et élan du lanceur, dégâts autour de la cible ; durées en tours du lanceur (`Unit.TickEffectsOnTurnStartOf`) ; retraits de PA/PM ; le reste non implémenté | Retrait de PM (le plus fort remplace le plus faible), poussée/tirage, boucliers en PV, vulnérabilité |
 | IA ennemie | Deck pattern | Attaque de base anti-lock et Ténacité faites (`EnemyAI.TryBasicAttack`, `ResourceDebuffManager`) ; reste le cycle de boss Zone/Basique/Heal |
-| Champions | Sous-classes `RazeUnit`, `CruxUnit`, `EvanUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest |
+| Champions | Sous-classes `RazeUnit`, `CruxUnit`, `EvanUnit` (+ `LyseUnit`) avec passifs | Valeurs des passifs à valider en playtest ; + fusion (état, commande d'activation, un asset par champion × émotion) |
 | Main | Départ 5, max 5 en fin de tour (excédent défaussé au choix), pioche 1/tour | Idem (acté le 24/09) |
 | Stats | `attackDamage`, `armor`, `magicResistance` dans `ChampionData` ; ATQ descriptive (n'entre dans aucun calcul, bonus de prochaine attaque à part), armure / résistance magique actives | Armure / résistance magique actées le 25/09 ; rôle de l'ATQ à trancher |
 | Grille | Carrée 10×10, 4 directions (`GridGeometry`) | Idem (acté le 24/09) ; budget des zones de l'Excel (9 / 25 cases) à revoir |

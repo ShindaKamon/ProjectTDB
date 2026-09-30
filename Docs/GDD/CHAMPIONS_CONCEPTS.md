@@ -44,6 +44,8 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 **Gameplay :** bien placer le fantôme par rapport aux cibles probables. Mécanique d'écho réutilisable pour d'autres invocateurs.
 **À trancher en playtest :** choix de cible quand plusieurs sont valides ; complexité globale.
 
+**Fusions (Éveil, 30/09/2026) :** Rage = *Deux en un* · Extase = *Écho soigneur* · Terreur = *Appât* — détail dans `SYSTEME_EMOTIONS.md`.
+
 ---
 
 ### 2. Crux — le choix de cible au déplacement
@@ -56,6 +58,8 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 |-----------------|----|-------|
 | **Grappin** (ex-Piolet d'ascension, cœur de gameplay) | 2 | Se propulse au grappin adjacent à une unité (alliée ou ennemie), portée 4-5 ; déclenche le Réflexe du grimpeur |
 | **Corde de rappel** (coup de maître) | 4 | Portée 2-3, tire la cible de 2 cases vers lui. Ennemi : 35 dégâts + tiré au contact. Allié : aucun dégât, juste tiré (sauvetage) |
+
+**Fusions (Éveil, 30/09/2026) :** Rage = *Avalanche* · Extase = *Ascension* · Terreur = *Vol de mouvement* — détail dans `SYSTEME_EMOTIONS.md`.
 
 ---
 
@@ -74,6 +78,8 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 | **Triche** (cœur de gameplay) | 1 | Modifie de ±1 le coût en PA d'une carte de la main (min 1) pour forcer un motif. Pas de dégâts. |
 | **Tapis** (coup de maître) | 5 | 72 dégâts de base, +10 par PA déjà dépensé ce tour. Finisher « all-in » à retravailler (ajouter un vrai risque) |
 
+**Fusions (Éveil, 30/09/2026) :** Rage = *All-in* (à tester) · Extase = *Partage des gains* · Terreur = *Pioche et tempo* — détail dans `SYSTEME_EMOTIONS.md`.
+
 **Note :** le bonus du passif n'est pas calculable dans le tableur de budget ; il s'ajoute en jeu. La fiche d'Evan mentionne aussi un « Full » et un ancien nom « l'Ingénieur » — à harmoniser dans l'Excel.
 
 ---
@@ -81,7 +87,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 ## 🗄️ CHAMPIONS HORS MVP
 
 ### ILYA — « Le Dévoué Enchaîné »
-Concept complet (Colère, système Rage, transformation Enchaîné ↔ Déchaîné, 12 cartes) : `ilya_deck_simple.md`. **Conçu avant l'Excel** : sa Rage devra devenir une variante de l'Éveil Colère, et son deck de 12 cartes passer au format 24 cartes (2 Signature + 6 Éveil + 16 Standard).
+Concept complet (Colère, système Rage, transformation Enchaîné ↔ Déchaîné, 12 cartes) : `ilya_deck_simple.md`. **Conçu avant l'Excel** : sa Rage devra devenir sa forme Colère (fusion Rage, voir `SYSTEME_EMOTIONS.md`), et son deck de 12 cartes passer au format du deck (Signatures + 16 Standard, sans cartes d'Éveil).
 
 ### LES JUMEAUX — ASTRA & NOCTIS
 Deux concepts concurrents :

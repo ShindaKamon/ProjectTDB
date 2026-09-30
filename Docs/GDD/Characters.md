@@ -36,7 +36,7 @@ Chaque **champion** a un trauma, un **passif** et **2 cartes Signature** (identi
 
 | Composant | Description |
 |-----------|-------------|
-| **Deck** | 24 CardData : 2 Signature + 6 Éveil + 16 Standard ; plusieurs decks possibles par champion |
+| **Deck** | 20 CardData dans le code (4 Signature + 16 Standard, sans cartes d'Éveil depuis le 30/09) ; plusieurs decks possibles par champion |
 | **Pioche** | Mélangée au début du combat |
 | **Main** | Règle à trancher (voir `Combat_System.md`) |
 | **Défausse** | Cartes jouées et défaussées |

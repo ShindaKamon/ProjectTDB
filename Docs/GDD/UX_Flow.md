@@ -404,7 +404,7 @@ Moments narratifs **placés à la main** dans un donjon (pas de tirage aléatoir
 ║     DECK « [NOM] » DE [CHAMPION] (24 cartes)║
 ╠══════════════════════════════════════════════╣
 ║                                              ║
-║  [Signature 2] [Éveil 6] [Standard 16]      ║
+║  [Signature 4] [Standard 16]                ║
 ║  Émotions : Colère / Peur (bi-émotion)      ║
 ║                                              ║
 ║  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐            ║
@@ -419,8 +419,8 @@ Moments narratifs **placés à la main** dans un donjon (pas de tirage aléatoir
 
 **Fonctionnalités :**
 - Plusieurs decks par champion (sélection / création)
-- Filtrage par type (Signature / Éveil / Standard) et par émotion
-- Compteur de composition (cible 2 + 6 + 16)
+- Filtrage par type (Signature / Standard) et par émotion
+- Compteur de composition (4 Signature + 16 Standard = 20 dans le code)
 - Tri par différents critères
 - Affichage du nombre de copies
 - Clic sur carte → Détails complets

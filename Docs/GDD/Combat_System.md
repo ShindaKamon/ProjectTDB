@@ -113,7 +113,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 |-----------|-----------|---------|--------------|-------------|
 | **PA + PM** | **Budget de 9 points**, réparti par profil (min 3 PA, min 2 PM) | 2-4 PA, 2-4 PM | Complète par tour | PA pour jouer des cartes, PM pour se déplacer (1 PM = 1 case) |
 | **PV** | 100 au niveau 1, +15 par niveau | Selon le barème (`Enemies.md`) | Via cartes/effets | Tombe à 0 = vaincu |
-| **Éveil** | Une jauge par émotion | — | Générée en jouant des cartes | Débloque les cartes d'Éveil (voir `SYSTEME_EMOTIONS.md`) |
+| **Éveil** | Une jauge par émotion | — | Générée en jouant des cartes | Jauge pleine = fusion avec l'émotion, brûle de 1 palier par tour (voir `SYSTEME_EMOTIONS.md`) |
 | **Armure / Résistance magique** | 0 par défaut (fiche champion) | Selon la fiche monstre | Buffs/malus de cartes (durée `effectDuration`) | Soustraction fixe : l'armure réduit les dégâts **physiques**, la résistance magique les **magiques** (type choisi par carte) ; minimum 1 dégât ; une valeur négative augmente les dégâts. Ordre : armure/résistance magique → réductions en % → bouclier → PV |
 | **Autres stats** (résistances, critique) | **Non définies** — à trancher | | | |
 
@@ -191,7 +191,7 @@ La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone,
 | Étape               | Action                      | Vérifications                  |
 |---------------------|-----------------------------|--------------------------------|
 | **1. Validation**   | Vérifier cible valide       | Portée, PA suffisants          |
-| **2. Coût**         | Dépenser les PA (et paliers d'Éveil si la carte en consomme) | Déduction immédiate |
+| **2. Coût**         | Dépenser les PA | Déduction immédiate |
 | **3. Calcul**       | Calculer dégâts/effets      | Appliquer modificateurs        |
 | **4. Application**  | Appliquer effets            | Dégâts, soins, mouvements      |
 | **5. Éveil / passif** | Ajouter l'Éveil généré ; déclencher les passifs (écho d'Evan, Réflexe du grimpeur, Main gagnante de Raze) | Selon la carte et le champion |

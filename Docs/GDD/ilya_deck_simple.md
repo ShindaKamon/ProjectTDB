@@ -5,8 +5,8 @@
 
 > ⚠️ **Conçu avant l'Excel MVP** (`TCG_Tactique_Systeme_de_calcul.xlsx`). Plusieurs éléments ne respectent plus les règles actuelles et devront être adaptés s'il revient :
 > - stats ATK/DEF (le système ne définit que PV, PA, PM) et PA/PM qui changent avec la forme (le budget PA+PM est fixé à 9 par profil) ;
-> - la Rage devrait devenir une variante de l'**Éveil Colère** ;
-> - deck de 12 cartes Personnage/Famille/Neutre → format **24 cartes** (2 Signature + 6 Éveil + 16 Standard) ;
+> - la Rage devrait devenir sa forme Colère (fusion **Rage**, voir `SYSTEME_EMOTIONS.md`) ;
+> - deck de 12 cartes Personnage/Famille/Neutre → format du deck (Signatures + 16 Standard, sans cartes d'Éveil) ;
 > - dégâts des cartes à recalculer avec le budget (ex : 1 PA = 12 dégâts de base, pas 20).
 >
 > ⚠️ **Une autre version d'Ilya a existé dans le code** (`IlyaUnit`, retiré le 24/09/2026, récupérable via le commit `00afe5d`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). À réconcilier avec ce document s'il revient.

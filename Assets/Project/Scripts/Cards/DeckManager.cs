@@ -17,6 +17,9 @@ public class DeckManager : MonoBehaviour
     // "carte de la main" n'existe pour choisir un exemplaire précis).
     private readonly Dictionary<CardData, int> _costOverrides = new Dictionary<CardData, int>();
 
+    /// <summary>Émotions des cartes du deck au début du combat (Signatures exclues) : décide des jauges d'Éveil affichées.</summary>
+    public List<EmotionType> DeckEmotions { get; private set; } = new List<EmotionType>();
+
     public System.Action OnHandChanged; // Événement pour notifier les changements dans la main
     public System.Action<int> OnDeckChanged; // Notifie changement taille deck
     public System.Action<int> OnDiscardChanged; // Notifie changement taille défausse
@@ -27,6 +30,7 @@ public class DeckManager : MonoBehaviour
         _deck.Clear();
         _hand.Clear();
         _discardPile.Clear();
+        DeckEmotions = DeckRules.DeckColors(null, initialCards);
 
         foreach (CardData card in initialCards)
         {

@@ -656,6 +656,9 @@ public class CardData : ScriptableObject
             }
         }
 
+        // --- ATQ DU LANCEUR : s'ajoute aux dégâts de chaque touche d'une carte offensive ---
+        if (finalDamage > 0) finalDamage += source.GetAttack();
+
         // --- MODIFICATEUR DE DÉGÂTS SORTANTS GÉNÉRIQUE (ex: Réflexe du grimpeur) ---
         // Ne consomme le bonus que si la carte inflige réellement des dégâts, pour qu'il
         // reste disponible si le joueur joue d'abord une carte de soin/buff.
@@ -1061,6 +1064,8 @@ public class CardData : ScriptableObject
                 GameLog.Log($"[CardData] {cardName}: +{attackBonus} dégâts de charge (bonus de prochaine attaque)");
             }
         }
+
+        if (finalChargeDamage > 0) finalChargeDamage += source.GetAttack();
 
         if (finalChargeDamage > 0 && source is IOutgoingDamageModifier dmgMod)
         {

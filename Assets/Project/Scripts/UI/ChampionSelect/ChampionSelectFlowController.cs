@@ -40,6 +40,7 @@ public class ChampionSelectFlowController : MonoBehaviour
     [SerializeField] private Image _characterArtChampionSelect;
 
     private ChampionData _currentArtChampion;
+    private ChampionModelPreview _modelPreview;
 
     public Screen CurrentScreen { get; private set; } = Screen.ChampionSelect;
 
@@ -53,6 +54,9 @@ public class ChampionSelectFlowController : MonoBehaviour
 
         if (_deckList != null)
             _deckList.OnDeckOpened += GoToDeckManager;
+
+        if (_characterArtChampionSelect != null)
+            _modelPreview = ChampionModelPreview.Create(_characterArtChampionSelect);
     }
 
     void OnDestroy()
@@ -96,7 +100,9 @@ public class ChampionSelectFlowController : MonoBehaviour
 
         Sprite fullBody = champion != null ? champion.fullBodyArt : null;
 
-        ApplySprite(_characterArtChampionSelect, fullBody);
+        // Le modèle 3D animé remplace l'illustration quand le champion en a un
+        bool hasModel = _modelPreview != null && _modelPreview.Show(champion);
+        ApplySprite(_characterArtChampionSelect, hasModel ? null : fullBody);
     }
 
     private static void ApplySprite(Image image, Sprite sprite)

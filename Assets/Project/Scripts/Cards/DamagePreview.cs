@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Prévision des dégâts d'une carte au survol d'une cible (classe pure : ne modifie rien, ne consomme aucun bonus).
-/// Reprend l'ordre de CardData.ExecuteEffect : dégâts de la carte + bonus de prochaine attaque, multiplicateur
+/// Reprend l'ordre de CardData.ExecuteEffect : dégâts de la carte + bonus de prochaine attaque + ATQ du lanceur, multiplicateur
 /// du lanceur, puis armure ou résistance magique de la cible. Les cartes dont les dégâts dépendent du
 /// déroulé (combo au PA dépensé, main défaussée, charge) ne sont pas prévues : mieux vaut rien afficher qu'un chiffre faux.
 /// </summary>
@@ -37,7 +37,7 @@ public static class DamagePreview
         entry = default;
         if (source == null || target == null || target.GetHealth() <= 0 || !IsPredictable(card)) return false;
 
-        int damage = card.damageAmount + source.GetNextAttackBonus();
+        int damage = card.damageAmount + source.GetNextAttackBonus() + source.GetAttack();
         if (source is IOutgoingDamageModifier modifier)
         {
             float multiplier = modifier.GetDamageMultiplier();

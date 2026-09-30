@@ -79,7 +79,9 @@ public class UnitPortraitView
         Color side = ally ? AllyFrame : EnemyFrame;
         _frame.color = active ? ActiveFrame : side;
 
-        Sprite portrait = unit is Champion champion && champion.championData != null ? champion.championData.portrait : null;
+        Sprite portrait = null;
+        if (unit is Champion champion && champion.championData != null) portrait = champion.championData.portrait;
+        else if (unit is Enemy enemy && enemy.GetEnemyData() != null) portrait = enemy.GetEnemyData().portrait;
         _face.sprite = portrait;
         _face.enabled = portrait != null;
         _initial.enabled = portrait == null;

@@ -115,6 +115,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **PV** | 100 au niveau 1, +15 par niveau | Selon le barème (`Enemies.md`) | Via cartes/effets | Tombe à 0 = vaincu |
 | **Éveil** | Une jauge par émotion | — | Générée en jouant des cartes | Jauge pleine = fusion avec l'émotion, brûle de 1 palier par tour (voir `SYSTEME_EMOTIONS.md`) |
 | **Armure / Résistance magique** | 0 par défaut (fiche champion) | Selon la fiche monstre | Buffs/malus de cartes (durée `effectDuration`) | Soustraction fixe : l'armure réduit les dégâts **physiques**, la résistance magique les **magiques** (type choisi par carte) ; minimum 1 dégât ; une valeur négative augmente les dégâts. Ordre : armure/résistance magique → réductions en % → bouclier → PV |
+| **ATQ** | Selon la fiche (Evan 2, Crux 1, Raze 3 au niveau 1 ; 0 pour les monstres actuels) | Selon la fiche monstre | Buffs/malus de cartes | Dégâts fixes ajoutés à chaque carte offensive, avant les % puis l’armure ; +0,5 par niveau (arrondi inférieur) pour les champions |
 | **Autres stats** (résistances, critique) | **Non définies** — à trancher | | | |
 
 **Profils PA/PM (exemples de l'Excel) :** brutal 6 PA / 3 PM · équilibré 5 PA / 4 PM · mobile 4 PA / 5 PM. Le profil est fixé par le personnage et **ne change pas avec le niveau**.
@@ -128,7 +129,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 |------|------|------|------|------|------|------|
 | Dégâts / soin | 12 | 26 | 42 | 60 | 80 | 102 |
 
-La valeur réelle d'une carte = baseline × (1 + modificateurs de portée, zone, statut, etc.) — voir `Card_System.md`. Il n'y a pas de stat ATK : la puissance est portée par la carte.
+La valeur réelle d’une carte = baseline × (1 + modificateurs de portée, zone, statut, etc.) — voir `Card_System.md`. **À ce chiffre s’ajoute l’ATQ du lanceur** (dégâts fixes par carte offensive, décidé le 30/09/2026, voir `GDD_Main.md`).
 
 **Gestion :**
 - Restauration complète chaque tour

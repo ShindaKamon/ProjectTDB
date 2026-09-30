@@ -112,6 +112,33 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void Attack_AddsToEveryDamagingCard_NotToOthers()
+        {
+            Unit caster = NewUnit(armor: 0, magicResistance: 0);
+            Unit target = NewUnit(armor: 0, magicResistance: 0);
+            caster.ModifyStats(3, 0, 0, 0);
+
+            var strike = ScriptableObject.CreateInstance<CardData>();
+            strike.targetType = CardTargetType.Enemy;
+            strike.damageAmount = 11;
+            var heal = ScriptableObject.CreateInstance<CardData>();
+            heal.targetType = CardTargetType.Self;
+            heal.healAmount = 5;
+
+            strike.ExecuteEffect(caster, target);
+            Assert.AreEqual(100 - 14, target.GetHealth(), "11 + 3 d'ATQ");
+            strike.ExecuteEffect(caster, target);
+            Assert.AreEqual(100 - 28, target.GetHealth(), "l'ATQ n'est pas consommée");
+
+            caster.TakeDamage(20);
+            heal.ExecuteEffect(caster, caster);
+            Assert.AreEqual(85, caster.GetHealth(), "un soin ne reçoit pas l'ATQ");
+
+            Object.DestroyImmediate(strike);
+            Object.DestroyImmediate(heal);
+        }
+
+        [Test]
         public void NextAttackBonus_StacksAndIsNotUsedByNonDamagingCards()
         {
             Unit caster = NewUnit(armor: 0, magicResistance: 0);

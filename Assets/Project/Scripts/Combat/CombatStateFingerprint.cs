@@ -15,7 +15,7 @@ public static class CombatStateFingerprint
             if (unit == null) continue;
             int pa = unit is IActionPointsUser paUser ? paUser.GetCurrentPA() : 0;
             string text = $"{unit.name}@{unit.GetCurrentGridPos()} PV{unit.GetHealth()} B{unit.GetShield()} PA{pa} PM{unit.GetCurrentMovementPoints()}"
-                        + $" ARM{unit.GetArmor()} RM{unit.GetMagicResistance()} ATQ+{unit.GetNextAttackBonus()}";
+                        + $" ARM{unit.GetArmor()} RM{unit.GetMagicResistance()} ATQ{unit.GetAttack()}+{unit.GetNextAttackBonus()}";
             if (unit is Champion champion)
                 text += $" {champion.Gauge.Describe()} c{champion.FusionTurnCounter}";
             if (unit.TryGetComponentSafe(out DeckManager deck))

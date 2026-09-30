@@ -132,37 +132,6 @@ public static class CodexCardVisual
         _ => Hex("#9c97b5"),
     };
 
-    // ===== Rôle de la carte (pictogramme et bandeau en main) =====
-
-    public static string RoleName(CardRole role) => role switch
-    {
-        CardRole.Attack => "Attaque",
-        CardRole.Heal => "Soin",
-        CardRole.Movement => "Mouvement",
-        CardRole.Control => "Contrôle",
-        _ => "Soutien",
-    };
-
-    /// <summary>Icône du codex (Sprite Asset CodexIcons), la même que dans le texte de la carte.</summary>
-    public static string RoleIcon(CardRole role) => role switch
-    {
-        CardRole.Attack => "dmg",
-        CardRole.Heal => "heal",
-        CardRole.Movement => "bond",
-        CardRole.Control => "lock",
-        _ => "buff",
-    };
-
-    /// <summary>Couleur du rôle, prise dans la palette des pastilles (pas celle des émotions).</summary>
-    public static ChipKind RoleChipKind(CardRole role) => role switch
-    {
-        CardRole.Attack => ChipKind.Damage,
-        CardRole.Heal => ChipKind.Heal,
-        CardRole.Movement => ChipKind.Push,
-        CardRole.Control => ChipKind.MovementPoints,
-        _ => ChipKind.ActionPoints,
-    };
-
     // ===== Textes =====
 
     /// <summary>« Colère · Standard » ou « Neutre · Signature · Evan ».</summary>

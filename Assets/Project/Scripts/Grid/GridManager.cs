@@ -204,6 +204,9 @@ public class GridManager : MonoBehaviour, IGridService
             GameLog.LogWarning("Aucun champion sélectionné. Le jeu commencera sans unité joueur initialement.");
         }
 
+        // Donjon : les monstres de la rencontre remplacent ceux posés dans la scène
+        if (DungeonRun.CurrentEncounter != null) SpawnEncounter(DungeonRun.CurrentEncounter);
+
         // 2. Trouve toutes les autres unités (ennemis) déjà présentes dans la scène
         // et les ajoute à la liste, en s'assurant de les initialiser si elles ne l'ont pas été.
         Unit[] existingUnitsInScene = FindObjectsByType<Unit>();
@@ -271,6 +274,30 @@ public class GridManager : MonoBehaviour, IGridService
             _placementPhase.Begin(champions, _startCells, () => StartBattle(champions[0]));
         else
             StartBattle(champions.Count > 0 ? champions[0] : null);
+    }
+
+    /// <summary>
+    /// Remplace les monstres posés dans la scène par ceux d'une rencontre de donjon.
+    /// </summary>
+    private void SpawnEncounter(EncounterData encounter)
+    {
+        foreach (Enemy sceneEnemy in FindObjectsByType<Enemy>())
+        {
+            sceneEnemy.gameObject.SetActive(false); // Destroy n'agit qu'en fin de frame
+            Destroy(sceneEnemy.gameObject);
+        }
+
+        foreach (EncounterData.Spawn spawn in encounter.enemies)
+        {
+            if (spawn.enemy == null || spawn.enemy.prefab == null)
+            {
+                Debug.LogError($"Rencontre « {encounter.encounterName} » : monstre ou prefab manquant.");
+                continue;
+            }
+
+            Enemy enemy = Instantiate(spawn.enemy.prefab).GetRequiredComponent<Enemy>("Monstre de la rencontre");
+            if (enemy != null) enemy.InitializeEnemy(spawn.enemy, spawn.cell);
+        }
     }
 
     /// <summary>

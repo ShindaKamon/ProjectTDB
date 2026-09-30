@@ -379,7 +379,7 @@ public class ChampionSelectManager : MonoBehaviour
         CombatParty.Clear();
         CombatParty.TryAdd(_selectedChampion, _selectedDeck);
         GameLog.Log($"Lancement du combat avec {_selectedChampion.championName} et un deck de {_selectedDeck?.Count ?? 0} cartes.");
-        SceneManager.LoadScene(_combatSceneName);
+        SceneManager.LoadScene(DungeonRun.BeginFromResources(_combatSceneName));
     }
 
     // ========== MULTIJOUEUR (salon local) ==========
@@ -509,7 +509,7 @@ public class ChampionSelectManager : MonoBehaviour
 
         if (CombatParty.Count < 2) return;
         GameLog.Log($"Lancement du combat avec {CombatParty.Count} joueurs.");
-        SceneManager.LoadScene(_combatSceneName);
+        SceneManager.LoadScene(DungeonRun.BeginFromResources(_combatSceneName));
     }
 
     private void BackFromChampionSelect()

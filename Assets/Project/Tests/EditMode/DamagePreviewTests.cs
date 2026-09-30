@@ -47,6 +47,17 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void TryPredict_AddsCasterAttack()
+        {
+            Unit source = NewUnit<Unit>();
+            source.ModifyStats(3, 0, 0, 0);
+            Unit target = NewUnit<Unit>();
+
+            Assert.IsTrue(DamagePreview.TryPredict(NewCard(20), source, target, out DamagePreview.Entry entry));
+            Assert.AreEqual(23, entry.Damage);
+        }
+
+        [Test]
         public void TryPredict_BaseDamage()
         {
             Unit source = NewUnit<Unit>();

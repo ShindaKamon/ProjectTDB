@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4ff59f37c43d7e408c7fb27c582d49a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectTDB::DungeonData
+  dungeonName: L'Orphelinat
+  rooms:
+  - roomName: Le dortoir
+    size: {x: 9, y: 7}
+    start: {x: 1, y: 3}
+    monsters:
+    - cell: {x: 4, y: 3}
+      encounter: {fileID: 11400000, guid: 5712760d84999134ebc45a6ac8f42bc8, type: 2}
+    doors:
+    - cell: {x: 8, y: 3}
+      targetRoom: 1
+      arrivalCell: {x: 1, y: 3}
+  - roomName: Le couloir
+    size: {x: 9, y: 7}
+    start: {x: 1, y: 3}
+    monsters:
+    - cell: {x: 4, y: 3}
+      encounter: {fileID: 11400000, guid: d39c29f16d794e9459a24ac4c5d376b9, type: 2}
+    doors:
+    - cell: {x: 0, y: 3}
+      targetRoom: 0
+      arrivalCell: {x: 7, y: 3}
+    - cell: {x: 8, y: 3}
+      targetRoom: 2
+      arrivalCell: {x: 1, y: 3}
+  - roomName: Sous le lit
+    size: {x: 9, y: 7}
+    start: {x: 1, y: 3}
+    monsters:
+    - cell: {x: 4, y: 3}
+      encounter: {fileID: 11400000, guid: 22381982d4d1a03409df34e2ccb6be21, type: 2}
+    doors:
+    - cell: {x: 0, y: 3}
+      targetRoom: 1
+      arrivalCell: {x: 7, y: 3}

@@ -29,7 +29,7 @@ Chaque **champion** a un trauma, un **passif** et **2 cartes Signature** (identi
 | **Max Health** | 100 au niveau 1, +15 par niveau |
 | **Max Action Points** | Selon le profil (budget PA + PM = 9, min 3) |
 | **Movement Range** | Selon le profil (min 2) |
-| **Defense** | Champ du code ; aucune stat de défense n'est définie dans le design actuel |
+| **Attack / Armor / Magic resistance** | ATQ additive aux dégâts de chaque carte offensive, armure et résistance magique ; gain par niveau (`attackPerLevel`…), valeurs dans `GDD_Main.md` |
 
 
 ### Deck de Départ

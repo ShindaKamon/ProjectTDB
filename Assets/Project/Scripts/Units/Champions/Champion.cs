@@ -177,7 +177,7 @@ public abstract class Champion : Unit, IActionPointsUser
     /// <summary>
     /// Initialise le champion avec les données ChampionData.
     /// </summary>
-    public void Initialize(ChampionData data, Vector2Int initialGridPos)
+    public void Initialize(ChampionData data, Vector2Int initialGridPos, int level = 1)
     {
         if (_isInitialized) return;
 
@@ -188,7 +188,7 @@ public abstract class Champion : Unit, IActionPointsUser
         gameObject.name = data.championName;
 
         // Initialise les stats de base (HP, Movement, ATK) via Unit
-        InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.magicResistance);
+        InitUnitStats(data.maxHealth, data.movementRange, data.AttackAtLevel(level), data.ArmorAtLevel(level), data.MagicResistanceAtLevel(level));
 
         // Initialise le component PA depuis ChampionData
         _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{name} (Champion)");

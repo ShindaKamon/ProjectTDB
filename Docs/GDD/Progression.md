@@ -21,12 +21,13 @@ La progression suit une **campagne façon Waven** : donjons fixes enchaînés, p
 
 ### Règle d'or
 
-Le niveau d'un champion ne fait progresser **que** :
+Le niveau d’un champion ne fait progresser **que** :
+- l’**ATQ**, l’**armure** et la **résistance magique** (petits gains fixes par niveau, valeurs dans `GDD_Main.md` « ATQ et défenses par niveau » ; décidé le 30/09/2026)
 - les **PV**
 - les **passifs**
 - les **slots de cartes** débloqués
 
-Il n'augmente **jamais** la puissance des cartes ni les **PA/PM par tour** : ceux-ci sont fixés une fois pour toutes par le **profil du personnage** (budget PA + PM = 9, min 3 PA, min 2 PM). Un champion niveau 1 a exactement le même total PA+PM qu'au niveau 20, seulement réparti selon son gameplay.
+Il n’augmente **jamais** les **PA/PM par tour** : ceux-ci sont fixés une fois pour toutes par le **profil du personnage** (budget PA + PM = 9, min 3 PA, min 2 PM). Un champion niveau 1 a exactement le même total PA+PM qu'au niveau 20, seulement réparti selon son gameplay.
 
 ### Profils PA/PM (exemples)
 

@@ -32,6 +32,20 @@ public class ChampionData : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("barrier")]
     public int magicResistance = 0;            // Résistance magique : réduit les dégâts magiques reçus (soustraction fixe)
 
+    [Header("Gain par niveau (arrondi à l'entier inférieur)")]
+    [Tooltip("ATQ gagnée par niveau au-dessus du 1 (ex: 0,5 = +1 tous les 2 niveaux)")]
+    public float attackPerLevel = 0f;
+    [Tooltip("Armure gagnée par niveau au-dessus du 1")]
+    public float armorPerLevel = 0f;
+    [Tooltip("Résistance magique gagnée par niveau au-dessus du 1")]
+    public float magicResistancePerLevel = 0f;
+
+    public int AttackAtLevel(int level) => attackDamage + Gain(attackPerLevel, level);
+    public int ArmorAtLevel(int level) => armor + Gain(armorPerLevel, level);
+    public int MagicResistanceAtLevel(int level) => magicResistance + Gain(magicResistancePerLevel, level);
+
+    private static int Gain(float perLevel, int level) => Mathf.FloorToInt(perLevel * Mathf.Max(0, level - 1));
+
     [Header("Fusion (Éveil)")]
     [Tooltip("Formes de fusion du champion : au plus une par émotion (Colère = Rage, Joie = Extase, Peur = Terreur)")]
     public List<FusionData> fusions = new List<FusionData>();

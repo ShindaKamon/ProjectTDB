@@ -19,6 +19,8 @@ public class BattleEndUI : MonoBehaviour
     private GameObject _root;
     private TextMeshProUGUI _title;
     private TextMeshProUGUI _subtitle;
+    private TextMeshProUGUI _replayLabel;
+    private bool _continueToDungeon;
     private TextMeshProUGUI _alliesTable;
     private TextMeshProUGUI _enemiesTable;
 
@@ -70,6 +72,9 @@ public class BattleEndUI : MonoBehaviour
         _title.text = victory ? "VICTOIRE !" : "DÉFAITE";
         _title.color = victory ? _victoryColor : _defeatColor;
         _subtitle.text = victory ? "Tous les ennemis sont vaincus." : "Tous les champions sont tombés.";
+        // Donjon : la victoire ramène à l'exploration ; la défaite permet de retenter le même combat
+        _continueToDungeon = victory && DungeonRun.IsActive;
+        _replayLabel.text = _continueToDungeon ? "Continuer" : "Rejouer";
         // Réseau : « Rejouer » ne relancerait le combat que sur ce PC (étape 2 à venir)
         Transform replay = _root.transform.Find("ReplayButton");
         if (replay != null) replay.gameObject.SetActive(!NetworkSession.IsActive);
@@ -96,10 +101,19 @@ public class BattleEndUI : MonoBehaviour
         return sb.ToString();
     }
 
-    private void Replay() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    private void ReplayOrContinue()
+    {
+        if (_continueToDungeon)
+        {
+            DungeonRun.CompleteEncounter();
+            SceneManager.LoadScene(DungeonRun.ExplorationSceneName);
+        }
+        else SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 
     private void MainMenu()
     {
+        DungeonRun.Clear();
         if (NetworkSession.IsActive) NetworkSession.LeaveToMenu();
         else SceneManager.LoadScene(_mainMenuSceneName);
     }
@@ -124,7 +138,7 @@ public class BattleEndUI : MonoBehaviour
         _alliesTable = NewTablePanel("AlliesTable", rootRt, new Vector2(-285f, 10f));
         _enemiesTable = NewTablePanel("EnemiesTable", rootRt, new Vector2(285f, 10f));
 
-        NewButton("ReplayButton", rootRt, "Rejouer", new Vector2(-150f, -250f), Replay);
+        _replayLabel = NewButton("ReplayButton", rootRt, "Rejouer", new Vector2(-150f, -250f), ReplayOrContinue);
         NewButton("MainMenuButton", rootRt, "Menu principal", new Vector2(150f, -250f), MainMenu);
     }
 
@@ -162,7 +176,7 @@ public class BattleEndUI : MonoBehaviour
         return text;
     }
 
-    private static void NewButton(string name, Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick)
+    private static TextMeshProUGUI NewButton(string name, Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         var rt = (RectTransform)go.transform;
@@ -175,6 +189,7 @@ public class BattleEndUI : MonoBehaviour
         TextMeshProUGUI text = NewText("Label", rt, 28f, FontStyles.Normal, Vector2.zero, Vector2.zero);
         Stretch(text.rectTransform);
         text.text = label;
+        return text;
     }
 
     private static void Stretch(RectTransform rt)

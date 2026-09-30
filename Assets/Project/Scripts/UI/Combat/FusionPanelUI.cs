@@ -4,7 +4,8 @@ using TMPro;
 
 /// <summary>
 /// Jauges d'émotion et boutons de fusion (Éveil) du champion affiché : un bouton par forme du champion,
-/// jauge en points, activable quand elle est pleine. Ne fait que soumettre la commande ActivateFusion.
+/// jauge en points, activable quand elle est pleine. Seules les émotions présentes dans le deck sont affichées ;
+/// un deck bi-émotion empile ses deux boutons l'un au-dessus de l'autre. Ne fait que soumettre la commande ActivateFusion.
 /// À poser sur le panneau de stats du champion ; la rangée se construit au démarrage, au-dessus du panneau.
 /// </summary>
 public class FusionPanelUI : MonoBehaviour
@@ -21,7 +22,7 @@ public class FusionPanelUI : MonoBehaviour
 
     void Awake()
     {
-        var go = new GameObject("FusionRow", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        var go = new GameObject("FusionRow", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
         _row = (RectTransform)go.transform;
         _row.SetParent(transform, false);
         _row.anchorMin = new Vector2(0f, 1f);
@@ -30,8 +31,10 @@ public class FusionPanelUI : MonoBehaviour
         _row.anchoredPosition = new Vector2(0f, _offsetAbovePanel);
         _row.sizeDelta = new Vector2(0f, _rowHeight);
 
-        var layout = go.GetComponent<HorizontalLayoutGroup>();
-        layout.spacing = 6f;
+        var layout = go.GetComponent<VerticalLayoutGroup>();
+        layout.spacing = 4f;
+        layout.childAlignment = TextAnchor.LowerLeft;
+        go.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         layout.childControlWidth = layout.childControlHeight = true;
         layout.childForceExpandWidth = layout.childForceExpandHeight = false;
     }
@@ -81,9 +84,10 @@ public class FusionPanelUI : MonoBehaviour
         if (champion == null || champion.championData == null) return;
         EnsureAura(champion);
 
+        var deck = champion.GetComponent<DeckManager>();
         foreach (FusionData form in champion.championData.fusions)
         {
-            if (form != null) AddButton(champion, form, active);
+            if (form != null && deck != null && deck.DeckEmotions.Contains(form.emotion)) AddButton(champion, form, active);
         }
     }
 

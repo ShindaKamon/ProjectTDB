@@ -15,14 +15,6 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     [Tooltip("Liseré de la pastille quand le coût a été modifié (ex: Triche)")]
     [SerializeField] private Color _modifiedCostOutline = new Color(1f, 0.85f, 0.1f, 1f);
     private Outline _costOutline;
-    [Header("Rôle de la carte (Attaque, Soin, Mouvement, Contrôle, Soutien)")]
-    [Tooltip("Zone d'illustration, teintée selon le rôle")]
-    [SerializeField] private Image _roleBackground;
-    [Tooltip("Grand pictogramme du rôle (icône du codex)")]
-    [SerializeField] private TextMeshProUGUI _roleIcon;
-    [Tooltip("Nom du rôle, sous le pictogramme")]
-    [SerializeField] private TextMeshProUGUI _roleLabel;
-
     [Tooltip("Cadre de la carte, entouré en jaune quand elle est survolée comme cible d'une autre carte (ex: Triche)")]
     [SerializeField] private Image _frame;
     [SerializeField] private Color _targetFrameColor = new Color(1f, 0.85f, 0.1f, 1f);
@@ -141,8 +133,6 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
                 _cardCostText.color = _originalCostTextColor;
             }
 
-            ShowRole(CardRoles.RoleOf(_cardData));
-
             // Afficher le background (A MODIFIER ENSUITE)
             if (_cardBackground != null) _cardBackground.sprite = _cardData.artwork;
             // Mettre à jour l'illustration si vous en avez une
@@ -162,24 +152,6 @@ public class CardUIElement : MonoBehaviour, IPointerClickHandler, IPointerEnterH
     {
         if (_cardData != null && _cardData.scalesWithPASpentThisTurn)
             CardTextView.Apply(_cardDescriptionText, _cardData, paSpentThisTurn);
-    }
-
-    // Rôle de la carte : zone d'illustration teintée, grand pictogramme et nom, dans la couleur des
-    // pastilles (pas celle des émotions, déjà portée par la pastille de coût)
-    private void ShowRole(CardRole role)
-    {
-        Color color = CodexCardVisual.ChipColor(CodexCardVisual.RoleChipKind(role));
-        if (_roleBackground != null) _roleBackground.color = Color.Lerp(new Color(0.08f, 0.08f, 0.11f), color, 0.3f);
-        if (_roleIcon != null)
-        {
-            if (_roleIcon.spriteAsset == null) _roleIcon.spriteAsset = Resources.Load<TMP_SpriteAsset>(CardRulesText.IconSpriteAsset);
-            _roleIcon.text = $"<sprite name=\"{CodexCardVisual.RoleIcon(role)}\" color=#{ColorUtility.ToHtmlStringRGB(color)}>";
-        }
-        if (_roleLabel != null)
-        {
-            _roleLabel.text = CodexCardVisual.RoleName(role).ToUpperInvariant();
-            _roleLabel.color = color;
-        }
     }
 
     /// <summary>Cadre jaune : la carte est la cible survolée d'une carte qui vise la main (ex: Triche).</summary>

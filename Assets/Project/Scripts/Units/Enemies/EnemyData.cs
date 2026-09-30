@@ -12,6 +12,8 @@ public class EnemyData : ScriptableObject
     public string enemyName = "Nouvel Ennemi";
     // Référence au prefab de l'ennemi
     public GameObject prefab;
+    [Tooltip("Portrait affiché dans la frise des tours (généré par Tools > Portraits)")]
+    public Sprite portrait;
 
     [Header("Classification")]
     [Tooltip("Si true, affiche la barre de vie en haut de l'écran au lieu d'au-dessus de la tête")]

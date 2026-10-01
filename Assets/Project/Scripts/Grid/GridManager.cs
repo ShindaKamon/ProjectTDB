@@ -16,6 +16,10 @@ public class GridManager : MonoBehaviour, IGridService
     [SerializeField] private int _width = 10;
     [SerializeField] private int _height = 10;
     [SerializeField] private GameObject _tilePrefab;
+    [Tooltip("Murs de la salle de combat, comme en exploration (Quaternius Wall_Modular, Column, Window_Small2)")]
+    [SerializeField] private GameObject _wallModel;
+    [SerializeField] private GameObject _cornerModel;
+    [SerializeField] private GameObject _windowModel;
     [Tooltip("Cases de départ des champions (en rouge pendant le placement) ; chaque joueur apparaît sur la case de son rang, puis peut changer de case")]
     [SerializeField] private Vector2Int[] _startCells =
     {
@@ -177,6 +181,8 @@ public class GridManager : MonoBehaviour, IGridService
         }
         
         transform.position = Vector3.zero;
+        RoomDecor.Build(transform, new Vector2Int(_width, _height), cell => _tiles[cell].transform.position,
+            System.Array.Empty<Vector2Int>(), _wallModel, _cornerModel, _windowModel, null);
         GameLog.Log($"Grille générée : {_width}x{_height} = {_tiles.Count} tuiles");
     }
 

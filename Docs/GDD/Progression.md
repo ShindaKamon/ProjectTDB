@@ -8,6 +8,7 @@
 - v2.1 (30/09/2026) : relecture d'audit — ATQ / armure / RM par niveau alignés sur `GDD_Main.md` et le code.
 
 > **Chiffres de référence : l'Excel.** Ce document explique les règles.
+> **XP et niveaux : V2** (décision du 01/10/2026). Le MVP garde les champions au niveau 1.
 > Rappel : pas de gacha (10/09/2026). Les Gemmes ne sont pas un tirage aléatoire mais restent à revalider avec le modèle de monétisation.
 
 ---

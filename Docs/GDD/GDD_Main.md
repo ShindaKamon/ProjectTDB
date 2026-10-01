@@ -111,8 +111,8 @@ Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 
 ### 1. Émotions et Couleur
 - Les cartes ont une **identité émotionnelle** ; le deck se construit autour d'1 ou 2 émotions
-- Les cartes génèrent de l'**Éveil** (une jauge par émotion) ; jauge pleine, le champion **fusionne avec l'émotion** (Rage, Extase, Terreur) et gagne un gameplay propre à son couple champion × émotion — concept acté le 30/09/2026 (voir `SYSTEME_EMOTIONS.md`), pas encore codé
-- **La couleur est un pilier visuel autant que narratif** : un donjon est désaturé à l'entrée et retrouve sa couleur à la victoire (voir `UI_Design.md`)
+- Les cartes génèrent de l'**Éveil** (une jauge par émotion) ; jauge pleine, le champion **fusionne avec l'émotion** (Rage, Extase, Terreur) et gagne un gameplay propre à son couple champion × émotion — concept acté et codé le 30/09/2026 (voir `SYSTEME_EMOTIONS.md`)
+- **La couleur est un pilier visuel autant que narratif** : un donjon est désaturé à l'entrée et retrouve sa couleur à la victoire (voir `UI_Design.md`) — **reporté en V2** (01/10/2026), rien n'est encore pensé
 
 ### 2. Mécanique Signature par Champion (pas de système de classe)
 - Chaque champion = 1 passif + 2 cartes Signature, pensés autour de son trauma
@@ -187,9 +187,11 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 **Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Ilya, Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
 **Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 51 cartes Standard (17 par émotion) + Signatures des 3 champions.
 **Decks :** 20 cartes (4 Signature, soit 2 exemplaires de chacune des 2 Signatures du champion, + 16 Standard — plus d'emplacements d'Éveil dans le deck depuis le 30/09), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
-**Ennemis :** deck pattern + IA ; 1 ennemi (UnderBed).
+**Ennemis :** deck pattern + IA ; 2 ennemis (UnderBed, Mouton de poussière).
 **UI :** écran de sélection de champion, éditeur de deck façon MTG Arena, HUD de combat, main en arc, ciblage (courbe + réticule), barre de vie de boss, preview des cartes ennemies, pop-ups de dégâts.
-**Pas encore dans le code :** jauge d'Éveil et fusion, profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), désaturation des donjons.
+**Éveil :** jauge par émotion et fusion, les 9 formes champion × émotion (30/09).
+**Donjon :** exploration de l'Orphelinat (3 salles en enfilade), décor Quaternius (01/10).
+**Pas encore dans le code :** profils PA/PM (les 3 champions sont en 5 PA / 4 PM, soit le profil « équilibré »), cycle de boss, XP et niveaux (V2), désaturation des donjons (V2).
 
 ### Design fait (Excel)
 - [x] Système de budget de cartes + calculateur
@@ -199,14 +201,19 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - [x] Barème des monstres par niveau
 - [x] Playtest papier (triangle Colère/Peur/Joie validé)
 
-### Reste à faire pour le MVP
-- [ ] Fusion (Éveil) : jauge, commande d'activation, 9 formes (prototype : Crux en Terreur)
+### Reste à faire pour le MVP *(mis à jour le 01/10/2026)*
+- [x] Fusion (Éveil) : jauge, commande d'activation, 9 formes — 30/09
 - [x] Règle de main/pioche : celle du code (départ 5, max 5, pioche 1/tour) — 24/09
 - [x] Grille carrée 4 directions (24/09) — reste à corriger la Roadmap de l'Excel (« hexagonale ») et le budget des zones (5 / 13 cases au lieu de 9 / 25)
-- [ ] Monstres de l'Orphelinat (stats selon le barème, patterns)
-- [x] Exploration et donjon de l'Orphelinat (3 salles, portes, clic sur un groupe = combat, boucle exploration ↔ combat) — 30/09, même vue, mêmes cases et mêmes personnages que le combat ; décor en formes simples fait (murs, fenêtres, portes fermées qui s’ouvrent à la fin du combat) ; reste props et textures, récompenses, réseau
-- [ ] Adapter le code : Éveil (jauge + fusion), cycle de boss (statuts de contrôle et anti-lock : faits le 25/09)
-- [ ] Désaturation visuelle des donjons
+- [x] Exploration et donjon de l'Orphelinat (3 salles en enfilade, sans retour en arrière ; clic sur un groupe = combat, boucle exploration ↔ combat) — 30/09, même vue, mêmes cases et mêmes personnages que le combat ; décor Quaternius le 01/10 (sol, murs, fenêtres, portes qui pivotent vers l'extérieur ; murs aussi en combat)
+- [x] Statuts de contrôle et règle anti-lock — 25/09
+- [ ] **Cycle de boss** Zone / Basique / Heal (UnderBed)
+- [ ] **Monstres de l'Orphelinat** : stats selon le barème de l'Excel (Mouton de poussière encore en valeurs provisoires), patterns ; Ombres du Placard ?
+- [ ] **Écran de fin de donjon** (aujourd'hui un écran IMGUI provisoire → Menu principal)
+- [ ] **Passe de playtest** (passifs, ATQ / défenses, fusions, monstres), puis report des chiffres en attente dans l'Excel
+- [ ] Optionnel : ambiance (lumière), mobilier d'orphelinat (à trancher : obstacles en combat ou non)
+
+**Reporté en V2 (01/10/2026) :** XP et niveaux (les champions restent au niveau 1), désaturation → couleur des donjons (rien n'est encore pensé), exploration en réseau.
 
 ## Objectifs de Design
 
@@ -215,9 +222,10 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - 3 émotions : Colère, Peur, Joie
 - 1 donjon complet : l'Orphelinat (Peur)
 - Monstres de donjon + boss (cycle Zone / Basique / Heal)
-- Premier passage désaturé → couleur
 
 ### Moyen Terme (Bêta)
+- XP et niveaux des champions (règles prêtes : `Progression.md`)
+- Passage désaturé → couleur des donjons (à concevoir)
 - Plusieurs donjons (Bureau/Anxiété, Maison/Colère…)
 - Cartes bi-émotion dédiées, oppositions d'émotions (paires Plutchik)
 - Nouveaux champions (Ilya, Jumeaux…)
@@ -248,7 +256,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Ayla | Abandonnée | 10/09 |
 | Gacha | Abandonné, monétisation à définir | 10/09 |
 | Lore | « Le monde grisonne », les champions ont gardé leur couleur | 11/09 |
-| Désaturation visuelle | Donjons désaturés, couleur restaurée à la victoire | 11/09 |
+| Désaturation visuelle | Donjons désaturés, couleur restaurée à la victoire — **reportée en V2** le 01/10 | 11/09 |
 | Accès aux donjons | Tout champion peut entrer dans tout donjon | 23/09 |
 | Ancienne jauge -100/+100 | En pause (archivée) — remplacée par l'Éveil | 23/09 |
 | Structure de jeu | Campagne façon Waven, pas de roguelike | 23/09 |
@@ -306,6 +314,8 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Signatures de Crux et Raze | **Piolet d'ascension → Grappin** (2 PA : se hisse à côté d'une unité alliée ou ennemie à 1-5 cases en ligne droite, cible une unité et plus une case). **Réflexe du grimpeur** : près d'un allié, **bouclier de 15** (comme celui des cartes, sans durée) au lieu de −15 % de dégâts subis ; près d'un ennemi, +15 % sur la prochaine carte de dégâts, affiché à côté de l'ATQ. **Bluff de Raze** : bouclier de 8 à chaque Bluff au lieu de −10 % de dégâts subis. **Corde de rappel** 4 → 2 PA : tire de 2 cases **un allié ou un ennemi à 1-5 cases** ; seul un ennemi subit les dégâts (15) — une carte « allié ou ennemi » ne blesse jamais un allié ; **Tapis** 5 → 3 PA, **un seul ennemi** au contact (tout miser sur une cible) : 40 dégâts, +8 par PA déjà dépensé. **Balayage furieux** cible une case ou un ennemi au contact. Pas de pioche au premier tour | 29/09 |
 | Pattern du boss | L'**attaque de base d'UnderBed est une carte de son pattern** (lisible dans l'aperçu) : Marée d'ombre → Agrippe → Marée d'ombre → Tapi dans le noir, en boucle ; elle reste aussi sa riposte quand il est contrôlé. **Attaque Range → Marée d'ombre** (attaque de zone) (2 PA, 16 dégâts en cercle de 1 autour d'un champion à 1-2 cases). L'aperçu de carte du boss et des mobs **se retourne** à chaque carte jouée, même si la suivante est identique. Valeurs provisoires | 29/09 |
 | Identité des émotions | Pas de carte équivalente entre deux émotions : **Colère** = plus gros dégâts avec contrepartie, sans soin ni vol de vie ; **Peur** = chaque attaque contrôle ; **Joie** = dégâts les plus faibles, chaque attaque soigne ou pioche. 10 cartes ajustées (détail : `Card_System.md`), **à reporter dans l'Excel** | 29/09 |
+| Pas de retour en arrière dans le donjon | Les salles s’enchaînent dans un seul sens : une seule porte par salle, vers la suivante ; on ne revient pas dans une salle déjà vidée (portes de retour retirées, rien n’est dessiné sur les côtés ouverts) | 01/10 |
+| Scope du MVP | **XP et niveaux** et **passage du gris à la couleur** reportés en V2 : le MVP se concentre sur un donjon fun (combat, boss, monstres) ; les champions restent au niveau 1 | 01/10 |
 
 ## Questions ouvertes
 
@@ -322,6 +332,6 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 
 ---
 
-**Dernière mise à jour :** 30 Septembre 2026
-**Version GDD :** 3.5
+**Dernière mise à jour :** 1er Octobre 2026
+**Version GDD :** 3.6
 **Responsable :** Shinda + Claude

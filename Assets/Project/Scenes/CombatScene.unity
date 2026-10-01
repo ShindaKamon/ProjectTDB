@@ -2171,6 +2171,9 @@ MonoBehaviour:
   _width: 10
   _height: 10
   _tilePrefab: {fileID: 3560364692205190547, guid: 0e8c11073006f1340abf54d156cc4334, type: 3}
+  _wallModel: {fileID: 919132149155446097, guid: 69e335aca5c4a974493c103e38451803, type: 3}
+  _cornerModel: {fileID: 919132149155446097, guid: 95600619c2d819a41b064eb3d44eea0d, type: 3}
+  _windowModel: {fileID: 919132149155446097, guid: b8eb7cb75bd7c9a4088eff512a326b4b, type: 3}
   _startCells:
   - {x: 3, y: 1}
   - {x: 5, y: 1}

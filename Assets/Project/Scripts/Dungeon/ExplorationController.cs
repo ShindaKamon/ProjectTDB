@@ -16,6 +16,14 @@ public class ExplorationController : MonoBehaviour
 {
     [Tooltip("Même prefab de case que le combat (GridManager)")]
     [SerializeField] private GameObject _tilePrefab;
+    [Tooltip("Pan de mur des salles (Quaternius Wall_Modular)")]
+    [SerializeField] private GameObject _wallModel;
+    [Tooltip("Pilier d'angle des salles (Quaternius Column)")]
+    [SerializeField] private GameObject _cornerModel;
+    [Tooltip("Fenêtre des murs (Quaternius Window_Small2)")]
+    [SerializeField] private GameObject _windowModel;
+    [Tooltip("Porte des murs (Quaternius Door3)")]
+    [SerializeField] private GameObject _doorModel;
     [SerializeField] private string _combatSceneName = "CombatScene";
     [SerializeField] private string _mainMenuSceneName = "MainMenuScene";
     [Tooltip("Vitesse du pion (cases par seconde)")]
@@ -145,7 +153,7 @@ public class ExplorationController : MonoBehaviour
         // elles s'ouvrent en s'animant juste après le dernier combat, sinon directement ouvertes
         var doorCells = new List<Vector2Int>();
         foreach (DungeonData.Door door in _room.doors) doorCells.Add(door.cell);
-        Dictionary<Vector2Int, Transform> leaves = RoomDecor.Build(_roomRoot, _room.size, CellToWorld, doorCells, DoorColor);
+        Dictionary<Vector2Int, Transform> leaves = RoomDecor.Build(_roomRoot, _room.size, CellToWorld, doorCells, _wallModel, _cornerModel, _windowModel, _doorModel);
 
         if (DungeonRun.IsRoomCleared(DungeonRun.CurrentRoom))
         {
@@ -156,7 +164,7 @@ public class ExplorationController : MonoBehaviour
                 if (animate && leaf != null) StartCoroutine(OpenDoor(door, leaf));
                 else
                 {
-                    if (leaf != null) Destroy(leaf.gameObject);
+                    if (leaf != null) leaf.rotation = RoomDecor.OpenRotation(leaf);
                     ActivateDoor(door);
                 }
             }
@@ -176,16 +184,16 @@ public class ExplorationController : MonoBehaviour
         BuildParty();
     }
 
-    // Le battant s'enfonce dans le sol, puis la porte devient cliquable
+    // Le battant pivote vers l'extérieur, puis la porte devient cliquable
     private IEnumerator OpenDoor(DungeonData.Door door, Transform leaf)
     {
-        Vector3 from = leaf.position, to = from + Vector3.down * leaf.localScale.y;
+        Quaternion from = leaf.rotation, to = RoomDecor.OpenRotation(leaf);
         for (float t = 0f; t < 1f; t += Time.deltaTime / DoorOpenDuration)
         {
-            leaf.position = Vector3.Lerp(from, to, t);
+            leaf.rotation = Quaternion.Slerp(from, to, t);
             yield return null;
         }
-        Destroy(leaf.gameObject);
+        leaf.rotation = to;
         ActivateDoor(door);
     }
 

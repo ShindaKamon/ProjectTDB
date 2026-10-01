@@ -44,9 +44,8 @@ public static class DungeonSetup
             Room("Le dortoir", new Vector2Int(1, 3), (new Vector2Int(4, 3), twoSheep),
                 Door(8, 3, 1, 1, 3)),
             Room("Le couloir", new Vector2Int(1, 3), (new Vector2Int(4, 3), threeSheep),
-                Door(0, 3, 0, 7, 3), Door(8, 3, 2, 1, 3)),
-            Room("Sous le lit", new Vector2Int(1, 3), (new Vector2Int(4, 3), bossFight),
-                Door(0, 3, 1, 7, 3)),
+                Door(8, 3, 2, 1, 3)),
+            Room("Sous le lit", new Vector2Int(1, 3), (new Vector2Int(4, 3), bossFight)),
         };
         Save(dungeon, ResourcesFolder + "/Orphelinat.asset");
 
@@ -99,6 +98,10 @@ public static class DungeonSetup
 
         var so = new SerializedObject(controller);
         so.FindProperty("_tilePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefabs/Grid/Tile.prefab");
+        so.FindProperty("_wallModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/Quaternius/ModularDungeons/Wall_Modular.fbx");
+        so.FindProperty("_cornerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/Quaternius/ModularDungeons/Column.fbx");
+        so.FindProperty("_windowModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/Quaternius/HouseInterior/Window_Small2.fbx");
+        so.FindProperty("_doorModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/Quaternius/Furniture/Door3.fbx");
         so.ApplyModifiedProperties();
 
         // Même fond et même lumière que CombatScene (la caméra isométrique est posée par ExplorationController)

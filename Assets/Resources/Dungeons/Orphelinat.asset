@@ -31,9 +31,6 @@ MonoBehaviour:
     - cell: {x: 4, y: 3}
       encounter: {fileID: 11400000, guid: d39c29f16d794e9459a24ac4c5d376b9, type: 2}
     doors:
-    - cell: {x: 0, y: 3}
-      targetRoom: 0
-      arrivalCell: {x: 7, y: 3}
     - cell: {x: 8, y: 3}
       targetRoom: 2
       arrivalCell: {x: 1, y: 3}
@@ -43,7 +40,4 @@ MonoBehaviour:
     monsters:
     - cell: {x: 4, y: 3}
       encounter: {fileID: 11400000, guid: 22381982d4d1a03409df34e2ccb6be21, type: 2}
-    doors:
-    - cell: {x: 0, y: 3}
-      targetRoom: 1
-      arrivalCell: {x: 7, y: 3}
+    doors: []

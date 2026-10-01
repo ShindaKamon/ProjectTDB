@@ -486,7 +486,7 @@ float EaseOutQuad(float t) => t * (2f - t);
 
 ## 🌫️ Désaturation Narrative des Donjons *(11/09/2026)*
 
-Décision de lore (voir `GDD_Main.md`) : le monde du jeu « grisonne » quand les émotions débordent sans être affrontées, et les champions font littéralement revenir la couleur en rééquilibrant les gens. Ce n'est pas qu'un texte d'ambiance — c'est un objectif visuel concret pour le MVP.
+Décision de lore (voir `GDD_Main.md`) : le monde du jeu « grisonne » quand les émotions débordent sans être affrontées, et les champions font littéralement revenir la couleur en rééquilibrant les gens. Ce n'est pas qu'un texte d'ambiance — c'est un objectif visuel concret, **reporté en V2** le 01/10/2026 (rien n'est encore pensé).
 
 ### Principe
 
@@ -498,7 +498,7 @@ Décision de lore (voir `GDD_Main.md`) : le monde du jeu « grisonne » quand le
 
 ### Pistes d'implémentation (à valider techniquement, voir `Technical_Specs.md`)
 
-- **Option simple (recommandée pour le MVP)** : un post-processing global (Color Grading / Saturation via URP Volume) dont la valeur de saturation est pilotée par une variable « progression du donjon » (0 = gris, 1 = couleur pleine). Peu coûteux, facile à brancher sur l'avancement des combats.
+- **Option simple (recommandée pour une première version)** : un post-processing global (Color Grading / Saturation via URP Volume) dont la valeur de saturation est pilotée par une variable « progression du donjon » (0 = gris, 1 = couleur pleine). Peu coûteux, facile à brancher sur l'avancement des combats.
 - **Option avancée (V2+)** : désaturation localisée (ex : un ennemi vaincu « libère » sa zone en couleur, effet de propagation), plus proche d'un vrai moment « juteux » mais demande plus de travail shader/VFX.
 - Le shader `UI_SwirlingLiquid` déjà utilisé pour le fond des cartes (voir `Technical_Specs.md`) pourrait être réutilisé/adapté pour un effet de « couleur qui infuse » lors de la victoire.
 

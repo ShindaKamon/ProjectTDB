@@ -20,3 +20,5 @@ MonoBehaviour:
     cell: {x: 5, y: 7}
   - enemy: {fileID: 11400000, guid: d332da0bdd25f5744ba1516013fdb888, type: 2}
     cell: {x: 7, y: 7}
+  bedCells: []
+  bedPrefab: {fileID: 0}

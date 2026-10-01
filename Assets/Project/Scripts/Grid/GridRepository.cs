@@ -137,7 +137,7 @@ public class GridRepository
     {
         foreach (Unit unit in _units)
         {
-            if (unit.GetCurrentGridPos() == gridPos)
+            if (!unit.IsHidden && unit.GetCurrentGridPos() == gridPos)
             {
                 return unit;
             }
@@ -153,7 +153,7 @@ public class GridRepository
         List<Unit> playerUnits = new List<Unit>();
         foreach (Unit unit in _units)
         {
-            if (unit.GetFaction() == Unit.UnitFaction.Player)
+            if (!unit.IsHidden && unit.GetFaction() == Unit.UnitFaction.Player)
             {
                 playerUnits.Add(unit);
             }
@@ -169,7 +169,7 @@ public class GridRepository
         List<Unit> enemyUnits = new List<Unit>();
         foreach (Unit unit in _units)
         {
-            if (unit.GetFaction() == Unit.UnitFaction.Enemy)
+            if (!unit.IsHidden && unit.GetFaction() == Unit.UnitFaction.Enemy)
             {
                 enemyUnits.Add(unit);
             }
@@ -178,11 +178,11 @@ public class GridRepository
     }
 
     /// <summary>
-    /// Retourne toutes les unités de la grille
+    /// Retourne toutes les unités de la grille, sauf les unités cachées (Unit.IsHidden)
     /// </summary>
     public List<Unit> GetAllUnits()
     {
-        return _units;
+        return _units.FindAll(unit => !unit.IsHidden);
     }
 
     /// <summary>

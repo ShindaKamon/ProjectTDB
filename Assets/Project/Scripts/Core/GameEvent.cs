@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -318,5 +319,21 @@ public class ResourceDebuffChangedEvent : GameEvent
     public ResourceDebuffChangedEvent(Unit target)
     {
         Target = target;
+    }
+}
+
+/// <summary>
+/// Publié quand les zones annoncées d'un lancer de monstre changent : annoncées (cases couvertes), puis vidées
+/// quand elles tombent, sont annulées (Sidération) ou que le monstre meurt (liste vide)
+/// </summary>
+public class ThrowZonesChangedEvent : GameEvent
+{
+    public Enemy Thrower { get; private set; }
+    public IReadOnlyList<Vector2Int> Cells { get; private set; }
+
+    public ThrowZonesChangedEvent(Enemy thrower, IReadOnlyList<Vector2Int> cells)
+    {
+        Thrower = thrower;
+        Cells = cells;
     }
 }

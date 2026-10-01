@@ -1976,6 +1976,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 589644724fcc21e43a65e98f3e55345a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ProjectTDB::DamagePreviewUI
+--- !u!1 &397179018
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 397179020}
+  - component: {fileID: 397179019}
+  m_Layer: 0
+  m_Name: ThrowZoneView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &397179019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 397179018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd2e355247820954baeae0831d208991, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectTDB::ThrowZoneView
+  _markerMaterial: {fileID: 2100000, guid: b80609f82a79061469eff30a688c4c78, type: 2}
+  _markerColor: {r: 0.85, g: 0.1, b: 0.1, a: 0.6}
+--- !u!4 &397179020
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 397179018}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -9281,3 +9327,4 @@ SceneRoots:
   - {fileID: 1875546597}
   - {fileID: 132847535}
   - {fileID: 1543569101}
+  - {fileID: 397179020}

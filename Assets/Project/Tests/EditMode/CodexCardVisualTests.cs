@@ -26,6 +26,19 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void RulesText_TelegraphedThrow_ReplacesTargetWithAnnouncedZones()
+        {
+            var card = NewCard(CardTargetType.EnemyOrTile, 0);
+            card.damageAmount = 16;
+            card.telegraphedZoneCount = 4;
+
+            string Plain(string s) => System.Text.RegularExpressions.Regex.Replace(s, "<[^>]+>", "");
+            string text = Plain(CardRulesText.Build(card));
+            StringAssert.Contains("Cible : 4 zones annoncées au sol, une sur chaque champion ; elles tombent à son prochain tour", text);
+            StringAssert.DoesNotContain("ennemi", text);
+        }
+
+        [Test]
         public void PassiveText_NameInBold_ThenSummary_EmptyWithoutPassive()
         {
             var champion = ScriptableObject.CreateInstance<ChampionData>();

@@ -31,6 +31,14 @@ public class EnemyAI : MonoBehaviour
     {
         GameLog.Log($"=== {_enemyUnit.name} (Ennemi) prend son tour ===");
 
+        // Lancer annoncé au tour précédent : ses zones tombent maintenant, avant tout le reste
+        if (_enemy != null && _enemy.HasPendingThrow) yield return StartCoroutine(ResolveThrow());
+
+        // Boss caché sous les lits : il passe sous un autre lit, et frappe de là sans se déplacer
+        BedHiding hiding = GetComponent<BedHiding>();
+        bool hidden = hiding != null && hiding.IsHiding;
+        if (hidden) hiding.MoveToNextBed();
+
         // PHASE 0 : les PA ont été remis à niveau par GridManager, puis les retraits appliqués.
         // Contrôlé = a perdu des PA ou des PM ce tour (règle anti-lock, voir TryBasicAttack)
         bool controlled = _enemy != null
@@ -92,7 +100,7 @@ public class EnemyAI : MonoBehaviour
             needsToMoveCloser = true;
         }
 
-        if (needsToMoveCloser)
+        if (needsToMoveCloser && !hidden)
         {
             // Calculer le chemin complet vers le joueur en utilisant tous les points de mouvement
             List<Tile> fullPath = CalculatePathTowardsTarget(closestPlayerUnit.GetCurrentGridPos());
@@ -140,8 +148,9 @@ public class EnemyAI : MonoBehaviour
                         // Dépense les PA
                         _enemy.SpendPA(playedCard.costPA);
 
-                        // Exécute l'effet de la carte
-                        yield return StartCoroutine(ExecuteEnemyCard(playedCard));
+                        // Exécute l'effet de la carte ; un lancer annoncé ne frappe qu'au prochain tour
+                        if (playedCard.telegraphedZoneCount > 0) yield return StartCoroutine(AnnounceThrow(playedCard));
+                        else yield return StartCoroutine(ExecuteEnemyCard(playedCard));
                         cardPlayed = true;
                     }
                 }
@@ -190,6 +199,25 @@ public class EnemyAI : MonoBehaviour
 
         GameLog.Log($"{_enemy.name} ne peut pas jouer sa carte : attaque de base ({basicAttack.cardName})");
         yield return StartCoroutine(ExecuteEnemyCard(basicAttack));
+    }
+
+    // Lancer annoncé : les zones s'affichent au sol et tomberont au début du prochain tour du monstre
+    private IEnumerator AnnounceThrow(CardData card)
+    {
+        List<Vector2Int> playerCells = Services.Grid.GetAllPlayerUnits().ConvertAll(u => u.GetCurrentGridPos());
+        _enemy.AnnounceThrow(card, Services.Grid.GetAllCells(), playerCells);
+        yield return new WaitForSeconds(0.5f);
+    }
+
+    // Les zones annoncées au tour précédent tombent : la carte s'applique sur chacune
+    private IEnumerator ResolveThrow()
+    {
+        var epicenters = new List<Vector2Int>();
+        CardData card = _enemy.TakePendingThrow(epicenters);
+        GameLog.Log($"{_enemy.name} : {card.cardName} tombe sur {epicenters.Count} zone(s)");
+        for (int i = 0; i < epicenters.Count; i++)
+            card.ExecuteEffect(_enemy, null, epicenters[i], i > 0);
+        yield return new WaitForSeconds(0.5f);
     }
 
     // Calcule le chemin du tour vers la cible, en contournant les unités (voir PathTowards)
@@ -364,10 +392,11 @@ public class EnemyAI : MonoBehaviour
                         GameLog.LogWarning($"{_enemy.name}: Cible hors de portée pour {card.cardName}");
                     }
                 }
-                // Carte de soin sur soi-même
+                // Carte de soin sur soi-même ; caché sous un lit, c'est son lit qui en profite
                 else if (card.targetType == CardTargetType.Self)
                 {
-                    targetUnit = _enemy;
+                    BedHiding hiding = GetComponent<BedHiding>();
+                    targetUnit = hiding != null && hiding.IsHiding ? hiding.CurrentBed : _enemy;
                 }
             }
             // Carte ciblant une tuile

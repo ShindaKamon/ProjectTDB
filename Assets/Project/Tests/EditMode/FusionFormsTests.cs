@@ -23,6 +23,7 @@ namespace ProjectTDB.Tests
             public Unit GetUnitAtGridPos(Vector2Int gridPos) => Units.Find(u => u.GetCurrentGridPos() == gridPos);
             public SummonUnit SpawnSummon(GameObject prefab, Vector2Int gridPos, Unit owner, int maxHealth) => null;
             public Tile GetTileAtPosition(Vector2Int pos) => null;
+            public List<Vector2Int> GetAllCells() => new List<Vector2Int>();
             public Vector2Int GetGridPosFromWorldPos(Vector3 worldPos) => Vector2Int.zero;
             public void HighlightTile(Vector2Int pos, Color color) { }
             public Dictionary<Tile, int> GetMovementTiles(Vector2Int startPos, int range, Unit ignoreUnit = null) => new Dictionary<Tile, int>();

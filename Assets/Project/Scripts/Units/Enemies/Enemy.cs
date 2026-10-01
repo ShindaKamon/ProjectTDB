@@ -79,6 +79,7 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
 
     public void CancelNextCard()
     {
+        ClearPendingThrow(); // Sidération annule aussi un lancer déjà annoncé
         if (GetNextCard() == null) return;
         IsNextCardCancelled = true;
         EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.CardCancelled, 0));
@@ -248,6 +249,64 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
         }
         _actionPointsComponent.AddPA(amount, canExceedMax);
         if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
+    }
+
+    // ========== LANCER ANNONCÉ (voir CardData.telegraphedZoneCount) ==========
+
+    // Tirages du monstre ; graine commune à tous les PC en réseau (SetRandomSeed, posée par GridManager)
+    private System.Random _rng = new System.Random();
+    private CardData _pendingThrowCard;
+    private readonly List<Vector2Int> _pendingThrowEpicenters = new List<Vector2Int>();
+
+    public void SetRandomSeed(int seed) => _rng = new System.Random(seed);
+
+    /// <summary>Générateur des tirages du monstre (zones, lit où se cacher), commun à tous les PC en réseau.</summary>
+    public System.Random Rng => _rng;
+
+    public bool HasPendingThrow => _pendingThrowCard != null;
+
+    /// <summary>
+    /// Annonce les zones d'un lancer (ThrowZonePicker), qui tomberont au début du prochain tour du monstre.
+    /// </summary>
+    /// <param name="cells">Cases du plateau (même ordre sur tous les PC).</param>
+    public void AnnounceThrow(CardData card, IList<Vector2Int> cells, IList<Vector2Int> championCells)
+    {
+        int radius = card.isAOE ? card.aoeRadius : 0;
+        _pendingThrowCard = card;
+        _pendingThrowEpicenters.Clear();
+        _pendingThrowEpicenters.AddRange(ThrowZonePicker.Pick(_rng, cells, championCells, card.telegraphedZoneCount, radius));
+
+        // Cases couvertes, pour l'affichage des zones au sol
+        var covered = new List<Vector2Int>();
+        foreach (Vector2Int cell in cells)
+            foreach (Vector2Int epicenter in _pendingThrowEpicenters)
+                if (card.isAOE ? card.IsInAOEShape(this, epicenter, cell) : cell == epicenter)
+                {
+                    covered.Add(cell);
+                    break;
+                }
+        GameLog.Log($"{name} annonce {card.cardName} : {_pendingThrowEpicenters.Count} zone(s)");
+        EventBus.Publish(new ThrowZonesChangedEvent(this, covered));
+    }
+
+    /// <summary>
+    /// Retire le lancer annoncé pour le résoudre : la carte et les épicentres de ses zones (null s'il n'y en a pas).
+    /// </summary>
+    public CardData TakePendingThrow(List<Vector2Int> epicenters)
+    {
+        CardData card = _pendingThrowCard;
+        epicenters.Clear();
+        epicenters.AddRange(_pendingThrowEpicenters);
+        ClearPendingThrow();
+        return card;
+    }
+
+    private void ClearPendingThrow()
+    {
+        if (_pendingThrowCard == null) return;
+        _pendingThrowCard = null;
+        _pendingThrowEpicenters.Clear();
+        EventBus.Publish(new ThrowZonesChangedEvent(this, new List<Vector2Int>()));
     }
 
     // ========== SYSTÈME DE DECK SÉQUENTIEL ==========

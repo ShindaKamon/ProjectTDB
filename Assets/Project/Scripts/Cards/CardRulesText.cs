@@ -70,7 +70,10 @@ public static class CardRulesText
 
         // Carte sur soi avec une zone : « Zone : autour de toi, … » suffit
         bool selfZone = card.targetType == CardTargetType.Self && ZoneText(card) != "";
-        string target = selfZone ? "" : TargetText(card);
+        // Lancer annoncé (boss) : les zones remplacent la cible
+        string target = card.telegraphedZoneCount > 0
+            ? $"{card.telegraphedZoneCount} zones annoncées au sol, une sur chaque champion ; elles tombent à son prochain tour"
+            : selfZone ? "" : TargetText(card);
         if (target != "") lines.Add("<b>Cible :</b> " + target);
 
         string zone = ZoneText(card);

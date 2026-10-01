@@ -299,6 +299,10 @@ public class CardData : ScriptableObject
     [Tooltip("Bonus de dégâts par PA déjà dépensé ce tour avant cette carte")]
     public int comboDamagePerPASpent = 0;
 
+    [Header("═══ LANCER ANNONCÉ (boss) ═══")]
+    [Tooltip("Si > 0 (carte de monstre ciblant une case) : la carte ne frappe pas tout de suite. Elle annonce ce nombre de zones (forme areaEffect / aoeRadius ; sans zone = 1 case), une sur chaque champion puis au hasard, qui tombent au début du prochain tour du lanceur. Sidération les annule.")]
+    public int telegraphedZoneCount = 0;
+
     // Méthode pour vérifier si une unité est une cible valide
     public bool IsValidTarget(Unit source, Unit target)
     {

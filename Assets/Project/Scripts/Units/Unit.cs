@@ -370,6 +370,11 @@ public class Unit : MonoBehaviour
             GameLog.LogWarning($"{name}: Cannot take damage - already dead");
             return;
         }
+        if (ResistsDamage)
+        {
+            GameLog.Log($"{name} résiste aux dégâts ({damage})");
+            return;
+        }
 
         TriggerReactiveShield();
         int damageToSelf = AbsorbWithShield(damage);
@@ -405,6 +410,11 @@ public class Unit : MonoBehaviour
         if (_unitState != null && !_unitState.CanTakeDamage())
         {
             GameLog.LogWarning($"{name}: Cannot take raw damage - already dead");
+            return;
+        }
+        if (ResistsDamage)
+        {
+            GameLog.Log($"{name} résiste aux dégâts bruts ({damage})");
             return;
         }
 
@@ -812,6 +822,17 @@ public class Unit : MonoBehaviour
     /// False pour une unité sans tour propre (invocation) : la rotation des tours la saute.
     /// </summary>
     public virtual bool TakesTurns => true;
+
+    /// <summary>
+    /// Unité cachée (ex. le boss sous un lit) : elle garde son tour, mais les requêtes de la grille l'ignorent
+    /// (case, cibles, zones). Posé par la mécanique qui la cache (BedHiding).
+    /// </summary>
+    public bool IsHidden { get; set; }
+
+    /// <summary>
+    /// True tant que l'unité ignore tous les dégâts (ex. le lit sous lequel se cache le boss).
+    /// </summary>
+    protected virtual bool ResistsDamage => false;
 
     // Getter pour la position de grille actuelle de l'unité.
     public Vector2Int GetCurrentGridPos()

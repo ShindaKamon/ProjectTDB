@@ -1,10 +1,11 @@
 # Ennemis - Émotions Tactics (Project TDB)
 
-**Version:** 3.2
-**Date:** 30 Septembre 2026
+**Version:** 3.3
+**Date:** 1er Octobre 2026
 **Statut:** Reflète la structure actuelle (EnemyData)
 **Changements :** v2.1 (23/09/2026) encodage réparé, ennemis replacés dans le lore. **v3.0 (23/09/2026)** : réalignement sur l'Excel MVP (onglet « Barème monstres ») — monstres de donjon vs d'aventure, PV et dégâts en ratio des PV joueur, XP = 15 % des PV, cycle de boss Zone / Basique / Heal, règle anti-lock. Les anciennes formules de PV (tiers, chapitres) sont archivées. **v3.1 (24/09/2026)** : stats des monstres selon le nombre de joueurs, faiblesse émotionnelle.
 **v3.2 (30/09/2026) :** relecture d'audit — mise à l'échelle des monstres selon le nombre de joueurs (coop locale) rappelée.
+**v3.3 (01/10/2026) :** boss de l'Orphelinat repensé en combat à 3 phases (le Monstre sous le lit), remplace le pattern en boucle d'UnderBed.
 
 > **Chiffres de référence : l'Excel.** Ce document explique les règles.
 
@@ -50,9 +51,36 @@ Un monstre dont l'action est bloquée par un contrôle (retrait de PM, etc.) fai
 | **Ombres du Placard** | Groupe de donjon | Stats et pattern à designer |
 | **Monstres Sous le Lit** | Groupe de donjon | Stats et pattern à designer |
 | **3ᵉ ennemi** | À définir | Concept à trouver |
-| **Boss** | Boss de donjon | Cycle Zone / Basique / Heal |
+| **Moutons de poussière** | Mobs du boss | Codés (valeurs provisoires) ; fusion à venir |
+| **Boss : le Monstre sous le lit** | Boss de donjon | Combat en 3 phases (ci-dessous) — design du 01/10/2026, pas encore codé |
 
 Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
+
+### Boss de l'Orphelinat : le Monstre sous le lit *(design du 01/10/2026)*
+
+**Idée :** on ne combat pas un monstre, on **le force à sortir**. Il se cache sous les lits du dortoir ; on lui retire ses cachettes une à une, il fusionne avec le dernier lit, puis il en sort. Le combat change de forme à chaque phase et le terrain se remplit (débris, objets lancés).
+
+**Carte propre au boss :** un dortoir, pas forcément 10×10 (par exemple en longueur), avec plusieurs lits.
+
+| | Phase 1 « Sous les lits » | Phase 2 « Le Lit » | Phase 3 « Il sort » |
+|---|---|---|---|
+| **Le monstre** | Passe d'un lit à l'autre, sous les lits | Fusionne avec le **dernier lit** : immobile, grand | Sort du lit détruit : il **bouge**, plus agressif au contact |
+| **Objectif du joueur** | **Casser les lits** jusqu'à ce qu'il n'en reste qu'un. Le lit où il se trouve **résiste et riposte** (ses draps attirent l'attaquant) : il faut casser les autres | Détruire le Lit | Le vaincre |
+| **Lancers d'objets** (zones annoncées un tour avant) | Beaucoup de zones d'**1 case** | Moins de zones, en **cercle de 1** | **Un gros objet** en **cercle de 2**, qui **reste** sur la grille comme obstacle |
+| **Draps** | Ligne sur toute la carte depuis son lit : les champions touchés sont **attirés** vers lui (pas de dégâts), jusqu'au premier obstacle | Idem, depuis le Lit | Arrachés : attirent et frappent au contact |
+| **Moutons de poussière** | Sortent des lits ; deux moutons côte à côte au tour du boss **fusionnent** en Gros mouton (plus de PV, frappe en zone) | Idem | Idem |
+
+**Les débris :** un lit cassé laisse des **débris** sur sa case (obstacle). Le monstre **ramasse les débris pour les lancer** : un lancer peut consommer un tas de débris (l'obstacle disparaît, la zone visée est touchée). Les débris sont donc à la fois un abri et des munitions pour le boss.
+
+**Étape 1 codée (01/10/2026) — lancers annoncés :** carte **Pluie de jouets** (2 PA, 4 zones d'1 case, une sur chaque champion puis au hasard, 16 dégâts — valeurs provisoires), en tête du pattern actuel d'UnderBed : Pluie de jouets → Agrippe → Marée d'ombre → Tapi dans le noir.
+
+**Phase 1 codée (01/10/2026) — sous les lits :** la rencontre du boss pose **6 lits simples** (une case chacun, tête contre les murs du fond : 3 au nord, 3 à l'est) ; les **PV du boss sont répartis entre les lits** (175 → 30 + 5 × 29) et sa barre affiche leur somme. Le monstre est **invisible**, seule une **ombre** sous son lit le trahit ; au début de chacun de ses tours il passe sous un **autre lit** (tirage) puis joue son pattern depuis là, sans se déplacer ; son lit **résiste** à tous les dégâts, et un soin du boss soigne son lit. Quand il ne reste que son lit, le lit cède et le monstre **sort** sur sa case avec les PV de ce lit (provisoire : les phases 2 et 3 viendront ensuite). Pas encore : la riposte du lit occupé (draps), Sidération sur le monstre caché, les débris.
+
+**Règles de lisibilité :** toute zone d'objet lancé est **annoncée un tour à l'avance** (zone rouge au sol) et tombe au tour suivant du boss ; Sidération (annulation de la prochaine carte) annule aussi un lancer préparé. Les tirages (lit visé, zones) utilisent la graine partagée du combat, pour le réseau.
+
+**Mis de côté (à réfléchir) :** les yeux dans le noir (attaque), le vol de carte, le lit qui avale, la lumière qui s'éteint, les Cauchemars face cachée.
+
+**Chiffres :** les ratios du cycle Zone / Basique / Heal ci-dessous restent la référence des dégâts et soins ; PV des lits, du Lit et du monstre à caler en playtest, puis à reporter dans l'Excel.
 
 
 ## Structure d'un Ennemi (EnemyData)
@@ -123,7 +151,7 @@ Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 | **Is Boss**      | true                               |
 | **Barre de Vie** | En haut de l'écran (BossHealthBar) |
 | **PV**           | 1.33× (boss) ou 3.3× (superboss) les PV de l'équipe |
-| **Pattern**      | **Cycle de 3 tours : Zone / Basique / Heal** |
+| **Pattern**      | **Cycle de 3 tours : Zone / Basique / Heal** (référence des dégâts ; le boss de l'Orphelinat se joue en phases, voir plus haut) |
 
 **Cycle de boss (ratios validés par playtest) :**
 1. **Zone** : ≈ 25 % des PV d'un joueur (à chaque cible touchée)

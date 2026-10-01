@@ -62,6 +62,22 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void HiddenUnit_IgnoredByUnitQueries_AndDoesNotBlockItsCell()
+        {
+            // Le boss caché sous un lit partage la case du lit : seul le lit compte pour la grille
+            Unit bed = NewUnit<EnemyUnit>(new Vector2Int(1, 1));
+            Unit boss = NewUnit<EnemyUnit>(new Vector2Int(1, 1));
+            boss.IsHidden = true;
+
+            Assert.AreSame(bed, _repo.GetUnitAtGridPos(new Vector2Int(1, 1)));
+            CollectionAssert.AreEquivalent(new[] { bed }, _repo.GetAllUnits());
+            CollectionAssert.AreEquivalent(new[] { bed }, _repo.GetAllEnemyUnits());
+
+            boss.IsHidden = false;
+            CollectionAssert.AreEquivalent(new[] { bed, boss }, _repo.GetAllUnits());
+        }
+
+        [Test]
         public void GetTileAtPosition_ReturnsTile_OrNullOutsideGrid()
         {
             Assert.AreSame(_tiles[new Vector2Int(1, 2)], _repo.GetTileAtPosition(new Vector2Int(1, 2)));

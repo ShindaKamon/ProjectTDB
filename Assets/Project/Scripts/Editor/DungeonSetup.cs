@@ -36,6 +36,14 @@ public static class DungeonSetup
             (sheep, new Vector2Int(2, 7)), (sheep, new Vector2Int(5, 7)), (sheep, new Vector2Int(7, 7)));
         EncounterData bossFight = SaveEncounter("Orphelinat_UnderBed", "Le monstre sous le lit",
             (boss, new Vector2Int(5, 8)), (sheep, new Vector2Int(3, 7)), (sheep, new Vector2Int(7, 7)));
+        // 6 lits contre les murs du fond (nord y = 9, est x = 9) : le boss se cache dessous (BedHiding)
+        bossFight.bedCells = new List<Vector2Int>
+        {
+            new Vector2Int(1, 9), new Vector2Int(4, 9), new Vector2Int(7, 9),
+            new Vector2Int(9, 1), new Vector2Int(9, 4), new Vector2Int(9, 7)
+        };
+        bossFight.bedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefabs/Enemies/Bed.prefab");
+        EditorUtility.SetDirty(bossFight);
 
         var dungeon = ScriptableObject.CreateInstance<DungeonData>();
         dungeon.dungeonName = "L'Orphelinat";

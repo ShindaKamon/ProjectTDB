@@ -43,6 +43,7 @@ public class GridManager : MonoBehaviour, IGridService
     // ===== DONNÉES INTERNES =====
     private Dictionary<Vector2Int, Tile> _tiles;
     private List<Unit> _units;
+    private readonly List<BedUnit> _encounterBeds = new List<BedUnit>(); // lits du combat de boss (BedHiding)
     private readonly HashSet<Unit> _unitsWhoPlayed = new HashSet<Unit>(); // unités ayant déjà eu un tour (pioche dès le 2e)
     private Unit _activeUnit;
 
@@ -243,6 +244,10 @@ public class GridManager : MonoBehaviour, IGridService
                     // PV et dégâts selon le nombre de joueurs (1 en solo : barème inchangé)
                     enemy.ScaleForPlayers(playerCount);
 
+                    // Réseau : tirages du monstre (lancers annoncés) communs à tous les PC, une graine par monstre
+                    // (le nombre d'unités déjà ajoutées est le même partout, l'ordre des unités étant fixe)
+                    if (CombatParty.Seed != 0) enemy.SetRandomSeed(CombatParty.Seed + 104729 * _units.Count);
+
                     // Notifie le BattleUIManager pour connecter les UI
                     GameLog.Log($"GridManager: Tentative de connexion UI pour {enemy.name}...");
                     GameLog.Log($"  - IBattleUIService disponible: {Services.IsBattleUIServiceAvailable()}");
@@ -274,6 +279,13 @@ public class GridManager : MonoBehaviour, IGridService
             }
         }
 
+        // Combat de boss avec lits : le boss se cache dessous, ses PV (déjà adaptés au nombre de joueurs) répartis entre eux
+        if (_encounterBeds.Count > 0)
+        {
+            Enemy boss = _units.Find(u => u is Enemy e && e.IsBoss()) as Enemy;
+            if (boss != null) boss.gameObject.AddComponent<BedHiding>().Begin(boss, _encounterBeds);
+        }
+
         // 3. Placement des champions (façon Dofus) avant le premier tour ; le boss garde sa case.
         // Pas d'unité active pendant le placement : InputManager ne réagit pas.
         if (_placementPhase != null && champions.Count > 0)
@@ -303,6 +315,17 @@ public class GridManager : MonoBehaviour, IGridService
 
             Enemy enemy = Instantiate(spawn.enemy.prefab).GetRequiredComponent<Enemy>("Monstre de la rencontre");
             if (enemy != null) enemy.InitializeEnemy(spawn.enemy, spawn.cell);
+        }
+
+        // Lits, tête contre le mur du fond (nord en haut de la grille, sinon est) ; PV fixés ensuite par BedHiding
+        _encounterBeds.Clear();
+        if (encounter.bedPrefab == null) return;
+        foreach (Vector2Int cell in encounter.bedCells)
+        {
+            BedUnit bed = Instantiate(encounter.bedPrefab).GetRequiredComponent<BedUnit>("Lit de la rencontre");
+            if (bed == null) continue;
+            bed.InitializeBed(cell, cell.y == _height - 1 ? Vector2Int.up : Vector2Int.right, 1);
+            _encounterBeds.Add(bed);
         }
     }
 
@@ -749,6 +772,13 @@ public class GridManager : MonoBehaviour, IGridService
     public void InvalidateAttackTilesCache() => _gridRepository.InvalidateAttackTilesCache();
 
     public Tile GetTileAtPosition(Vector2Int pos) => _gridRepository.GetTileAtPosition(pos);
+
+    public List<Vector2Int> GetAllCells()
+    {
+        var cells = new List<Vector2Int>(_tiles.Keys);
+        cells.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y.CompareTo(b.y));
+        return cells;
+    }
 
     public Vector2Int GetGridPosFromWorldPos(Vector3 worldPos) => _gridRepository.GetGridPosFromWorldPos(worldPos);
 

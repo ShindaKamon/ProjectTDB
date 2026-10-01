@@ -151,7 +151,7 @@ La valeur réelle d’une carte = baseline × (1 + modificateurs de portée, zon
 | **Restauration**  | Complète au début du tour                |
 | **Non-cumulatif** | Ne se garde pas entre tours              |
 
-**MVP :** grille plate sans obstacles (terrains spéciaux : V2, voir `Grid_System.md`). Les cartes ont une option « ligne de vue requise / non requise ».
+**MVP :** grille plate sans obstacles (terrains spéciaux : V2, voir `Grid_System.md`), **sauf le combat de boss de l'Orphelinat** (01/10/2026) : débris de lits et objets lancés y deviennent des obstacles, sur une carte propre (voir `Enemies.md`). Les cartes ont une option « ligne de vue requise / non requise ».
 
 **Mouvement via Cartes :**
 - Certaines cartes donnent des PM bonus (contrepartie « Élan tactique » : +2 PM)

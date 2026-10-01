@@ -50,6 +50,11 @@ public interface IGridService
     Tile GetTileAtPosition(Vector2Int pos);
 
     /// <summary>
+    /// Toutes les cases du plateau, triées par x puis y (même ordre sur tous les PC)
+    /// </summary>
+    List<Vector2Int> GetAllCells();
+
+    /// <summary>
     /// Convertit une position monde en position grille
     /// </summary>
     Vector2Int GetGridPosFromWorldPos(Vector3 worldPos);

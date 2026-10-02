@@ -24,16 +24,18 @@ public static class DungeonSetup
 
         var sheep = AssetDatabase.LoadAssetAtPath<EnemyData>(EnemyFolder + "MoutonDePoussiere.asset");
         var boss = AssetDatabase.LoadAssetAtPath<EnemyData>(EnemyFolder + "UnderBed.asset");
-        if (sheep == null || boss == null)
+        var soldier = AssetDatabase.LoadAssetAtPath<EnemyData>(EnemyFolder + "SoldatDeBois.asset");
+        if (sheep == null || boss == null || soldier == null)
         {
-            Debug.LogError("DungeonSetup : MoutonDePoussiere.asset ou UnderBed.asset introuvable.");
+            Debug.LogError("DungeonSetup : MoutonDePoussiere.asset, UnderBed.asset ou SoldatDeBois.asset introuvable.");
             return;
         }
 
         EncounterData twoSheep = SaveEncounter("Orphelinat_DeuxMoutons", "Deux moutons de poussière",
             (sheep, new Vector2Int(3, 7)), (sheep, new Vector2Int(6, 7)));
         EncounterData threeSheep = SaveEncounter("Orphelinat_TroisMoutons", "Trois moutons de poussière",
-            (sheep, new Vector2Int(2, 7)), (sheep, new Vector2Int(5, 7)), (sheep, new Vector2Int(7, 7)));
+            (sheep, new Vector2Int(2, 7)), (sheep, new Vector2Int(5, 7)), (sheep, new Vector2Int(7, 7)),
+            (soldier, new Vector2Int(5, 6))); // garde du corps des moutons, présenté avant le boss
         EncounterData bossFight = SaveEncounter("Orphelinat_UnderBed", "Le monstre sous le lit",
             (boss, new Vector2Int(5, 8))); // pas de mobs au départ : le boss les invoque (Invocation de mouton)
         // 6 lits contre les murs du fond (nord y = 9, est x = 9) : le boss se cache dessous (BedHiding)

@@ -49,11 +49,11 @@ Un monstre dont l'action est bloquée par un contrôle (retrait de PM ; les mons
 
 | Ennemi | Type | Statut |
 |--------|----------------|--------|
-| **Ombres du Placard** | Groupe de donjon | Stats et pattern à designer |
+| ~~Ombres du Placard~~ | — | **Abandonné le 02/10/2026** : remplacé par le Soldat de bois |
 | **Monstres Sous le Lit** | Groupe de donjon | Stats et pattern à designer |
 | **3ᵉ ennemi** | À définir | Concept à trouver |
 | **Moutons de poussière** | Mobs du boss | Codés (valeurs provisoires) ; pas de fusion (retirée le 02/10) |
-| **Soldats de bois** | Mobs du boss | Apparaissent via Pluie de jouets (02/10/2026), pas encore codés |
+| **Soldats de bois** (casse-noisette) | Mobs du boss + salle 2 | **Codés le 02/10/2026** (valeurs provisoires) : 60 PV, 2 PM ; pattern Garde-à-vous (bouclier 15 sur lui) → Baïonnette (10 au contact) ; garde du corps des mobs (`EnemyData.guardsAllies`) ; apparaît une Pluie de jouets sur deux (`CardData.animatedToy`) et dans la salle 2 |
 | **Boss : le Monstre sous le lit** | Boss de donjon | Combat en 3 phases (ci-dessous) — design du 01/10/2026, pas encore codé |
 
 Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
@@ -109,7 +109,7 @@ Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 **À trancher :**
 - Montant du soin du passif.
 - Dégâts et nombre de zones de chaque carte.
-- Soldats de bois : stats, carte, comportement s'il n'y a aucun mob à protéger.
+- Soldats de bois : équilibrage (codés le 02/10 : 60 PV, 2 PM, Garde-à-vous → Baïonnette ; sans mob à protéger, il va au contact comme les autres).
 
 **Étape 1 codée (01/10/2026) — lancers annoncés :** carte **Pluie de jouets** (2 PA, 4 zones d'1 case, une sur chaque champion puis au hasard, 16 dégâts — valeurs provisoires), en tête du pattern actuel d'UnderBed : Pluie de jouets → Agrippe → Marée d'ombre → Tapi dans le noir.
 

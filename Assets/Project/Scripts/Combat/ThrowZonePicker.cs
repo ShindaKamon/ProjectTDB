@@ -26,6 +26,18 @@ public static class ThrowZonePicker
         return picked;
     }
 
+    /// <summary>
+    /// Zone du jouet qui s'anime (CardData.animatedToy) : une des zones tirées au hasard, jamais une zone posée
+    /// sur un champion. -1 s'il n'y en a pas.
+    /// </summary>
+    public static int PickToyIndex(System.Random rng, IList<Vector2Int> epicenters, IList<Vector2Int> championCells)
+    {
+        var candidates = new List<int>();
+        for (int i = 0; i < epicenters.Count; i++)
+            if (!championCells.Contains(epicenters[i])) candidates.Add(i);
+        return candidates.Count == 0 ? -1 : candidates[rng.Next(candidates.Count)];
+    }
+
     // Mélange de Fisher-Yates, sur une copie
     private static List<Vector2Int> Shuffled(System.Random rng, IList<Vector2Int> source)
     {

@@ -80,5 +80,17 @@ namespace ProjectTDB.Tests
 
             CollectionAssert.AreEqual(a, b);
         }
+
+        [Test]
+        public void PickToyIndex_NeverOnAChampion()
+        {
+            var champions = new List<Vector2Int> { new Vector2Int(2, 2), new Vector2Int(5, 5) };
+            var zones = new List<Vector2Int> { new Vector2Int(2, 2), new Vector2Int(5, 5), new Vector2Int(8, 1) };
+
+            for (int seed = 0; seed < 20; seed++)
+                Assert.AreEqual(2, ThrowZonePicker.PickToyIndex(new System.Random(seed), zones, champions), "seule zone aléatoire");
+
+            Assert.AreEqual(-1, ThrowZonePicker.PickToyIndex(new System.Random(1), zones.GetRange(0, 2), champions), "que des zones de champions");
+        }
     }
 }

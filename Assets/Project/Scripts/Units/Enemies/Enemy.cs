@@ -261,6 +261,12 @@ public class Enemy : Unit, IOutgoingDamageModifier
 
     public bool HasPendingThrow => _pendingThrowCard != null;
 
+    private int _throwCount; // lancers annoncés depuis le début du combat (jouet qui s'anime un lancer sur N)
+
+    /// <summary>Jouet du lancer annoncé qui s'animera en monstre (null si aucun) et sa case.</summary>
+    public EnemyData PendingToy { get; private set; }
+    public Vector2Int PendingToyCell { get; private set; }
+
     /// <summary>
     /// Annonce les zones d'un lancer (ThrowZonePicker), qui tomberont au début du prochain tour du monstre.
     /// </summary>
@@ -271,6 +277,19 @@ public class Enemy : Unit, IOutgoingDamageModifier
         _pendingThrowCard = card;
         _pendingThrowEpicenters.Clear();
         _pendingThrowEpicenters.AddRange(ThrowZonePicker.Pick(_rng, cells, championCells, card.telegraphedZoneCount, radius));
+
+        // Un lancer sur N (à partir du N-ième), un des jouets s'animera : zone non marquée, jamais sur un champion
+        _throwCount++;
+        PendingToy = null;
+        if (card.animatedToy != null && card.animatedToyEveryNthThrow > 0 && _throwCount % card.animatedToyEveryNthThrow == 0)
+        {
+            int toy = ThrowZonePicker.PickToyIndex(_rng, _pendingThrowEpicenters, championCells);
+            if (toy >= 0)
+            {
+                PendingToy = card.animatedToy;
+                PendingToyCell = _pendingThrowEpicenters[toy];
+            }
+        }
 
         // Cases couvertes, pour l'affichage des zones au sol
         var covered = new List<Vector2Int>();
@@ -302,6 +321,7 @@ public class Enemy : Unit, IOutgoingDamageModifier
         if (_pendingThrowCard == null) return;
         _pendingThrowCard = null;
         _pendingThrowEpicenters.Clear();
+        PendingToy = null;
         EventBus.Publish(new ThrowZonesChangedEvent(this, new List<Vector2Int>()));
     }
 

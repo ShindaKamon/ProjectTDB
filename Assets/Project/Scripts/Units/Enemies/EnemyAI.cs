@@ -98,7 +98,18 @@ public class EnemyAI : MonoBehaviour
             needsToMoveCloser = true;
         }
 
-        if (needsToMoveCloser && !hidden)
+        // Garde du corps (ex. soldat de bois) : se place entre le mob qu'il protège et le champion qui le menace
+        List<Vector2Int> guardPath = null;
+        bool guarding = !hidden && TryGuardAlly(playerUnits, out guardPath);
+        if (guarding && guardPath.Count > 0)
+        {
+            List<Tile> tiles = guardPath.ConvertAll(p => Services.Grid.GetTileAtPosition(p));
+            _enemyUnit.MoveToTile(tiles);
+            _enemyUnit.SpendMovement(tiles.Count);
+            yield return new WaitUntil(() => !_enemyUnit.IsMoving());
+        }
+
+        if (needsToMoveCloser && !hidden && !guarding)
         {
             // Calculer le chemin complet vers le joueur en utilisant tous les points de mouvement
             List<Tile> fullPath = CalculatePathTowardsTarget(closestPlayerUnit.GetCurrentGridPos());
@@ -216,7 +227,9 @@ public class EnemyAI : MonoBehaviour
     private IEnumerator AnnounceThrow(CardData card)
     {
         List<Vector2Int> playerCells = Services.Grid.GetAllPlayerUnits().ConvertAll(u => u.GetCurrentGridPos());
-        _enemy.AnnounceThrow(card, Services.Grid.GetAllCells(), playerCells);
+        // Les jouets ne tombent jamais sur un lit (Enemies.md)
+        List<Vector2Int> cells = Services.Grid.GetAllCells().FindAll(c => !(Services.Grid.GetUnitAtGridPos(c) is BedUnit));
+        _enemy.AnnounceThrow(card, cells, playerCells);
         yield return new WaitForSeconds(0.5f);
     }
 
@@ -224,11 +237,63 @@ public class EnemyAI : MonoBehaviour
     private IEnumerator ResolveThrow()
     {
         var epicenters = new List<Vector2Int>();
+        EnemyData toy = _enemy.PendingToy;
+        Vector2Int toyCell = _enemy.PendingToyCell;
         CardData card = _enemy.TakePendingThrow(epicenters);
         GameLog.Log($"{_enemy.name} : {card.cardName} tombe sur {epicenters.Count} zone(s)");
         for (int i = 0; i < epicenters.Count; i++)
             card.ExecuteEffect(_enemy, null, epicenters[i], i > 0);
+
+        // Le jouet s'anime s'il est tombé sur une case vide (sinon il a frappé comme les autres)
+        if (toy != null && Services.Grid.GetTileAtPosition(toyCell) != null && Services.Grid.GetUnitAtGridPos(toyCell) == null)
+            Services.Grid.SpawnEnemy(toy, toyCell);
         yield return new WaitForSeconds(0.5f);
+    }
+
+    // Garde du corps : mob à protéger (le plus proche, ni boss ni autre garde) et chemin du tour vers sa case de garde.
+    // False s'il n'est pas garde du corps ou n'a personne à protéger (il agit alors comme les autres).
+    private bool TryGuardAlly(List<Unit> playerUnits, out List<Vector2Int> path)
+    {
+        path = new List<Vector2Int>();
+        if (_enemy == null || _enemy.GetEnemyData() == null || !_enemy.GetEnemyData().guardsAllies) return false;
+
+        Vector2Int pos = _enemyUnit.GetCurrentGridPos();
+        var protegees = Services.Grid.GetAllEnemyUnits().FindAll(u =>
+            u != _enemyUnit && u is Enemy e && !e.IsBoss() && e.GetEnemyData() != null && !e.GetEnemyData().guardsAllies);
+        Unit protegee = ChooseTarget(pos, protegees);
+        if (protegee == null) return false;
+
+        Unit threat = ChooseTarget(protegee.GetCurrentGridPos(), playerUnits);
+        if (threat == null) return false;
+
+        bool IsFree(Vector2Int p) => p == pos || (Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
+        Vector2Int? cell = GuardCell(protegee.GetCurrentGridPos(), threat.GetCurrentGridPos(), pos, IsFree);
+        if (cell.HasValue && cell.Value != pos)
+            path = PathTowards(pos, cell.Value, 0, _enemyUnit.GetCurrentMovementPoints(), IsFree, reachTarget: true);
+        GameLog.Log($"{_enemyUnit.name} protège {protegee.name} de {threat.name}");
+        return true;
+    }
+
+    /// <summary>
+    /// Case de garde : la case libre au contact du protégé la plus proche du champion qui le menace (à égalité,
+    /// la plus proche du garde). guard est la case actuelle du garde (comptée libre). Null si le protégé est encerclé.
+    /// </summary>
+    public static Vector2Int? GuardCell(Vector2Int protegee, Vector2Int threat, Vector2Int guard, System.Func<Vector2Int, bool> isFree)
+    {
+        Vector2Int? best = null;
+        int bestScore = int.MaxValue;
+        foreach (Vector2Int dir in GridGeometry.Directions4)
+        {
+            Vector2Int cell = protegee + dir;
+            if (cell != guard && !isFree(cell)) continue;
+            int score = GridGeometry.Distance(cell, threat) * 100 + GridGeometry.Distance(cell, guard);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = cell;
+            }
+        }
+        return best;
     }
 
     // Calcule le chemin du tour vers la cible, en contournant les unités (voir PathTowards)
@@ -247,10 +312,11 @@ public class EnemyAI : MonoBehaviour
     /// déjà à portée ou n'a aucun chemin.
     /// </summary>
     public static List<Vector2Int> PathTowards(Vector2Int start, Vector2Int target, int attackRange, int movement,
-        System.Func<Vector2Int, bool> isFree)
+        System.Func<Vector2Int, bool> isFree, bool reachTarget = false)
     {
         var path = new List<Vector2Int>();
-        int range = Mathf.Max(1, attackRange); // sans carte : au contact
+        // sans carte : au contact ; reachTarget : sur la case elle-même (case libre visée, ex. case de garde)
+        int range = reachTarget ? 0 : Mathf.Max(1, attackRange);
         int Gap(Vector2Int p) => Mathf.Max(0, GridGeometry.Distance(p, target) - range);
         if (movement <= 0 || Gap(start) == 0) return path;
 

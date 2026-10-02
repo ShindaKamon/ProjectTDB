@@ -238,6 +238,12 @@ public class CardData : ScriptableObject
     [Tooltip("Carte de monstre : fait apparaître ce monstre sur la case libre la plus proche du lanceur (boss caché : d'un lit au hasard) (ex: Invocation de mouton)")]
     public EnemyData spawnedEnemy;
 
+    [Tooltip("Lancer annoncé : un des jouets lancés s'anime en ce monstre s'il tombe sur une case vide (zone non marquée, jamais celle d'un champion) (ex: soldat de bois de Pluie de jouets)")]
+    public EnemyData animatedToy;
+
+    [Tooltip("Le jouet s'anime un lancer sur N de cette carte, à partir du N-ième (2 = la 2e, la 4e…)")]
+    public int animatedToyEveryNthThrow = 2;
+
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         6. EFFETS SPÉCIAUX                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝

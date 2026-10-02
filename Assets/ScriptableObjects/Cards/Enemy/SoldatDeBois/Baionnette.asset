@@ -10,11 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Pluie_de_jouets
-  m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Pluie de jouets
-  description: "Le monstre lance les jouets cach\xE9s sous le lit : 4 zones annonc\xE9es
-    au sol, qui tombent \xE0 son prochain tour (16 d\xE9g\xE2ts)."
+  m_Name: Baionnette
+  m_EditorClassIdentifier: ProjectTDB::CardData
+  cardName: "Ba\xEFonnette"
+  description: "Le soldat de bois pique un champion au contact : 10 d\xE9g\xE2ts."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -22,15 +21,15 @@ MonoBehaviour:
   signatureOwner: {fileID: 0}
   costPA: 0
   costHP: 0
-  targetType: 9
-  targetRange: 0
+  targetType: 2
+  targetRange: 1
   targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
-  affectedTarget: 2
+  affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 16
+  damageAmount: 10
   damageType: 0
   damageSelf: 0
   healAmount: 0
@@ -50,7 +49,7 @@ MonoBehaviour:
   hindersEnemyNextCard: 0
   changesHidingSpot: 0
   spawnedEnemy: {fileID: 0}
-  animatedToy: {fileID: 11400000, guid: c291663205086214bb1b153b76e7256b, type: 2}
+  animatedToy: {fileID: 0}
   animatedToyEveryNthThrow: 2
   isChargeCard: 0
   leapToTarget: 0
@@ -68,4 +67,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
-  telegraphedZoneCount: 4
+  telegraphedZoneCount: 0

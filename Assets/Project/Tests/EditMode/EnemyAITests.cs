@@ -120,6 +120,33 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void GuardCell_BetweenProtegeeAndThreat()
+        {
+            // Mouton en (5,5), champion en (5,1) au sud : le soldat se place au sud du mouton, en (5,4)
+            Vector2Int? cell = EnemyAI.GuardCell(new Vector2Int(5, 5), new Vector2Int(5, 1), new Vector2Int(8, 8),
+                FreeExcept(new Vector2Int(5, 5), new Vector2Int(5, 1)));
+
+            Assert.AreEqual(new Vector2Int(5, 4), cell);
+        }
+
+        [Test]
+        public void GuardCell_AlreadyInPlace_Stays()
+        {
+            Vector2Int? cell = EnemyAI.GuardCell(new Vector2Int(5, 5), new Vector2Int(5, 1), new Vector2Int(5, 4),
+                FreeExcept(new Vector2Int(5, 5), new Vector2Int(5, 1), new Vector2Int(5, 4)));
+
+            Assert.AreEqual(new Vector2Int(5, 4), cell, "sa propre case compte comme libre");
+        }
+
+        [Test]
+        public void PathTowards_ReachTarget_EndsOnTheCell()
+        {
+            var path = EnemyAI.PathTowards(new Vector2Int(0, 0), new Vector2Int(2, 0), 0, 5, FreeExcept(), reachTarget: true);
+
+            Assert.AreEqual(new Vector2Int(2, 0), path[path.Count - 1]);
+        }
+
+        [Test]
         public void NearestFreeCell_NextToOrigin_SkipsOccupiedCells()
         {
             // Lit en (4,9) contre le mur du fond, voisins (3,9) et (5,9) occupés : le mouton sort devant, en (4,8)

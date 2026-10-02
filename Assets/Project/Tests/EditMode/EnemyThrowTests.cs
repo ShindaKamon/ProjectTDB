@@ -102,5 +102,28 @@ namespace ProjectTDB.Tests
             Assert.IsFalse(enemy.HasPendingThrow);
             Assert.AreEqual(0, _events[_events.Count - 1].Cells.Count);
         }
+
+        [Test]
+        public void AnimatedToy_EverySecondThrow_FromTheSecond_NeverOnAChampion()
+        {
+            var soldier = ScriptableObject.CreateInstance<EnemyData>();
+            _created.Add(soldier);
+            CardData rain = NewThrow(4);
+            rain.animatedToy = soldier;
+            rain.animatedToyEveryNthThrow = 2;
+            var champions = new List<Vector2Int> { new Vector2Int(2, 2) };
+            Enemy enemy = NewEnemy();
+
+            enemy.AnnounceThrow(rain, Board(), champions);
+            Assert.IsNull(enemy.PendingToy, "1re pluie : pas de soldat");
+
+            enemy.TakePendingThrow(new List<Vector2Int>());
+            enemy.AnnounceThrow(rain, Board(), champions);
+            Assert.AreSame(soldier, enemy.PendingToy, "2e pluie : un soldat");
+            Assert.AreNotEqual(new Vector2Int(2, 2), enemy.PendingToyCell);
+
+            enemy.CancelNextCard();
+            Assert.IsNull(enemy.PendingToy, "Sidération annule aussi le soldat");
+        }
     }
 }

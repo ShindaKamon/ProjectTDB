@@ -34,6 +34,9 @@ public class EnemyData : ScriptableObject
     [Tooltip("Attaque de base, jouée à la place de la carte prévue quand un contrôle (retrait de PM) l'empêche de la jouer : règle anti-lock")]
     public CardData basicAttack;
 
+    [Tooltip("Garde du corps (ex: soldat de bois) : se place entre le mob le plus proche (ni boss, ni autre garde) et le champion qui le menace ; sans mob à protéger, va au contact comme les autres")]
+    public bool guardsAllies = false;
+
     /// <summary>Phase suivante d'un boss : une nouvelle barre de vie pleine et un nouveau pattern.</summary>
     [System.Serializable]
     public class BossPhase

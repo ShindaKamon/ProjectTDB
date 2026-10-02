@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Pluie_de_jouets
-  m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Pluie de jouets
-  description: "Le monstre lance les jouets cach\xE9s sous le lit : 4 zones annonc\xE9es
-    au sol, qui tombent \xE0 son prochain tour (16 d\xE9g\xE2ts)."
+  m_Name: Garde_a_vous
+  m_EditorClassIdentifier: ProjectTDB::CardData
+  cardName: "Garde-\xE0-vous"
+  description: "Le soldat de bois se met au garde-\xE0-vous derri\xE8re son bouclier
+    : bouclier de 15."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -22,22 +22,22 @@ MonoBehaviour:
   signatureOwner: {fileID: 0}
   costPA: 0
   costHP: 0
-  targetType: 9
+  targetType: 1
   targetRange: 0
   targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
-  affectedTarget: 2
+  affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 16
+  damageAmount: 0
   damageType: 0
   damageSelf: 0
   healAmount: 0
   lifestealFixedAmount: 0
   damageAroundTarget: 0
   nextAttackBonus: 0
-  shieldAmount: 0
+  shieldAmount: 15
   reactiveShield: 0
   armorAmount: 0
   magicResistanceAmount: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
   hindersEnemyNextCard: 0
   changesHidingSpot: 0
   spawnedEnemy: {fileID: 0}
-  animatedToy: {fileID: 11400000, guid: c291663205086214bb1b153b76e7256b, type: 2}
+  animatedToy: {fileID: 0}
   animatedToyEveryNthThrow: 2
   isChargeCard: 0
   leapToTarget: 0
@@ -68,4 +68,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
-  telegraphedZoneCount: 4
+  telegraphedZoneCount: 0

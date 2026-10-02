@@ -25,7 +25,6 @@ public class ExplorationController : MonoBehaviour
     [Tooltip("Porte des murs (Quaternius Door3)")]
     [SerializeField] private GameObject _doorModel;
     [SerializeField] private string _combatSceneName = "CombatScene";
-    [SerializeField] private string _mainMenuSceneName = "MainMenuScene";
     [Tooltip("Vitesse du pion (cases par seconde)")]
     [SerializeField] private float _walkSpeed = 6f;
 
@@ -316,16 +315,6 @@ public class ExplorationController : MonoBehaviour
         if (_room == null) return;
         var big = new GUIStyle(GUI.skin.label) { fontSize = 26, fontStyle = FontStyle.Bold };
         GUI.Label(new Rect(16, 12, 700, 40), $"{DungeonRun.Dungeon.dungeonName} — {_room.roomName}", big);
-
-        if (!DungeonRun.IsCompleted) return;
-        var box = new Rect(Screen.width / 2f - 200, Screen.height / 2f - 80, 400, 160);
-        GUI.Box(box, GUIContent.none);
-        big.alignment = TextAnchor.MiddleCenter;
-        GUI.Label(new Rect(box.x, box.y + 10, box.width, 50), "Donjon terminé !", big);
-        if (GUI.Button(new Rect(box.x + 100, box.y + 90, 200, 44), "Menu principal"))
-        {
-            DungeonRun.Clear();
-            SceneManager.LoadScene(_mainMenuSceneName);
-        }
+        // Fin du donjon : écran affiché dans le combat, après le dernier combat (BattleEndUI)
     }
 }

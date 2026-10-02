@@ -209,7 +209,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - [x] Statuts de contrôle et règle anti-lock — 25/09
 - [x] **Boss en 3 phases** (terminé le 02/10, valeurs provisoires) : le Monstre sous le lit (sous les lits → fusion avec le dernier lit → il sort), lancers d'objets annoncés, draps qui attirent, débris, soldats de bois (la fusion des moutons est retirée le 02/10), carte propre au boss (voir `Enemies.md`) — faits le 01/10 : lancers annoncés (Pluie de jouets) et phase 1 (6 lits portant les PV du boss, caché sous l'un d'eux avec son ombre, change de lit chaque tour, sort quand il ne reste que son lit)
 - [ ] **Monstres de l'Orphelinat** : stats selon le barème de l'Excel (Mouton de poussière et Soldat de bois en valeurs provisoires ; les Ombres du Placard sont abandonnées le 02/10, remplacées par le Soldat de bois), patterns ; Ombres du Placard ?
-- [ ] **Écran de fin de donjon** (aujourd'hui un écran IMGUI provisoire → Menu principal)
+- [x] **Écran de fin de donjon** (02/10) : « DONJON TERMINÉ ! », bilan de l'expédition (dégâts et soins cumulés), Recommencer ou Menu principal ; affiché après le dernier combat
 - [ ] **Passe de playtest** (passifs, ATQ / défenses, fusions, monstres), puis report des chiffres en attente dans l'Excel
 - [ ] Optionnel : ambiance (lumière), mobilier d'orphelinat (à trancher : obstacles en combat ou non)
 

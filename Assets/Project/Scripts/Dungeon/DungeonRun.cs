@@ -23,6 +23,9 @@ public static class DungeonRun
 
     public static bool IsActive => Dungeon != null;
 
+    /// <summary>Bilan de l'expédition en cours (écran de fin de donjon).</summary>
+    public static DungeonRunStats Stats { get; private set; } = new DungeonRunStats();
+
     /// <summary>Nouvelle partie : salle 0, pion sur sa case de départ, aucun monstre vaincu.</summary>
     public static void Begin(DungeonData dungeon)
     {
@@ -116,5 +119,6 @@ public static class DungeonRun
         PartyCell = Vector2Int.zero;
         _defeated.Clear();
         _doorsJustOpened = false;
+        Stats = new DungeonRunStats();
     }
 }

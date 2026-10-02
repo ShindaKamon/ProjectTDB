@@ -6,7 +6,8 @@ using UnityEngine.UI;
 /// <summary>
 /// Écran de fin de combat (MVP) : « VICTOIRE ! » ou « DÉFAITE », puis Rejouer (même équipe, même
 /// combat) ou Menu principal. Affiché sur BattleEndedEvent, construit à la première utilisation ;
-/// son fond bloque les clics sur le plateau. Récompenses et retour de la couleur : plus tard.
+/// son fond bloque les clics sur le plateau. Après le dernier combat d'un donjon, « Continuer » le change en écran
+/// de fin de donjon (bilan de l'expédition, Recommencer ou Menu principal). Récompenses et retour de la couleur : plus tard.
 /// </summary>
 public class BattleEndUI : MonoBehaviour
 {
@@ -103,12 +104,38 @@ public class BattleEndUI : MonoBehaviour
 
     private void ReplayOrContinue()
     {
-        if (_continueToDungeon)
+        if (_restartDungeon)
         {
-            DungeonRun.CompleteEncounter();
+            // Même équipe, donjon depuis le début
+            DungeonRun.Begin(DungeonRun.Dungeon);
             SceneManager.LoadScene(DungeonRun.ExplorationSceneName);
         }
+        else if (_continueToDungeon)
+        {
+            DungeonRun.Stats.AddCombat(_stats.Allies);
+            DungeonRun.CompleteEncounter();
+            if (DungeonRun.IsCompleted) ShowDungeonEnd(); // dernier combat gagné : fin du donjon
+            else SceneManager.LoadScene(DungeonRun.ExplorationSceneName);
+        }
         else SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    private bool _restartDungeon;
+
+    // Écran de fin de donjon, sur le même écran : bilan de toute l'expédition, Recommencer ou Menu principal
+    private void ShowDungeonEnd()
+    {
+        _restartDungeon = true;
+        _title.text = "DONJON TERMINÉ !";
+        _title.fontSize = 72f; // plus long que « VICTOIRE ! » : tient sur une ligne
+        _title.color = _victoryColor;
+        int won = DungeonRun.Stats.CombatsWon;
+        _subtitle.text = $"{DungeonRun.Dungeon.dungeonName} — {won} combat{(won > 1 ? "s" : "")} gagné{(won > 1 ? "s" : "")}";
+        _alliesTable.text = Table("Toute l'expédition", DungeonRun.Stats.Allies);
+        _enemiesTable.transform.parent.gameObject.SetActive(false);
+        var allies = (RectTransform)_alliesTable.transform.parent;
+        allies.anchoredPosition = new Vector2(0f, allies.anchoredPosition.y);
+        _replayLabel.text = "Recommencer";
     }
 
     private void MainMenu()

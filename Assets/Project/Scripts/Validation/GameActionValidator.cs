@@ -118,6 +118,9 @@ public static class GameActionValidator
             return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");
         }
 
+        if (!HasLineOfSight(card, source.GetCurrentGridPos(), target))
+            return ValidationResult.Fail($"{card.cardName} : pas de ligne de vue sur {target.DisplayName}");
+
         // Validation du type de cible (allié/ennemi)
         bool isAlly = source.GetFaction() == target.GetFaction();
         bool isEnemy = source.GetFaction() != target.GetFaction();
@@ -210,7 +213,36 @@ public static class GameActionValidator
             return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");
         }
 
+        if (!HasLineOfSight(card, sourcePos, targetTilePos))
+            return ValidationResult.Fail($"{card.cardName} : pas de ligne de vue sur cette case");
+
         return ValidationResult.Success();
+    }
+
+    // ========== LIGNE DE VUE (décision du 02/10/2026) ==========
+    // Toutes les cartes l'exigent pour l'instant, sauf les sauts (CardData.leapToTarget, ex. Bond percutant, qui passent
+    // par-dessus) et celles qui l'ignorent (CardData.ignoresLineOfSight) : une unité
+    // (alliée ou ennemie), un lit ou un tas de jouets sur une case traversée par la droite lanceur → cible la bloque
+    // (GridGeometry.LineOfSightCells). Les unités cachées (boss sous un lit) ne bloquent pas. Sans grille (tests), dégagée.
+
+    /// <summary>Ligne de vue de la case from vers la case to (ce qui occupe from ou to ne bloque pas).</summary>
+    public static bool HasLineOfSight(CardData card, Vector2Int from, Vector2Int to)
+    {
+        if (card == null || card.ignoresLineOfSight || card.leapToTarget || !Services.IsGridServiceAvailable()) return true;
+        Unit atFrom = Services.Grid.GetUnitAtGridPos(from), atTo = Services.Grid.GetUnitAtGridPos(to);
+        return GridGeometry.IsLineClear(from, to, cell =>
+        {
+            Unit unit = Services.Grid.GetUnitAtGridPos(cell);
+            return unit != null && unit != atFrom && unit != atTo;
+        });
+    }
+
+    /// <summary>Ligne de vue de la case from vers une unité : vers au moins une de ses cases (grande unité, ex. un lit).</summary>
+    public static bool HasLineOfSight(CardData card, Vector2Int from, Unit target)
+    {
+        foreach (Vector2Int cell in target.OccupiedCells)
+            if (HasLineOfSight(card, from, cell)) return true;
+        return false;
     }
 
     // ========== CARTES DE DÉPLACEMENT D'INVOCATION (ex: Écho évanescent) ==========

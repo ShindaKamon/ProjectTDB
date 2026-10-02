@@ -74,6 +74,36 @@ public static class GridGeometry
         return cells;
     }
 
+    /// <summary>
+    /// Cases que traverse la droite qui relie les centres de from et de to, sans from ni to (ligne de vue, décision du
+    /// 02/10/2026). Une droite qui passe exactement par le coin entre deux cases ne traverse ni l'une ni l'autre.
+    /// </summary>
+    public static System.Collections.Generic.List<Vector2Int> LineOfSightCells(Vector2Int from, Vector2Int to)
+    {
+        var cells = new System.Collections.Generic.List<Vector2Int>();
+        int nx = Mathf.Abs(to.x - from.x), ny = Mathf.Abs(to.y - from.y);
+        var stepX = new Vector2Int(System.Math.Sign(to.x - from.x), 0);
+        var stepY = new Vector2Int(0, System.Math.Sign(to.y - from.y));
+        Vector2Int cell = from;
+        for (int ix = 0, iy = 0; ix < nx || iy < ny;)
+        {
+            int toX = (1 + 2 * ix) * ny, toY = (1 + 2 * iy) * nx; // bord de case le plus proche le long de la droite
+            if (toX < toY) { cell += stepX; ix++; }
+            else if (toY < toX) { cell += stepY; iy++; }
+            else { cell += stepX + stepY; ix++; iy++; } // passage par un coin
+            if (cell != to) cells.Add(cell);
+        }
+        return cells;
+    }
+
+    /// <summary>Ligne de vue dégagée de from à to : aucune case traversée n'est bloquée.</summary>
+    public static bool IsLineClear(Vector2Int from, Vector2Int to, System.Func<Vector2Int, bool> isBlocked)
+    {
+        foreach (Vector2Int cell in LineOfSightCells(from, to))
+            if (isBlocked(cell)) return false;
+        return true;
+    }
+
     /// <summary>Direction de grille la plus proche pour aller de from vers to.</summary>
     public static Vector2Int SnapDirection(Vector2Int from, Vector2Int to) => SnapDirection((Vector2)(to - from));
 }

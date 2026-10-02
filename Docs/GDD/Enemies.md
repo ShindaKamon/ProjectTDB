@@ -106,6 +106,8 @@ Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 
 **Ombre :** l'assombrissement de Marée d'ombre et de Frayeur dure **jusqu'au prochain tour du boss** (02/10/2026). **Phase 2 :** le monstre est **à moitié visible** : le Lit marche sur ses pattes d'araignée (lit soulevé, pattes qui dépassent de chaque côté, yeux rouges lumineux sous le matelas, côté pied). **Modèle :** une araignée géante (Quaternius Easy Enemy, CC0), dans les 3 phases.
 
+**Lisibilité (02/10/2026) :** bandeau d'objectif au début du combat et à chaque phase (`EnemyData.firstPhaseTitle` / `firstPhaseObjective`, `BossPhase.objective`, affichés par `BossHealthBarUI`) ; « Vide ! » sur un lit vide touché (`Unit.OnDamageResisted` → `UnitEffect.EmptyHideout`) ; bulle au survol d'un lit (`Unit.HoverHint`, ne dit « il est dessous » que si le lit est révélé) ; ombre qui se déplace (`BedHiding`) : **visible** quand son lit casse (elle file jusqu'au nouveau lit, qui devient révélé), **perdue dans le noir** avec Marée d'ombre (elle sort par le pied du lit et se dissout).
+
 **À trancher :**
 - ~~Montant du soin du passif~~ : 10 % de la barre en cours (02/10).
 - Dégâts et nombre de zones de chaque carte.

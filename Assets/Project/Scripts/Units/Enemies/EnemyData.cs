@@ -46,6 +46,8 @@ public class EnemyData : ScriptableObject
     {
         [Tooltip("Titre affiché en grand au début de la phase (ex: « Le Lit »)")]
         public string title = "";
+        [Tooltip("Objectif de la phase en une phrase, affiché sous le titre (ex: « Il a fusionné avec le dernier lit : frappe le Lit ! »)")]
+        [TextArea] public string objective = "";
         [Tooltip("PV de la phase (barre pleine au début de la phase), barème d'un joueur")]
         public int maxHealth = 100;
         [Tooltip("Pattern de la phase, joué depuis le début")]
@@ -55,6 +57,10 @@ public class EnemyData : ScriptableObject
     }
 
     [Header("Phases (boss)")]
+    [Tooltip("Titre de la première phase, affiché en grand au début du combat (vide = pas de bandeau de départ)")]
+    public string firstPhaseTitle = "";
+    [Tooltip("Objectif de la première phase en une phrase, sous le titre (ex: « Il se cache sous un des lits… »)")]
+    [TextArea] public string firstPhaseObjective = "";
     [Tooltip("Phases après la première (maxHealth + combatDeck ci-dessus) : à 0 PV, le boss repart avec la barre pleine et le pattern de la phase suivante. Vide = une seule barre.")]
     public List<BossPhase> nextPhases = new List<BossPhase>();
 

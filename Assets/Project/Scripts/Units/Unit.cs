@@ -373,6 +373,7 @@ public class Unit : MonoBehaviour
         if (ResistsDamage)
         {
             GameLog.Log($"{name} résiste aux dégâts ({damage})");
+            OnDamageResisted();
             return;
         }
 
@@ -415,6 +416,7 @@ public class Unit : MonoBehaviour
         if (ResistsDamage)
         {
             GameLog.Log($"{name} résiste aux dégâts bruts ({damage})");
+            OnDamageResisted();
             return;
         }
 
@@ -871,6 +873,12 @@ public class Unit : MonoBehaviour
     /// True tant que l'unité ignore tous les dégâts (ex. le lit sous lequel se cache le boss).
     /// </summary>
     protected virtual bool ResistsDamage => false;
+
+    /// <summary>Un coup vient d'être ignoré (ResistsDamage) : retour visuel éventuel (ex. « Vide ! » sur un lit vide).</summary>
+    protected virtual void OnDamageResisted() { }
+
+    /// <summary>Phrase d'aide affichée dans la bulle de survol (ex. « Le monstre se cache peut-être dessous »), null si aucune.</summary>
+    public virtual string HoverHint => null;
 
     // Getter pour la position de grille actuelle de l'unité.
     public Vector2Int GetCurrentGridPos()

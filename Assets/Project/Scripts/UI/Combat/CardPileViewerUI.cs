@@ -29,7 +29,10 @@ public class CardPileViewerUI : MonoBehaviour
     void Update()
     {
         if (IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
             Hide();
+            PauseMenuUI.ConsumeEscape(); // Échap ferme la pile, pas d'ouverture du menu dans la foulée
+        }
     }
 
     public void Show(string title, IReadOnlyList<CardData> cards)

@@ -87,5 +87,34 @@ namespace ProjectTDB.Tests
                 GridGeometry.StraightPath(new Vector2Int(2, 5), new Vector2Int(2, 3)));
             Assert.IsEmpty(GridGeometry.StraightPath(new Vector2Int(2, 5), new Vector2Int(2, 5)));
         }
+
+        [Test]
+        public void LineOfSightCells_StraightLine_AreTheCellsBetween()
+        {
+            CollectionAssert.AreEqual(new[] { new Vector2Int(1, 0), new Vector2Int(2, 0) },
+                GridGeometry.LineOfSightCells(new Vector2Int(0, 0), new Vector2Int(3, 0)));
+            Assert.IsEmpty(GridGeometry.LineOfSightCells(new Vector2Int(0, 0), new Vector2Int(0, 1)), "au contact : rien entre les deux");
+        }
+
+        [Test]
+        public void LineOfSightCells_ThroughACorner_SkipsBothSideCells()
+        {
+            // La droite (0,0) → (3,1) passe exactement par le coin entre (1,0), (2,0), (1,1) et (2,1)
+            CollectionAssert.AreEqual(new[] { new Vector2Int(1, 0), new Vector2Int(2, 1) },
+                GridGeometry.LineOfSightCells(new Vector2Int(0, 0), new Vector2Int(3, 1)));
+            // Diagonale parfaite : seules les cases sur la diagonale
+            CollectionAssert.AreEqual(new[] { new Vector2Int(1, 1) },
+                GridGeometry.LineOfSightCells(new Vector2Int(0, 0), new Vector2Int(2, 2)));
+        }
+
+        [Test]
+        public void IsLineClear_BlockedByAnythingOnTheLine_NotBySideCells()
+        {
+            var from = new Vector2Int(0, 0);
+            var to = new Vector2Int(4, 0);
+            Assert.IsFalse(GridGeometry.IsLineClear(from, to, c => c == new Vector2Int(2, 0)), "obstacle sur la ligne");
+            Assert.IsTrue(GridGeometry.IsLineClear(from, to, c => c == new Vector2Int(2, 1)), "obstacle à côté");
+            Assert.IsTrue(GridGeometry.IsLineClear(from, to, c => c == to || c == from), "lanceur et cible ne bloquent pas");
+        }
     }
 }

@@ -371,6 +371,7 @@ public static class DeckSaveManager
         { "Écho evanescent", "Écho évanescent" }, // orthographe provisoire du 24/09/2026
         { "Vision cauchemardesque", "Hantise" }, // nom trop long pour la carte (29/09/2026)
         { "Piolet d'ascension", "Grappin" }, // 29/09/2026 : un piolet ne fait pas bondir
+        { "Piège et recul", "Frappe et repli" }, // 02/10/2026 : la carte ne pose pas de piège
     };
 
     /// <summary>Nom actuel d'une carte (suit les renommages successifs).</summary>

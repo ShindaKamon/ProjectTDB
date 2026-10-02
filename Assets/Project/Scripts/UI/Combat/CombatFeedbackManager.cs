@@ -99,6 +99,8 @@ public class CombatFeedbackManager : MonoBehaviour
 
         var (text, kind) = DescribeEffect(evt.Effect, evt.Amount);
         Vector3 offset = Vector3.up * _effectTextSpacing * (index + 1);
+        // Cachette vide (un lit, bas) : juste au-dessus de sa barre de vie, pas à hauteur de personnage
+        if (evt.Effect == UnitEffect.EmptyHideout) offset = Vector3.up * 0.9f - _damageNumberOffset;
         ShowCustomText(text, CodexCardVisual.ChipColor(kind), evt.Target.transform.position + offset);
     }
 
@@ -123,6 +125,7 @@ public class CombatFeedbackManager : MonoBehaviour
             UnitEffect.PmImmune => ("Tenace", ChipKind.Mute),
             UnitEffect.CardCancelled => ("Carte annulée", ChipKind.Mute),
             UnitEffect.CardHindered => ("Carte entravée", ChipKind.Mute),
+            UnitEffect.EmptyHideout => ("Vide !", ChipKind.Mute),
             _ => (signed, ChipKind.Mute)
         };
     }

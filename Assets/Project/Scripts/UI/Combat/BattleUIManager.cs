@@ -159,11 +159,13 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         }
     }
 
-    // Petits aperçus des monstres ordinaires : empilés sous la carte du boss (ou à sa place sans boss), dans l'ordre
-    // d'arrivée, sans trou ; un aperçu de plus est créé si les emplacements de la scène sont tous pris
+    // Petits aperçus des monstres ordinaires : empilés sous la carte du boss (ou à sa place sans boss), dans l'ordre où
+    // ils vont jouer (le prochain en haut, recalculé à chaque tour), sans trou ; un aperçu de plus est créé si les
+    // emplacements de la scène sont tous pris
     private readonly List<EnemyCardPreviewUI> _minionPool = new List<EnemyCardPreviewUI>();
     private readonly List<Enemy> _minionOrder = new List<Enemy>();
     private float _minionTop, _minionStep, _bossPreviewTop;
+    private const float MinionGap = 6f;
 
     private bool TryTrackMinionCards(Enemy enemy)
     {
@@ -197,18 +199,35 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         }
         ys.Sort((a, b) => b.CompareTo(a));
         _minionTop = ys[0];
-        _minionStep = ys.Count > 1 ? ys[0] - ys[1] : 90f;
+        // Écart : la hauteur affichée d'un aperçu (taille réglée dans la scène) et un petit espace
+        var first = (RectTransform)_minionPool[0].transform;
+        _minionStep = first.rect.height * first.localScale.y + MinionGap;
         _bossPreviewTop = _enemyCardPreview != null ? ((RectTransform)_enemyCardPreview.transform).anchoredPosition.y : _minionTop;
     }
 
     private void LayoutMinionPreviews()
     {
         float top = _currentBoss != null ? _minionTop : _bossPreviewTop; // sans boss, la place de sa carte est libre
+        SortMinionsByTurnOrder();
         for (int i = 0; i < _minionOrder.Count; i++)
         {
             var rect = (RectTransform)_minionPreviews[_minionOrder[i]].transform;
             rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, top - i * _minionStep);
         }
+    }
+
+    // Ordre des tours comme la frise (TurnOrderUI) : les unités qui jouent, à partir de l'unité active
+    private void SortMinionsByTurnOrder()
+    {
+        if (!Services.IsGridServiceAvailable() || _minionOrder.Count < 2) return;
+        List<Unit> order = Services.Grid.GetAllUnits().FindAll(u => u != null && u.TakesTurns);
+        int start = Mathf.Max(0, order.IndexOf(Services.Grid.GetActiveUnit()));
+        int Rank(Enemy enemy)
+        {
+            int index = order.IndexOf(enemy);
+            return index < 0 ? int.MaxValue : (index - start + order.Count) % order.Count;
+        }
+        _minionOrder.Sort((a, b) => Rank(a).CompareTo(Rank(b)));
     }
 
     /// <summary>
@@ -273,6 +292,7 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
     {
         Champion champion = LocalView.ChampionToShow(e.NewActiveUnit);
         if (champion != null && champion != _currentPlayer) RegisterPlayer(champion);
+        if (_minionOrder.Count > 1) LayoutMinionPreviews(); // dans l'ordre où ils vont jouer à partir de ce tour
     }
 
     /// <summary>

@@ -194,26 +194,60 @@ public class BossHealthBarUI : MonoBehaviour
         if (e.Boss != _trackedBoss) return;
         UpdateBossName();
 
-        // Bandeau au centre de l'écran : la barre repart pleine, le joueur doit comprendre pourquoi
-        string title = _trackedBoss.GetEnemyData().nextPhases[e.Phase - 1].title;
-        string text = $"Phase {e.Phase + 1}/{e.PhaseCount}" + (string.IsNullOrEmpty(title) ? "" : $"\n{title}");
+        // Bandeau au centre de l'écran : la barre repart pleine, le joueur doit comprendre pourquoi et quoi faire
+        EnemyData.BossPhase phase = _trackedBoss.GetEnemyData().nextPhases[e.Phase - 1];
+        ShowBanner(e.Phase, e.PhaseCount, phase.title, phase.objective);
+    }
+
+    private bool _startBannerShown;
+
+    // Début du combat : bandeau de la première phase et son objectif (ex. les lits du Monstre sous le lit)
+    private void ShowStartBanner()
+    {
+        if (_startBannerShown || _trackedBoss == null) return;
+        _startBannerShown = true;
+        EnemyData data = _trackedBoss.GetEnemyData();
+        if (data != null && !string.IsNullOrEmpty(data.firstPhaseTitle))
+            ShowBanner(0, _trackedBoss.PhaseCount, data.firstPhaseTitle, data.firstPhaseObjective);
+    }
+
+    private void ShowBanner(int phase, int phaseCount, string title, string objective)
+    {
+        string text = phaseCount > 1 ? $"Phase {phase + 1}/{phaseCount}" : "";
+        if (!string.IsNullOrEmpty(title)) text += (text.Length > 0 ? "\n" : "") + title;
+        if (!string.IsNullOrEmpty(objective)) text += $"\n<size=45%>{objective}</size>";
         if (_phaseBanner != null) StopCoroutine(_phaseBanner);
-        _phaseBanner = StartCoroutine(ShowPhaseBanner(text));
+        _phaseBanner = StartCoroutine(ShowPhaseBanner(text, string.IsNullOrEmpty(objective) ? 2f : 4.5f));
     }
 
     private Coroutine _phaseBanner;
     private TextMeshProUGUI _phaseBannerText;
+    private CanvasGroup _phaseBannerGroup; // bande sombre du bandeau, pour le fondu
 
-    private System.Collections.IEnumerator ShowPhaseBanner(string text)
+    private System.Collections.IEnumerator ShowPhaseBanner(string text, float visibleSeconds)
     {
         if (_phaseBannerText == null)
         {
-            // Créé à la demande sur le canvas de la barre, au centre de l'écran
-            var go = new GameObject("PhaseBanner", typeof(RectTransform));
-            go.transform.SetParent(GetComponentInParent<Canvas>().rootCanvas.transform, false);
+            // Créé à la demande sur le canvas de la barre, au centre de l'écran : une bande sombre sur toute la largeur
+            // (lisible par-dessus le plateau), le texte dessus
+            var band = new GameObject("PhaseBanner", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
+            band.transform.SetParent(GetComponentInParent<Canvas>().rootCanvas.transform, false);
+            var bandRect = (RectTransform)band.transform;
+            bandRect.anchorMin = new Vector2(0f, 0.6f);
+            bandRect.anchorMax = new Vector2(1f, 0.6f);
+            bandRect.pivot = new Vector2(0.5f, 0.5f);
+            bandRect.sizeDelta = new Vector2(0f, 300f);
+            var bandImage = band.GetComponent<Image>();
+            bandImage.color = new Color(0f, 0f, 0f, 0.65f);
+            bandImage.raycastTarget = false;
+            _phaseBannerGroup = band.GetComponent<CanvasGroup>();
+            _phaseBannerGroup.blocksRaycasts = false;
+
+            var go = new GameObject("Text", typeof(RectTransform));
+            go.transform.SetParent(bandRect, false);
             var rect = (RectTransform)go.transform;
-            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.6f);
-            rect.sizeDelta = new Vector2(900f, 220f);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(1300f, 300f);
             _phaseBannerText = go.AddComponent<TextMeshProUGUI>();
             _phaseBannerText.alignment = TextAlignmentOptions.Center;
             _phaseBannerText.fontSize = 64f;
@@ -222,13 +256,13 @@ public class BossHealthBarUI : MonoBehaviour
         }
 
         _phaseBannerText.text = text;
-        _phaseBannerText.gameObject.SetActive(true);
-        for (float t = 0f; t < 2.5f; t += Time.deltaTime)
+        _phaseBannerGroup.gameObject.SetActive(true);
+        for (float t = 0f; t < visibleSeconds + 0.5f; t += Time.deltaTime)
         {
-            _phaseBannerText.alpha = t < 2f ? 1f : 1f - (t - 2f) / 0.5f; // visible 2 s, puis fondu
+            _phaseBannerGroup.alpha = t < visibleSeconds ? 1f : 1f - (t - visibleSeconds) / 0.5f; // visible, puis fondu
             yield return null;
         }
-        _phaseBannerText.gameObject.SetActive(false);
+        _phaseBannerGroup.gameObject.SetActive(false);
         _phaseBanner = null;
     }
 
@@ -249,6 +283,7 @@ public class BossHealthBarUI : MonoBehaviour
 
     private void OnTurnChanged(TurnChangedEvent e)
     {
+        ShowStartBanner();
         if (_trackedBoss != null) RefreshStatChips();
     }
 

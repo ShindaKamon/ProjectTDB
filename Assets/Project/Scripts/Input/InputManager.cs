@@ -180,7 +180,8 @@ public class InputManager : MonoBehaviour
                         // On survole une unité, elle est dans la portée ET c'est une cible valide
                         // (soi-même : sa case n'est pas dans la portée mais reste ciblable, voir IsValidTarget)
                         bool inRange = tilesInRange.Contains(targetTile) || hoveredUnit == activeUnit;
-                        if (inRange && inLine && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit))
+                        if (inRange && inLine && currentSelectedCard.IsValidTarget(activeUnit, hoveredUnit)
+                            && GameActionValidator.HasLineOfSight(currentSelectedCard, sourcePos, hoveredUnit))
                         {
                             hoveredPos = hoveredUnit.GetCurrentGridPos();
                             isValidHoverTarget = true;
@@ -206,7 +207,8 @@ public class InputManager : MonoBehaviour
                     // Carte d'invocation alors que l'invocation est déjà là : seule sa case est valide (soin)
                     bool isValidTile = GameActionValidator.HealsActiveSummon(currentSelectedCard, activeUnit)
                         ? GameActionValidator.CanTargetTile(currentSelectedCard, activeUnit, hoveredPos).IsValid
-                        : currentSelectedCard.targetsTile && tilesInRange.Contains(hoveredTile) && inLine && isValidTarget;
+                        : currentSelectedCard.targetsTile && tilesInRange.Contains(hoveredTile) && inLine && isValidTarget
+                          && GameActionValidator.HasLineOfSight(currentSelectedCard, sourcePos, hoveredPos);
 
                     if (isValidTile)
                     {

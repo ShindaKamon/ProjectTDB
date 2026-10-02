@@ -69,7 +69,7 @@ Decks d'exemple (4 Signatures + 16 Standard). Le **deck de base** de chaque cham
 |---|---|---|---|---|
 | Raze | Tapis vert | Colère + Joie | Alterner les émotions pour le **Bluff** (bouclier 8), vol de vie pour tenir, coûts 1 → 2 → 3 pour la Suite | Coup de colère ×3, Frappe rapide ×2, Poing ardent ×2, Charge brutale ×2, Rire lumineux ×3, Flamme de l'espoir ×2, Étincelle ×1, Élan de joie ×1 |
 | Evan | Cauchemar en écho | Colère + Peur | Coups à distance et en zone doublés par Lyse ; boucliers de la Peur ; Sidération pour annuler un lancer | Frappe rapide ×3, Poing ardent ×2, Jet de rage ×2, Explosion de rage ×1, Ombre rampante ×2, Frappe hésitante ×1, Vertige ×1, Bouclier de la terreur ×2, Réflexe de survie ×1, Sidération ×1 |
-| Crux | Grimpeur prudent | Peur + Joie | Harceler, ralentir et reculer hors de portée ; vol de vie et bouclier réactif | Piqûre d'angoisse ×3, Piège et recul ×2, Hantise ×2, Vertige ×1, Réflexe de survie ×2, Rire lumineux ×3, Étincelle ×2, Souvenir heureux ×1 |
+| Crux | Grimpeur prudent | Peur + Joie | Harceler, ralentir et reculer hors de portée ; vol de vie et bouclier réactif | Piqûre d'angoisse ×3, Frappe et repli ×2, Hantise ×2, Vertige ×1, Réflexe de survie ×2, Rire lumineux ×3, Étincelle ×2, Souvenir heureux ×1 |
 
 | Champion | Deck | Couleurs | Façon de jouer | Cœur du deck |
 |---|---|---|---|---|
@@ -77,7 +77,7 @@ Decks d'exemple (4 Signatures + 16 Standard). Le **deck de base** de chaque cham
 | Evan | Cauchemar partagé | Peur | Contrôle à plusieurs cibles, Lyse double les coups | Frappe hésitante ×4, Cauchemar collectif ×2, Aura de terreur ×2, Rumination ×2, Sidération ×1 |
 | Evan | Frère et sœur | Joie + Peur | Survie : soigner Evan et Lyse, grignoter à distance | Souffle apaisant ×3, Souvenir heureux ×2, Élan partagé ×1, Étincelle ×3, Ombre rampante ×3 |
 | Crux | Grimpeur furieux | Colère | Plonger au contact et frapper en zone | Poing ardent ×3, Balayage furieux ×3, Charge brutale ×3, Rage aveugle ×2, Bond percutant ×2 |
-| Crux | Harceleur | Peur | Frapper, ralentir, reculer | Piège et recul ×3, Piqûre d'angoisse ×4, Effroi partagé ×2, Réflexe de survie ×3 |
+| Crux | Harceleur | Peur | Frapper, ralentir, reculer | Frappe et repli ×3, Piqûre d'angoisse ×4, Effroi partagé ×2, Réflexe de survie ×3 |
 | Crux | Premier de cordée | Joie | Soutien mobile : rejoindre l'équipe et la soigner en zone | Vague de bien-être ×3, Éclat de joie ×3, Rire lumineux ×3, Élan partagé ×2 |
 | Raze | Suite | Colère | Coûts en escalier (1, 2, 3) pour enchaîner les +1 PA | Coup de colère ×4, Frappe rapide ×3, Charge brutale ×2, Sang pour sang ×2, Rage totale ×1 |
 | Raze | Bluff | Colère + Peur | Alterner les émotions pour gagner un bouclier de 8 à chaque changement | Coup de colère ×3, Piqûre d'angoisse ×3, Frappe hésitante ×3, Silence glaçant ×2, Sang pour sang ×1 |

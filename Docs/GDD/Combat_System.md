@@ -152,7 +152,7 @@ La valeur réelle d’une carte = baseline × (1 + modificateurs de portée, zon
 | **Restauration**  | Complète au début du tour                |
 | **Non-cumulatif** | Ne se garde pas entre tours              |
 
-**MVP :** grille plate sans obstacles (terrains spéciaux : V2, voir `Grid_System.md`), **sauf le combat de boss de l'Orphelinat** (01/10/2026) : les jouets lancés qui restent au sol y deviennent des obstacles, sur une carte propre (voir `Enemies.md`). Les cartes ont une option « ligne de vue requise / non requise ».
+**MVP :** grille plate sans obstacles (terrains spéciaux : V2, voir `Grid_System.md`), **sauf le combat de boss de l'Orphelinat** (01/10/2026) : les jouets lancés qui restent au sol y deviennent des obstacles, sur une carte propre (voir `Enemies.md`). **Ligne de vue (02/10/2026)** : requise par toutes les cartes pour l'instant (joueurs et monstres) ; une unité (alliée ou ennemie), un lit ou un tas de jouets sur la droite qui relie le centre du lanceur à celui de la cible la bloque (passer exactement par un coin ne bloque pas ; les unités cachées non plus). Exceptions : les sauts (ex. Bond percutant) et les cartes marquées « ligne de vue non requise » (`CardData.ignoresLineOfSight`, à régler carte par carte).
 
 **Mouvement via Cartes :**
 - Certaines cartes donnent des PM bonus (contrepartie « Élan tactique » : +2 PM)
@@ -213,7 +213,7 @@ La valeur réelle d’une carte = baseline × (1 + modificateurs de portée, zon
 | **Réduction de dégâts (%)** | Passifs de Crux et de Raze (Bluff) | Réduit les prochains dégâts subis d'un pourcentage |
 | **Vulnérabilité** | Contrepartie (Joie) | Le lanceur perd de l'**armure** (−5 par défaut, à équilibrer) jusqu'à son prochain tour : il subit plus de dégâts physiques |
 | **Bouclier réactif** | Peur (Réflexe de survie) | Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup |
-| **Recul et élan** | Peur (Fuite panique, Piège et recul) | Le lanceur recule de N cases à l'opposé de sa cible ; gain de PM (ou de PA) pour le tour en cours |
+| **Recul et élan** | Peur (Fuite panique, Frappe et repli) | Le lanceur recule de N cases à l'opposé de sa cible ; gain de PM (ou de PA) pour le tour en cours |
 | **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour). Durée comptée en tours du lanceur (voir « Décisions actées » de `GDD_Main.md`) |
 | **Réduction de PA** | Moutons (Embrumé) | **Champions seulement** (les monstres n'ont plus de PA depuis le 02/10/2026 ; Aura de terreur est devenue une **Entrave** : le monstre fait son attaque de base au lieu de sa prochaine carte, qui revient au tour suivant). Réduit les PA de la cible au prochain tour : −1 PA pour Aura de terreur (calcul Excel : 26 × (1 − 0,15 portée − 0,10 Éveil) ≈ 20 pts ≈ −20 % des PA pendant 1 tour ≈ 1 PA) |
 
@@ -243,7 +243,7 @@ La valeur réelle d’une carte = baseline × (1 + modificateurs de portée, zon
 | **Portée**       | Cartes mêlée (1) nécessitent proximité    |
 | **AOE**          | Regroupement amplifie dégâts ennemis      |
 | **Mobilité**     | PM limités = planifier mouvement          |
-| **Ligne de Vue** | Obstacles peuvent bloquer (V2)            |
+| **Ligne de Vue** | Requise par défaut (02/10/2026) : une unité, un lit ou un tas de jouets entre le lanceur et la cible la bloque ; les sauts et les cartes « ligne de vue non requise » l'ignorent |
 
 **Formations Recommandées :**
 - Ligne : couverture maximale du terrain

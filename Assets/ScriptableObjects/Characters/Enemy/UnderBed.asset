@@ -30,8 +30,12 @@ MonoBehaviour:
   basicAttack: {fileID: 11400000, guid: b0fd9321ac910f84f819c44ae91e46ba, type: 2}
   guardsAllies: 0
   darknessHealPercent: 10
+  firstPhaseTitle: Sous les lits
+  firstPhaseObjective: 'Il se cache sous un des lits. Frappe les lits pour le trouver
+    : un lit vide ne craint rien, le sien encaisse et le trahit.'
   nextPhases:
   - title: Le Lit
+    objective: "Il a fusionn\xE9 avec le dernier lit : frappe le Lit !"
     maxHealth: 250
     combatDeck:
     - {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
@@ -41,6 +45,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: fd1239cbced32eb4b9d313f73b04b172, type: 2}
     basicAttack: {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
   - title: Il sort
+    objective: "Il est sorti de sa cachette : ach\xE8ve-le !"
     maxHealth: 300
     combatDeck:
     - {fileID: 11400000, guid: 4b29a30c8ddb31449a019a2d5e47602e, type: 2}

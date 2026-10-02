@@ -31,7 +31,7 @@ La grille est la fondation tactique du jeu : positionnement, portée et contrôl
 
 ### Portée MVP
 
-- **Grille plate, sans obstacles**, ligne de vue directe
+- **Grille plate, sans obstacles de terrain** ; la ligne de vue est bloquée par les unités, lits et tas de jouets (02/10/2026, voir `Combat_System.md`)
 - Les types de terrain, obstacles et la ligne de vue bloquée décrits ci-dessous sont prévus pour la **V2**
 - Taille de grille : 10×10 dans le code (7×7 à 11×11 envisagés selon le combat)
 - Portées des cartes MVP : 1 à 6 cases

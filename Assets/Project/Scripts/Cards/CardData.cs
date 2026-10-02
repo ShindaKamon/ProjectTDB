@@ -130,6 +130,9 @@ public class CardData : ScriptableObject
     [Tooltip("Cible uniquement en ligne droite depuis le lanceur (4 directions, pas de diagonale)")]
     public bool targetInStraightLine = false;
 
+    [Tooltip("Ligne de vue non requise : la cible peut être derrière une unité, un lit ou un tas de jouets (par défaut, tout ce qui se trouve entre le lanceur et la cible la bloque ; les sauts, leapToTarget, l'ignorent toujours ; voir GameActionValidator.HasLineOfSight)")]
+    public bool ignoresLineOfSight = false;
+
     [Space(5)]
     [Tooltip("Forme de la zone d'effet")]
     public CardAreaEffect areaEffect = CardAreaEffect.None;
@@ -283,7 +286,7 @@ public class CardData : ScriptableObject
     [Tooltip("Le lanceur recule de N cases à l'opposé de sa cible après l'effet (contrepartie « Repli automatique », ex: Fuite panique)")]
     public int casterRetreat = 0;
 
-    [Tooltip("PM gagnés par le lanceur pour ce tour (« Élan tactique », ex: Piège et recul)")]
+    [Tooltip("PM gagnés par le lanceur pour ce tour (« Élan tactique », ex: Frappe et repli)")]
     public int casterMovementGain = 0;
 
     [Tooltip("PA gagnés par le lanceur pour ce tour, au-delà de son maximum (ex: Sang pour sang)")]

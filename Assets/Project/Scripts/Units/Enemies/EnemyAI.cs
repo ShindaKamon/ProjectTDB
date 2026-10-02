@@ -550,6 +550,14 @@ public class EnemyAI : MonoBehaviour
 
     private int DistanceToTarget(Unit target) => DistanceFrom(AttackOrigins(), target.GetCurrentGridPos());
 
+    // La carte peut toucher cette cible : à portée et en ligne de vue depuis une de ses cases d'origine
+    private bool InReach(CardData card, Unit target)
+    {
+        foreach (Vector2Int origin in AttackOrigins())
+            if (target.DistanceFrom(origin) <= card.targetRange && GameActionValidator.HasLineOfSight(card, origin, target)) return true;
+        return false;
+    }
+
     /// <summary>Distance (4 directions) de la case d'origine la plus proche à la cellule donnée.</summary>
     public static int DistanceFrom(IList<Vector2Int> origins, Vector2Int cell)
     {
@@ -610,15 +618,12 @@ public class EnemyAI : MonoBehaviour
             return false;
         }
 
-        // Vérifie la portée pour les cartes ciblant l'ennemi (4 directions, comme le joueur ; boss dans un lit : depuis n'importe quel lit)
-        if (card.targetType == CardTargetType.Enemy)
+        // Cartes ciblant l'ennemi : un champion à portée et en ligne de vue (4 directions, comme le joueur ; boss dans
+        // un lit : depuis n'importe quel lit)
+        if (card.targetType == CardTargetType.Enemy && !playerUnits.Exists(p => InReach(card, p)))
         {
-            int distance = DistanceToTarget(closestPlayer);
-            if (distance > card.targetRange)
-            {
-                GameLog.Log($"{_enemy.name}: {card.cardName} hors de portée (distance: {distance}, portée: {card.targetRange})");
-                return false;
-            }
+            GameLog.Log($"{_enemy.name}: {card.cardName} sans cible à portée et en ligne de vue (portée: {card.targetRange})");
+            return false;
         }
 
         // La carte peut être jouée!
@@ -648,16 +653,9 @@ public class EnemyAI : MonoBehaviour
                 // Carte offensive contre joueur
                 if (card.targetType == CardTargetType.Enemy)
                 {
-                    // Vérifie la portée (4 directions ; boss dans un lit : depuis n'importe quel lit)
-                    int distance = DistanceToTarget(closestPlayer);
-                    if (distance <= card.targetRange)
-                    {
-                        targetUnit = closestPlayer;
-                    }
-                    else
-                    {
-                        GameLog.LogWarning($"{_enemy.name}: Cible hors de portée pour {card.cardName}");
-                    }
+                    // Parmi les champions à portée et en ligne de vue (4 directions ; boss dans un lit : depuis n'importe quel lit)
+                    targetUnit = ChooseTarget(AttackOrigins(), playerUnits.FindAll(p => InReach(card, p)), card.targetRange);
+                    if (targetUnit == null) GameLog.LogWarning($"{_enemy.name}: Cible hors de portée ou de vue pour {card.cardName}");
                 }
                 // Carte sur soi-même (ex. soin)
                 else if (card.targetType == CardTargetType.Self)

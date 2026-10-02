@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Piege_et_recul
+  m_Name: Frappe_et_repli
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: "Pi\xE8ge et recul"
+  cardName: Frappe et repli
   description: "Inflige 25 d\xE9g\xE2ts \xE0 un ennemi au contact. Il perd 1 PM et
     tu gagnes 2 PM ce tour."
   specialText: 
@@ -24,6 +24,8 @@ MonoBehaviour:
   costHP: 0
   targetType: 2
   targetRange: 1
+  targetInStraightLine: 0
+  ignoresLineOfSight: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -35,25 +37,42 @@ MonoBehaviour:
   healAmount: 0
   lifestealFixedAmount: 0
   damageAroundTarget: 0
-  atkIncreased: 0
-  defenseAmount: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
   reactiveShield: 0
   armorAmount: 0
-  barrierAmount: 0
+  magicResistanceAmount: 0
   effectDuration: 1
   paReduction: 0
   pmReduction: 1
   removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 0
+  spawnedEnemy: {fileID: 0}
+  paBecomesPmInShadow: 0
+  darkensTerrain: 0
+  throwsDebris: 0
+  pileOnEmptyCell: {fileID: 0}
+  pulledPileDamage: 0
+  isAmbush: 0
+  animatedToy: {fileID: 0}
+  animatedToyEveryNthThrow: 2
   isChargeCard: 0
+  leapToTarget: 0
   knockbackDistance: 0
   pullsTowardCaster: 0
   casterRetreat: 0
   casterMovementGain: 2
   casterActionGain: 0
   casterArmorAmount: 0
+  casterMovementLoss: 0
   drawAmount: 0
+  discardHandAttackBonusPerCard: 0
   isSummonCard: 0
   summonPrefab: {fileID: 0}
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
+  telegraphedZoneCount: 0

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Corde_de_rappel
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Corde de rappel
-  description: "Tire un alli\xE9 ou un ennemi \xE0 1-5 cases de 2 cases vers toi
-    ; un ennemi subit 15 d\xE9g\xE2ts."
+  description: "Tire un alli\xE9 ou un ennemi \xE0 1-5 cases en ligne droite de 2
+    cases vers toi ; un ennemi subit 15 d\xE9g\xE2ts."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -24,7 +24,8 @@ MonoBehaviour:
   costHP: 0
   targetType: 5
   targetRange: 5
-  targetInStraightLine: 0
+  targetInStraightLine: 1
+  ignoresLineOfSight: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
@@ -47,6 +48,17 @@ MonoBehaviour:
   removeAllMovement: 0
   nextTurnActionGain: 0
   cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 0
+  spawnedEnemy: {fileID: 0}
+  paBecomesPmInShadow: 0
+  darkensTerrain: 0
+  throwsDebris: 0
+  pileOnEmptyCell: {fileID: 0}
+  pulledPileDamage: 0
+  isAmbush: 0
+  animatedToy: {fileID: 0}
+  animatedToyEveryNthThrow: 2
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 2
@@ -63,3 +75,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
+  telegraphedZoneCount: 0

@@ -1846,6 +1846,7 @@ GameObject:
   m_Component:
   - component: {fileID: 397179020}
   - component: {fileID: 397179019}
+  - component: {fileID: 397179021}
   m_Layer: 0
   m_Name: ThrowZoneView
   m_TagString: Untagged
@@ -1867,6 +1868,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectTDB::ThrowZoneView
   _markerMaterial: {fileID: 2100000, guid: b80609f82a79061469eff30a688c4c78, type: 2}
   _markerColor: {r: 0.85, g: 0.1, b: 0.1, a: 0.6}
+  _sweepColor: {r: 0.95, g: 0.55, b: 0.1, a: 0.55}
 --- !u!4 &397179020
 Transform:
   m_ObjectHideFlags: 0
@@ -1882,6 +1884,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &397179021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 397179018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ffa0f2f9573a8149b2edda38d0e573e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectTDB::EnemyThreatView
+  _markerMaterial: {fileID: 2100000, guid: b80609f82a79061469eff30a688c4c78, type: 2}
+  _moveColor: {r: 0.25, g: 0.5, b: 1, a: 0.8}
+  _threatColor: {r: 1, g: 0.3, b: 0.25, a: 0.35}
+  _focusColor: {r: 1, g: 0.85, b: 0.2, a: 0.6}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -4690,7 +4708,7 @@ RectTransform:
   m_GameObject: {fileID: 1127281002}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.46, y: 0.46, z: 0.46}
+  m_LocalScale: {x: 0.62, y: 0.62, z: 0.62}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1902895335}
@@ -6456,7 +6474,7 @@ RectTransform:
   m_GameObject: {fileID: 1540045540}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.46, y: 0.46, z: 0.46}
+  m_LocalScale: {x: 0.62, y: 0.62, z: 0.62}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 255061877}
@@ -8357,6 +8375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ffcf771ab607ca49aab674758f1e667, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ProjectTDB::FusionPanelUI
+  _awakeningEnabled: 0
   _rowHeight: 34
   _offsetAbovePanel: 44
   _buttonWidth: 130

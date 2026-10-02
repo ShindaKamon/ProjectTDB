@@ -206,7 +206,8 @@ public enum UnitEffect
     NextAttackPercent,      // ex. +15 : prochaine carte de dégâts +15 %
     PmImmune,               // Ténacité (montant ignoré)
     CardCancelled,          // prochaine carte du monstre annulée (montant ignoré)
-    CardHindered            // prochaine carte du monstre entravée : attaque de base à la place (montant ignoré)
+    CardHindered,           // prochaine carte du monstre entravée : attaque de base à la place (montant ignoré)
+    EmptyHideout            // coup sur une cachette vide (ex. un lit sans le monstre) : rien ne se passe (montant ignoré)
 }
 
 /// <summary>
@@ -371,4 +372,25 @@ public class TerrainDarknessChangedEvent : GameEvent
     {
         IsDark = isDark;
     }
+}
+
+/// <summary>
+/// Survol de l'aperçu de carte d'un monstre (EnemyCardPreviewUI) : Enemy = le monstre de l'aperçu, null à la sortie.
+/// </summary>
+public class EnemyPreviewHoveredEvent : GameEvent
+{
+    public Enemy Enemy { get; private set; }
+
+    public EnemyPreviewHoveredEvent(Enemy enemy) => Enemy = enemy;
+}
+
+/// <summary>
+/// Monstre mis en avant (survolé sur le plateau ou par son aperçu, EnemyThreatView) : son aperçu de carte grossit.
+/// Null quand plus aucun monstre n'est survolé.
+/// </summary>
+public class EnemyFocusChangedEvent : GameEvent
+{
+    public Enemy Enemy { get; private set; }
+
+    public EnemyFocusChangedEvent(Enemy enemy) => Enemy = enemy;
 }

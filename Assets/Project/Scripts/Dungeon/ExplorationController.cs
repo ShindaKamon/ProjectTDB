@@ -29,6 +29,9 @@ public class ExplorationController : MonoBehaviour
     [SerializeField] private float _walkSpeed = 6f;
 
     private const float DoorOpenDuration = 0.9f;
+    private const float WanderPauseMin = 2.5f, WanderPauseMax = 4f; // pause d'un groupe de monstres entre deux pas (secondes)
+    private const float WanderSpeed = 2f; // cases par seconde
+    private const int WanderRadius = 2; // distance max à sa case de départ
     private static readonly Color MonsterColor = new Color(0.8f, 0.2f, 0.2f);
     private static readonly Color DoorColor = new Color(0.9f, 0.75f, 0.25f);
     private static readonly Color PartyColor = new Color(0.25f, 0.55f, 0.95f);
@@ -39,6 +42,11 @@ public class ExplorationController : MonoBehaviour
     private readonly List<Transform> _partyModels = new List<Transform>();
     private Vector2Int _partyCell;
     private bool _walking;
+    private System.Func<Vector2Int, bool> _goal; // but de la marche en cours (le dernier clic)
+    private System.Action _onArrived;
+    private Vector2Int _partyNext = new Vector2Int(-1, -1); // case où le pion est en train d'entrer
+    private int _targetSpot = -1; // groupe que le pion vient chercher (il ne bouge plus)
+    private readonly Dictionary<int, Vector2Int> _monsterCell = new Dictionary<int, Vector2Int>();
     private readonly Dictionary<Vector2Int, int> _monsterAt = new Dictionary<Vector2Int, int>();
     private readonly Dictionary<Vector2Int, DungeonData.Door> _doorAt = new Dictionary<Vector2Int, DungeonData.Door>();
     private Camera _camera;
@@ -61,7 +69,7 @@ public class ExplorationController : MonoBehaviour
 
     private void Update()
     {
-        if (_walking || DungeonRun.IsCompleted) return;
+        if (DungeonRun.IsCompleted) return;
         if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
@@ -76,10 +84,12 @@ public class ExplorationController : MonoBehaviour
     {
         if (cell.x < 0 || cell.y < 0 || cell.x >= _room.size.x || cell.y >= _room.size.y) return;
 
+        _targetSpot = -1;
         if (_monsterAt.TryGetValue(cell, out int spot))
         {
-            // Le pion s'arrête à côté du groupe, puis le combat démarre
-            WalkThen(c => GridGeometry.AreAdjacent(c, cell), () => StartEncounter(spot));
+            // Le pion s'arrête à côté du groupe (là où il se trouve, il l'attend), puis le combat démarre
+            _targetSpot = spot;
+            WalkThen(c => GridGeometry.AreAdjacent(c, _monsterCell[spot]), () => StartEncounter(spot));
         }
         else if (_doorAt.TryGetValue(cell, out DungeonData.Door door))
         {
@@ -91,20 +101,26 @@ public class ExplorationController : MonoBehaviour
         }
     }
 
+    // Nouveau but : pris en compte tout de suite, même en pleine marche (le pion change de direction à la case suivante)
     private void WalkThen(System.Func<Vector2Int, bool> isGoal, System.Action onArrived)
     {
-        List<Vector2Int> path = ExplorationPathfinder.FindPath(_partyCell, _room.size,
-            c => _monsterAt.ContainsKey(c), isGoal);
-        if (path == null) return;
-        StartCoroutine(Walk(path, onArrived));
+        if (ExplorationPathfinder.FindPath(_partyCell, _room.size, c => _monsterAt.ContainsKey(c), isGoal) == null) return;
+        _goal = isGoal;
+        _onArrived = onArrived;
+        if (!_walking) StartCoroutine(Walk());
     }
 
-    private IEnumerator Walk(List<Vector2Int> path, System.Action onArrived)
+    // Le chemin est recalculé à chaque case vers le dernier but cliqué (clic en cours de marche, monstres qui bougent)
+    private IEnumerator Walk()
     {
         _walking = true;
         SetPartyWalking(true);
-        foreach (Vector2Int next in path)
+        while (true)
         {
+            List<Vector2Int> path = ExplorationPathfinder.FindPath(_partyCell, _room.size, c => _monsterAt.ContainsKey(c), _goal);
+            if (path == null || path.Count == 0) break;
+            Vector2Int next = path[0];
+            _partyNext = next;
             Vector3 from = _party.position, to = CellToWorld(next) + Vector3.up * _party.position.y;
             Face(to - from);
             for (float t = 0f; t < 1f; t += Time.deltaTime * _walkSpeed)
@@ -115,9 +131,13 @@ public class ExplorationController : MonoBehaviour
             _party.position = to;
             _partyCell = next;
         }
+        _partyNext = new Vector2Int(-1, -1);
         _walking = false;
         SetPartyWalking(false);
-        onArrived?.Invoke();
+        System.Action arrived = _goal(_partyCell) ? _onArrived : null;
+        _goal = null;
+        _onArrived = null;
+        arrived?.Invoke();
     }
 
     private void StartEncounter(int spot)
@@ -140,6 +160,8 @@ public class ExplorationController : MonoBehaviour
         if (_roomRoot != null) Destroy(_roomRoot.gameObject);
         _roomRoot = new GameObject("Room").transform;
         _monsterAt.Clear();
+        _monsterCell.Clear();
+        _targetSpot = -1;
         _doorAt.Clear();
 
         _room = DungeonRun.Dungeon.rooms[DungeonRun.CurrentRoom];
@@ -174,13 +196,59 @@ public class ExplorationController : MonoBehaviour
             if (DungeonRun.IsDefeated(DungeonRun.CurrentRoom, i)) continue;
             DungeonData.MonsterSpot spot = _room.monsters[i];
             _monsterAt[spot.cell] = i;
+            _monsterCell[i] = spot.cell;
             GameObject monsterPrefab = spot.encounter.enemies.Count > 0 ? spot.encounter.enemies[0].enemy.prefab : null;
-            if (MakeModel(monsterPrefab, _roomRoot, CellToWorld(spot.cell), 1f, 180f) == null)
-                Make(PrimitiveType.Capsule, CellToWorld(spot.cell) + Vector3.up * 0.9f, new Vector3(0.8f, 0.9f, 0.8f), MonsterColor);
+            Transform model = MakeModel(monsterPrefab, _roomRoot, CellToWorld(spot.cell), 1f, 180f);
+            if (model == null)
+                model = Make(PrimitiveType.Capsule, CellToWorld(spot.cell) + Vector3.up * 0.9f, new Vector3(0.8f, 0.9f, 0.8f), MonsterColor).transform;
+            StartCoroutine(Wander(i, spot.cell, model, _roomRoot));
         }
         _monsterPanel.Show(RemainingGroups());
 
         BuildParty();
+    }
+
+    // Un groupe de monstres se promène autour de sa case de départ (décision du 02/10/2026) : une pause assez longue
+    // pour cliquer dessus, un pas d'une case, et ainsi de suite. Il attend le pion qui vient le chercher. La boucle
+    // s'arrête quand la salle est reconstruite (roomRoot détruit).
+    private IEnumerator Wander(int spot, Vector2Int home, Transform model, Transform roomRoot)
+    {
+        while (roomRoot != null && model != null)
+        {
+            yield return new WaitForSeconds(Random.Range(WanderPauseMin, WanderPauseMax));
+            if (roomRoot == null || model == null || _targetSpot == spot) continue;
+
+            Vector2Int cell = _monsterCell[spot];
+            var options = new List<Vector2Int>();
+            foreach (Vector2Int dir in GridGeometry.Directions4)
+            {
+                Vector2Int next = cell + dir;
+                bool inRoom = next.x >= 0 && next.y >= 0 && next.x < _room.size.x && next.y < _room.size.y;
+                if (inRoom && GridGeometry.Distance(next, home) <= WanderRadius && !_monsterAt.ContainsKey(next)
+                    && !_doorAt.ContainsKey(next) && next != _partyCell && next != _partyNext)
+                    options.Add(next);
+            }
+            if (options.Count == 0) continue;
+
+            // La case d'arrivée est réservée tout de suite : le pion et les clics la voient déjà occupée
+            Vector2Int target = options[Random.Range(0, options.Count)];
+            _monsterAt.Remove(cell);
+            _monsterAt[target] = spot;
+            _monsterCell[spot] = target;
+
+            Vector3 from = model.position, to = CellToWorld(target);
+            to.y = from.y;
+            model.rotation = Quaternion.LookRotation(to - from);
+            model.TryGetComponent(out UnitAnimator animator);
+            if (animator != null) animator.SetWalking(true);
+            for (float t = 0f; t < 1f && model != null; t += Time.deltaTime * WanderSpeed)
+            {
+                model.position = Vector3.Lerp(from, to, t);
+                yield return null;
+            }
+            if (model != null) model.position = to;
+            if (animator != null) animator.SetWalking(false);
+        }
     }
 
     // Le battant pivote vers l'extérieur, puis la porte devient cliquable

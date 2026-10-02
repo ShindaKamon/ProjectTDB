@@ -928,6 +928,8 @@ public class GridManager : MonoBehaviour, IGridService
         {
             if (card.targetInStraightLine && !GridGeometry.TryGetLine(sourcePos, GetGridPosFromWorldPos(tile.transform.position), out _, out _))
                 continue;
+            if (!GameActionValidator.HasLineOfSight(card, sourcePos, GetGridPosFromWorldPos(tile.transform.position)))
+                continue; // derrière une unité, un lit ou des jouets
             tile.SetColor(_cardTargetColor);
         }
 

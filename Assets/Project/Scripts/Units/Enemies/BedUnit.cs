@@ -38,6 +38,20 @@ public class BedUnit : Unit
     public override string DisplayName => "Lit";
     protected override bool ResistsDamage => !_occupied;
 
+    // Coup sur un lit vide : « Vide ! » au-dessus du lit, pour comprendre qu'il n'est pas dessous
+    protected override void OnDamageResisted() => EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.EmptyHideout, 0));
+
+    private bool _carried; // phase 2 : le Lit est sur le dos du monstre (LiftOntoBoss)
+
+    // Ne trahit jamais un monstre caché : seul un lit révélé (touché, ou rejoint sous nos yeux) dit qu'il est dessous
+    public override string HoverHint =>
+        _carried ? "Le monstre a fusionné avec ce lit : frappe-le !"
+        : Revealed ? "Le monstre est dessous ! Les coups sur ce lit le touchent."
+        : "Le monstre se cache peut-être dessous. Un lit vide ne craint rien.";
+
+    /// <summary>Ombre du monstre sous ce lit (modèle pour l'ombre qui se déplace d'un lit à l'autre, BedHiding).</summary>
+    public Transform ShadowTemplate => _shadow != null ? _shadow.transform : null;
+
     private Vector2Int _footCell; // le lit prend 2 cases : la tête contre le mur, le pied vers la salle
 
     public override IEnumerable<Vector2Int> OccupiedCells
@@ -77,6 +91,7 @@ public class BedUnit : Unit
     /// </summary>
     public Vector3 LiftOntoBoss()
     {
+        _carried = true;
         Transform model = transform.Find("Model");
         if (model == null) return transform.position;
         Vector3 center = model.position;

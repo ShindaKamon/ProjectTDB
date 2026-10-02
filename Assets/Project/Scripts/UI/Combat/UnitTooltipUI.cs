@@ -5,7 +5,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// Bulle d'information au survol d'un monstre (boss compris) ou d'une invocation (ex: Lyse) : nom, PV (+ bouclier) et pastilles
+/// Bulle d'information au survol d'un monstre (boss compris), d'une invocation (ex: Lyse) ou d'une unité qui a une phrase d'aide
+/// (Unit.HoverHint, ex. un lit du Monstre sous le lit, affichée en dessous) : nom, PV (+ bouclier) et pastilles
 /// de stats, les mêmes que sous la barre du boss (CodexCardVisual.UnitChips : ATQ, armure,
 /// résistance magique, bouclier, PA/PM avec les retraits en attente, Ténacité).
 /// La bulle est construite à la première utilisation et suit la souris.
@@ -20,6 +21,7 @@ public class UnitTooltipUI : MonoBehaviour
     private RectTransform _panel;
     private TextMeshProUGUI _nameText;
     private TextMeshProUGUI _healthText;
+    private TextMeshProUGUI _hintText; // phrase d'aide de l'unité (Unit.HoverHint), ex. un lit du Monstre sous le lit
     private Transform _chips;
     private Unit _shownUnit;
     private float _nextRefresh;
@@ -49,7 +51,7 @@ public class UnitTooltipUI : MonoBehaviour
         if (!InputManager.TryGetPointedObject(out GameObject pointed)) return null;
         if (!pointed.TryGetComponent(out Unit unit) || unit.GetHealth() <= 0) return null;
 
-        return unit is Enemy || unit is SummonUnit ? unit : null;
+        return unit is Enemy || unit is SummonUnit || unit.HoverHint != null ? unit : null;
     }
 
     private void Refresh(Unit unit)
@@ -62,6 +64,9 @@ public class UnitTooltipUI : MonoBehaviour
         _healthText.text = $"PV {unit.GetHealth()}/{unit.GetMaxHealth()}"
             + (shield > 0 ? $"  <color=#{ColorUtility.ToHtmlStringRGB(CodexCardVisual.ChipColor(ChipKind.Shield))}>+{shield}</color>" : "");
         CardChipsView.Build(_chips, CodexCardVisual.UnitChips(unit), _chipBackground, _nameText.font, 18f, 20f);
+        string hint = unit.HoverHint;
+        _hintText.gameObject.SetActive(!string.IsNullOrEmpty(hint));
+        _hintText.text = hint;
     }
 
     private void Hide()
@@ -115,6 +120,11 @@ public class UnitTooltipUI : MonoBehaviour
         chipsLayout.childControlWidth = chipsLayout.childControlHeight = true;
         chipsLayout.childForceExpandWidth = chipsLayout.childForceExpandHeight = false;
         _chips = chips.transform;
+
+        _hintText = NewText("Hint", 17f, FontStyles.Italic);
+        _hintText.textWrappingMode = TextWrappingModes.Normal;
+        _hintText.color = CodexCardVisual.InkDim;
+        _hintText.gameObject.AddComponent<LayoutElement>().preferredWidth = 300f;
     }
 
     private TextMeshProUGUI NewText(string name, float size, FontStyles style)

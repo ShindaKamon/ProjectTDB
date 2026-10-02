@@ -1,12 +1,14 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Affiche la prochaine carte qu'un ennemi va jouer.
 /// Cette UI donne au joueur l'information stratégique pour anticiper les actions ennemies.
+/// Survolée, elle met son monstre en avant sur le plateau (zone de dégâts, EnemyThreatView) ; son monstre survolé, elle grossit.
 /// </summary>
-public class EnemyCardPreviewUI : MonoBehaviour
+public class EnemyCardPreviewUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("References")]
     [SerializeField] private TextMeshProUGUI _cardNameText;
@@ -28,7 +30,22 @@ public class EnemyCardPreviewUI : MonoBehaviour
     void Awake()
     {
         EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Subscribe<EnemyFocusChangedEvent>(OnEnemyFocusChanged);
         if (_previewContainer != null) _baseScale = _previewContainer.transform.localScale;
+    }
+
+    private const float FocusScale = 1.15f; // aperçu de son monstre survolé
+
+    public void OnPointerEnter(PointerEventData eventData) => EventBus.Publish(new EnemyPreviewHoveredEvent(_trackedEnemy));
+    public void OnPointerExit(PointerEventData eventData) => EventBus.Publish(new EnemyPreviewHoveredEvent(null));
+
+    // Son monstre est survolé (plateau ou aperçu) : la carte grossit et passe devant ses voisines
+    private void OnEnemyFocusChanged(EnemyFocusChangedEvent e)
+    {
+        if (_previewContainer == null || _flip != null) return;
+        bool focused = e.Enemy != null && e.Enemy == _trackedEnemy;
+        _previewContainer.transform.localScale = _baseScale * (focused ? FocusScale : 1f);
+        if (focused) _previewContainer.transform.SetAsLastSibling();
     }
 
     // Échelle d'origine de la carte (les aperçus des mobs sont réduits) : le retournement la respecte
@@ -66,6 +83,7 @@ public class EnemyCardPreviewUI : MonoBehaviour
     void OnDestroy()
     {
         EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Unsubscribe<EnemyFocusChangedEvent>(OnEnemyFocusChanged);
 
         // Désabonne des événements
         if (_trackedEnemy != null)

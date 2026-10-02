@@ -60,7 +60,9 @@ public class BedHiding : MonoBehaviour
     public void MoveToAnotherBed()
     {
         if (!IsHiding || _fused || _beds.Count <= 1) return;
+        Transform shadow = _current.ShadowTemplate;
         MoveTo(_beds[BedHideout.NextBed(_boss.Rng, _beds.Count, _beds.IndexOf(_current))]);
+        if (shadow != null) StartCoroutine(ShadowVanishes(shadow)); // il se perd dans le noir : on sait qu'il a bougé, pas où
     }
 
     /// <summary>
@@ -103,15 +105,70 @@ public class BedHiding : MonoBehaviour
     private void OnUnitDied(UnitDiedEvent e)
     {
         if (!(e.DeadUnit is BedUnit bed) || !_beds.Remove(bed) || _fused) return;
+        Transform fledShadow = bed == _current ? bed.ShadowTemplate : null;
         if (bed == _current) _current = null;
 
         if (_beds.Count <= 1)
         {
-            if (_current == null && _beds.Count == 1) MoveTo(_beds[0]);
+            if (_current == null && _beds.Count == 1) FleeTo(_beds[0], fledShadow);
             _boss.LoseHealth(_boss.GetHealth()); // fin de la phase 1 → Fuse (ou Emerge sans lit)
             return;
         }
-        if (_current == null) MoveTo(_beds[_boss.Rng.Next(_beds.Count)]);
+        if (_current == null) FleeTo(_beds[_boss.Rng.Next(_beds.Count)], fledShadow);
+    }
+
+    // Son lit vient de casser : il fuit sous un autre, et on voit son ombre y filer (décision du 02/10/2026)
+    private void FleeTo(BedUnit bed, Transform fromShadow)
+    {
+        MoveTo(bed);
+        if (fromShadow != null) StartCoroutine(ShadowRunsTo(fromShadow, bed));
+    }
+
+    private const float ShadowRunSeconds = 0.8f;
+
+    // Ombre noire qui file d'un lit à l'autre ; à l'arrivée, le lit est marqué comme occupé (révélé)
+    private System.Collections.IEnumerator ShadowRunsTo(Transform fromShadow, BedUnit bed)
+    {
+        Transform blob = MakeShadowBlob(fromShadow);
+        Transform target = bed.ShadowTemplate;
+        Vector3 from = blob.position, to = target != null ? target.position : bed.transform.position;
+        to.y = from.y;
+        if ((to - from).sqrMagnitude > 0.0001f) blob.rotation = Quaternion.LookRotation(to - from);
+        for (float t = 0f; t < 1f && bed != null; t += Time.deltaTime / ShadowRunSeconds)
+        {
+            blob.position = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t));
+            yield return null;
+        }
+        Destroy(blob.gameObject);
+        if (bed != null && bed == _current && bed.Occupied) bed.Revealed = true;
+    }
+
+    // Marée d'ombre : l'ombre sort du lit vers la salle et se dissout dans le noir
+    private System.Collections.IEnumerator ShadowVanishes(Transform fromShadow)
+    {
+        Transform blob = MakeShadowBlob(fromShadow);
+        Vector3 outward = -fromShadow.parent.forward; // vers le pied du lit, côté salle
+        Vector3 from = blob.position + outward * 0.9f, to = from + outward * 2f; // sort par le pied du lit, bien visible
+        Vector3 scale = blob.localScale;
+        for (float t = 0f; t < 1f; t += Time.deltaTime / (ShadowRunSeconds * 1.5f))
+        {
+            blob.position = Vector3.Lerp(from, to, t);
+            blob.localScale = scale * Mathf.Clamp01(2f - 2f * t); // entière, puis se dissout dans la seconde moitié
+            yield return null;
+        }
+        Destroy(blob.gameObject);
+    }
+
+    // Copie de l'ombre d'un lit, en tache ronde au sol, détachée du lit (qui peut disparaître)
+    private static Transform MakeShadowBlob(Transform template)
+    {
+        Transform blob = Instantiate(template.gameObject).transform;
+        blob.name = "ShadowOnTheMove";
+        blob.gameObject.SetActive(true);
+        blob.position = template.position;
+        blob.rotation = template.rotation;
+        blob.localScale = new Vector3(0.9f, template.lossyScale.y, 0.9f);
+        return blob;
     }
 
     private void OnBossPhaseChanged(BossPhaseChangedEvent e)

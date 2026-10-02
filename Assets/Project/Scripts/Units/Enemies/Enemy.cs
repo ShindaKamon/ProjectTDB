@@ -54,9 +54,22 @@ public class Enemy : Unit, IOutgoingDamageModifier
     /// </summary>
     public bool IsNextCardCancelled { get; private set; }
 
+    /// <summary>Embuscade annoncée (ex. Frayeur) : elle a lieu au début de son prochain tour (null si aucune).</summary>
+    public CardData PendingAmbush { get; private set; }
+
+    public void AnnounceAmbush(CardData card) => PendingAmbush = card;
+
+    public CardData TakePendingAmbush()
+    {
+        CardData card = PendingAmbush;
+        PendingAmbush = null;
+        return card;
+    }
+
     public void CancelNextCard()
     {
         ClearPendingThrow(); // Sidération annule aussi un lancer déjà annoncé
+        PendingAmbush = null; // et une embuscade annoncée
         if (GetNextCard() == null) return;
         IsNextCardCancelled = true;
         EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.CardCancelled, 0));
@@ -200,6 +213,12 @@ public class Enemy : Unit, IOutgoingDamageModifier
     /// <summary>Phase en cours (0 = la première).</summary>
     public int Phase => _phase;
 
+    /// <summary>Attaque de base de la phase en cours (sinon celle d'EnemyData).</summary>
+    public CardData BasicAttack =>
+        _phase > 0 && _enemyData.nextPhases[_phase - 1].basicAttack != null
+            ? _enemyData.nextPhases[_phase - 1].basicAttack
+            : _enemyData?.basicAttack;
+
     /// <summary>Nombre de phases : 1 + EnemyData.nextPhases.</summary>
     public int PhaseCount => 1 + (_enemyData != null ? _enemyData.nextPhases.Count : 0);
 
@@ -296,12 +315,14 @@ public class Enemy : Unit, IOutgoingDamageModifier
     /// Annonce les zones d'un lancer (ThrowZonePicker), qui tomberont au début du prochain tour du monstre.
     /// </summary>
     /// <param name="cells">Cases du plateau (même ordre sur tous les PC).</param>
-    public void AnnounceThrow(CardData card, IList<Vector2Int> cells, IList<Vector2Int> championCells)
+    /// <param name="zoneCount">Nombre de zones (-1 = CardData.telegraphedZoneCount ; ex. Bric-à-brac : plus avec les débris).</param>
+    public void AnnounceThrow(CardData card, IList<Vector2Int> cells, IList<Vector2Int> championCells, int zoneCount = -1)
     {
         int radius = card.isAOE ? card.aoeRadius : 0;
         _pendingThrowCard = card;
         _pendingThrowEpicenters.Clear();
-        _pendingThrowEpicenters.AddRange(ThrowZonePicker.Pick(_rng, cells, championCells, card.telegraphedZoneCount, radius));
+        _pendingThrowEpicenters.AddRange(ThrowZonePicker.Pick(_rng, cells, championCells,
+            zoneCount >= 0 ? zoneCount : card.telegraphedZoneCount, radius));
 
         // Un lancer sur N (à partir du N-ième), un des jouets s'animera : zone non marquée, jamais sur un champion
         _throwCount++;

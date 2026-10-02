@@ -42,6 +42,9 @@ public class EnemyAI : MonoBehaviour
         if (_enemy != null && _enemy.OnOwnTurnStart(hidden || TerrainDarkness.IsDark) > 0) yield return new WaitForSeconds(0.5f);
         TerrainDarkness.OnTurnStart(_enemyUnit);
 
+        // Embuscade annoncée au tour précédent (ex. Frayeur) : il surgit au contact du champion le plus faible
+        if (_enemy != null && _enemy.PendingAmbush != null) yield return StartCoroutine(ResolveAmbush());
+
         // PHASE 0 : les PM ont été remis à niveau par GridManager, puis les retraits appliqués.
         // Contrôlé = a perdu des PM ce tour (règle anti-lock, voir TryBasicAttack ; pas de PA chez les monstres)
         bool controlled = _enemy != null && _enemyUnit.GetCurrentMovementPoints() < _enemyUnit.GetMaxMovementPoints();
@@ -161,7 +164,8 @@ public class EnemyAI : MonoBehaviour
                     if (playedCard != null)
                     {
                         // Exécute l'effet de la carte ; un lancer annoncé ne frappe qu'au prochain tour
-                        if (playedCard.telegraphedZoneCount > 0) yield return StartCoroutine(AnnounceThrow(playedCard));
+                        if (playedCard.isAmbush) _enemy.AnnounceAmbush(playedCard); // il frappera au prochain tour
+                        else if (playedCard.telegraphedZoneCount > 0) yield return StartCoroutine(AnnounceThrow(playedCard));
                         else yield return StartCoroutine(ExecuteEnemyCard(playedCard));
                         cardPlayed = true;
                         ApplyCardSideEffects(playedCard, hiding);
@@ -201,7 +205,7 @@ public class EnemyAI : MonoBehaviour
     /// </summary>
     private IEnumerator TryBasicAttack()
     {
-        CardData basicAttack = _enemy.GetEnemyData()?.basicAttack;
+        CardData basicAttack = _enemy.BasicAttack; // celle de la phase en cours
         if (basicAttack == null)
         {
             GameLog.LogWarning($"{_enemy.name}: carte injouable mais aucune attaque de base définie (EnemyData.basicAttack)");
@@ -224,7 +228,18 @@ public class EnemyAI : MonoBehaviour
         List<Vector2Int> playerCells = Services.Grid.GetAllPlayerUnits().ConvertAll(u => u.GetCurrentGridPos());
         // Les jouets ne tombent jamais sur un lit (Enemies.md)
         List<Vector2Int> cells = Services.Grid.GetAllCells().FindAll(c => !(Services.Grid.GetUnitAtGridPos(c) is BedUnit));
-        _enemy.AnnounceThrow(card, cells, playerCells);
+        // Ex. Bric-à-brac : il ramasse tous les débris (ils disparaissent), une zone de plus par tas
+        int zoneCount = card.telegraphedZoneCount;
+        if (card.throwsDebris)
+        {
+            foreach (Unit debris in Services.Grid.GetAllUnits().FindAll(u => u is DebrisUnit))
+            {
+                debris.Despawn();
+                zoneCount++;
+            }
+            cells = Services.Grid.GetAllCells().FindAll(c => !(Services.Grid.GetUnitAtGridPos(c) is BedUnit));
+        }
+        _enemy.AnnounceThrow(card, cells, playerCells, zoneCount);
         yield return new WaitForSeconds(0.5f);
     }
 
@@ -243,6 +258,51 @@ public class EnemyAI : MonoBehaviour
         if (toy != null && Services.Grid.GetTileAtPosition(toyCell) != null && Services.Grid.GetUnitAtGridPos(toyCell) == null)
             Services.Grid.SpawnEnemy(toy, toyCell);
         yield return new WaitForSeconds(0.5f);
+    }
+
+    // Embuscade (ex. Frayeur) : il surgit au contact du champion qui a le moins de PV et lui applique la carte
+    private IEnumerator ResolveAmbush()
+    {
+        CardData card = _enemy.TakePendingAmbush();
+        List<Unit> champions = Services.Grid.GetAllPlayerUnits();
+        Unit target = null;
+        foreach (Unit champion in champions)
+            if (target == null || champion.GetHealth() < target.GetHealth()) target = champion;
+        if (target == null) yield break;
+
+        Vector2Int pos = _enemyUnit.GetCurrentGridPos();
+        var others = champions.FindAll(c => c != target).ConvertAll(c => c.GetCurrentGridPos());
+        Vector2Int? cell = AmbushCell(target.GetCurrentGridPos(), others,
+            p => p == pos || (Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null));
+        if (cell.HasValue) _enemyUnit.TeleportTo(cell.Value);
+        GameLog.Log($"{_enemy.name} surgit au contact de {target.name} ({card.cardName})");
+
+        yield return StartCoroutine(_enemy.LookAtCoroutine(target.transform.position));
+        card.ExecuteEffect(_enemy, target);
+        yield return new WaitForSeconds(0.5f);
+    }
+
+    /// <summary>
+    /// Case de l'embuscade : la case libre au contact de la cible la plus éloignée des autres champions (ordre fixe des
+    /// 4 directions à égalité) ; si la cible est encerclée, la case libre la plus proche. Null s'il n'y en a aucune.
+    /// </summary>
+    public static Vector2Int? AmbushCell(Vector2Int target, IList<Vector2Int> otherChampions, System.Func<Vector2Int, bool> isFree)
+    {
+        Vector2Int? best = null;
+        int bestScore = int.MinValue;
+        foreach (Vector2Int dir in GridGeometry.Directions4)
+        {
+            Vector2Int cell = target + dir;
+            if (!isFree(cell)) continue;
+            int score = int.MaxValue; // sans autre champion, toutes les cases se valent
+            foreach (Vector2Int other in otherChampions) score = Mathf.Min(score, GridGeometry.Distance(cell, other));
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = cell;
+            }
+        }
+        return best ?? NearestFreeCell(target, isFree);
     }
 
     // Effets d'une carte de monstre qui ne visent personne : ils ont lieu même si la carte part dans le vide

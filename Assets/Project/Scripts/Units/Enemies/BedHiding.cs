@@ -50,10 +50,11 @@ public class BedHiding : MonoBehaviour
         EventBus.Unsubscribe<UnitHealedEvent>(OnUnitHealed);
     }
 
-    // Phase 2 : le Lit porte les PV du boss, il récupère ce que le boss récupère (ex. Tapi dans le noir)
+    // Son lit récupère ce que le boss récupère (ex. Tapi dans le noir) : en phase 1 la barre reste à la mesure des
+    // lits, en phase 2 le Lit porte les PV du boss
     private void OnUnitHealed(UnitHealedEvent e)
     {
-        if (_fused && e.Target == _boss && _current != null) _current.Heal(e.HealAmount);
+        if (e.Target == _boss && _current != null) _current.Heal(e.HealAmount);
     }
 
     /// <summary>Phase 1 : il passe sous un autre lit, caché à nouveau (ex. Marée d'ombre).</summary>
@@ -97,12 +98,21 @@ public class BedHiding : MonoBehaviour
         _boss.LoseHealth(e.EffectiveDamage);
     }
 
-    // Phase 1 : son lit casse, il fuit sous un autre (caché à nouveau)
+    // Phase 1 : son lit casse, il fuit sous un autre (caché à nouveau). Quand il ne reste qu'un lit (ou aucun), la
+    // phase 1 se termine quoi qu'il reste dans sa barre : il fusionne avec le dernier lit (sinon, sans cachette, le
+    // combat serait bloqué)
     private void OnUnitDied(UnitDiedEvent e)
     {
-        if (!(e.DeadUnit is BedUnit bed) || !_beds.Remove(bed) || bed != _current || _fused) return;
-        _current = null;
-        if (_beds.Count > 0) MoveTo(_beds[_boss.Rng.Next(_beds.Count)]);
+        if (!(e.DeadUnit is BedUnit bed) || !_beds.Remove(bed) || _fused) return;
+        if (bed == _current) _current = null;
+
+        if (_beds.Count <= 1)
+        {
+            if (_current == null && _beds.Count == 1) MoveTo(_beds[0]);
+            _boss.LoseHealth(_boss.GetHealth()); // fin de la phase 1 → Fuse (ou Emerge sans lit)
+            return;
+        }
+        if (_current == null) MoveTo(_beds[_boss.Rng.Next(_beds.Count)]);
     }
 
     private void OnBossPhaseChanged(BossPhaseChangedEvent e)
@@ -132,21 +142,32 @@ public class BedHiding : MonoBehaviour
         GameLog.Log($"{_boss.name} fusionne avec le lit {lit.GetCurrentGridPos()} ({lit.GetHealth()} PV)");
     }
 
-    // Phase 3 : le Lit cède (s'il n'est pas déjà tombé avec la barre), le boss sort sur sa case
+    // Phase 3 : le Lit cède (s'il n'est pas déjà tombé avec la barre) et laisse ses débris ; le boss sort à côté
     private void Emerge()
     {
         BedUnit lit = _current;
         _current = null;
         _fused = false;
         _beds.Clear();
-        if (lit == null) return;
+        if (lit == null)
+        {
+            // Plus aucun lit : il sort là où il était caché, sur la case libre la plus proche
+            Vector2Int from = _boss.GetCurrentGridPos();
+            Vector2Int? free = EnemyAI.NearestFreeCell(from, p => Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
+            SetVisible(true);
+            _boss.TeleportTo(free ?? from);
+            return;
+        }
 
         Vector2Int cell = lit.GetCurrentGridPos();
+        var litCells = new List<Vector2Int>(lit.OccupiedCells);
+        Vector2Int? exit = EnemyAI.NearestFreeCell(cell, p => !litCells.Contains(p)
+            && Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
         if (lit.GetHealth() > 0) lit.Collapse();
         else lit.Occupied = false;
 
         SetVisible(true);
-        _boss.TeleportTo(cell);
+        _boss.TeleportTo(exit ?? cell);
         GameLog.Log($"{_boss.name} sort du Lit");
     }
 

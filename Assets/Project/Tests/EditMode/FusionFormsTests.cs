@@ -23,6 +23,7 @@ namespace ProjectTDB.Tests
             public Unit GetUnitAtGridPos(Vector2Int gridPos) => Units.Find(u => u.GetCurrentGridPos() == gridPos);
             public SummonUnit SpawnSummon(GameObject prefab, Vector2Int gridPos, Unit owner, int maxHealth) => null;
             public Enemy SpawnEnemy(EnemyData data, Vector2Int gridPos) => null;
+            public DebrisUnit SpawnDebris(GameObject prefab, IList<Vector2Int> cells, Quaternion rotation) => null;
             public Tile GetTileAtPosition(Vector2Int pos) => null;
             public List<Vector2Int> GetAllCells() => new List<Vector2Int>();
             public Vector2Int GetGridPosFromWorldPos(Vector3 worldPos) => Vector2Int.zero;

@@ -44,10 +44,14 @@ public class EnemyData : ScriptableObject
     [System.Serializable]
     public class BossPhase
     {
+        [Tooltip("Titre affiché en grand au début de la phase (ex: « Le Lit »)")]
+        public string title = "";
         [Tooltip("PV de la phase (barre pleine au début de la phase), barème d'un joueur")]
         public int maxHealth = 100;
         [Tooltip("Pattern de la phase, joué depuis le début")]
         public List<CardData> combatDeck = new List<CardData>();
+        [Tooltip("Attaque de base de la phase (vide = celle d'EnemyData)")]
+        public CardData basicAttack;
     }
 
     [Header("Phases (boss)")]

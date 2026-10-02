@@ -244,6 +244,12 @@ public class CardData : ScriptableObject
     [Tooltip("Carte de monstre : assombrit tout le terrain jusqu'au prochain tour du lanceur (ex: Marée d'ombre, Frayeur ; voir TerrainDarkness)")]
     public bool darkensTerrain = false;
 
+    [Tooltip("Lancer annoncé : ramasse tous les débris du terrain pour les lancer (ils disparaissent), une zone de plus par tas de débris (ex: Bric-à-brac)")]
+    public bool throwsDebris = false;
+
+    [Tooltip("Embuscade (ex: Frayeur) : rien ce tour-ci (hors effets sans cible, ex. l'ombre) ; au début de son prochain tour, le monstre surgit au contact du champion qui a le moins de PV et lui applique la carte")]
+    public bool isAmbush = false;
+
     [Tooltip("Lancer annoncé : un des jouets lancés s'anime en ce monstre s'il tombe sur une case vide (zone non marquée, jamais celle d'un champion) (ex: soldat de bois de Pluie de jouets)")]
     public EnemyData animatedToy;
 
@@ -437,6 +443,8 @@ public class CardData : ScriptableObject
 
         foreach (Unit unit in allUnits)
         {
+            if (!unit.IsTargetable) continue; // décor (ex. débris) : jamais touché
+
             // Touchée si une de ses cases est dans la zone (grande unité, ex. un lit sur 2 cases)
             bool inShape = false;
             foreach (Vector2Int cell in unit.OccupiedCells) inShape |= IsInAOEShape(source, epicenter, cell);

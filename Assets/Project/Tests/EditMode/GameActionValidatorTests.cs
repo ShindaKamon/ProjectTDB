@@ -357,6 +357,18 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void CanTargetUnit_Debris_Fails()
+        {
+            var card = NewCard();
+            card.targetType = CardTargetType.Enemy;
+            card.targetRange = 10;
+
+            var result = GameActionValidator.CanTargetUnit(card, NewUnit<Unit>(), NewUnit<DebrisUnit>());
+
+            Assert.IsFalse(result.IsValid, "les débris bloquent des cases mais ne se ciblent pas");
+        }
+
+        [Test]
         public void CanTargetUnit_EnemyType_TargetingEnemy_Succeeds()
         {
             var card = NewCard();

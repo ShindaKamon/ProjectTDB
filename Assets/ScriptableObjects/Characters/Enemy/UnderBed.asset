@@ -31,17 +31,22 @@ MonoBehaviour:
   guardsAllies: 0
   darknessHealPercent: 10
   nextPhases:
-  - maxHealth: 250
+  - title: Le Lit
+    maxHealth: 250
     combatDeck:
     - {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
+    - {fileID: 11400000, guid: 870fe08d61c3c5c45968389fb8e38d5c, type: 2}
     - {fileID: 11400000, guid: ab072e1efdc8a3e469a8924742aaa686, type: 2}
     - {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
     - {fileID: 11400000, guid: fd1239cbced32eb4b9d313f73b04b172, type: 2}
-  - maxHealth: 300
+    basicAttack: {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
+  - title: Il sort
+    maxHealth: 300
     combatDeck:
     - {fileID: 11400000, guid: 4b29a30c8ddb31449a019a2d5e47602e, type: 2}
-    - {fileID: 11400000, guid: ab072e1efdc8a3e469a8924742aaa686, type: 2}
+    - {fileID: 11400000, guid: 921b5e703f845f344ac68002e0325e3f, type: 2}
     - {fileID: 11400000, guid: 4b29a30c8ddb31449a019a2d5e47602e, type: 2}
-    - {fileID: 11400000, guid: 7aa82ffd82021dc45b2e20a4b1b04a5e, type: 2}
+    - {fileID: 11400000, guid: 0817960f0655d9240a26843fa150e23f, type: 2}
+    basicAttack: {fileID: 11400000, guid: 4b29a30c8ddb31449a019a2d5e47602e, type: 2}
   healthBarOffset: {x: 0, y: 2, z: 0}
   healthBarColor: {r: 1, g: 0, b: 0, a: 1}

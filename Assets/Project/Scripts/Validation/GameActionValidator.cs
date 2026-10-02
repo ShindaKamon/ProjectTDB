@@ -103,6 +103,10 @@ public static class GameActionValidator
         if (target == null)
             return ValidationResult.Fail($"{card.cardName} nécessite une cible");
 
+        // Élément du décor qui bloque des cases mais ne se cible pas (ex. débris d'un lit)
+        if (!target.IsTargetable)
+            return ValidationResult.Fail($"{target.DisplayName} ne peut pas être ciblé");
+
         // Ciblage en ligne droite (même ligne ou même colonne que le lanceur)
         if (card.targetInStraightLine && !GridGeometry.TryGetLine(source.GetCurrentGridPos(), target.GetCurrentGridPos(), out _, out _))
             return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");

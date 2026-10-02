@@ -81,6 +81,21 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void BasicAttack_FollowsThePhase()
+        {
+            Enemy boss = NewBoss(NewCard("Agrippe"), NewCard("Agrippe du Lit"), NewCard("Agrippe au contact"));
+            EnemyData data = boss.GetEnemyData();
+            data.basicAttack = NewCard("Agrippe 1-3");
+            data.nextPhases[0].basicAttack = NewCard("Agrippe 1-4");
+
+            Assert.AreSame(data.basicAttack, boss.BasicAttack);
+            boss.LoseHealth(100);
+            Assert.AreSame(data.nextPhases[0].basicAttack, boss.BasicAttack, "phase 2 : la sienne");
+            boss.LoseHealth(120);
+            Assert.AreSame(data.basicAttack, boss.BasicAttack, "phase 3 sans attaque propre : celle d'EnemyData");
+        }
+
+        [Test]
         public void LoseHealth_GoesThroughPhases_LikeDamage()
         {
             CardData third = NewCard("Agrippe au contact");

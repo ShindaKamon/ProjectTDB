@@ -191,7 +191,45 @@ public class BossHealthBarUI : MonoBehaviour
 
     private void OnBossPhaseChanged(BossPhaseChangedEvent e)
     {
-        if (e.Boss == _trackedBoss) UpdateBossName();
+        if (e.Boss != _trackedBoss) return;
+        UpdateBossName();
+
+        // Bandeau au centre de l'écran : la barre repart pleine, le joueur doit comprendre pourquoi
+        string title = _trackedBoss.GetEnemyData().nextPhases[e.Phase - 1].title;
+        string text = $"Phase {e.Phase + 1}/{e.PhaseCount}" + (string.IsNullOrEmpty(title) ? "" : $"\n{title}");
+        if (_phaseBanner != null) StopCoroutine(_phaseBanner);
+        _phaseBanner = StartCoroutine(ShowPhaseBanner(text));
+    }
+
+    private Coroutine _phaseBanner;
+    private TextMeshProUGUI _phaseBannerText;
+
+    private System.Collections.IEnumerator ShowPhaseBanner(string text)
+    {
+        if (_phaseBannerText == null)
+        {
+            // Créé à la demande sur le canvas de la barre, au centre de l'écran
+            var go = new GameObject("PhaseBanner", typeof(RectTransform));
+            go.transform.SetParent(GetComponentInParent<Canvas>().rootCanvas.transform, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.6f);
+            rect.sizeDelta = new Vector2(900f, 220f);
+            _phaseBannerText = go.AddComponent<TextMeshProUGUI>();
+            _phaseBannerText.alignment = TextAlignmentOptions.Center;
+            _phaseBannerText.fontSize = 64f;
+            _phaseBannerText.raycastTarget = false;
+            if (_bossNameText != null) _phaseBannerText.font = _bossNameText.font;
+        }
+
+        _phaseBannerText.text = text;
+        _phaseBannerText.gameObject.SetActive(true);
+        for (float t = 0f; t < 2.5f; t += Time.deltaTime)
+        {
+            _phaseBannerText.alpha = t < 2f ? 1f : 1f - (t - 2f) / 0.5f; // visible 2 s, puis fondu
+            yield return null;
+        }
+        _phaseBannerText.gameObject.SetActive(false);
+        _phaseBanner = null;
     }
 
     // Nom du boss, suivi de sa phase s'il en a plusieurs (« Phase 2/3 ») : sa barre repart pleine à chaque phase

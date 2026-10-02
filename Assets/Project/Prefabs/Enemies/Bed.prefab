@@ -106,6 +106,7 @@ MonoBehaviour:
   _rotationSpeed: 10
   _shadow: {fileID: 7471970217894046116}
   _healthBarOffset: {x: 0, y: 0.9, z: 0}
+  _debrisPrefab: {fileID: 3988413431034122830, guid: 25b9e7e80c8e96643943bc1aa4fd2504, type: 3}
 --- !u!1 &4179148358139753333
 GameObject:
   m_ObjectHideFlags: 0

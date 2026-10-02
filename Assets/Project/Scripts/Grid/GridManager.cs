@@ -856,6 +856,21 @@ public class GridManager : MonoBehaviour, IGridService
         return enemy;
     }
 
+    public DebrisUnit SpawnDebris(GameObject prefab, IList<Vector2Int> cells, Quaternion rotation)
+    {
+        if (prefab == null || cells == null || cells.Count == 0) return null;
+        foreach (Vector2Int cell in cells)
+            if (!_tiles.ContainsKey(cell) || GetUnitAtGridPos(cell) != null) return null;
+
+        DebrisUnit debris = Instantiate(prefab).GetRequiredComponent<DebrisUnit>("Débris");
+        if (debris == null) return null;
+        debris.InitializeDebris(cells, rotation);
+        _units.Add(debris);
+        _gridRepository.AddUnit(debris);
+        debris.OnUnitDied += HandleUnitDied; // ramassés par Bric-à-brac (Despawn)
+        return debris;
+    }
+
     /// <summary>
     /// Retourne la TurnStateMachine (Phase 3.4)
     /// </summary>

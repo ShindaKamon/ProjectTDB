@@ -104,6 +104,18 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void Announce_ZoneCountOverride_ForDebris()
+        {
+            // Bric-à-brac : 1 zone de base + 2 tas de débris ramassés = 3 zones
+            Enemy enemy = NewEnemy();
+            enemy.AnnounceThrow(NewThrow(1), Board(), new List<Vector2Int>(), 3);
+
+            var epicenters = new List<Vector2Int>();
+            enemy.TakePendingThrow(epicenters);
+            Assert.AreEqual(3, epicenters.Count);
+        }
+
+        [Test]
         public void AnimatedToy_EverySecondThrow_FromTheSecond_NeverOnAChampion()
         {
             var soldier = ScriptableObject.CreateInstance<EnemyData>();

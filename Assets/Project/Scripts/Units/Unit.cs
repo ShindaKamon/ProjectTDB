@@ -838,6 +838,9 @@ public class Unit : MonoBehaviour
     /// </summary>
     public virtual bool ShownInCombatSummary => true;
 
+    /// <summary>False pour un élément du décor qui bloque ses cases sans pouvoir être ciblé ni touché (ex. débris).</summary>
+    public virtual bool IsTargetable => true;
+
     /// <summary>
     /// Cases occupées : la sienne, ou plusieurs pour une grande unité (ex. un lit sur 2 cases). La grille, les zones
     /// et la portée d'une carte en tiennent compte.

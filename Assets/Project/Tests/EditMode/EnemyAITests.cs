@@ -120,6 +120,26 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void AmbushCell_NextToTarget_FarthestFromOtherChampions()
+        {
+            // Cible en (5,5), autre champion en (5,8) au nord : Frayeur surgit au sud de la cible, en (5,4)
+            Vector2Int? cell = EnemyAI.AmbushCell(new Vector2Int(5, 5), new[] { new Vector2Int(5, 8) },
+                FreeExcept(new Vector2Int(5, 5), new Vector2Int(5, 8)));
+
+            Assert.AreEqual(new Vector2Int(5, 4), cell);
+        }
+
+        [Test]
+        public void AmbushCell_TargetSurrounded_NearestFreeCell()
+        {
+            var target = new Vector2Int(5, 5);
+            Vector2Int? cell = EnemyAI.AmbushCell(target, new Vector2Int[0],
+                FreeExcept(target, new Vector2Int(4, 5), new Vector2Int(6, 5), new Vector2Int(5, 4), new Vector2Int(5, 6)));
+
+            Assert.AreEqual(2, GridGeometry.Distance(target, cell.Value));
+        }
+
+        [Test]
         public void GuardCell_BetweenProtegeeAndThreat()
         {
             // Mouton en (5,5), champion en (5,1) au sud : le soldat se place au sud du mouton, en (5,4)

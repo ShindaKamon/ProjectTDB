@@ -244,8 +244,14 @@ public class CardData : ScriptableObject
     [Tooltip("Carte de monstre : assombrit tout le terrain jusqu'au prochain tour du lanceur (ex: Marée d'ombre, Frayeur ; voir TerrainDarkness)")]
     public bool darkensTerrain = false;
 
-    [Tooltip("Lancer annoncé : ramasse tous les débris du terrain pour les lancer (ils disparaissent), une zone de plus par tas de débris (ex: Bric-à-brac)")]
+    [Tooltip("Lancer annoncé : ramasse un tas de débris (jouets tombés) pour le lancer (il disparaît) ; sans débris au sol, la carte ne fait rien (ex: Bric-à-brac)")]
     public bool throwsDebris = false;
+
+    [Tooltip("Lancer annoncé : chaque objet tombé sur une case vide y reste en tas (obstacle, munition de Bric-à-brac) (ex: les jouets de Pluie de jouets)")]
+    public GameObject pileOnEmptyCell;
+
+    [Tooltip("Carte de monstre : avant son effet, ramène vers le lanceur (boss : son lit) tous les tas de débris du plateau, qui disparaissent ; chaque champion sur le trajet d'un tas (PileSweep) subit ces dégâts. 0 = rien (ex: Au lit !)")]
+    public int pulledPileDamage = 0;
 
     [Tooltip("Embuscade (ex: Frayeur) : rien ce tour-ci (hors effets sans cible, ex. l'ombre) ; au début de son prochain tour, le monstre surgit au contact du champion qui a le moins de PV et lui applique la carte")]
     public bool isAmbush = false;

@@ -325,17 +325,20 @@ public class ResourceDebuffChangedEvent : GameEvent
 
 /// <summary>
 /// Publié quand les zones annoncées d'un lancer de monstre changent : annoncées (cases couvertes), puis vidées
-/// quand elles tombent, sont annulées (Sidération) ou que le monstre meurt (liste vide)
+/// quand elles tombent, sont annulées (Sidération) ou que le monstre meurt (liste vide).
+/// IsSweep : trajets des tas de débris qu'Au lit ! ramènera s'il est la prochaine carte (PileSweep), affichés à part.
 /// </summary>
 public class ThrowZonesChangedEvent : GameEvent
 {
     public Enemy Thrower { get; private set; }
     public IReadOnlyList<Vector2Int> Cells { get; private set; }
+    public bool IsSweep { get; private set; }
 
-    public ThrowZonesChangedEvent(Enemy thrower, IReadOnlyList<Vector2Int> cells)
+    public ThrowZonesChangedEvent(Enemy thrower, IReadOnlyList<Vector2Int> cells, bool isSweep = false)
     {
         Thrower = thrower;
         Cells = cells;
+        IsSweep = isSweep;
     }
 }
 

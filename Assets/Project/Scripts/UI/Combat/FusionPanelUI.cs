@@ -10,6 +10,9 @@ using TMPro;
 /// </summary>
 public class FusionPanelUI : MonoBehaviour
 {
+    [Tooltip("Éveil retiré pour l'instant (02/10/2026, à retravailler) : jauges et boutons masqués, donc aucune fusion possible")]
+    [SerializeField] private bool _awakeningEnabled = false;
+
     [Header("Disposition")]
     [Tooltip("Hauteur de la rangée")]
     [SerializeField] private float _rowHeight = 34f;
@@ -77,7 +80,7 @@ public class FusionPanelUI : MonoBehaviour
     {
         _readyButtons.Clear();
         for (int i = _row.childCount - 1; i >= 0; i--) Destroy(_row.GetChild(i).gameObject);
-        if (!Services.IsGridServiceAvailable()) return;
+        if (!_awakeningEnabled || !Services.IsGridServiceAvailable()) return;
 
         Unit active = Services.Grid.GetActiveUnit();
         Champion champion = active != null ? LocalView.ChampionToShow(active) : null;

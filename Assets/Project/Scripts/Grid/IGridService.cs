@@ -49,7 +49,7 @@ public interface IGridService
     Enemy SpawnEnemy(EnemyData data, Vector2Int gridPos);
 
     /// <summary>
-    /// Pose des débris (obstacle non ciblable, ex. un lit cassé) sur les cases données, qui doivent être libres.
+    /// Pose des débris (obstacle non ciblable, ex. les jouets tombés de Pluie de jouets) sur les cases données, qui doivent être libres.
     /// </summary>
     DebrisUnit SpawnDebris(GameObject prefab, IList<Vector2Int> cells, Quaternion rotation);
 

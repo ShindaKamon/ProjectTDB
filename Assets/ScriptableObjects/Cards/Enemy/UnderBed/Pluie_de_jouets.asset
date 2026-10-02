@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: Pluie de jouets
   description: "Le monstre lance les jouets cach\xE9s sous le lit : 4 zones annonc\xE9es
-    au sol, qui tombent \xE0 son prochain tour (16 d\xE9g\xE2ts)."
+    au sol, qui tombent \xE0 son prochain tour (16 d\xE9g\xE2ts). Les jouets tomb\xE9s
+    sur une case vide y restent en tas."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -50,6 +51,11 @@ MonoBehaviour:
   hindersEnemyNextCard: 0
   changesHidingSpot: 0
   spawnedEnemy: {fileID: 0}
+  paBecomesPmInShadow: 0
+  darkensTerrain: 0
+  throwsDebris: 0
+  pileOnEmptyCell: {fileID: 5554742416862918169, guid: f820c3f982ace844ea5cad2fd023a32c, type: 3}
+  isAmbush: 0
   animatedToy: {fileID: 11400000, guid: c291663205086214bb1b153b76e7256b, type: 2}
   animatedToyEveryNthThrow: 2
   isChargeCard: 0

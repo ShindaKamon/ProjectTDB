@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Au_lit
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Au lit !
-  description: "Les draps du Lit s'\xE9tirent et attirent un champion \xE0 1-5 cases
-    de 3 cases vers lui ; il perd 1 PM au prochain tour."
+  description: "Les draps du Lit ram\xE8nent tout \xE0 lui : chaque tas de jouets
+    file vers le Lit et dispara\xEEt (12 d\xE9g\xE2ts \xE0 chaque champion sur son
+    trajet). Puis ils attirent un champion \xE0 1-5 cases de 3 cases vers lui ; il
+    perd 1 PM au prochain tour."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -53,6 +55,8 @@ MonoBehaviour:
   paBecomesPmInShadow: 0
   darkensTerrain: 0
   throwsDebris: 0
+  pileOnEmptyCell: {fileID: 0}
+  pulledPileDamage: 12
   isAmbush: 0
   animatedToy: {fileID: 0}
   animatedToyEveryNthThrow: 2

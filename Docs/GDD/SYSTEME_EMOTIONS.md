@@ -56,6 +56,8 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 
 ## ✨ SYSTÈME D'ÉVEIL — la fusion (concept acté le 30/09/2026, pas encore codé)
 
+> ⏸️ **Retiré du jeu pour l'instant (02/10/2026)** : à retravailler. Les jauges et les boutons de fusion sont masqués (`FusionPanelUI._awakeningEnabled = false`), donc aucune fusion n'est possible en combat ; le code des règles (jauges, formes de fusion, tests) est conservé pour la refonte.
+
 **Principe :** l'Éveil n'est **plus une catégorie de cartes** dans le deck (les 6 slots d'Éveil disparaissent : ils auraient bloqué la construction de deck). Quand la jauge d'une émotion est pleine, le champion **fusionne avec cette émotion** et obtient, tant que dure la fusion, un **gameplay propre à son couple champion × émotion**. Trois formes par émotion : **Colère → Rage**, **Joie → Extase**, **Peur → Terreur**.
 
 **La jauge (inchangée) :**

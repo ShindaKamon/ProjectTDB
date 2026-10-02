@@ -25,8 +25,8 @@ public static class AnimationSetup
         Human("ModularMen/Adventurer", "Champions/Crux_Base"),
         Human("ModularMen/Suit", "Champions/Raze_Base"),
         Human("ModularWomen/Casual", "Summons/Lyse_Summon"),
-        // Cthulhu n'a pas de clip de repos ni de marche : il flotte dans les deux cas
-        new Rig { fbx = "CuteMonsters/Models/Cthulhu", idle = "Flying", walk = "Flying", hit = "HitRecieve", death = "Death", prefab = "Enemies/UnderBed" },
+        // L'araignée n'a pas de clip de coup reçu : elle sursaute (Spider_Jump)
+        new Rig { fbx = "EasyEnemy/Models/Spider", idle = "Spider_Idle", walk = "Spider_Walk", hit = "Spider_Jump", death = "Spider_Death", prefab = "Enemies/UnderBed" },
         new Rig { fbx = "CuteMonsters/Models/Ghost", idle = "Idle", walk = "Walk", hit = "HitRecieve", death = "Death", prefab = "Enemies/MoutonDePoussiere" },
     };
 

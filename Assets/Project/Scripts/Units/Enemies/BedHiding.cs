@@ -6,14 +6,13 @@ using UnityEngine;
 /// - phase 1, cache-cache : le boss est caché sous un lit (invisible et ignoré par la grille). Seul ce lit subit
 ///   des dégâts, qui passent au boss ; le premier coup le révèle (son ombre dépasse du lit). Il change de lit, et
 ///   redevient caché, quand il joue une carte qui le fait changer de cachette (Marée d'ombre) et quand son lit casse ;
-/// - phase 2 (Enemy passe en phase 2 à 0 PV) : il fusionne avec son lit, le Lit (à moitié visible, immobile) ; les
+/// - phase 2 (Enemy passe en phase 2 à 0 PV) : il fusionne avec son lit, le Lit, qu'il porte sur son dos (à moitié visible, immobile) ; les
 ///   autres lits s'effondrent, le Lit reçoit les PV de la phase et ses dégâts passent toujours au boss ;
 /// - phase 3 : le Lit cède et le boss en sort.
 /// Ajouté au boss par GridManager quand la rencontre a des lits.
 /// </summary>
 public class BedHiding : MonoBehaviour
 {
-    private const float FusedDepth = 0.6f; // phase 2 : le modèle du boss s'enfonce dans le Lit
 
     private Enemy _boss;
     private readonly List<BedUnit> _beds = new List<BedUnit>();
@@ -137,12 +136,14 @@ public class BedHiding : MonoBehaviour
 
         lit.SetFullHealth(_boss.GetMaxHealth());
         lit.Revealed = true;
-        SetRenderersVisible(true); // à moitié visible : le modèle s'enfonce dans le Lit
-        _boss.transform.position += Vector3.down * FusedDepth;
+        SetRenderersVisible(true); // à moitié visible : il porte le Lit sur son dos
+        Vector3 center = lit.LiftOntoBoss();
+        _boss.transform.position = new Vector3(center.x, _boss.transform.position.y, center.z);
+        ShowFusedModel(true, lit);
         GameLog.Log($"{_boss.name} fusionne avec le lit {lit.GetCurrentGridPos()} ({lit.GetHealth()} PV)");
     }
 
-    // Phase 3 : le Lit cède (s'il n'est pas déjà tombé avec la barre) et laisse ses débris ; le boss sort à côté
+    // Phase 3 : le Lit cède (s'il n'est pas déjà tombé avec la barre) ; le boss sort à côté
     private void Emerge()
     {
         BedUnit lit = _current;
@@ -154,6 +155,7 @@ public class BedHiding : MonoBehaviour
             // Plus aucun lit : il sort là où il était caché, sur la case libre la plus proche
             Vector2Int from = _boss.GetCurrentGridPos();
             Vector2Int? free = EnemyAI.NearestFreeCell(from, p => Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
+            ShowFusedModel(false, null);
             SetVisible(true);
             _boss.TeleportTo(free ?? from);
             return;
@@ -166,9 +168,24 @@ public class BedHiding : MonoBehaviour
         if (lit.GetHealth() > 0) lit.Collapse();
         else lit.Occupied = false;
 
+        ShowFusedModel(false, null);
         SetVisible(true);
         _boss.TeleportTo(exit ?? cell);
         GameLog.Log($"{_boss.name} sort du Lit");
+    }
+
+    // Phase 2 : le modèle « fusionné » (enfant FusedModel du prefab : des pattes d'araignée sous le Lit soulevé, des yeux
+    // rouges sous le matelas, côté pied) remplace le modèle habituel ; phase 3 : retour à l'araignée
+    private void ShowFusedModel(bool fused, BedUnit lit)
+    {
+        Transform fusedModel = _boss.transform.Find("FusedModel");
+        Transform model = _boss.transform.Find("Model");
+        if (fusedModel == null) return;
+        fusedModel.gameObject.SetActive(fused);
+        if (model != null) model.gameObject.SetActive(!fused);
+        if (!fused) return;
+
+        fusedModel.rotation = Quaternion.LookRotation(-lit.transform.forward); // les yeux au pied du lit, vers la salle
     }
 
     private void SetVisible(bool visible)

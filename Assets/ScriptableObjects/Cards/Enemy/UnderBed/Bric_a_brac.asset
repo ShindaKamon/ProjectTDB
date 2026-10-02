@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Bric_a_brac
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: "Bric-\xE0-brac"
-  description: "Il ramasse les d\xE9bris des lits et les jouets et les lance : une
-    zone sur chaque champion, une de plus par tas de d\xE9bris (cercle de 1, 20 d\xE9g\xE2ts),
-    au prochain tour."
+  description: "Il ramasse un tas de jouets tomb\xE9s et le lance : une zone sur
+    un champion (cercle de 1, 20 d\xE9g\xE2ts), au prochain tour. Sans jouets au
+    sol, il n'a rien \xE0 lancer."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -54,6 +54,8 @@ MonoBehaviour:
   paBecomesPmInShadow: 0
   darkensTerrain: 0
   throwsDebris: 1
+  pileOnEmptyCell: {fileID: 0}
+  pulledPileDamage: 0
   isAmbush: 0
   animatedToy: {fileID: 0}
   animatedToyEveryNthThrow: 2

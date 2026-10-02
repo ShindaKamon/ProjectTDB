@@ -11,8 +11,6 @@ public class BedUnit : Unit
     [Tooltip("Ombre du monstre, affichée quand il est révélé sous ce lit")]
     [SerializeField] private GameObject _shadow;
     [SerializeField] private Vector3 _healthBarOffset = new Vector3(0f, 0.5f, 0f);
-    [Tooltip("Débris laissés sur ses 2 cases quand le lit tombe (obstacle, munitions de Bric-à-brac)")]
-    [SerializeField] private GameObject _debrisPrefab;
 
     private bool _occupied;
 
@@ -66,21 +64,31 @@ public class BedUnit : Unit
     // Initialisé par InitializeBed (GridManager), pas par Unit.Start
     protected override void Start() { }
 
-    // Le lit tombe (cassé ou effondré) : il laisse des débris sur ses cases
-    protected override void Die()
-    {
-        var cells = new List<Vector2Int>(OccupiedCells);
-        Quaternion rotation = transform.rotation;
-        base.Die(); // le lit quitte la grille (événement de mort), ses cases se libèrent
-        if (_debrisPrefab != null && Services.IsGridServiceAvailable()) Services.Grid.SpawnDebris(_debrisPrefab, cells, rotation);
-    }
-
     /// <summary>Le lit cède (le boss en sort) : il disparaît comme une unité vaincue.</summary>
     public void Collapse()
     {
         Occupied = false;
         Die();
     }
+
+    /// <summary>
+    /// Phase 2 : le boss fusionne avec ce lit, qui se retrouve sur son dos (soulevé, un peu agrandi pour le couvrir,
+    /// de travers). Renvoie le centre du lit au sol, où se place le boss.
+    /// </summary>
+    public Vector3 LiftOntoBoss()
+    {
+        Transform model = transform.Find("Model");
+        if (model == null) return transform.position;
+        Vector3 center = model.position;
+        model.localPosition += Vector3.up * CarriedLift;
+        model.localScale *= CarriedScale;
+        model.localRotation *= Quaternion.Euler(CarriedTilt);
+        return center;
+    }
+
+    private const float CarriedLift = 0.7f;
+    private const float CarriedScale = 1.3f;
+    private static readonly Vector3 CarriedTilt = new Vector3(5f, 0f, -7f);
 
     /// <summary>Fixe les PV du lit, barre pleine (ex. le Lit de la phase 2 reçoit les PV de la phase).</summary>
     public void SetFullHealth(int health)

@@ -21,6 +21,15 @@ public class EnemyAI : MonoBehaviour
         this.TryGetComponentSafe(out _enemy);
     }
 
+    private void OnEnable() => EventBus.Subscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
+    private void OnDisable() => EventBus.Unsubscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
+
+    // Nouvelle phase : le pattern repart du début, les trajets d'Au lit ! affichés ne valent plus
+    private void OnBossPhaseChanged(BossPhaseChangedEvent e)
+    {
+        if (e.Boss == _enemy) PublishSweepPreview();
+    }
+
     public void TakeTurn()
     {
         // Lance la coroutine pour gérer le tour de l'ennemi
@@ -163,6 +172,8 @@ public class EnemyAI : MonoBehaviour
                     CardData playedCard = _enemy.DrawAndPlayNextCard();
                     if (playedCard != null)
                     {
+                        // Ex. Au lit ! : les tas de débris filent d'abord vers son lit
+                        yield return StartCoroutine(SweepPiles(playedCard, hiding));
                         // Exécute l'effet de la carte ; un lancer annoncé ne frappe qu'au prochain tour
                         if (playedCard.isAmbush) _enemy.AnnounceAmbush(playedCard); // il frappera au prochain tour
                         else if (playedCard.telegraphedZoneCount > 0) yield return StartCoroutine(AnnounceThrow(playedCard));
@@ -177,6 +188,7 @@ public class EnemyAI : MonoBehaviour
                     // resté hors de portée le bloquerait sur la même carte et on ne verrait jamais la suite du pattern.
                     // Ses effets sans cible (ombre, changement de lit, invocation) ont lieu quand même.
                     _enemy.DrawAndPlayNextCard();
+                    yield return StartCoroutine(SweepPiles(nextCard, hiding));
                     ApplyCardSideEffects(nextCard, hiding);
                     GameLog.Log($"{_enemy.name}: {nextCard.cardName} sans cible à portée, joue dans le vide (pattern suivant)");
                 }
@@ -195,7 +207,8 @@ public class EnemyAI : MonoBehaviour
             yield return StartCoroutine(TryBasicAttack());
         }
 
-        // 5. Fin du tour
+        // 5. Fin du tour : si sa prochaine carte est Au lit !, les trajets des tas s'affichent dès maintenant
+        PublishSweepPreview();
         EventBus.Publish(new TurnEndRequestedEvent(_enemyUnit));
     }
 
@@ -225,21 +238,23 @@ public class EnemyAI : MonoBehaviour
     // Lancer annoncé : les zones s'affichent au sol et tomberont au début du prochain tour du monstre
     private IEnumerator AnnounceThrow(CardData card)
     {
-        List<Vector2Int> playerCells = Services.Grid.GetAllPlayerUnits().ConvertAll(u => u.GetCurrentGridPos());
-        // Les jouets ne tombent jamais sur un lit (Enemies.md)
-        List<Vector2Int> cells = Services.Grid.GetAllCells().FindAll(c => !(Services.Grid.GetUnitAtGridPos(c) is BedUnit));
-        // Ex. Bric-à-brac : il ramasse tous les débris (ils disparaissent), une zone de plus par tas
-        int zoneCount = card.telegraphedZoneCount;
+        // Ex. Bric-à-brac : il ramasse un tas de débris au hasard (il disparaît) ; sans débris au sol, la carte est
+        // morte (décision du 02/10/2026)
         if (card.throwsDebris)
         {
-            foreach (Unit debris in Services.Grid.GetAllUnits().FindAll(u => u is DebrisUnit))
+            List<Unit> piles = Services.Grid.GetAllUnits().FindAll(u => u is DebrisUnit);
+            if (piles.Count == 0)
             {
-                debris.Despawn();
-                zoneCount++;
+                GameLog.Log($"{_enemy.name} : {card.cardName}, plus rien à lancer");
+                yield break;
             }
-            cells = Services.Grid.GetAllCells().FindAll(c => !(Services.Grid.GetUnitAtGridPos(c) is BedUnit));
+            piles[_enemy.Rng.Next(piles.Count)].Despawn();
         }
-        _enemy.AnnounceThrow(card, cells, playerCells, zoneCount);
+
+        List<Vector2Int> playerCells = Services.Grid.GetAllPlayerUnits().ConvertAll(u => u.GetCurrentGridPos());
+        // Rien ne tombe sur un lit ni sur des débris (Enemies.md)
+        List<Vector2Int> cells = Services.Grid.GetAllCells().FindAll(c => !(Services.Grid.GetUnitAtGridPos(c) is BedUnit || Services.Grid.GetUnitAtGridPos(c) is DebrisUnit));
+        _enemy.AnnounceThrow(card, cells, playerCells);
         yield return new WaitForSeconds(0.5f);
     }
 
@@ -257,7 +272,63 @@ public class EnemyAI : MonoBehaviour
         // Le jouet s'anime s'il est tombé sur une case vide (sinon il a frappé comme les autres)
         if (toy != null && Services.Grid.GetTileAtPosition(toyCell) != null && Services.Grid.GetUnitAtGridPos(toyCell) == null)
             Services.Grid.SpawnEnemy(toy, toyCell);
+
+        // Ex. Pluie de jouets : ce qui est tombé sur une case vide y reste en tas (munitions de Bric-à-brac)
+        if (card.pileOnEmptyCell != null)
+            foreach (Vector2Int cell in epicenters)
+                if (Services.Grid.GetTileAtPosition(cell) != null && Services.Grid.GetUnitAtGridPos(cell) == null)
+                    Services.Grid.SpawnDebris(card.pileOnEmptyCell, new[] { cell }, Quaternion.Euler(0f, _enemy.Rng.Next(4) * 90f, 0f));
         yield return new WaitForSeconds(0.5f);
+    }
+
+    // Ex. Au lit ! : les draps ramènent à son lit tous les tas de débris du plateau, qui disparaissent ; un champion sur
+    // le trajet d'un tas (PileSweep) est touché, une fois par tas qui le traverse
+    private IEnumerator SweepPiles(CardData card, BedHiding hiding)
+    {
+        if (card.pulledPileDamage <= 0) yield break;
+        List<Unit> piles = Services.Grid.GetAllUnits().FindAll(u => u is DebrisUnit);
+        EventBus.Publish(new ThrowZonesChangedEvent(_enemy, new List<Vector2Int>(), isSweep: true));
+        if (piles.Count == 0) yield break;
+
+        List<Vector2Int> lit = SweepTargetCells(hiding);
+        Vector3 litPosition = hiding != null && hiding.CurrentBed != null ? hiding.CurrentBed.transform.position : transform.position;
+        var starts = new List<Vector3>();
+        foreach (Unit pile in piles) starts.Add(pile.transform.position);
+        for (float t = 0f; t < 1f; t += Time.deltaTime / 0.4f)
+        {
+            for (int i = 0; i < piles.Count; i++) piles[i].transform.position = Vector3.Lerp(starts[i], litPosition, t);
+            yield return null;
+        }
+
+        foreach (Unit pile in piles)
+        {
+            List<Vector2Int> path = PileSweep.Path(new List<Vector2Int>(pile.OccupiedCells), lit);
+            foreach (Unit champion in Services.Grid.GetAllPlayerUnits())
+                if (path.Contains(champion.GetCurrentGridPos())) champion.TakeDamageFrom(card.pulledPileDamage, _enemyUnit);
+            pile.Despawn();
+        }
+        GameLog.Log($"{_enemy.name} : {card.cardName} ramène {piles.Count} tas de débris");
+        yield return new WaitForSeconds(0.3f);
+    }
+
+    // Cases vers lesquelles filent les tas : son lit (boss caché ou fusionné), sinon ses propres cases
+    private List<Vector2Int> SweepTargetCells(BedHiding hiding) =>
+        new List<Vector2Int>(hiding != null && hiding.CurrentBed != null ? hiding.CurrentBed.OccupiedCells : _enemyUnit.OccupiedCells);
+
+    // Trajets des tas affichés au sol tant que sa prochaine carte ramène les débris (vide sinon)
+    private void PublishSweepPreview()
+    {
+        if (_enemy == null) return;
+        var cells = new List<Vector2Int>();
+        CardData next = _enemy.GetNextCard();
+        if (next != null && next.pulledPileDamage > 0)
+        {
+            List<Vector2Int> lit = SweepTargetCells(GetComponent<BedHiding>());
+            foreach (Unit pile in Services.Grid.GetAllUnits().FindAll(u => u is DebrisUnit))
+                foreach (Vector2Int cell in PileSweep.Path(new List<Vector2Int>(pile.OccupiedCells), lit))
+                    if (!cells.Contains(cell)) cells.Add(cell);
+        }
+        EventBus.Publish(new ThrowZonesChangedEvent(_enemy, cells, isSweep: true));
     }
 
     // Embuscade (ex. Frayeur) : il surgit au contact du champion qui a le moins de PV et lui applique la carte

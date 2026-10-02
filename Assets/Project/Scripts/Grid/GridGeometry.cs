@@ -53,6 +53,27 @@ public static class GridGeometry
             : new Vector2Int(0, System.Math.Sign(direction.y));
     }
 
+    /// <summary>
+    /// Trajet en 4 directions qui suit au plus près la droite de from à to (un escalier de cases voisines, pas de
+    /// diagonale) : les cases traversées, sans from, avec to. À égalité, le pas vertical passe d'abord. Vide si from == to.
+    /// </summary>
+    public static System.Collections.Generic.List<Vector2Int> StraightPath(Vector2Int from, Vector2Int to)
+    {
+        var cells = new System.Collections.Generic.List<Vector2Int>();
+        int nx = Mathf.Abs(to.x - from.x), ny = Mathf.Abs(to.y - from.y);
+        var stepX = new Vector2Int(System.Math.Sign(to.x - from.x), 0);
+        var stepY = new Vector2Int(0, System.Math.Sign(to.y - from.y));
+        Vector2Int cell = from;
+        for (int ix = 0, iy = 0; ix < nx || iy < ny;)
+        {
+            // Avance sur l'axe dont le prochain bord de case est le plus proche le long de la droite
+            if ((1 + 2 * ix) * ny < (1 + 2 * iy) * nx) { cell += stepX; ix++; }
+            else { cell += stepY; iy++; }
+            cells.Add(cell);
+        }
+        return cells;
+    }
+
     /// <summary>Direction de grille la plus proche pour aller de from vers to.</summary>
     public static Vector2Int SnapDirection(Vector2Int from, Vector2Int to) => SnapDirection((Vector2)(to - from));
 }

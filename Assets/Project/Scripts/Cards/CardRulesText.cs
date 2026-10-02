@@ -47,7 +47,9 @@ public static class CardRulesText
         if (card.nextTurnActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.nextTurnActionGain} PA au prochain tour");
         if (card.cancelsEnemyNextCard) Effect("lock", ChipKind.Mute, "Le monstre ne joue pas sa prochaine carte");
         if (card.spawnedEnemy != null) Effect("summon", ChipKind.Mute, "Fait apparaître : " + card.spawnedEnemy.enemyName);
-        if (card.throwsDebris) Effect("summon", ChipKind.Mute, "Ramasse les débris : une zone de plus par tas");
+        if (card.throwsDebris) Effect("summon", ChipKind.Mute, "Ramasse un tas de débris pour le lancer ; sans débris, rien");
+        if (card.pileOnEmptyCell != null) Effect("summon", ChipKind.Mute, "Ce qui tombe sur une case vide y reste en tas");
+        if (card.pulledPileDamage > 0) Effect("pull", ChipKind.Push, $"Ramène tous les tas de débris : {card.pulledPileDamage} dégâts à chaque champion sur leur trajet");
         if (card.isAmbush) Effect("bond", ChipKind.Push, "Au prochain tour : surgit au contact du champion le plus faible et frappe");
         if (card.darkensTerrain) Effect("lock", ChipKind.Mute, "Assombrit le terrain jusqu'à son prochain tour");
         if (card.changesHidingSpot) Effect("summon", ChipKind.Mute, "Il change de cachette");

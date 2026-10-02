@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Débris d'un lit cassé (combat du Monstre sous le lit) : obstacle qui bloque ses cases, sans tour, sans barre de
-/// vie, qu'on ne peut ni cibler ni toucher. Les jouets de Pluie de jouets l'évitent ; Bric-à-brac le ramasse pour le
-/// lancer (il disparaît). Créé par GridManager.SpawnDebris quand un lit tombe.
+/// Tas de débris (combat du Monstre sous le lit) : les jouets tombés de Pluie de jouets sur une case vide (1 case).
+/// Obstacle qui bloque ses cases, sans tour, sans barre de vie, qu'on ne peut ni cibler ni toucher. Les lancers
+/// l'évitent ; Bric-à-brac le ramasse pour le lancer (il disparaît), un tas à la fois. Créé par GridManager.SpawnDebris.
 /// </summary>
 public class DebrisUnit : Unit
 {

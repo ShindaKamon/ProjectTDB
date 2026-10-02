@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Maree_d_ombre
-  m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: "Mar\xE9e d'ombre"
-  description: "L'ombre de sous le lit d\xE9borde : 16 d\xE9g\xE2ts dans un cercle
-    de 1 autour d'un champion \xE0 1-2 cases ; le terrain s'assombrit jusqu'\xE0
-    son prochain tour et il change de cachette."
+  m_Name: Embrume
+  m_EditorClassIdentifier: ProjectTDB::CardData
+  cardName: "Embrum\xE9"
+  description: "Le mouton souffle sa poussi\xE8re dans les yeux d'un champion \xE0
+    1-2 cases : 4 d\xE9g\xE2ts, il perd 1 PA au prochain tour (1 PM si le terrain
+    est dans l'ombre)."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -26,12 +26,12 @@ MonoBehaviour:
   targetType: 2
   targetRange: 2
   targetInStraightLine: 0
-  areaEffect: 4
-  aoeRadius: 1
-  affectedTarget: 2
+  areaEffect: 0
+  aoeRadius: 0
+  affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 16
+  damageAmount: 4
   damageType: 0
   damageSelf: 0
   healAmount: 0
@@ -42,16 +42,17 @@ MonoBehaviour:
   reactiveShield: 0
   armorAmount: 0
   magicResistanceAmount: 0
-  effectDuration: 0
-  paReduction: 0
+  effectDuration: 1
+  paReduction: 1
   pmReduction: 0
   removeAllMovement: 0
   nextTurnActionGain: 0
   cancelsEnemyNextCard: 0
   hindersEnemyNextCard: 0
-  changesHidingSpot: 1
+  changesHidingSpot: 0
   spawnedEnemy: {fileID: 0}
-  darkensTerrain: 1
+  paBecomesPmInShadow: 1
+  darkensTerrain: 0
   animatedToy: {fileID: 0}
   animatedToyEveryNthThrow: 2
   isChargeCard: 0

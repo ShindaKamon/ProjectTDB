@@ -24,8 +24,10 @@ MonoBehaviour:
   combatDeck:
   - {fileID: 11400000, guid: 7b65c1c12e7a5f14e8f5f0e43a646ea8, type: 2}
   - {fileID: 11400000, guid: 7b65c1c12e7a5f14e8f5f0e43a646ea8, type: 2}
+  - {fileID: 11400000, guid: ac1f3af3745f5134eba3719c4acba351, type: 2}
   basicAttack: {fileID: 11400000, guid: ea6a702a378575f409e1f4335ff61a35, type: 2}
   guardsAllies: 0
+  darknessHealPercent: 0
   nextPhases: []
-  healthBarOffset: {x: 0, y: 1.3, z: 0}
+  healthBarOffset: {x: 0, y: 0.9, z: 0}
   healthBarColor: {r: 1, g: 0, b: 0, a: 1}

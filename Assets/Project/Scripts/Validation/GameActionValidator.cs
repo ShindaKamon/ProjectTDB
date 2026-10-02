@@ -107,8 +107,8 @@ public static class GameActionValidator
         if (card.targetInStraightLine && !GridGeometry.TryGetLine(source.GetCurrentGridPos(), target.GetCurrentGridPos(), out _, out _))
             return ValidationResult.Fail($"{card.cardName} ne peut cibler qu'en ligne droite");
 
-        // Validation de la portée (4 directions, voir GridGeometry)
-        int distance = GridGeometry.Distance(source.GetCurrentGridPos(), target.GetCurrentGridPos());
+        // Validation de la portée (4 directions, voir GridGeometry), jusqu'à la plus proche des cases de la cible
+        int distance = target.DistanceFrom(source.GetCurrentGridPos());
         if (distance > card.targetRange)
         {
             return ValidationResult.Fail($"{card.cardName} hors de portée : {distance}/{card.targetRange}");

@@ -15,12 +15,12 @@ MonoBehaviour:
   encounterName: Le monstre sous le lit
   enemies:
   - enemy: {fileID: 11400000, guid: 572829aa49a2a1048bfb69cf45732074, type: 2}
-    cell: {x: 5, y: 8}
+    cell: {x: 5, y: 5}
   bedCells:
-  - {x: 1, y: 9}
-  - {x: 4, y: 9}
-  - {x: 7, y: 9}
-  - {x: 9, y: 1}
-  - {x: 9, y: 4}
-  - {x: 9, y: 7}
+  - {x: 1, y: 8}
+  - {x: 3, y: 8}
+  - {x: 5, y: 8}
+  - {x: 7, y: 8}
+  - {x: 8, y: 2}
+  - {x: 8, y: 5}
   bedPrefab: {fileID: 2313114307189587562, guid: c095a310f2e53c6498036d7893e73a1f, type: 3}

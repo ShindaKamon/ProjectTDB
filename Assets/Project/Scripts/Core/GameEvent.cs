@@ -356,3 +356,16 @@ public class BossPhaseChangedEvent : GameEvent
         PhaseCount = phaseCount;
     }
 }
+
+/// <summary>
+/// Publié quand le terrain s'assombrit (Marée d'ombre) ou redevient normal (TerrainDarkness)
+/// </summary>
+public class TerrainDarknessChangedEvent : GameEvent
+{
+    public bool IsDark { get; private set; }
+
+    public TerrainDarknessChangedEvent(bool isDark)
+    {
+        IsDark = isDark;
+    }
+}

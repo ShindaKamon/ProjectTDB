@@ -77,6 +77,9 @@ public class EnemyCardPreviewUI : MonoBehaviour
     /// <summary>
     /// Assigne l'ennemi à tracker pour afficher sa prochaine carte
     /// </summary>
+    /// <summary>Aperçu créé en cours de combat (monstre invoqué) : le combat a déjà commencé, il s'affiche tout de suite.</summary>
+    public void MarkBattleStarted() => _battleStarted = true;
+
     public void SetTrackedEnemy(Enemy enemy)
     {
         // Désabonne de l'ancien ennemi si présent

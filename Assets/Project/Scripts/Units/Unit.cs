@@ -839,6 +839,26 @@ public class Unit : MonoBehaviour
     public virtual bool ShownInCombatSummary => true;
 
     /// <summary>
+    /// Cases occupées : la sienne, ou plusieurs pour une grande unité (ex. un lit sur 2 cases). La grille, les zones
+    /// et la portée d'une carte en tiennent compte.
+    /// </summary>
+    public virtual IEnumerable<Vector2Int> OccupiedCells { get { yield return _currentGridPos; } }
+
+    public bool OccupiesCell(Vector2Int cell)
+    {
+        foreach (Vector2Int occupied in OccupiedCells) if (occupied == cell) return true;
+        return false;
+    }
+
+    /// <summary>Distance (4 directions) de la case donnée à la plus proche des cases occupées par l'unité.</summary>
+    public int DistanceFrom(Vector2Int from)
+    {
+        int best = int.MaxValue;
+        foreach (Vector2Int occupied in OccupiedCells) best = Mathf.Min(best, GridGeometry.Distance(from, occupied));
+        return best;
+    }
+
+    /// <summary>
     /// Unité cachée (ex. le boss sous un lit) : elle garde son tour, mais les requêtes de la grille l'ignorent
     /// (case, cibles, zones). Posé par la mécanique qui la cache (BedHiding).
     /// </summary>

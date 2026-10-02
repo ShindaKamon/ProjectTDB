@@ -68,6 +68,7 @@ public class GridManager : MonoBehaviour, IGridService
 
         _tiles = new Dictionary<Vector2Int, Tile>();
         _units = new List<Unit>();
+        TerrainDarkness.Clear(); // nouveau combat : terrain normal
         GenerateGrid();
 
         // Initialise le GridRepository après la génération de la grille
@@ -317,14 +318,15 @@ public class GridManager : MonoBehaviour, IGridService
             if (enemy != null) enemy.InitializeEnemy(spawn.enemy, spawn.cell);
         }
 
-        // Lits, tête contre le mur du fond (nord en haut de la grille, sinon est) ; PV fixés ensuite par BedHiding
+        // Lits, tête vers le mur du fond le plus proche (nord ou est), pied vers la salle ; PV fixés ensuite par BedHiding
         _encounterBeds.Clear();
         if (encounter.bedPrefab == null) return;
         foreach (Vector2Int cell in encounter.bedCells)
         {
             BedUnit bed = Instantiate(encounter.bedPrefab).GetRequiredComponent<BedUnit>("Lit de la rencontre");
             if (bed == null) continue;
-            bed.InitializeBed(cell, cell.y == _height - 1 ? Vector2Int.up : Vector2Int.right, 1);
+            Vector2Int wall = _height - 1 - cell.y <= _width - 1 - cell.x ? Vector2Int.up : Vector2Int.right;
+            bed.InitializeBed(cell, wall, 1);
             _encounterBeds.Add(bed);
         }
     }

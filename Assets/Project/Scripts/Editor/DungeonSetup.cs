@@ -37,12 +37,13 @@ public static class DungeonSetup
             (sheep, new Vector2Int(2, 7)), (sheep, new Vector2Int(5, 7)), (sheep, new Vector2Int(7, 7)),
             (soldier, new Vector2Int(5, 6))); // garde du corps des moutons, présenté avant le boss
         EncounterData bossFight = SaveEncounter("Orphelinat_UnderBed", "Le monstre sous le lit",
-            (boss, new Vector2Int(5, 8))); // pas de mobs au départ : le boss les invoque (Invocation de mouton)
-        // 6 lits contre les murs du fond (nord y = 9, est x = 9) : le boss se cache dessous (BedHiding)
+            (boss, new Vector2Int(5, 5))); // pas de mobs au départ : le boss les invoque (Invocation de mouton)
+        // 6 lits de 2 cases, tête vers les murs du fond, une rangée libre le long des murs (y = 9, x = 9) pour circuler :
+        // le boss se cache dessous (BedHiding)
         bossFight.bedCells = new List<Vector2Int>
         {
-            new Vector2Int(1, 9), new Vector2Int(4, 9), new Vector2Int(7, 9),
-            new Vector2Int(9, 1), new Vector2Int(9, 4), new Vector2Int(9, 7)
+            new Vector2Int(1, 8), new Vector2Int(3, 8), new Vector2Int(5, 8), new Vector2Int(7, 8),
+            new Vector2Int(8, 2), new Vector2Int(8, 5)
         };
         bossFight.bedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefabs/Enemies/Bed.prefab");
         EditorUtility.SetDirty(bossFight);

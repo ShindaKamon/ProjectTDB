@@ -38,6 +38,10 @@ public class EnemyAI : MonoBehaviour
         BedHiding hiding = GetComponent<BedHiding>();
         bool hidden = hiding != null && hiding.IsHiding;
 
+        // Passif « Tapi dans le noir » (dans un lit ou terrain assombri), puis l'ombre qu'il avait posée se dissipe
+        if (_enemy != null && _enemy.OnOwnTurnStart(hidden || TerrainDarkness.IsDark) > 0) yield return new WaitForSeconds(0.5f);
+        TerrainDarkness.OnTurnStart(_enemyUnit);
+
         // PHASE 0 : les PM ont été remis à niveau par GridManager, puis les retraits appliqués.
         // Contrôlé = a perdu des PM ce tour (règle anti-lock, voir TryBasicAttack ; pas de PA chez les monstres)
         bool controlled = _enemy != null && _enemyUnit.GetCurrentMovementPoints() < _enemyUnit.GetMaxMovementPoints();
@@ -160,24 +164,16 @@ public class EnemyAI : MonoBehaviour
                         if (playedCard.telegraphedZoneCount > 0) yield return StartCoroutine(AnnounceThrow(playedCard));
                         else yield return StartCoroutine(ExecuteEnemyCard(playedCard));
                         cardPlayed = true;
-
-                        // Ex. Invocation de mouton : le monstre sort d'un lit (boss caché) ou apparaît à côté du lanceur
-                        if (playedCard.spawnedEnemy != null)
-                        {
-                            Vector2Int origin = hidden ? hiding.SpawnOrigin() : _enemyUnit.GetCurrentGridPos();
-                            Vector2Int? cell = NearestFreeCell(origin, p => Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
-                            if (cell.HasValue) Services.Grid.SpawnEnemy(playedCard.spawnedEnemy, cell.Value);
-                        }
-
-                        // Ex. Marée d'ombre : le boss caché passe sous un autre lit
-                        if (playedCard.changesHidingSpot && hiding != null) hiding.MoveToAnotherBed();
+                        ApplyCardSideEffects(playedCard, hiding);
                     }
                 }
                 else if (_enemy.IsBoss())
                 {
                     // Boss : la carte part dans le vide et le pattern avance (décision du 02/10/2026), sinon un joueur
-                    // resté hors de portée le bloquerait sur la même carte et on ne verrait jamais la suite du pattern
+                    // resté hors de portée le bloquerait sur la même carte et on ne verrait jamais la suite du pattern.
+                    // Ses effets sans cible (ombre, changement de lit, invocation) ont lieu quand même.
                     _enemy.DrawAndPlayNextCard();
+                    ApplyCardSideEffects(nextCard, hiding);
                     GameLog.Log($"{_enemy.name}: {nextCard.cardName} sans cible à portée, joue dans le vide (pattern suivant)");
                 }
                 else
@@ -187,11 +183,10 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // 4. Attaque de base quand la carte prévue n'a pas pu être jouée ; la carte reste pour
-        // le prochain tour. Boss : seulement s'il est bloqué par un contrôle (règle anti-lock).
-        // Monstres ordinaires : dès que la carte est injouable, contrôlés ou non (décision du 28/09/2026)
+        // 4. Attaque de base : carte entravée (ex. Aura de terreur), ou boss bloqué par un contrôle (règle anti-lock).
+        // Monstre ordinaire qui ne peut pas jouer sa carte : il passe son tour et la garde (décision du 02/10/2026)
         bool isMinion = _enemy != null && !_enemy.IsBoss();
-        if (!cardPlayed && !cardCancelled && (controlled || isMinion || cardHindered))
+        if (!cardPlayed && !cardCancelled && (cardHindered || (controlled && !isMinion)))
         {
             yield return StartCoroutine(TryBasicAttack());
         }
@@ -248,6 +243,24 @@ public class EnemyAI : MonoBehaviour
         if (toy != null && Services.Grid.GetTileAtPosition(toyCell) != null && Services.Grid.GetUnitAtGridPos(toyCell) == null)
             Services.Grid.SpawnEnemy(toy, toyCell);
         yield return new WaitForSeconds(0.5f);
+    }
+
+    // Effets d'une carte de monstre qui ne visent personne : ils ont lieu même si la carte part dans le vide
+    private void ApplyCardSideEffects(CardData card, BedHiding hiding)
+    {
+        // Ex. Invocation de mouton : le monstre sort d'un lit (boss caché) ou apparaît à côté du lanceur
+        if (card.spawnedEnemy != null)
+        {
+            Vector2Int origin = hiding != null && hiding.IsHiding ? hiding.SpawnOrigin() : _enemyUnit.GetCurrentGridPos();
+            Vector2Int? cell = NearestFreeCell(origin, p => Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
+            if (cell.HasValue) Services.Grid.SpawnEnemy(card.spawnedEnemy, cell.Value);
+        }
+
+        // Ex. Marée d'ombre : tout le terrain s'assombrit jusqu'à son prochain tour
+        if (card.darkensTerrain) TerrainDarkness.Darken(_enemyUnit);
+
+        // Ex. Marée d'ombre : le boss caché passe sous un autre lit
+        if (card.changesHidingSpot && hiding != null) hiding.MoveToAnotherBed();
     }
 
     // Garde du corps : mob à protéger (le plus proche, ni boss ni autre garde) et chemin du tour vers sa case de garde.

@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Lit du combat contre le Monstre sous le lit : une case, de faction ennemie, sans tour ni déplacement.
+/// Lit du combat contre le Monstre sous le lit : 2 cases (tête contre le mur, pied vers la salle), de faction ennemie, sans tour ni déplacement.
 /// Cachette du boss (BedHiding) : seul le lit sous lequel il se cache subit des dégâts (un lit vide ne craint
 /// rien), et ces dégâts passent au boss. L'ombre du monstre ne dépasse que quand il a été révélé (touché).
 /// </summary>
@@ -37,9 +38,22 @@ public class BedUnit : Unit
     public override string DisplayName => "Lit";
     protected override bool ResistsDamage => !_occupied;
 
+    private Vector2Int _footCell; // le lit prend 2 cases : la tête contre le mur, le pied vers la salle
+
+    public override IEnumerable<Vector2Int> OccupiedCells
+    {
+        get
+        {
+            yield return GetCurrentGridPos();
+            yield return _footCell;
+        }
+    }
+
+    /// <param name="cell">Case de la tête du lit ; le pied occupe la case voisine, côté salle.</param>
     /// <param name="wallDirection">Direction du mur contre lequel est posée la tête du lit.</param>
     public void InitializeBed(Vector2Int cell, Vector2Int wallDirection, int health)
     {
+        _footCell = cell - wallDirection;
         InitUnitStats(health, 0);
         Initialize(cell);
         transform.rotation = Quaternion.LookRotation(new Vector3(wallDirection.x, 0f, wallDirection.y));

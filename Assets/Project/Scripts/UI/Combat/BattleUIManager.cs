@@ -159,20 +159,56 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         }
     }
 
-    // Petit aperçu libre pour un monstre ordinaire ; false s'il n'y en a plus
+    // Petits aperçus des monstres ordinaires : empilés sous la carte du boss (ou à sa place sans boss), dans l'ordre
+    // d'arrivée, sans trou ; un aperçu de plus est créé si les emplacements de la scène sont tous pris
+    private readonly List<EnemyCardPreviewUI> _minionPool = new List<EnemyCardPreviewUI>();
+    private readonly List<Enemy> _minionOrder = new List<Enemy>();
+    private float _minionTop, _minionStep, _bossPreviewTop;
+
     private bool TryTrackMinionCards(Enemy enemy)
     {
-        if (_minionCardPreviews == null) return false;
+        if (_minionCardPreviews == null || _minionCardPreviews.Length == 0) return false;
+        if (_minionPool.Count == 0) InitMinionLayout();
 
+        EnemyCardPreviewUI preview = _minionPool.Find(p => p != null && !_minionPreviews.ContainsValue(p));
+        if (preview == null)
+        {
+            preview = Instantiate(_minionPool[0], _minionPool[0].transform.parent);
+            preview.MarkBattleStarted(); // le combat a déjà commencé : pas d'attente du prochain tour
+            _minionPool.Add(preview);
+        }
+
+        _minionPreviews[enemy] = preview;
+        _minionOrder.Add(enemy);
+        preview.SetTrackedEnemy(enemy);
+        LayoutMinionPreviews();
+        return true;
+    }
+
+    // Position des emplacements de la scène : le plus haut et l'écart entre deux, pour empiler les suivants
+    private void InitMinionLayout()
+    {
+        var ys = new List<float>();
         foreach (EnemyCardPreviewUI preview in _minionCardPreviews)
         {
-            if (preview == null || _minionPreviews.ContainsValue(preview)) continue;
-
-            _minionPreviews[enemy] = preview;
-            preview.SetTrackedEnemy(enemy);
-            return true;
+            if (preview == null) continue;
+            _minionPool.Add(preview);
+            ys.Add(((RectTransform)preview.transform).anchoredPosition.y);
         }
-        return false;
+        ys.Sort((a, b) => b.CompareTo(a));
+        _minionTop = ys[0];
+        _minionStep = ys.Count > 1 ? ys[0] - ys[1] : 90f;
+        _bossPreviewTop = _enemyCardPreview != null ? ((RectTransform)_enemyCardPreview.transform).anchoredPosition.y : _minionTop;
+    }
+
+    private void LayoutMinionPreviews()
+    {
+        float top = _currentBoss != null ? _minionTop : _bossPreviewTop; // sans boss, la place de sa carte est libre
+        for (int i = 0; i < _minionOrder.Count; i++)
+        {
+            var rect = (RectTransform)_minionPreviews[_minionOrder[i]].transform;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, top - i * _minionStep);
+        }
     }
 
     /// <summary>
@@ -187,6 +223,8 @@ public class BattleUIManager : MonoBehaviour, IBattleUIService
         {
             minionPreview.HidePreview();
             _minionPreviews.Remove(enemy);
+            _minionOrder.Remove(enemy);
+            LayoutMinionPreviews(); // les suivants remontent
             return;
         }
 

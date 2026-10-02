@@ -38,6 +38,7 @@ public class BedHiding : MonoBehaviour
         EventBus.Subscribe<UnitDamagedEvent>(OnUnitDamaged);
         EventBus.Subscribe<UnitDiedEvent>(OnUnitDied);
         EventBus.Subscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
+        EventBus.Subscribe<UnitHealedEvent>(OnUnitHealed);
         GameLog.Log($"{boss.name} se cache sous l'un des {beds.Count} lits ({bedHealth} PV chacun)");
     }
 
@@ -46,6 +47,13 @@ public class BedHiding : MonoBehaviour
         EventBus.Unsubscribe<UnitDamagedEvent>(OnUnitDamaged);
         EventBus.Unsubscribe<UnitDiedEvent>(OnUnitDied);
         EventBus.Unsubscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
+        EventBus.Unsubscribe<UnitHealedEvent>(OnUnitHealed);
+    }
+
+    // Phase 2 : le Lit porte les PV du boss, il récupère ce que le boss récupère (ex. Tapi dans le noir)
+    private void OnUnitHealed(UnitHealedEvent e)
+    {
+        if (_fused && e.Target == _boss && _current != null) _current.Heal(e.HealAmount);
     }
 
     /// <summary>Phase 1 : il passe sous un autre lit, caché à nouveau (ex. Marée d'ombre).</summary>

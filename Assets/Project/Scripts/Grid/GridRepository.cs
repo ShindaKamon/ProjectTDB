@@ -137,7 +137,7 @@ public class GridRepository
     {
         foreach (Unit unit in _units)
         {
-            if (!unit.IsHidden && unit.GetCurrentGridPos() == gridPos)
+            if (!unit.IsHidden && unit.OccupiesCell(gridPos)) // grande unité : toutes ses cases
             {
                 return unit;
             }

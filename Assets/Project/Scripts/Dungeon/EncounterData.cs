@@ -20,7 +20,7 @@ public class EncounterData : ScriptableObject
     public string encounterName = "Nouvelle rencontre";
     public List<Spawn> enemies = new List<Spawn>();
 
-    [Tooltip("Lits du combat de boss (Monstre sous le lit) : le boss se cache dessous et ses PV sont répartis entre eux ; chaque lit a la tête contre le mur du fond le plus proche. Vide = pas de lits.")]
+    [Tooltip("Lits du combat de boss (Monstre sous le lit), case de la tête : le boss se cache dessous ; chaque lit prend 2 cases, tête vers le mur du fond le plus proche, pied vers la salle. Vide = pas de lits.")]
     public List<Vector2Int> bedCells = new List<Vector2Int>();
 
     [Tooltip("Prefab d'un lit (porte un BedUnit)")]

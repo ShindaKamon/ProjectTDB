@@ -42,10 +42,12 @@ public static class CardRulesText
         // Malus de la cible, formulés comme les autres malus : « Perd 1 PM pendant 1 tour »
         if (card.removeAllMovement) Effect("lock", ChipKind.MovementPoints, "Perd tous ses PM pendant " + DebuffTurns(card));
         else if (card.pmReduction > 0) Effect("pm", ChipKind.MovementPoints, $"Perd {card.pmReduction} PM pendant " + DebuffTurns(card));
-        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Perd {card.paReduction} PA pendant " + DebuffTurns(card));
+        if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Perd {card.paReduction} PA pendant " + DebuffTurns(card)
+            + (card.paBecomesPmInShadow ? $" ({card.paReduction} PM dans l'ombre)" : ""));
         if (card.nextTurnActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.nextTurnActionGain} PA au prochain tour");
         if (card.cancelsEnemyNextCard) Effect("lock", ChipKind.Mute, "Le monstre ne joue pas sa prochaine carte");
         if (card.spawnedEnemy != null) Effect("summon", ChipKind.Mute, "Fait apparaître : " + card.spawnedEnemy.enemyName);
+        if (card.darkensTerrain) Effect("lock", ChipKind.Mute, "Assombrit le terrain jusqu'à son prochain tour");
         if (card.changesHidingSpot) Effect("summon", ChipKind.Mute, "Il change de cachette");
         if (card.hindersEnemyNextCard) Effect("lock", ChipKind.Mute, "Entrave : le monstre fait son attaque de base au lieu de sa prochaine carte");
         if (card.knockbackDistance > 0)

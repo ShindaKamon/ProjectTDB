@@ -240,6 +240,31 @@ public class Enemy : Unit, IOutgoingDamageModifier
         else SetCurrentHealth(GetHealth() - amount);
     }
 
+    // ========== PASSIF « TAPI DANS LE NOIR » (EnemyData.darknessHealPercent) ==========
+
+    private int _healthAtLastTurn = -1; // PV et phase au début de son tour précédent : « touché » = moins de PV ou autre phase
+    private int _phaseAtLastTurn;
+
+    /// <summary>
+    /// Début du tour du monstre : dans l'ombre et pas touché depuis son tour précédent, il récupère
+    /// EnemyData.darknessHealPercent % de sa barre en cours. Retourne les PV récupérés.
+    /// </summary>
+    public int OnOwnTurnStart(bool inShadow)
+    {
+        int percent = _enemyData != null ? _enemyData.darknessHealPercent : 0;
+        bool untouched = _healthAtLastTurn >= 0 && _phase == _phaseAtLastTurn && GetHealth() >= _healthAtLastTurn;
+        int healed = 0;
+        if (percent > 0 && inShadow && untouched && GetHealth() < GetMaxHealth())
+        {
+            healed = Mathf.Min(Mathf.Max(1, GetMaxHealth() * percent / 100), GetMaxHealth() - GetHealth());
+            GameLog.Log($"[Tapi dans le noir] {name} récupère {healed} PV dans l'ombre");
+            HealFrom(healed, this);
+        }
+        _healthAtLastTurn = GetHealth();
+        _phaseAtLastTurn = _phase;
+        return healed;
+    }
+
     // ========== IMPLÉMENTATION INTERFACE IOutgoingDamageModifier ==========
     // Multiplicateur permanent (nombre de joueurs) : rien à consommer.
 

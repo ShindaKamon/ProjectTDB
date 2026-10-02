@@ -62,6 +62,18 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
+        public void Bed_OccupiesHeadAndFoot_ForQueriesAndRange()
+        {
+            // Lit contre le mur du fond (nord) : tête en (1,3), pied en (1,2)
+            BedUnit bed = NewUnit<BedUnit>(new Vector2Int(1, 3));
+            typeof(BedUnit).GetField("_footCell", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(bed, new Vector2Int(1, 2));
+
+            Assert.AreSame(bed, _repo.GetUnitAtGridPos(new Vector2Int(1, 3)));
+            Assert.AreSame(bed, _repo.GetUnitAtGridPos(new Vector2Int(1, 2)), "le pied bloque aussi sa case");
+            Assert.AreEqual(1, bed.DistanceFrom(new Vector2Int(1, 1)), "au contact du pied = au contact du lit");
+        }
+
+        [Test]
         public void HiddenUnit_IgnoredByUnitQueries_AndDoesNotBlockItsCell()
         {
             // Le boss caché sous un lit partage la case du lit : seul le lit compte pour la grille

@@ -238,6 +238,12 @@ public class CardData : ScriptableObject
     [Tooltip("Carte de monstre : fait apparaître ce monstre sur la case libre la plus proche du lanceur (boss caché : d'un lit au hasard) (ex: Invocation de mouton)")]
     public EnemyData spawnedEnemy;
 
+    [Tooltip("Dans l'ombre (terrain assombri, voir TerrainDarkness), le retrait de PA devient un retrait de PM (ex: Embrumé)")]
+    public bool paBecomesPmInShadow = false;
+
+    [Tooltip("Carte de monstre : assombrit tout le terrain jusqu'au prochain tour du lanceur (ex: Marée d'ombre, Frayeur ; voir TerrainDarkness)")]
+    public bool darkensTerrain = false;
+
     [Tooltip("Lancer annoncé : un des jouets lancés s'anime en ce monstre s'il tombe sur une case vide (zone non marquée, jamais celle d'un champion) (ex: soldat de bois de Pluie de jouets)")]
     public EnemyData animatedToy;
 
@@ -410,6 +416,13 @@ public class CardData : ScriptableObject
     }
 
     // Méthode pour obtenir toutes les unités affectées par l'AOE
+    /// <summary>
+    /// Retraits de PA/PM d'une carte ; ex. Embrumé : dans l'ombre (terrain assombri), le retrait de PA devient un
+    /// retrait de PM.
+    /// </summary>
+    public static (int pa, int pm) ResourceLoss(int pa, int pm, bool paBecomesPmInShadow, bool inShadow) =>
+        paBecomesPmInShadow && inShadow ? (0, Mathf.Max(pm, pa)) : (pa, pm);
+
     public List<Unit> GetAOEAffectedUnits(Unit source, Vector2Int epicenter)
     {
         List<Unit> affectedUnits = new List<Unit>();
@@ -424,7 +437,10 @@ public class CardData : ScriptableObject
 
         foreach (Unit unit in allUnits)
         {
-            if (!IsInAOEShape(source, epicenter, unit.GetCurrentGridPos()))
+            // Touchée si une de ses cases est dans la zone (grande unité, ex. un lit sur 2 cases)
+            bool inShape = false;
+            foreach (Vector2Int cell in unit.OccupiedCells) inShape |= IsInAOEShape(source, epicenter, cell);
+            if (!inShape)
                 continue;
 
             bool shouldAffect;
@@ -977,10 +993,12 @@ public class CardData : ScriptableObject
                 debuffTargets.Add(targetUnit);
             }
 
+            (int paLoss, int pmLoss) = ResourceLoss(paReduction, pmReduction, paBecomesPmInShadow, TerrainDarkness.IsDark);
+
             foreach (Unit debuffTarget in debuffTargets)
             {
                 // Retrait appliqué au début du prochain tour de la cible (voir ResourceDebuffManager)
-                ResourceDebuffManager.ApplyDebuff(debuffTarget, paReduction, removeAllMovement ? int.MaxValue : pmReduction, source);
+                ResourceDebuffManager.ApplyDebuff(debuffTarget, paLoss, removeAllMovement ? int.MaxValue : pmLoss, source);
             }
         }
 

@@ -32,10 +32,13 @@ public class CombatStats
         EntryOf(source).Healing += amount;
     }
 
-    /// <summary>Unité déjà présente (ex. un champion qui n'a encore rien fait), pour qu'elle figure au tableau.</summary>
+    /// <summary>
+    /// Unité déjà présente (ex. un champion qui n'a encore rien fait), pour qu'elle figure au tableau ; sauf un
+    /// élément du décor (Unit.ShownInCombatSummary, ex. les lits du boss).
+    /// </summary>
     public void Register(Unit unit)
     {
-        if (unit != null) EntryOf(unit);
+        if (unit != null && unit.ShownInCombatSummary) EntryOf(unit);
     }
 
     public List<Entry> Allies => _order.FindAll(e => e.IsAlly);

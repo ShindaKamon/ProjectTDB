@@ -1,21 +1,20 @@
-using System.Linq;
 using NUnit.Framework;
 
 namespace ProjectTDB.Tests
 {
     /// <summary>
-    /// Boss caché sous les lits : PV répartis entre les lits, et il change toujours de lit.
+    /// Boss caché sous les lits : casser tous les lits sauf un vide la barre de la phase 1, et il change
+    /// toujours de lit.
     /// </summary>
     public class BedHideoutTests
     {
         [Test]
-        public void SplitHealth_SumsToTotal_SharesDifferByAtMostOne()
+        public void BedHealth_AllBedsButOne_EmptyThePhaseBar()
         {
-            int[] shares = BedHideout.SplitHealth(175, 6);
-
-            Assert.AreEqual(175, shares.Sum());
-            Assert.LessOrEqual(shares.Max() - shares.Min(), 1);
-            CollectionAssert.AreEqual(new[] { 30, 29, 29, 29, 29, 29 }, shares);
+            Assert.AreEqual(20, BedHideout.BedHealth(100, 6), "5 lits de 20 = 100");
+            Assert.AreEqual(200, 5 * BedHideout.BedHealth(200, 6), "coop à 2 : barre doublée, lits doublés");
+            Assert.GreaterOrEqual(5 * BedHideout.BedHealth(101, 6), 101, "arrondi au-dessus");
+            Assert.AreEqual(100, BedHideout.BedHealth(100, 1), "un seul lit : toute la barre");
         }
 
         [Test]

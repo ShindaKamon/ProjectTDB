@@ -26,8 +26,9 @@ public class LyseUnit : SummonUnit
         SetMaxHealth(Mathf.Max(1, currentHealth / 2));
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         if (_owner != null)
         {
             _owner.OnHealthChanged -= HandleOwnerHealthChanged;

@@ -34,15 +34,13 @@ public class EnemyAI : MonoBehaviour
         // Lancer annoncé au tour précédent : ses zones tombent maintenant, avant tout le reste
         if (_enemy != null && _enemy.HasPendingThrow) yield return StartCoroutine(ResolveThrow());
 
-        // Boss caché sous les lits : il passe sous un autre lit, et frappe de là sans se déplacer
+        // Boss dans un lit (caché ou fusionné) : il frappe de là sans se déplacer
         BedHiding hiding = GetComponent<BedHiding>();
         bool hidden = hiding != null && hiding.IsHiding;
-        if (hidden) hiding.MoveToNextBed();
 
-        // PHASE 0 : les PA ont été remis à niveau par GridManager, puis les retraits appliqués.
-        // Contrôlé = a perdu des PA ou des PM ce tour (règle anti-lock, voir TryBasicAttack)
-        bool controlled = _enemy != null
-            && (_enemy.GetCurrentPA() < _enemy.GetMaxPA() || _enemyUnit.GetCurrentMovementPoints() < _enemyUnit.GetMaxMovementPoints());
+        // PHASE 0 : les PM ont été remis à niveau par GridManager, puis les retraits appliqués.
+        // Contrôlé = a perdu des PM ce tour (règle anti-lock, voir TryBasicAttack ; pas de PA chez les monstres)
+        bool controlled = _enemy != null && _enemyUnit.GetCurrentMovementPoints() < _enemyUnit.GetMaxMovementPoints();
 
         // 1. Trouver le joueur le plus proche
         List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
@@ -127,10 +125,12 @@ public class EnemyAI : MonoBehaviour
         bool cardPlayed = false;
         // Carte annulée (ex: Sidération) : pas de carte ni d'attaque de base ce tour
         bool cardCancelled = _enemy != null && _enemy.ConsumeCancelledCard();
-        if (_enemy != null && !cardCancelled)
+        // Carte entravée (ex: Aura de terreur) : attaque de base à la place, la carte revient au tour suivant
+        bool cardHindered = _enemy != null && _enemy.ConsumeHinderedCard() && !cardCancelled;
+        if (_enemy != null && !cardCancelled && !cardHindered)
         {
             CardData nextCard = _enemy.GetNextCard();
-            if (nextCard != null && _enemy.GetCurrentPA() >= nextCard.costPA)
+            if (nextCard != null)
             {
                 GameLog.Log($"{_enemy.name} veut jouer la carte: {nextCard.cardName}");
 
@@ -145,31 +145,42 @@ public class EnemyAI : MonoBehaviour
                     CardData playedCard = _enemy.DrawAndPlayNextCard();
                     if (playedCard != null)
                     {
-                        // Dépense les PA
-                        _enemy.SpendPA(playedCard.costPA);
-
                         // Exécute l'effet de la carte ; un lancer annoncé ne frappe qu'au prochain tour
                         if (playedCard.telegraphedZoneCount > 0) yield return StartCoroutine(AnnounceThrow(playedCard));
                         else yield return StartCoroutine(ExecuteEnemyCard(playedCard));
                         cardPlayed = true;
+
+                        // Ex. Invocation de mouton : le monstre sort d'un lit (boss caché) ou apparaît à côté du lanceur
+                        if (playedCard.spawnedEnemy != null)
+                        {
+                            Vector2Int origin = hidden ? hiding.SpawnOrigin() : _enemyUnit.GetCurrentGridPos();
+                            Vector2Int? cell = NearestFreeCell(origin, p => Services.Grid.GetTileAtPosition(p) != null && Services.Grid.GetUnitAtGridPos(p) == null);
+                            if (cell.HasValue) Services.Grid.SpawnEnemy(playedCard.spawnedEnemy, cell.Value);
+                        }
+
+                        // Ex. Marée d'ombre : le boss caché passe sous un autre lit
+                        if (playedCard.changesHidingSpot && hiding != null) hiding.MoveToAnotherBed();
                     }
+                }
+                else if (_enemy.IsBoss())
+                {
+                    // Boss : la carte part dans le vide et le pattern avance (décision du 02/10/2026), sinon un joueur
+                    // resté hors de portée le bloquerait sur la même carte et on ne verrait jamais la suite du pattern
+                    _enemy.DrawAndPlayNextCard();
+                    GameLog.Log($"{_enemy.name}: {nextCard.cardName} sans cible à portée, joue dans le vide (pattern suivant)");
                 }
                 else
                 {
                     GameLog.Log($"{_enemy.name}: Ne PEUT PAS jouer {nextCard.cardName} (pas de cible/hors portée), garde la carte pour le prochain tour");
                 }
             }
-            else if (nextCard != null)
-            {
-                GameLog.Log($"{_enemy.name}: Pas assez de PA pour jouer {nextCard.cardName}");
-            }
         }
 
-        // 4. Attaque de base (0 PA) quand la carte prévue n'a pas pu être jouée ; la carte reste pour
+        // 4. Attaque de base quand la carte prévue n'a pas pu être jouée ; la carte reste pour
         // le prochain tour. Boss : seulement s'il est bloqué par un contrôle (règle anti-lock).
         // Monstres ordinaires : dès que la carte est injouable, contrôlés ou non (décision du 28/09/2026)
         bool isMinion = _enemy != null && !_enemy.IsBoss();
-        if (!cardPlayed && !cardCancelled && (controlled || isMinion))
+        if (!cardPlayed && !cardCancelled && (controlled || isMinion || cardHindered))
         {
             yield return StartCoroutine(TryBasicAttack());
         }
@@ -275,6 +286,30 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
+    /// Case libre la plus proche de origin (origin exclue), en largeur d'abord sur 4 directions, dans un ordre
+    /// fixe (même résultat sur tous les PC) ; null si aucune case libre n'est atteignable à moins de 10 pas.
+    /// </summary>
+    public static Vector2Int? NearestFreeCell(Vector2Int origin, System.Func<Vector2Int, bool> isFree)
+    {
+        var seen = new HashSet<Vector2Int> { origin };
+        var queue = new Queue<(Vector2Int cell, int steps)>();
+        queue.Enqueue((origin, 0));
+        while (queue.Count > 0)
+        {
+            (Vector2Int p, int steps) = queue.Dequeue();
+            if (steps >= 10) continue;
+            foreach (Vector2Int dir in GridGeometry.Directions4)
+            {
+                Vector2Int next = p + dir;
+                if (!seen.Add(next)) continue;
+                if (isFree(next)) return next;
+                queue.Enqueue((next, steps + 1)); // on traverse les cases occupées (lits, unités)
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Obtient la portée maximale des cartes de l'ennemi
     /// </summary>
     private int GetMaxCardRange()
@@ -289,7 +324,47 @@ public class EnemyAI : MonoBehaviour
 
     // Cible du monstre pour une attaque de portée attackRange (voir ChooseTarget)
     private Unit FindClosestPlayer(List<Unit> playerUnits, int attackRange) =>
-        ChooseTarget(_enemyUnit.GetCurrentGridPos(), playerUnits, attackRange);
+        ChooseTarget(AttackOrigins(), playerUnits, attackRange);
+
+    // Cases d'où le monstre frappe : la sienne, ou n'importe quel lit quand le boss est dans un lit (BedHiding)
+    private List<Vector2Int> AttackOrigins()
+    {
+        BedHiding hiding = GetComponent<BedHiding>();
+        if (hiding != null && hiding.IsHiding)
+        {
+            List<Vector2Int> beds = hiding.AttackOrigins();
+            if (beds.Count > 0) return beds;
+        }
+        return new List<Vector2Int> { _enemyUnit.GetCurrentGridPos() };
+    }
+
+    private int DistanceToTarget(Unit target) => DistanceFrom(AttackOrigins(), target.GetCurrentGridPos());
+
+    /// <summary>Distance (4 directions) de la case d'origine la plus proche à la cellule donnée.</summary>
+    public static int DistanceFrom(IList<Vector2Int> origins, Vector2Int cell)
+    {
+        int best = int.MaxValue;
+        foreach (Vector2Int origin in origins) best = Mathf.Min(best, GridGeometry.Distance(origin, cell));
+        return best;
+    }
+
+    /// <summary>Comme ChooseTarget, la distance étant mesurée depuis la plus proche des cases d'origine.</summary>
+    public static Unit ChooseTarget(IList<Vector2Int> origins, IEnumerable<Unit> candidates, int attackRange = 0)
+    {
+        Unit best = null;
+        int bestDistance = int.MaxValue;
+        foreach (Unit unit in candidates)
+        {
+            if (unit == null) continue;
+            int distance = Mathf.Max(attackRange, DistanceFrom(origins, unit.GetCurrentGridPos()));
+            if (distance < bestDistance || (distance == bestDistance && unit.GetHealth() < best.GetHealth()))
+            {
+                bestDistance = distance;
+                best = unit;
+            }
+        }
+        return best;
+    }
 
     /// <summary>
     /// Ciblage de base des monstres (décision du 28/09/2026, pourra varier selon le boss) : toutes
@@ -297,26 +372,8 @@ public class EnemyAI : MonoBehaviour
     /// celle qui a le moins de PV ; si aucune n'est à portée, la plus proche (cases en 4 directions),
     /// puis le moins de PV à distance égale.
     /// </summary>
-    public static Unit ChooseTarget(Vector2Int from, IEnumerable<Unit> candidates, int attackRange = 0)
-    {
-        Unit best = null;
-        int bestDistance = int.MaxValue;
-
-        foreach (Unit unit in candidates)
-        {
-            if (unit == null) continue;
-
-            // À portée = aussi proche que n'importe quelle autre cible à portée
-            int distance = Mathf.Max(attackRange, GridGeometry.Distance(from, unit.GetCurrentGridPos()));
-            if (distance < bestDistance || (distance == bestDistance && unit.GetHealth() < best.GetHealth()))
-            {
-                bestDistance = distance;
-                best = unit;
-            }
-        }
-
-        return best;
-    }
+    public static Unit ChooseTarget(Vector2Int from, IEnumerable<Unit> candidates, int attackRange = 0) =>
+        ChooseTarget(new[] { from }, candidates, attackRange); // à portée = aussi proche que toute autre cible à portée
 
     /// <summary>
     /// Vérifie si une carte peut être jouée (cible valide, portée OK, etc.)
@@ -343,10 +400,10 @@ public class EnemyAI : MonoBehaviour
             return false;
         }
 
-        // Vérifie la portée pour les cartes ciblant l'ennemi (4 directions, comme le joueur)
+        // Vérifie la portée pour les cartes ciblant l'ennemi (4 directions, comme le joueur ; boss dans un lit : depuis n'importe quel lit)
         if (card.targetType == CardTargetType.Enemy)
         {
-            int distance = GridGeometry.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
+            int distance = DistanceToTarget(closestPlayer);
             if (distance > card.targetRange)
             {
                 GameLog.Log($"{_enemy.name}: {card.cardName} hors de portée (distance: {distance}, portée: {card.targetRange})");
@@ -381,8 +438,8 @@ public class EnemyAI : MonoBehaviour
                 // Carte offensive contre joueur
                 if (card.targetType == CardTargetType.Enemy)
                 {
-                    // Vérifie la portée (4 directions)
-                    int distance = GridGeometry.Distance(_enemy.GetCurrentGridPos(), closestPlayer.GetCurrentGridPos());
+                    // Vérifie la portée (4 directions ; boss dans un lit : depuis n'importe quel lit)
+                    int distance = DistanceToTarget(closestPlayer);
                     if (distance <= card.targetRange)
                     {
                         targetUnit = closestPlayer;
@@ -392,11 +449,10 @@ public class EnemyAI : MonoBehaviour
                         GameLog.LogWarning($"{_enemy.name}: Cible hors de portée pour {card.cardName}");
                     }
                 }
-                // Carte de soin sur soi-même ; caché sous un lit, c'est son lit qui en profite
+                // Carte sur soi-même (ex. soin)
                 else if (card.targetType == CardTargetType.Self)
                 {
-                    BedHiding hiding = GetComponent<BedHiding>();
-                    targetUnit = hiding != null && hiding.IsHiding ? hiding.CurrentBed : _enemy;
+                    targetUnit = _enemy;
                 }
             }
             // Carte ciblant une tuile

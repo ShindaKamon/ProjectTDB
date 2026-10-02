@@ -24,7 +24,10 @@ namespace ProjectTDB.Tests
         [Test]
         public void ApplyDebuff_AnnouncesPaAndPmLossAtImpact()
         {
-            Unit unit = NewUnit(4);
+            var go = new GameObject("Raze");
+            _createdGameObjects.Add(go);
+            Unit unit = go.AddComponent<RazeUnit>(); // un champion : il a des PA
+            unit.SetMaxMovementPoints(4);
             var received = new List<UnitEffectAppliedEvent>();
             System.Action<UnitEffectAppliedEvent> handler = e => received.Add(e);
             EventBus.Subscribe(handler);
@@ -44,7 +47,29 @@ namespace ProjectTDB.Tests
             Assert.AreEqual(-2, received[1].Amount);
             Assert.AreSame(unit, received[1].Target);
 
-            ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit); // vide le retrait en attente
+            // Vide le retrait en attente ; champion de test sans PA initialisés, d'où ce log attendu
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "Raze (Champion): ActionPointsComponent n'est pas initialisé !");
+            ResourceDebuffManager.ProcessDebuffsOnTurnStart(unit);
+        }
+
+        [Test]
+        public void ApplyDebuff_IgnoresPaLoss_OnUnitWithoutActionPoints()
+        {
+            Unit unit = NewUnit(4); // comme un monstre : pas de PA
+            var received = new List<UnitEffectAppliedEvent>();
+            System.Action<UnitEffectAppliedEvent> handler = e => received.Add(e);
+            EventBus.Subscribe(handler);
+            try
+            {
+                ResourceDebuffManager.ApplyDebuff(unit, 1, 0, null);
+            }
+            finally
+            {
+                EventBus.Unsubscribe(handler);
+            }
+
+            Assert.AreEqual(0, received.Count, "Aucun retour visuel de PA");
+            Assert.AreEqual((0, 0), ResourceDebuffManager.GetPending(unit), "Aucun retrait en attente");
         }
 
         [TearDown]

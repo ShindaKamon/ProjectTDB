@@ -56,6 +56,7 @@ public static class ResourceDebuffManager
     public static void ApplyDebuff(Unit target, int paReduction, int pmReduction, Unit source)
     {
         if (target == null) return;
+        if (!(target is IActionPointsUser)) paReduction = 0; // retraits de PA : champions seulement (les monstres n'ont pas de PA)
         if (paReduction <= 0 && pmReduction <= 0) return;
 
         _pending.TryGetValue(target, out var current);

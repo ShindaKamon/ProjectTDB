@@ -18,7 +18,7 @@ public class BossHealthBarUI : MonoBehaviour
     [SerializeField] private Image _bossPortrait; // Portrait du boss (optionnel)
     [SerializeField] private Image _fillImage; // Image de remplissage de la barre
 
-    [Header("Stats du boss (PM, PA, attaque, armure, résistance magique, bouclier)")]
+    [Header("Stats du boss (PM, attaque, armure, résistance magique, bouclier)")]
     [SerializeField] private Transform _statChipsContainer;
     [SerializeField] private Sprite _chipBackground;
 
@@ -70,7 +70,6 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnUnitDied -= OnBossDied;
             _trackedBoss.OnStatsModified -= RefreshStatChips;
             _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
-            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
         }
     }
@@ -87,7 +86,6 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnUnitDied -= OnBossDied;
             _trackedBoss.OnStatsModified -= RefreshStatChips;
             _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
-            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
         }
 
@@ -100,7 +98,6 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnUnitDied += OnBossDied;
             _trackedBoss.OnStatsModified += RefreshStatChips;
             _trackedBoss.OnMovementPointsChanged += OnBossResourcesChanged;
-            _trackedBoss.OnActionPointsChanged += OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged += OnBossShieldChanged;
 
             // Affiche le container
@@ -110,10 +107,7 @@ public class BossHealthBarUI : MonoBehaviour
             }
 
             // Affiche le nom du boss
-            if (_bossNameText != null)
-            {
-                _bossNameText.text = _trackedBoss.GetEnemyData().enemyName;
-            }
+            UpdateBossName();
 
             // Initialise la barre de vie
             UpdateHealth(_trackedBoss.GetHealth(), _trackedBoss.GetMaxHealth());
@@ -165,7 +159,7 @@ public class BossHealthBarUI : MonoBehaviour
     private Color? _fillBaseColor; // couleur de la barre sans bouclier (celle de la scène)
 
     /// <summary>
-    /// Pastilles PM / PA / attaque / armure / résistance magique / bouclier sous la barre (valeurs courantes)
+    /// Pastilles PM / attaque / armure / résistance magique / bouclier sous la barre (valeurs courantes)
     /// </summary>
     private void RefreshStatChips()
     {
@@ -180,17 +174,34 @@ public class BossHealthBarUI : MonoBehaviour
     }
     private void OnBossResourcesChanged(int current, int max) => RefreshStatChips();
 
-    // PM/PA affichés : restants pendant le tour du boss, sinon ceux de son prochain tour (retraits compris)
+    // PM affichés : restants pendant le tour du boss, sinon ceux de son prochain tour (retraits compris)
     void OnEnable()
     {
         EventBus.Subscribe<ResourceDebuffChangedEvent>(OnResourceDebuffChanged);
         EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Subscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
     }
 
     void OnDisable()
     {
         EventBus.Unsubscribe<ResourceDebuffChangedEvent>(OnResourceDebuffChanged);
         EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
+        EventBus.Unsubscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
+    }
+
+    private void OnBossPhaseChanged(BossPhaseChangedEvent e)
+    {
+        if (e.Boss == _trackedBoss) UpdateBossName();
+    }
+
+    // Nom du boss, suivi de sa phase s'il en a plusieurs (« Phase 2/3 ») : sa barre repart pleine à chaque phase
+    private void UpdateBossName()
+    {
+        if (_bossNameText == null || _trackedBoss == null) return;
+        string name = _trackedBoss.GetEnemyData().enemyName;
+        _bossNameText.text = _trackedBoss.PhaseCount > 1
+            ? $"{name}  —  Phase {_trackedBoss.Phase + 1}/{_trackedBoss.PhaseCount}"
+            : name;
     }
 
     private void OnResourceDebuffChanged(ResourceDebuffChangedEvent e)
@@ -231,7 +242,6 @@ public class BossHealthBarUI : MonoBehaviour
             _trackedBoss.OnUnitDied -= OnBossDied;
             _trackedBoss.OnStatsModified -= RefreshStatChips;
             _trackedBoss.OnMovementPointsChanged -= OnBossResourcesChanged;
-            _trackedBoss.OnActionPointsChanged -= OnBossResourcesChanged;
             _trackedBoss.OnShieldChanged -= OnBossShieldChanged;
             _trackedBoss = null;
         }

@@ -42,6 +42,12 @@ public interface IGridService
     /// </summary>
     SummonUnit SpawnSummon(GameObject prefab, Vector2Int gridPos, Unit owner, int maxHealth);
 
+    /// <summary>
+    /// Fait apparaître un monstre en cours de combat (ex. Invocation de mouton) : il joue en dernier dans
+    /// l'ordre des tours. Retourne null si la case est invalide ou occupée.
+    /// </summary>
+    Enemy SpawnEnemy(EnemyData data, Vector2Int gridPos);
+
     // ========== TUILES ==========
 
     /// <summary>

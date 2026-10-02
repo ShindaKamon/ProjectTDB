@@ -15,7 +15,7 @@ MonoBehaviour:
   emotion: 5
   formName: Pioche et tempo
   description: "La premi\xE8re carte qui touche un ennemi chaque tour fait piocher
-    1 carte et rend 1 PA ; une Suite retire en plus 1 PA aux ennemis touch\xE9s."
+    1 carte et rend 1 PA ; une Suite retire en plus 1 PM aux ennemis touch\xE9s."
   cardsDrawn: 1
   actionPointsGained: 1
-  suiteActionPointLoss: 1
+  suiteMovementPointLoss: 1

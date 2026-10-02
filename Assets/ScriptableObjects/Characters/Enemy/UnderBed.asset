@@ -16,17 +16,30 @@ MonoBehaviour:
   prefab: {fileID: 1411125681048226662, guid: 013cc346d885cd14f88d4ce0415cf943, type: 3}
   portrait: {fileID: 21300000, guid: a85bc3151a1371d4bb7fe506eef17ce4, type: 3}
   isBoss: 1
-  maxHealth: 175
+  maxHealth: 200
   movementRange: 3
-  maxActionPoints: 2
   attackDamage: 0
   armor: 4
   magicResistance: 4
   combatDeck:
+  - {fileID: 11400000, guid: b0fd9321ac910f84f819c44ae91e46ba, type: 2}
   - {fileID: 11400000, guid: ab072e1efdc8a3e469a8924742aaa686, type: 2}
   - {fileID: 11400000, guid: b0fd9321ac910f84f819c44ae91e46ba, type: 2}
+  - {fileID: 11400000, guid: fd1239cbced32eb4b9d313f73b04b172, type: 2}
   - {fileID: 11400000, guid: 7aa82ffd82021dc45b2e20a4b1b04a5e, type: 2}
-  - {fileID: 11400000, guid: a5c47284245dab04d92343113eacf9fc, type: 2}
   basicAttack: {fileID: 11400000, guid: b0fd9321ac910f84f819c44ae91e46ba, type: 2}
+  nextPhases:
+  - maxHealth: 250
+    combatDeck:
+    - {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
+    - {fileID: 11400000, guid: ab072e1efdc8a3e469a8924742aaa686, type: 2}
+    - {fileID: 11400000, guid: 07eadb4a9c706ac40a90872b2cf9b123, type: 2}
+    - {fileID: 11400000, guid: fd1239cbced32eb4b9d313f73b04b172, type: 2}
+  - maxHealth: 300
+    combatDeck:
+    - {fileID: 11400000, guid: 4b29a30c8ddb31449a019a2d5e47602e, type: 2}
+    - {fileID: 11400000, guid: ab072e1efdc8a3e469a8924742aaa686, type: 2}
+    - {fileID: 11400000, guid: 4b29a30c8ddb31449a019a2d5e47602e, type: 2}
+    - {fileID: 11400000, guid: 7aa82ffd82021dc45b2e20a4b1b04a5e, type: 2}
   healthBarOffset: {x: 0, y: 2, z: 0}
   healthBarColor: {r: 1, g: 0, b: 0, a: 1}

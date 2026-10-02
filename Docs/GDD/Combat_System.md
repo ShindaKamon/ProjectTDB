@@ -1,11 +1,12 @@
 # Système de Combat - Émotions Tactics (Project TDB)
 
-**Version:** 3.3
-**Date:** 30 Septembre 2026
+**Version:** 3.4
+**Date:** 2 Octobre 2026
 **Statut:** **Référence pour les règles de combat** (tour, main, ressources, statuts, contrôle, difficulté). Les **chiffres** (budget des cartes, profils PA/PM, barème monstres) font foi dans l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`.
 **v3.1 (23/09/2026) :** réalignement sur l'Excel — budget PA+PM de 9 par profil, échelle de dégâts = baseline de l'Excel, statuts de contrôle de la Peur, règle anti-lock, règle de main redevenue question ouverte (hypothèse de playtest : main de 3).
 **v3.0 (23/09/2026) :** encodage réparé ; ancienne jauge -100/+100 retirée. **v3.2 :** ordre des tours et règles de main alignés sur le code réel (voir « État du code » dans `Technical_Specs.md`).
 **v3.3 (30/09/2026) :** relecture d'audit — règle de main actée (5 cartes) rappelée dans le tableau de tour.
+**v3.4 (02/10/2026) :** les monstres n'ont plus de PA ; les retraits de PA ne visent plus que les champions.
 
 ## Vue d'Ensemble
 
@@ -81,7 +82,7 @@ Le système de combat combine combat tactique sur **grille carrée** (voir `Grid
 | **Pioche**       | Séquentielle, reprend au début en fin de deck |
 | **IA**           | Joue la prochaine carte de son pattern (1 carte par tour) |
 | **Anti-lock**    | Si l'action du monstre est bloquée par un contrôle, il fait son **Attaque de base** (insensible au contrôle) à la place |
-| **PA**           | 2-4 selon l'ennemi                            |
+| **PA**           | **Aucun** (02/10/2026) : une carte du pattern par tour, sans coût |
 | **Intention**    | La prochaine carte est affichée à l'avance au joueur (preview des cartes ennemies) |
 
 **Déroulement :**
@@ -214,9 +215,9 @@ La valeur réelle d’une carte = baseline × (1 + modificateurs de portée, zon
 | **Bouclier réactif** | Peur (Réflexe de survie) | Le bouclier ne se déclenche qu'au premier coup ennemi reçu avant le prochain tour du lanceur, et absorbe ce coup |
 | **Recul et élan** | Peur (Fuite panique, Piège et recul) | Le lanceur recule de N cases à l'opposé de sa cible ; gain de PM (ou de PA) pour le tour en cours |
 | **Buffs / Debuffs** | Toutes émotions | Points de buff répartis entre intensité et durée (~10 pts ≈ +10 % pendant 1 tour). Durée comptée en tours du lanceur (voir « Décisions actées » de `GDD_Main.md`) |
-| **Réduction de PA** | Peur (Aura de terreur) | Réduit les PA de la cible au prochain tour : −1 PA pour Aura de terreur (calcul Excel : 26 × (1 − 0,15 portée − 0,10 Éveil) ≈ 20 pts ≈ −20 % des PA pendant 1 tour ≈ 1 PA) |
+| **Réduction de PA** | Moutons (Embrumé) | **Champions seulement** (les monstres n'ont plus de PA depuis le 02/10/2026 ; Aura de terreur est devenue une **Entrave** : le monstre fait son attaque de base au lieu de sa prochaine carte, qui revient au tour suivant). Réduit les PA de la cible au prochain tour : −1 PA pour Aura de terreur (calcul Excel : 26 × (1 − 0,15 portée − 0,10 Éveil) ≈ 20 pts ≈ −20 % des PA pendant 1 tour ≈ 1 PA) |
 
-**Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**. Codée (25/09/2026) : si le monstre a perdu des PA ou des PM ce tour et ne peut pas jouer sa carte prévue, il joue la carte `EnemyData.basicAttack` (0 PA, sans avancer son pattern), s'il a une cible à portée.
+**Règle anti-lock** : un monstre dont l'action est bloquée par un contrôle fait quand même son **Attaque de base**. Codée (25/09/2026) : si le monstre a perdu des PA ou des PM ce tour (une fois les PA des monstres retirés du code : des PM seulement) et ne peut pas jouer sa carte prévue, il joue la carte `EnemyData.basicAttack` (0 PA, sans avancer son pattern), s'il a une cible à portée.
 
 **Ténacité** : un monstre qui perd **tous** ses PM ignore les retraits de PM à son tour suivant (pastille « tenace » sous la barre du boss). On peut l'immobiliser, mais pas indéfiniment, même à plusieurs joueurs.
 

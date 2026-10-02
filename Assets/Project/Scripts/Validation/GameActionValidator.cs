@@ -388,9 +388,6 @@ public static class GameActionValidator
         if (data.movementRange < 0)
             return ValidationResult.Fail($"EnemyData '{data.enemyName}' : movementRange doit être >= 0");
 
-        if (data.maxActionPoints < 0)
-            return ValidationResult.Fail($"EnemyData '{data.enemyName}' : maxActionPoints doit être >= 0");
-
         if (data.prefab == null)
             return ValidationResult.Fail($"EnemyData '{data.enemyName}' : prefab manquant");
 

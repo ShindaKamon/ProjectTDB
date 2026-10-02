@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Agrippe
   m_EditorClassIdentifier: ProjectTDB::CardData
   cardName: Agrippe
-  description: "Une main surgit de sous le lit et agrippe un champion \xE0 1-2 cases
+  description: "Une main surgit de sous le lit et agrippe un champion \xE0 1-3 cases
     : 10 d\xE9g\xE2ts."
   specialText: 
   artwork: {fileID: 0}
@@ -23,7 +23,7 @@ MonoBehaviour:
   costPA: 0
   costHP: 0
   targetType: 2
-  targetRange: 2
+  targetRange: 3
   targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
@@ -47,6 +47,8 @@ MonoBehaviour:
   removeAllMovement: 0
   nextTurnActionGain: 0
   cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 0
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 0
@@ -63,3 +65,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
+  telegraphedZoneCount: 0

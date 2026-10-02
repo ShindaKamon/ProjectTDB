@@ -119,7 +119,7 @@ public class MonsterPanel : MonoBehaviour
             GUI.Label(new Rect(textX, card.y + 8f, textWidth, 44f), title, _nameStyle);
 
             GUI.Label(new Rect(textX, card.y + 50f, textWidth, 24f),
-                $"PV {EnemyScaling.ScaledHealth(enemy.maxHealth, players)}   PA {enemy.maxActionPoints}   PM {enemy.movementRange}", _statStyle);
+                $"PV {EnemyScaling.ScaledHealth(enemy.maxHealth, players)}   PM {enemy.movementRange}", _statStyle);
             GUI.Label(new Rect(textX, card.y + 72f, textWidth, 24f),
                 $"Armure {enemy.armor}   Rés. magique {enemy.magicResistance}", _statStyle);
         }

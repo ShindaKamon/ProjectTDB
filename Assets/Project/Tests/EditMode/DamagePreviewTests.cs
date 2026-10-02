@@ -175,7 +175,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void StatusChips_ShowsPendingResourceDebuff()
         {
-            Unit unit = NewUnit<Unit>();
+            Unit unit = NewUnit<RazeUnit>(); // un champion : les retraits de PA ne visent que les champions
             ResourceDebuffManager.ApplyDebuff(unit, 1, 2, null);
 
             List<CardChip> chips = UnitStatusChips.Build(unit);

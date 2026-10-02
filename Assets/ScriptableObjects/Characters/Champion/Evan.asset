@@ -18,8 +18,8 @@ MonoBehaviour:
     vraiment disparu : un id\xE9al \xE9ph\xE9m\xE8re qu'il n'arrive pas \xE0 l\xE2cher,
     et qu'il fait revivre un instant \xE0 chaque combat."
   passiveName: Miroir fraternel
-  passiveDescription: "\xC9cho : Lyse renvoie 40 % de chaque attaque d'Evan (cible
-    \xE0 sa port\xE9e)"
+  passiveDescription: "\xC9cho : chacune de ses invocations renvoie 40 % de chaque
+    attaque d'Evan (cible \xE0 sa port\xE9e)"
   portrait: {fileID: 21300000, guid: 3e508eed7ccdb6b4caa0a4d455d4bbcf, type: 3}
   fullBodyArt: {fileID: 21300000, guid: 52182fb0aa09a43468adf6d344b0dc45, type: 3}
   prefab: {fileID: 545175965259311260, guid: c05e030ecd6eb1645a8613c759d83c57, type: 3}
@@ -45,16 +45,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
   - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
   - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
-  - {fileID: 11400000, guid: 522972628eac1a04489520c688cd75d1, type: 2}
+  - {fileID: 11400000, guid: 00812ce6755a37043b02d06d8764a6ed, type: 2}
+  - {fileID: 11400000, guid: 00812ce6755a37043b02d06d8764a6ed, type: 2}
   - {fileID: 11400000, guid: e7e9f62f8e10f8043b0d304858622ab2, type: 2}
   - {fileID: 11400000, guid: e7e9f62f8e10f8043b0d304858622ab2, type: 2}
-  - {fileID: 11400000, guid: e7e9f62f8e10f8043b0d304858622ab2, type: 2}
-  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
-  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
-  - {fileID: 11400000, guid: cda47f583e4e149418af0a0caaf88b7a, type: 2}
   - {fileID: 11400000, guid: e22ed21666f0ce14ba5ecaef674b3421, type: 2}
-  - {fileID: 11400000, guid: e22ed21666f0ce14ba5ecaef674b3421, type: 2}
-  - {fileID: 11400000, guid: 38f65b0d9dcf8cc43a76ef0763d89aec, type: 2}
-  - {fileID: 11400000, guid: 38f65b0d9dcf8cc43a76ef0763d89aec, type: 2}
-  - {fileID: 11400000, guid: 6162996745c56074abfb9f7ea1428815, type: 2}
-  - {fileID: 11400000, guid: 6162996745c56074abfb9f7ea1428815, type: 2}
+  - {fileID: 11400000, guid: 4af9ced2bf34147488d3b6b2d31ddb20, type: 2}
+  - {fileID: 11400000, guid: 4af9ced2bf34147488d3b6b2d31ddb20, type: 2}
+  - {fileID: 11400000, guid: aa064837421f45743bd66a2d814567ce, type: 2}
+  - {fileID: 11400000, guid: e2cc9cc55a6e3e44999c1a1b3f87b43b, type: 2}
+  - {fileID: 11400000, guid: b97c2a05e6421834abf5d16c336ec692, type: 2}
+  - {fileID: 11400000, guid: b97c2a05e6421834abf5d16c336ec692, type: 2}
+  - {fileID: 11400000, guid: 5b32da30bbdd35a4984e78e3f9d47d92, type: 2}
+  - {fileID: 11400000, guid: 34df3a5eed5463940a42fbfc62de4881, type: 2}

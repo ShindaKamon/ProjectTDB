@@ -122,6 +122,7 @@ public class CombatFeedbackManager : MonoBehaviour
             UnitEffect.NextAttackPercent => (signed + "% prochaine attaque", ChipKind.Damage),
             UnitEffect.PmImmune => ("Tenace", ChipKind.Mute),
             UnitEffect.CardCancelled => ("Carte annulée", ChipKind.Mute),
+            UnitEffect.CardHindered => ("Carte entravée", ChipKind.Mute),
             _ => (signed, ChipKind.Mute)
         };
     }

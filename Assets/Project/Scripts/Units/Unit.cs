@@ -478,6 +478,15 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
+    /// Une unité détruite sans passer par Die()/Despawn() (ex. monstres de la scène remplacés par ceux
+    /// de la rencontre) emporte sa barre de vie, qui resterait sinon figée à l'écran.
+    /// </summary>
+    protected virtual void OnDestroy()
+    {
+        if (healthBar != null) Destroy(healthBar.gameObject);
+    }
+
+    /// <summary>
     /// Paie un coût en PV (ignore la défense, ne déclenche pas les effets de dégâts reçus)
     /// </summary>
     public void PayHealth(int amount)
@@ -822,6 +831,12 @@ public class Unit : MonoBehaviour
     /// False pour une unité sans tour propre (invocation) : la rotation des tours la saute.
     /// </summary>
     public virtual bool TakesTurns => true;
+
+    /// <summary>
+    /// False pour un élément du décor qui n'est pas un vrai combattant (ex. les lits du boss) : absent du
+    /// récapitulatif de fin de combat.
+    /// </summary>
+    public virtual bool ShownInCombatSummary => true;
 
     /// <summary>
     /// Unité cachée (ex. le boss sous un lit) : elle garde son tour, mais les requêtes de la grille l'ignorent

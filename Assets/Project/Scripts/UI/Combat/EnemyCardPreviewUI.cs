@@ -11,7 +11,6 @@ public class EnemyCardPreviewUI : MonoBehaviour
     [Header("References")]
     [SerializeField] private TextMeshProUGUI _cardNameText;
     [SerializeField] private TextMeshProUGUI _cardDescriptionText;
-    [SerializeField] private TextMeshProUGUI _cardCostText;
     [SerializeField] private Image _cardIllustrationImage; // Optionnel
     [SerializeField] private GameObject _previewContainer; // Container à masquer quand pas de carte
 
@@ -173,18 +172,17 @@ public class EnemyCardPreviewUI : MonoBehaviour
         if (_cardNameText != null)
         {
             // Carte annulée (ex: Sidération) : nom barré, le monstre ne la jouera pas
+            // Carte entravée (ex: Aura de terreur) : nom barré, attaque de base à la place
             bool cancelled = _trackedEnemy != null && _trackedEnemy.IsNextCardCancelled;
-            _cardNameText.text = cancelled ? $"<s>{nextCard.cardName}</s> (annulée)" : nextCard.cardName;
+            bool hindered = _trackedEnemy != null && _trackedEnemy.IsNextCardHindered;
+            _cardNameText.text = cancelled ? $"<s>{nextCard.cardName}</s> (annulée)"
+                : hindered ? $"<s>{nextCard.cardName}</s> (entravée)"
+                : nextCard.cardName;
         }
 
         if (_cardDescriptionText != null)
         {
             CardTextView.Apply(_cardDescriptionText, nextCard); // texte généré depuis les champs
-        }
-
-        if (_cardCostText != null)
-        {
-            _cardCostText.text = nextCard.costPA.ToString();
         }
 
 

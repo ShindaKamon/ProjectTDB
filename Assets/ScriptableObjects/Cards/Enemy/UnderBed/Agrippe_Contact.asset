@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Mordille
+  m_Name: Agrippe_Contact
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: Mordille
-  description: "Mordille un champion au contact : 8 d\xE9g\xE2ts, vole 4 PV."
+  cardName: Agrippe
+  description: "Le monstre agrippe un champion au contact : 10 d\xE9g\xE2ts."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -29,11 +29,11 @@ MonoBehaviour:
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 8
+  damageAmount: 10
   damageType: 0
   damageSelf: 0
   healAmount: 0
-  lifestealFixedAmount: 4
+  lifestealFixedAmount: 0
   damageAroundTarget: 0
   nextAttackBonus: 0
   shieldAmount: 0
@@ -46,6 +46,8 @@ MonoBehaviour:
   removeAllMovement: 0
   nextTurnActionGain: 0
   cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 0
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 0
@@ -62,3 +64,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
+  telegraphedZoneCount: 0

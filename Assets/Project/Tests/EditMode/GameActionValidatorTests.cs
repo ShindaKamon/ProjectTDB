@@ -37,7 +37,6 @@ namespace ProjectTDB.Tests
             data.enemyName = name;
             data.maxHealth = 50;
             data.movementRange = 2;
-            data.maxActionPoints = 2;
             data.prefab = new GameObject("DummyEnemyPrefab");
             _createdGameObjects.Add(data.prefab);
             data.combatDeck = new List<CardData> { NewCard("PatternCard") };
@@ -66,15 +65,15 @@ namespace ProjectTDB.Tests
             return unit;
         }
 
-        private Enemy NewEnemyWithPA(int currentPA, int maxPA, Vector2Int? gridPos = null)
+        private Champion NewChampionWithPA(int currentPA, int maxPA, Vector2Int? gridPos = null)
         {
-            var enemy = NewUnit<Enemy>(gridPos);
-            var apComponent = new ActionPointsComponent(maxPA, "TestEnemy");
+            var champion = NewUnit<RazeUnit>(gridPos); // un champion : les monstres n'ont pas de PA
+            var apComponent = new ActionPointsComponent(maxPA, "TestChampion");
             // Ramène currentPA au niveau voulu (le constructeur initialise currentPA = maxPA).
             if (currentPA < maxPA)
                 apComponent.SpendPA(maxPA - currentPA);
-            SetField(enemy, "_actionPointsComponent", apComponent);
-            return enemy;
+            SetField(champion, "_actionPointsComponent", apComponent);
+            return champion;
         }
 
         /// <summary>
@@ -165,11 +164,11 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanPlayCard_InsufficientPA_Fails()
         {
-            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
+            var champion = NewChampionWithPA(currentPA: 1, maxPA: 3);
             var card = NewCard();
             card.costPA = 2;
 
-            var result = GameActionValidator.CanPlayCard(enemy, card);
+            var result = GameActionValidator.CanPlayCard(champion, card);
 
             Assert.IsFalse(result.IsValid);
             StringAssert.Contains("PA insuffisants", result.ErrorMessage);
@@ -178,11 +177,11 @@ namespace ProjectTDB.Tests
         [Test]
         public void CanPlayCard_SufficientPA_Succeeds()
         {
-            var enemy = NewEnemyWithPA(currentPA: 3, maxPA: 3);
+            var champion = NewChampionWithPA(currentPA: 3, maxPA: 3);
             var card = NewCard();
             card.costPA = 2;
 
-            var result = GameActionValidator.CanPlayCard(enemy, card);
+            var result = GameActionValidator.CanPlayCard(champion, card);
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }
@@ -219,13 +218,13 @@ namespace ProjectTDB.Tests
         {
             // Sans override, le coût brut (2 PA) dépasserait le PA disponible (1) et échouerait.
             // Avec l'override actif (-1), le coût effectif (1) doit être utilisé à la place.
-            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
-            var deckManager = AddDeckManager(enemy);
+            var champion = NewChampionWithPA(currentPA: 1, maxPA: 3);
+            var deckManager = AddDeckManager(champion);
             var card = NewCard();
             card.costPA = 2;
             deckManager.ModifyCardCost(card, -1); // coût effectif : 1
 
-            var result = GameActionValidator.CanPlayCard(enemy, card);
+            var result = GameActionValidator.CanPlayCard(champion, card);
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }
@@ -235,13 +234,13 @@ namespace ProjectTDB.Tests
         {
             // Sans override, le coût brut (1 PA) serait jouable avec 1 PA disponible.
             // Avec l'override actif (+1), le coût effectif (2) doit bloquer l'action.
-            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
-            var deckManager = AddDeckManager(enemy);
+            var champion = NewChampionWithPA(currentPA: 1, maxPA: 3);
+            var deckManager = AddDeckManager(champion);
             var card = NewCard();
             card.costPA = 1;
             deckManager.ModifyCardCost(card, 1); // coût effectif : 2
 
-            var result = GameActionValidator.CanPlayCard(enemy, card);
+            var result = GameActionValidator.CanPlayCard(champion, card);
 
             Assert.IsFalse(result.IsValid);
             StringAssert.Contains("PA insuffisants", result.ErrorMessage);
@@ -252,12 +251,12 @@ namespace ProjectTDB.Tests
         {
             // DeckManager présent mais aucun override actif : le comportement doit être
             // identique à celui d'avant l'introduction de la surcouche de coût.
-            var enemy = NewEnemyWithPA(currentPA: 1, maxPA: 3);
-            AddDeckManager(enemy);
+            var champion = NewChampionWithPA(currentPA: 1, maxPA: 3);
+            AddDeckManager(champion);
             var card = NewCard();
             card.costPA = 2;
 
-            var result = GameActionValidator.CanPlayCard(enemy, card);
+            var result = GameActionValidator.CanPlayCard(champion, card);
 
             Assert.IsFalse(result.IsValid);
             StringAssert.Contains("PA insuffisants", result.ErrorMessage);
@@ -269,12 +268,12 @@ namespace ProjectTDB.Tests
             // Régression du bug corrigé dans DeckManager.GetEffectiveCost : le plancher de
             // 1 PA s'appliquait auparavant même sans override actif, rendant les cartes à
             // coût 0 injouables gratuitement dès qu'un DeckManager était présent.
-            var enemy = NewEnemyWithPA(currentPA: 0, maxPA: 3);
-            AddDeckManager(enemy);
+            var champion = NewChampionWithPA(currentPA: 0, maxPA: 3);
+            AddDeckManager(champion);
             var card = NewCard();
             card.costPA = 0;
 
-            var result = GameActionValidator.CanPlayCard(enemy, card);
+            var result = GameActionValidator.CanPlayCard(champion, card);
 
             Assert.IsTrue(result.IsValid, result.ErrorMessage);
         }

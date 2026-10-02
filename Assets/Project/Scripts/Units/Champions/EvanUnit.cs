@@ -129,8 +129,9 @@ public class EvanUnit : Champion, ISummonOwner
         }
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         if (_activeSummon != null)
         {
             _activeSummon.OnUnitDied -= HandleSummonDied;

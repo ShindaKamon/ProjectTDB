@@ -107,5 +107,35 @@ namespace ProjectTDB.Tests
 
             CollectionAssert.AreEqual(new[] { new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(3, 0) }, path);
         }
+
+        [Test]
+        public void ChooseTarget_FromAnyBed_UsesTheClosestBed()
+        {
+            // Boss caché : il frappe depuis n'importe quel lit. Champion à 2 cases du lit (9,4), loin du lit (1,9)
+            var beds = new[] { new Vector2Int(1, 9), new Vector2Int(9, 4) };
+            Unit champion = NewUnit(new Vector2Int(7, 4), 100);
+
+            Assert.AreEqual(2, EnemyAI.DistanceFrom(beds, champion.GetCurrentGridPos()));
+            Assert.AreSame(champion, EnemyAI.ChooseTarget(beds, new[] { champion }, 3));
+        }
+
+        [Test]
+        public void NearestFreeCell_NextToOrigin_SkipsOccupiedCells()
+        {
+            // Lit en (4,9) contre le mur du fond, voisins (3,9) et (5,9) occupés : le mouton sort devant, en (4,8)
+            Vector2Int? cell = EnemyAI.NearestFreeCell(new Vector2Int(4, 9),
+                FreeExcept(new Vector2Int(4, 9), new Vector2Int(3, 9), new Vector2Int(5, 9)));
+
+            Assert.AreEqual(new Vector2Int(4, 8), cell);
+        }
+
+        [Test]
+        public void NearestFreeCell_GoesPastOccupiedNeighbours()
+        {
+            Vector2Int? cell = EnemyAI.NearestFreeCell(new Vector2Int(0, 0),
+                FreeExcept(new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(0, 1)));
+
+            Assert.AreEqual(2, GridGeometry.Distance(new Vector2Int(0, 0), cell.Value), "au-delà des voisins occupés");
+        }
     }
 }

@@ -61,7 +61,15 @@ Détail des émotions : `SYSTEME_EMOTIONS.md`.
 
 Objectif : **chaque couleur est jouable seule** (chacune garde son point fort : Colère = dégâts, Peur = contrôle, Joie = soin) et **chaque champion a plusieurs decks viables aux façons de jouer différentes**. Pour que la Joie seule puisse finir un combat, deux cartes offensives bon marché lui ont été ajoutées : **Étincelle** (1 PA, 10 dégâts, portée 1-3) et **Rire lumineux** (2 PA, 13 dégâts au contact, vol de vie 13 — « soin + miroir dégâts » de l'Excel).
 
-Decks d'exemple (4 Signatures + 16 Standard). Le **deck de base** de chaque champion (ses cartes de départ, `ChampionData.startingDeck`) est son archétype principal : Écho de Colère (Evan), Grimpeur furieux (Crux), Suite (Raze) ; les deux autres sont enregistrés comme decks perso :
+Decks d'exemple (4 Signatures + 16 Standard). Le **deck de base** de chaque champion (ses cartes de départ, `ChampionData.startingDeck`) est son archétype principal : Écho de Colère (Evan), Grimpeur furieux (Crux), Suite (Raze). *(02/10/2026 : les deux autres decks de chaque champion ont été retirés de la sauvegarde ; le tableau ci-dessous reste comme pistes d'archétypes. Les decks de base ont été refaits, voir « Decks de base » juste après.)*
+
+**Decks de base (02/10/2026), bi-couleur, pensés contre le boss de l'Orphelinat** (le deck est la clef de la victoire : usure ~14 dégâts par tour, recherche du monstre en phase 1 ; les cartes de zone touchent plusieurs lits et le trouvent plus vite). À valider en jouant :
+
+| Champion | Deck | Couleurs | Plan | Cartes (hors Signatures ×2 chacune) |
+|---|---|---|---|---|
+| Raze | Tapis vert | Colère + Joie | Alterner les émotions pour le **Bluff** (bouclier 8), vol de vie pour tenir, coûts 1 → 2 → 3 pour la Suite | Coup de colère ×3, Frappe rapide ×2, Poing ardent ×2, Charge brutale ×2, Rire lumineux ×3, Flamme de l'espoir ×2, Étincelle ×1, Élan de joie ×1 |
+| Evan | Cauchemar en écho | Colère + Peur | Coups à distance et en zone doublés par Lyse ; boucliers de la Peur ; Sidération pour annuler un lancer | Frappe rapide ×3, Poing ardent ×2, Jet de rage ×2, Explosion de rage ×1, Ombre rampante ×2, Frappe hésitante ×1, Vertige ×1, Bouclier de la terreur ×2, Réflexe de survie ×1, Sidération ×1 |
+| Crux | Grimpeur prudent | Peur + Joie | Harceler, ralentir et reculer hors de portée ; vol de vie et bouclier réactif | Piqûre d'angoisse ×3, Piège et recul ×2, Hantise ×2, Vertige ×1, Réflexe de survie ×2, Rire lumineux ×3, Étincelle ×2, Souvenir heureux ×1 |
 
 | Champion | Deck | Couleurs | Façon de jouer | Cœur du deck |
 |---|---|---|---|---|

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
-  m_Name: Mordille
+  m_Name: Invocation_de_mouton
   m_EditorClassIdentifier: ProjectTDB::CardData
-  cardName: Mordille
-  description: "Mordille un champion au contact : 8 d\xE9g\xE2ts, vole 4 PV."
+  cardName: Invocation de mouton
+  description: "Un mouton de poussi\xE8re roule hors d'un lit."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
@@ -21,19 +21,19 @@ MonoBehaviour:
   signatureOwner: {fileID: 0}
   costPA: 0
   costHP: 0
-  targetType: 2
-  targetRange: 1
+  targetType: 1
+  targetRange: 0
   targetInStraightLine: 0
   areaEffect: 0
   aoeRadius: 0
   affectedTarget: 0
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 8
+  damageAmount: 0
   damageType: 0
   damageSelf: 0
   healAmount: 0
-  lifestealFixedAmount: 4
+  lifestealFixedAmount: 0
   damageAroundTarget: 0
   nextAttackBonus: 0
   shieldAmount: 0
@@ -46,6 +46,9 @@ MonoBehaviour:
   removeAllMovement: 0
   nextTurnActionGain: 0
   cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 0
+  spawnedEnemy: {fileID: 11400000, guid: d332da0bdd25f5744ba1516013fdb888, type: 2}
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 0
@@ -62,3 +65,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
+  telegraphedZoneCount: 0

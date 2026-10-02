@@ -22,6 +22,7 @@ namespace ProjectTDB.Tests
             public List<Unit> GetAllUnits() => Units;
             public Unit GetUnitAtGridPos(Vector2Int gridPos) => Units.Find(u => u.GetCurrentGridPos() == gridPos);
             public SummonUnit SpawnSummon(GameObject prefab, Vector2Int gridPos, Unit owner, int maxHealth) => null;
+            public Enemy SpawnEnemy(EnemyData data, Vector2Int gridPos) => null;
             public Tile GetTileAtPosition(Vector2Int pos) => null;
             public List<Vector2Int> GetAllCells() => new List<Vector2Int>();
             public Vector2Int GetGridPosFromWorldPos(Vector3 worldPos) => Vector2Int.zero;
@@ -297,7 +298,7 @@ namespace ProjectTDB.Tests
         }
 
         [Test]
-        public void Tempo_FirstHitEachTurn_GivesAPA_AndSuiteRemovesEnemyPA()
+        public void Tempo_FirstHitEachTurn_GivesAPA_AndSuiteRemovesEnemyPM()
         {
             var fusion = NewFusion<TempoFusion>(EmotionType.Fear);
             var raze = NewFused<RazeUnit>(fusion, Vector2Int.zero);
@@ -311,7 +312,7 @@ namespace ProjectTDB.Tests
             raze.OnCardAboutToExecute(NewCard(EmotionType.Fear, 2)); // Suite (1 puis 2)
             raze.OnCardHitEnemies(NewCard(EmotionType.Fear, 2), hit, firstOfCard: true);
             Assert.AreEqual(7, raze.GetCurrentPA(), "+1 PA de la Suite, +1 PA de la fusion à la première carte qui touche");
-            Assert.AreEqual(1, ResourceDebuffManager.GetPending(enemy).pa, "la Suite retire 1 PA à l'ennemi");
+            Assert.AreEqual(1, ResourceDebuffManager.GetPending(enemy).pm, "la Suite retire 1 PM à l'ennemi");
 
             raze.OnCardHitEnemies(NewCard(EmotionType.Fear, 2), hit, firstOfCard: true);
             Assert.AreEqual(7, raze.GetCurrentPA(), "une seule fois par tour");

@@ -829,6 +829,31 @@ public class GridManager : MonoBehaviour, IGridService
         return summon;
     }
 
+    public Enemy SpawnEnemy(EnemyData data, Vector2Int gridPos)
+    {
+        if (data == null || data.prefab == null || !_tiles.ContainsKey(gridPos) || GetUnitAtGridPos(gridPos) != null)
+        {
+            GameLog.LogWarning($"SpawnEnemy : impossible de faire apparaître {data?.enemyName} en {gridPos}.");
+            return null;
+        }
+
+        Enemy enemy = Instantiate(data.prefab).GetRequiredComponent<Enemy>("Monstre invoqué");
+        if (enemy == null) return null;
+        enemy.InitializeEnemy(data, gridPos);
+
+        // Mêmes réglages que les monstres du départ (voir InitUnits) : nombre de joueurs, graine commune en réseau
+        enemy.ScaleForPlayers(Mathf.Min(CombatParty.Count, _startCells.Length));
+        if (CombatParty.Seed != 0) enemy.SetRandomSeed(CombatParty.Seed + 104729 * _units.Count);
+
+        _units.Add(enemy);
+        _gridRepository.AddUnit(enemy);
+        enemy.OnUnitDied += HandleUnitDied;
+        if (Services.IsBattleUIServiceAvailable()) Services.BattleUI.OnEnemySpawned(enemy);
+
+        GameLog.Log($"Monstre invoqué : {enemy.name} en {gridPos}");
+        return enemy;
+    }
+
     /// <summary>
     /// Retourne la TurnStateMachine (Phase 3.4)
     /// </summary>

@@ -19,7 +19,7 @@ MonoBehaviour:
   emotionType: 0
   category: 0
   signatureOwner: {fileID: 0}
-  costPA: 2
+  costPA: 0
   costHP: 0
   targetType: 1
   targetRange: 0

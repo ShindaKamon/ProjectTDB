@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "Mar\xE9e d'ombre"
   description: "L'ombre de sous le lit d\xE9borde : 16 d\xE9g\xE2ts dans un cercle
-    de 1 autour d'un champion \xE0 1-2 cases."
+    de 1 autour d'un champion \xE0 1-2 cases, puis il change de cachette."
   specialText: 
   artwork: {fileID: 0}
   emotionType: 0
   category: 0
   signatureOwner: {fileID: 0}
-  costPA: 2
+  costPA: 0
   costHP: 0
   targetType: 2
   targetRange: 2
@@ -47,6 +47,8 @@ MonoBehaviour:
   removeAllMovement: 0
   nextTurnActionGain: 0
   cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 1
   isChargeCard: 0
   leapToTarget: 0
   knockbackDistance: 0
@@ -63,3 +65,4 @@ MonoBehaviour:
   isRepositionSummonCard: 0
   scalesWithPASpentThisTurn: 0
   comboDamagePerPASpent: 0
+  telegraphedZoneCount: 0

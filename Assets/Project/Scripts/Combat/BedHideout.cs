@@ -1,18 +1,17 @@
 /// <summary>
-/// Règles du boss caché sous les lits (phase 1 du Monstre sous le lit, voir BedHiding) : répartition de
-/// ses PV entre les lits et choix du lit suivant. Classe pure, testable.
+/// Règles du boss caché sous les lits (phase 1 du Monstre sous le lit, voir BedHiding) : PV des lits et
+/// choix du lit suivant. Classe pure, testable.
 /// </summary>
 public static class BedHideout
 {
     /// <summary>
-    /// Répartit les PV du boss entre les lits : parts égales, le reste va aux premiers lits (la somme vaut total).
+    /// PV de chaque lit : casser tous les lits sauf un vide la barre de la phase 1 (le dernier devient le Lit
+    /// de la phase 2). Arrondi au-dessus, pour que ces lits suffisent toujours.
     /// </summary>
-    public static int[] SplitHealth(int total, int bedCount)
+    public static int BedHealth(int phaseHealth, int bedCount)
     {
-        var shares = new int[bedCount];
-        for (int i = 0; i < bedCount; i++)
-            shares[i] = total / bedCount + (i < total % bedCount ? 1 : 0);
-        return shares;
+        if (bedCount <= 1) return phaseHealth;
+        return (phaseHealth + bedCount - 2) / (bedCount - 1);
     }
 
     /// <summary>

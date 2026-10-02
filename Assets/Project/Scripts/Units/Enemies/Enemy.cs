@@ -4,36 +4,15 @@ using System.Collections.Generic;
 /// <summary>
 /// Classe Enemy hérite de Unit et représente les ennemis.
 /// Les ennemis ont :
-/// - Un système PA pour jouer leurs cartes de pattern (via ActionPointsComponent)
-/// - Un deck séquentiel (pas de mélange) qui boucle
+/// - Un deck séquentiel (pas de mélange) qui boucle : une carte par tour, sans coût (pas de PA, 02/10/2026)
 /// - Un comportement prévisible pour le joueur
 /// </summary>
-public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
+public class Enemy : Unit, IOutgoingDamageModifier
 {
     // ========== ENEMY DATA ==========
 
     [Header("=== Enemy Specific ==")]
     [SerializeField] private EnemyData _enemyData;
-
-    // ========== SYSTÈME PA (Points d'Action) ==========
-    // Les ennemis ont leur propre système PA pour jouer leurs cartes de pattern
-    // Utilise la composition avec ActionPointsComponent pour éviter la duplication de code
-    // Note: maxActionPoints est initialisé depuis EnemyData, pas besoin de SerializeField
-
-    // Component qui gère la logique PA
-    private ActionPointsComponent _actionPointsComponent;
-
-    // ========== ÉVÉNEMENTS ==========
-
-    /// <summary>
-    /// Événement pour notifier les changements de PA
-    /// Redirige l'événement du component vers l'extérieur
-    /// </summary>
-    public event System.Action<int, int> OnActionPointsChanged
-    {
-        add { if (_actionPointsComponent != null) _actionPointsComponent.OnActionPointsChanged += value; }
-        remove { if (_actionPointsComponent != null) _actionPointsComponent.OnActionPointsChanged -= value; }
-    }
 
     // ========== DECK PATTERN ==========
     // Deck system pour pattern de combat
@@ -45,8 +24,6 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
 
     // ========== GETTERS PUBLICS ==========
 
-    public int GetCurrentPA() => _actionPointsComponent?.GetCurrentPA() ?? 0;
-    public int GetMaxPA() => _actionPointsComponent?.GetMaxPA() ?? 0;
     public EnemyData GetEnemyData() => _enemyData;
     public bool IsBoss() => _enemyData != null && _enemyData.isBoss;
     public override string DisplayName => _enemyData != null ? _enemyData.enemyName : name;
@@ -100,6 +77,32 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
         return true;
     }
 
+    /// <summary>
+    /// True si la prochaine carte est entravée (ex: Aura de terreur) : à son prochain tour, le monstre
+    /// joue son attaque de base à la place, sans avancer son pattern (la carte revient au tour suivant)
+    /// </summary>
+    public bool IsNextCardHindered { get; private set; }
+
+    public void HinderNextCard()
+    {
+        if (GetNextCard() == null) return;
+        IsNextCardHindered = true;
+        EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.CardHindered, 0));
+        OnNextCardChanged?.Invoke(GetNextCard()); // l'aperçu affiche la carte comme entravée
+    }
+
+    /// <summary>
+    /// Au tour du monstre : retourne true si sa carte était entravée, et lève l'entrave
+    /// </summary>
+    public bool ConsumeHinderedCard()
+    {
+        if (!IsNextCardHindered) return false;
+        IsNextCardHindered = false;
+        GameLog.Log($"{name} (Enemy) : carte entravée, attaque de base à la place");
+        OnNextCardChanged?.Invoke(GetNextCard());
+        return true;
+    }
+
     // ========== INITIALISATION ==========
 
     /// <summary>
@@ -128,9 +131,6 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
         // Initialise les stats de base via la classe Unit (HP, PM, ATK)
         InitUnitStats(data.maxHealth, data.movementRange, data.attackDamage, data.armor, data.magicResistance);
 
-        // Initialise le component PA depuis EnemyData
-        _actionPointsComponent = new ActionPointsComponent(data.maxActionPoints, $"{gameObject.name} (Enemy)");
-
         // Copie le deck de combat (pattern)
         _combatDeck.Clear();
         if (data.combatDeck != null)
@@ -147,7 +147,7 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
         // Notifie la prochaine carte
         OnNextCardChanged?.Invoke(GetNextCard());
 
-        GameLog.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, PA: {GetCurrentPA()}/{GetMaxPA()}, Deck: {_combatDeck.Count} cartes");
+        GameLog.Log($"{name} (Enemy) initialisé - HP: {_health}/{_maxHealth}, Deck: {_combatDeck.Count} cartes");
     }
 
     protected override void Start()
@@ -178,6 +178,7 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
     // ========== NOMBRE DE JOUEURS (coop) ==========
 
     private float _damageMultiplier = 1f;
+    private int _playerCount = 1; // pour les PV des phases suivantes du boss
 
     /// <summary>
     /// Adapte le monstre au nombre de joueurs (EnemyScaling) : PV max et dégâts de ses cartes.
@@ -186,9 +187,57 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
     public void ScaleForPlayers(int playerCount)
     {
         if (_enemyData == null) return;
+        _playerCount = playerCount;
         _damageMultiplier = EnemyScaling.DamageMultiplier(playerCount);
         SetMaxHealth(EnemyScaling.ScaledHealth(_enemyData.maxHealth, playerCount));
         GameLog.Log($"{name} adapté à {playerCount} joueur(s) : PV {_maxHealth}, dégâts x{_damageMultiplier:F2}");
+    }
+
+    // ========== PHASES DU BOSS (EnemyData.nextPhases) ==========
+
+    private int _phase; // 0 = première phase (maxHealth et combatDeck d'EnemyData)
+
+    /// <summary>Phase en cours (0 = la première).</summary>
+    public int Phase => _phase;
+
+    /// <summary>Nombre de phases : 1 + EnemyData.nextPhases.</summary>
+    public int PhaseCount => 1 + (_enemyData != null ? _enemyData.nextPhases.Count : 0);
+
+    /// <summary>
+    /// À 0 PV, un boss qui a encore des phases ne meurt pas : il repart avec la barre pleine et le pattern de la
+    /// phase suivante (surprise voulue, décision du 02/10/2026). Sinon, mort normale.
+    /// </summary>
+    protected override void Die()
+    {
+        if (_phase + 1 < PhaseCount) StartPhase(_phase + 1);
+        else base.Die();
+    }
+
+    private void StartPhase(int phase)
+    {
+        EnemyData.BossPhase data = _enemyData.nextPhases[phase - 1];
+        _phase = phase;
+        SetMaxHealth(EnemyScaling.ScaledHealth(data.maxHealth, _playerCount));
+        SetCurrentHealth(GetMaxHealth());
+
+        _combatDeck.Clear();
+        _combatDeck.AddRange(data.combatDeck);
+        _currentCardIndex = 0;
+        OnNextCardChanged?.Invoke(GetNextCard());
+
+        GameLog.Log($"{name} passe en phase {phase + 1}/{PhaseCount} : {GetMaxHealth()} PV, {_combatDeck.Count} cartes");
+        EventBus.Publish(new BossPhaseChangedEvent(this, phase, PhaseCount));
+    }
+
+    /// <summary>
+    /// Perte de PV sans retour visuel propre (ex. coups portés au lit sous lequel le boss se cache, déjà affichés
+    /// sur le lit). À 0 PV : même règle que la mort (phase suivante ou mort).
+    /// </summary>
+    public void LoseHealth(int amount)
+    {
+        if (amount <= 0) return;
+        if (GetHealth() - amount <= 0) Die();
+        else SetCurrentHealth(GetHealth() - amount);
     }
 
     // ========== IMPLÉMENTATION INTERFACE IOutgoingDamageModifier ==========
@@ -197,59 +246,6 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
     public float GetDamageMultiplier() => _damageMultiplier;
 
     public void ConsumeDamageModifier() { }
-
-    // ========== IMPLÉMENTATION INTERFACE IActionPointsUser ==========
-
-    public bool SpendPA(int amount)
-    {
-        if (_actionPointsComponent == null)
-        {
-            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
-            return false;
-        }
-        return _actionPointsComponent.SpendPA(amount);
-    }
-
-    public void RefreshPA()
-    {
-        if (_actionPointsComponent == null)
-        {
-            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
-            return;
-        }
-        _actionPointsComponent.RefreshPA();
-    }
-
-    public void SetMaxPA(int value)
-    {
-        if (_actionPointsComponent == null)
-        {
-            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
-            return;
-        }
-        _actionPointsComponent.SetMaxPA(value);
-    }
-
-    public void ReduceCurrentPA(int amount)
-    {
-        if (_actionPointsComponent == null)
-        {
-            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
-            return;
-        }
-        _actionPointsComponent.ReduceCurrentPA(amount);
-    }
-
-    public void AddPA(int amount, bool canExceedMax = false)
-    {
-        if (_actionPointsComponent == null)
-        {
-            Debug.LogError($"{name} (Enemy): ActionPointsComponent n'est pas initialisé !");
-            return;
-        }
-        _actionPointsComponent.AddPA(amount, canExceedMax);
-        if (amount > 0) EventBus.Publish(new UnitEffectAppliedEvent(this, UnitEffect.ActionPoints, amount));
-    }
 
     // ========== LANCER ANNONCÉ (voir CardData.telegraphedZoneCount) ==========
 
@@ -313,7 +309,7 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
 
     /// <summary>
     /// Pioche et joue la prochaine carte du deck (séquentiel, pas de mélange)
-    /// Retourne null si aucune carte disponible ou pas assez de PA
+    /// Retourne null si aucune carte disponible
     /// </summary>
     public CardData DrawAndPlayNextCard()
     {
@@ -333,13 +329,6 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
 
         CardData nextCard = _combatDeck[_currentCardIndex];
 
-        // Vérifie si on a assez de PA
-        if (nextCard.costPA > GetCurrentPA())
-        {
-            GameLog.LogWarning($"{name} (Enemy): Pas assez de PA pour jouer {nextCard.cardName} (coût: {nextCard.costPA}, dispo: {GetCurrentPA()})");
-            return null;
-        }
-
         // Joue la carte
         GameLog.Log($"{name} (Enemy) joue la carte: {nextCard.cardName}");
         _currentCardIndex++;
@@ -353,8 +342,10 @@ public class Enemy : Unit, IActionPointsUser, IOutgoingDamageModifier
     /// <summary>
     /// Appelé quand l'ennemi est détruit (mort ou autre raison)
     /// </summary>
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
+
         // Notifie le BattleUIManager pour nettoyer les UI
         if (Services.IsBattleUIServiceAvailable())
         {

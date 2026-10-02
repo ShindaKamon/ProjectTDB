@@ -35,7 +35,7 @@ public static class DungeonSetup
         EncounterData threeSheep = SaveEncounter("Orphelinat_TroisMoutons", "Trois moutons de poussière",
             (sheep, new Vector2Int(2, 7)), (sheep, new Vector2Int(5, 7)), (sheep, new Vector2Int(7, 7)));
         EncounterData bossFight = SaveEncounter("Orphelinat_UnderBed", "Le monstre sous le lit",
-            (boss, new Vector2Int(5, 8)), (sheep, new Vector2Int(3, 7)), (sheep, new Vector2Int(7, 7)));
+            (boss, new Vector2Int(5, 8))); // pas de mobs au départ : le boss les invoque (Invocation de mouton)
         // 6 lits contre les murs du fond (nord y = 9, est x = 9) : le boss se cache dessous (BedHiding)
         bossFight.bedCells = new List<Vector2Int>
         {

@@ -45,6 +45,9 @@ public static class CardRulesText
         if (card.paReduction > 0) Effect("pa", ChipKind.ActionPoints, $"Perd {card.paReduction} PA pendant " + DebuffTurns(card));
         if (card.nextTurnActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.nextTurnActionGain} PA au prochain tour");
         if (card.cancelsEnemyNextCard) Effect("lock", ChipKind.Mute, "Le monstre ne joue pas sa prochaine carte");
+        if (card.spawnedEnemy != null) Effect("summon", ChipKind.Mute, "Fait apparaître : " + card.spawnedEnemy.enemyName);
+        if (card.changesHidingSpot) Effect("summon", ChipKind.Mute, "Il change de cachette");
+        if (card.hindersEnemyNextCard) Effect("lock", ChipKind.Mute, "Entrave : le monstre fait son attaque de base au lieu de sa prochaine carte");
         if (card.knockbackDistance > 0)
             Effect(card.pullsTowardCaster ? "pull" : "push", ChipKind.Push,
                 (card.pullsTowardCaster ? "Tire de " : "Repousse de ") + Cases(card.knockbackDistance));

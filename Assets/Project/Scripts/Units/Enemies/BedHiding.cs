@@ -2,51 +2,75 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Phase 1 du Monstre sous le lit (voir Enemies.md) : le boss est caché sous un des lits (invisible et ignoré par
-/// la grille, seule son ombre dépasse), change de lit au début de chacun de ses tours et frappe depuis là.
-/// Ses PV sont ceux des lits (somme affichée par sa barre de boss) ; le lit où il se trouve résiste.
-/// Quand il ne reste qu'un lit, le lit cède et le boss en sort avec les PV de ce lit (en attendant les phases 2 et 3).
+/// Phases 1 et 2 du Monstre sous le lit (Enemies.md, révision du 02/10/2026) :
+/// - phase 1, cache-cache : le boss est caché sous un lit (invisible et ignoré par la grille). Seul ce lit subit
+///   des dégâts, qui passent au boss ; le premier coup le révèle (son ombre dépasse du lit). Il change de lit, et
+///   redevient caché, quand il joue une carte qui le fait changer de cachette (Marée d'ombre) et quand son lit casse ;
+/// - phase 2 (Enemy passe en phase 2 à 0 PV) : il fusionne avec son lit, le Lit (à moitié visible, immobile) ; les
+///   autres lits s'effondrent, le Lit reçoit les PV de la phase et ses dégâts passent toujours au boss ;
+/// - phase 3 : le Lit cède et le boss en sort.
 /// Ajouté au boss par GridManager quand la rencontre a des lits.
 /// </summary>
 public class BedHiding : MonoBehaviour
 {
+    private const float FusedDepth = 0.6f; // phase 2 : le modèle du boss s'enfonce dans le Lit
+
     private Enemy _boss;
     private readonly List<BedUnit> _beds = new List<BedUnit>();
     private BedUnit _current;
+    private bool _fused;
 
+    /// <summary>True tant que le boss est dans un lit (caché en phase 1, fusionné en phase 2).</summary>
     public bool IsHiding => _current != null;
 
-    /// <summary>Lit sous lequel le boss est caché (null une fois sorti).</summary>
+    /// <summary>Lit où se trouve le boss (null une fois sorti).</summary>
     public BedUnit CurrentBed => _current;
 
     public void Begin(Enemy boss, List<BedUnit> beds)
     {
         _boss = boss;
         _beds.AddRange(beds);
-        int[] shares = BedHideout.SplitHealth(boss.GetMaxHealth(), beds.Count);
-        for (int i = 0; i < beds.Count; i++) beds[i].SetMaxHealth(shares[i]);
+        int bedHealth = BedHideout.BedHealth(boss.GetMaxHealth(), beds.Count);
+        foreach (BedUnit bed in beds) bed.SetFullHealth(bedHealth);
 
         SetVisible(false);
         MoveTo(_beds[boss.Rng.Next(_beds.Count)]);
         EventBus.Subscribe<UnitDamagedEvent>(OnUnitDamaged);
-        EventBus.Subscribe<UnitHealedEvent>(OnUnitHealed);
         EventBus.Subscribe<UnitDiedEvent>(OnUnitDied);
-        GameLog.Log($"{boss.name} se cache sous l'un des {beds.Count} lits ({boss.GetMaxHealth()} PV répartis)");
+        EventBus.Subscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
+        GameLog.Log($"{boss.name} se cache sous l'un des {beds.Count} lits ({bedHealth} PV chacun)");
     }
 
     private void OnDestroy()
     {
         EventBus.Unsubscribe<UnitDamagedEvent>(OnUnitDamaged);
-        EventBus.Unsubscribe<UnitHealedEvent>(OnUnitHealed);
         EventBus.Unsubscribe<UnitDiedEvent>(OnUnitDied);
+        EventBus.Unsubscribe<BossPhaseChangedEvent>(OnBossPhaseChanged);
     }
 
-    /// <summary>Début du tour du boss : il passe sous un autre lit.</summary>
-    public void MoveToNextBed()
+    /// <summary>Phase 1 : il passe sous un autre lit, caché à nouveau (ex. Marée d'ombre).</summary>
+    public void MoveToAnotherBed()
     {
-        if (!IsHiding) return;
+        if (!IsHiding || _fused || _beds.Count <= 1) return;
         MoveTo(_beds[BedHideout.NextBed(_boss.Rng, _beds.Count, _beds.IndexOf(_current))]);
     }
+
+    /// <summary>
+    /// Cases d'où il peut frapper : n'importe quel lit encore debout (une main sort de sous n'importe quel lit),
+    /// ce qui ne trahit pas celui où il se cache.
+    /// </summary>
+    public List<Vector2Int> AttackOrigins()
+    {
+        var cells = new List<Vector2Int>();
+        foreach (BedUnit bed in _beds) if (bed != null && bed.GetHealth() > 0) cells.Add(bed.GetCurrentGridPos());
+        return cells;
+    }
+
+    /// <summary>
+    /// Case d'où sortent les monstres qu'il invoque : un lit au hasard (son lit en phase 2), pour ne pas
+    /// trahir sa cachette en phase 1.
+    /// </summary>
+    public Vector2Int SpawnOrigin() => _beds[_boss.Rng.Next(_beds.Count)].GetCurrentGridPos();
 
     private void MoveTo(BedUnit bed)
     {
@@ -57,45 +81,76 @@ public class BedHiding : MonoBehaviour
         GameLog.Log($"{_boss.name} se cache sous le lit {bed.GetCurrentGridPos()}");
     }
 
-    private void OnUnitDamaged(UnitDamagedEvent e) { if (e.Target is BedUnit) SyncBossHealth(); }
+    // Coup sur son lit : il est révélé, et le boss perd ce que le lit a perdu (peut le faire changer de phase)
+    private void OnUnitDamaged(UnitDamagedEvent e)
+    {
+        if (e.Target != _current || e.EffectiveDamage <= 0) return;
+        _current.Revealed = true;
+        _boss.LoseHealth(e.EffectiveDamage);
+    }
 
-    private void OnUnitHealed(UnitHealedEvent e) { if (e.Target is BedUnit) SyncBossHealth(); }
-
+    // Phase 1 : son lit casse, il fuit sous un autre (caché à nouveau)
     private void OnUnitDied(UnitDiedEvent e)
     {
-        if (!(e.DeadUnit is BedUnit bed) || !_beds.Remove(bed) || !IsHiding) return;
-        if (_beds.Count == 1) Emerge();
-        else SyncBossHealth();
+        if (!(e.DeadUnit is BedUnit bed) || !_beds.Remove(bed) || bed != _current || _fused) return;
+        _current = null;
+        if (_beds.Count > 0) MoveTo(_beds[_boss.Rng.Next(_beds.Count)]);
     }
 
-    // PV du boss = somme des PV des lits restants
-    private void SyncBossHealth()
+    private void OnBossPhaseChanged(BossPhaseChangedEvent e)
     {
-        int total = 0;
-        foreach (BedUnit bed in _beds) if (bed != null) total += bed.GetHealth();
-        _boss.SetCurrentHealth(total);
+        if (e.Boss != _boss) return;
+        if (e.Phase == 1) Fuse();
+        else if (e.Phase == 2) Emerge();
     }
 
-    // Il ne reste que son lit : le lit cède, le boss sort sur sa case avec les PV du lit
+    // Phase 2 : il fusionne avec son lit (ou un autre encore debout si le sien vient de casser) ; les autres s'effondrent
+    private void Fuse()
+    {
+        BedUnit lit = _current != null && _current.GetHealth() > 0 ? _current : _beds.Find(b => b != null && b.GetHealth() > 0);
+        if (lit == null) { Emerge(); return; }
+
+        if (lit != _current) MoveTo(lit);
+        _fused = true;
+        foreach (BedUnit bed in new List<BedUnit>(_beds))
+            if (bed != lit && bed != null && bed.GetHealth() > 0) bed.Collapse();
+        _beds.Clear();
+        _beds.Add(lit);
+
+        lit.SetFullHealth(_boss.GetMaxHealth());
+        lit.Revealed = true;
+        SetRenderersVisible(true); // à moitié visible : le modèle s'enfonce dans le Lit
+        _boss.transform.position += Vector3.down * FusedDepth;
+        GameLog.Log($"{_boss.name} fusionne avec le lit {lit.GetCurrentGridPos()} ({lit.GetHealth()} PV)");
+    }
+
+    // Phase 3 : le Lit cède (s'il n'est pas déjà tombé avec la barre), le boss sort sur sa case
     private void Emerge()
     {
-        BedUnit last = _beds[0];
-        int health = last.GetHealth();
-        Vector2Int cell = last.GetCurrentGridPos();
+        BedUnit lit = _current;
         _current = null;
+        _fused = false;
         _beds.Clear();
-        last.Collapse();
+        if (lit == null) return;
+
+        Vector2Int cell = lit.GetCurrentGridPos();
+        if (lit.GetHealth() > 0) lit.Collapse();
+        else lit.Occupied = false;
 
         SetVisible(true);
         _boss.TeleportTo(cell);
-        _boss.SetCurrentHealth(health);
-        GameLog.Log($"{_boss.name} sort de sous le dernier lit ({health} PV)");
+        GameLog.Log($"{_boss.name} sort du Lit");
     }
 
     private void SetVisible(bool visible)
     {
         _boss.IsHidden = !visible;
-        foreach (Renderer renderer in _boss.GetComponentsInChildren<Renderer>(true)) renderer.enabled = visible;
+        SetRenderersVisible(visible);
         foreach (Collider collider in _boss.GetComponentsInChildren<Collider>(true)) collider.enabled = visible; // les clics vont au lit
+    }
+
+    private void SetRenderersVisible(bool visible)
+    {
+        foreach (Renderer renderer in _boss.GetComponentsInChildren<Renderer>(true)) renderer.enabled = visible;
     }
 }

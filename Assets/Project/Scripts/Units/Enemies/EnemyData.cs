@@ -22,18 +22,31 @@ public class EnemyData : ScriptableObject
     [Header("Stats de Base")]
     public int maxHealth = 50;                 // HP (Points de Vie) maximum
     public int movementRange = 2;              // PM (Points de Mouvement) maximum
-    public int maxActionPoints = 2;            // PA (Points d'Action) maximum
     public int attackDamage = 5;               // ATK (Attaque) - dégâts de base
     public int armor = 0;                      // Armure : réduit les dégâts physiques reçus (soustraction fixe)
     [UnityEngine.Serialization.FormerlySerializedAs("barrier")]
     public int magicResistance = 0;            // Résistance magique : réduit les dégâts magiques reçus (soustraction fixe)
 
     [Header("Deck Pattern")]
-    [Tooltip("Le deck définit le pattern de combat de l'ennemi. Les cartes sont jouées dans l'ordre (pas de mélange).")]
+    [Tooltip("Le deck définit le pattern de combat de l'ennemi. Les cartes sont jouées dans l'ordre (pas de mélange), une par tour, sans coût : les monstres n'ont pas de PA.")]
     public List<CardData> combatDeck = new List<CardData>();
 
-    [Tooltip("Attaque de base (0 PA), jouée à la place de la carte prévue quand un contrôle (retrait de PA/PM) l'empêche de la jouer : règle anti-lock")]
+    [Tooltip("Attaque de base, jouée à la place de la carte prévue quand un contrôle (retrait de PM) l'empêche de la jouer : règle anti-lock")]
     public CardData basicAttack;
+
+    /// <summary>Phase suivante d'un boss : une nouvelle barre de vie pleine et un nouveau pattern.</summary>
+    [System.Serializable]
+    public class BossPhase
+    {
+        [Tooltip("PV de la phase (barre pleine au début de la phase), barème d'un joueur")]
+        public int maxHealth = 100;
+        [Tooltip("Pattern de la phase, joué depuis le début")]
+        public List<CardData> combatDeck = new List<CardData>();
+    }
+
+    [Header("Phases (boss)")]
+    [Tooltip("Phases après la première (maxHealth + combatDeck ci-dessus) : à 0 PV, le boss repart avec la barre pleine et le pattern de la phase suivante. Vide = une seule barre.")]
+    public List<BossPhase> nextPhases = new List<BossPhase>();
 
     [Header("Visual Settings")]
     public Vector3 healthBarOffset = new Vector3(0, 2f, 0);

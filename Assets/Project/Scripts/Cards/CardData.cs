@@ -229,6 +229,15 @@ public class CardData : ScriptableObject
     [Tooltip("Le monstre ciblé ne joue pas sa prochaine carte (ni attaque de base) et passe à la suivante de son pattern (ex: Sidération)")]
     public bool cancelsEnemyNextCard = false;
 
+    [Tooltip("Le monstre ciblé joue son attaque de base au lieu de sa prochaine carte, qui revient au tour suivant (ex: Aura de terreur, Entrave)")]
+    public bool hindersEnemyNextCard = false;
+
+    [Tooltip("Boss caché sous les lits : après cette carte, il passe sous un autre lit et redevient caché (ex: Marée d'ombre)")]
+    public bool changesHidingSpot = false;
+
+    [Tooltip("Carte de monstre : fait apparaître ce monstre sur la case libre la plus proche du lanceur (boss caché : d'un lit au hasard) (ex: Invocation de mouton)")]
+    public EnemyData spawnedEnemy;
+
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         6. EFFETS SPÉCIAUX                                 ║
     // ╚════════════════════════════════════════════════════════════════════════════╝
@@ -860,6 +869,12 @@ public class CardData : ScriptableObject
         if (cancelsEnemyNextCard && targetUnit is Enemy cancelledEnemy)
         {
             cancelledEnemy.CancelNextCard();
+        }
+
+        // Monstre ciblé : entrave sa prochaine carte (ex: Aura de terreur)
+        if (hindersEnemyNextCard && targetUnit is Enemy hinderedEnemy)
+        {
+            hinderedEnemy.HinderNextCard();
         }
 
         // Gain de PA au prochain tour de la cible, ou du lanceur pour une carte sur soi (ex: Élan partagé)

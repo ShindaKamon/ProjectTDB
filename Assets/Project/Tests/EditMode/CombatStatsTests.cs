@@ -71,5 +71,17 @@ namespace ProjectTDB.Tests
             Assert.AreEqual(1, stats.Allies.Count);
             Assert.AreEqual(0, stats.Allies[0].Damage);
         }
+
+        [Test]
+        public void Register_SkipsBossBeds()
+        {
+            var stats = new CombatStats();
+
+            stats.Register(NewUnit<BedUnit>("Lit"));
+            stats.Register(NewUnit<Enemy>("UnderBed"));
+
+            Assert.AreEqual(1, stats.Enemies.Count, "c'est UnderBed qu'on combat, pas ses lits");
+            Assert.AreEqual("UnderBed", stats.Enemies[0].Name);
+        }
     }
 }

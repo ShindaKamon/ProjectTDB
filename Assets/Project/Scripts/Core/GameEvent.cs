@@ -205,7 +205,8 @@ public enum UnitEffect
     DamageTakenPercent,     // ex. -15 : dégâts subis réduits de 15 %
     NextAttackPercent,      // ex. +15 : prochaine carte de dégâts +15 %
     PmImmune,               // Ténacité (montant ignoré)
-    CardCancelled           // prochaine carte du monstre annulée (montant ignoré)
+    CardCancelled,          // prochaine carte du monstre annulée (montant ignoré)
+    CardHindered            // prochaine carte du monstre entravée : attaque de base à la place (montant ignoré)
 }
 
 /// <summary>
@@ -335,5 +336,23 @@ public class ThrowZonesChangedEvent : GameEvent
     {
         Thrower = thrower;
         Cells = cells;
+    }
+}
+
+/// <summary>
+/// Publié quand un boss passe à sa phase suivante (barre de vie pleine, nouveau pattern) : Phase vaut 1 pour la
+/// deuxième phase, PhaseCount est le nombre total de phases
+/// </summary>
+public class BossPhaseChangedEvent : GameEvent
+{
+    public Enemy Boss { get; private set; }
+    public int Phase { get; private set; }
+    public int PhaseCount { get; private set; }
+
+    public BossPhaseChangedEvent(Enemy boss, int phase, int phaseCount)
+    {
+        Boss = boss;
+        Phase = phase;
+        PhaseCount = phaseCount;
     }
 }

@@ -54,7 +54,7 @@ Un **boss** dont l'action est bloquée par un contrôle (retrait de PM ; les mon
 | **3ᵉ ennemi** | À définir | Concept à trouver |
 | **Moutons de poussière** | Mobs du boss | Codés (valeurs provisoires) : 100 PV, 3 PM ; pattern Mordille (8 + vol de vie 4) ×2 → **Embrumé** (4 dégâts à 1-2 cases, −1 PA au prochain tour, −1 PM si le terrain est dans l'ombre : `CardData.paBecomesPmInShadow`) ; pas de fusion (retirée le 02/10) |
 | **Soldats de bois** (casse-noisette) | Mobs du boss + salle 2 | **Codés le 02/10/2026** (valeurs provisoires) : 60 PV, 2 PM ; pattern Baïonnette (10 au contact) ×2 → Garde-à-vous (bouclier 15 sur lui) ; garde du corps des mobs (`EnemyData.guardsAllies`) ; apparaît une Pluie de jouets sur deux (`CardData.animatedToy`) et dans la salle 2 |
-| **Boss : le Monstre sous le lit** | Boss de donjon | Combat en 3 phases (ci-dessous) — design du 01/10/2026, pas encore codé |
+| **Boss : le Monstre sous le lit** | Boss de donjon | Combat en 3 phases (ci-dessous) — design du 01/10/2026, codé le 02/10/2026 (voir « Phases codées » plus bas) |
 
 Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 
@@ -74,7 +74,7 @@ Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 
 **Les débris :** *(révisé le 02/10/2026 : les lits cassés ne laissent plus rien)* seuls les **jouets tombés** de Pluie de jouets restent au sol (obstacle). Le monstre **ramasse les débris pour les lancer** : un lancer peut consommer un tas de débris (l'obstacle disparaît, la zone visée est touchée). Les débris sont donc à la fois un abri et des munitions pour le boss.
 
-#### Révision du 02/10/2026 *(fait foi sur le tableau ci-dessus en cas d'écart ; pas encore codée)*
+#### Révision du 02/10/2026 *(fait foi sur le tableau ci-dessus en cas d'écart ; codée le 02/10/2026, révisions suivantes dans le tableau des cartes)*
 
 **Phase 1, cache-cache :** le monstre est **caché** (aucune ombre visible). Ses attaques trahissent sa position (portée d'Agrippe depuis son lit). Un coup sur le **lit occupé** le **révèle** (l'ombre apparaît sous le lit) et abîme ce lit ; un lit vide ne subit rien. Il **change de lit**, et redevient caché, à **Marée d'ombre** et **quand son lit casse**.
 

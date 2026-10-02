@@ -54,7 +54,7 @@ Basées sur la Roue de Plutchik. On parle directement des émotions : **les noms
 
 ---
 
-## ✨ SYSTÈME D'ÉVEIL — la fusion (concept acté le 30/09/2026, pas encore codé)
+## ✨ SYSTÈME D'ÉVEIL — la fusion (concept acté le 30/09/2026, codé puis mis en pause le 02/10/2026)
 
 > ⏸️ **Retiré du jeu pour l'instant (02/10/2026)** : à retravailler. Les jauges et les boutons de fusion sont masqués (`FusionPanelUI._awakeningEnabled = false`), donc aucune fusion n'est possible en combat ; le code des règles (jauges, formes de fusion, tests) est conservé pour la refonte.
 

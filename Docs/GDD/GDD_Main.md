@@ -75,7 +75,7 @@ Pas de gouvernement oppressif, pas d'organisation secrète. Les champions sont d
 Chaque champion du MVP porte un **trauma** qui fonde sa mécanique (voir `CHAMPIONS_CONCEPTS.md`) : Evan n'arrive pas à laisser partir sa sœur jumelle Lyse, Crux ne supporte plus de laisser quelqu'un hors de portée, Raze ne laisse plus jamais le hasard décider.
 
 **Exemples de donjons** :
-- **Orphelinat** : Enfants prisonniers de la Peur → Ennemis : Ombres du Placard, Monstres Sous le Lit — **donjon du MVP**
+- **Orphelinat** : Enfants prisonniers de la Peur → Ennemis : Moutons de poussière, Soldats de bois, Monstre sous le lit (les Ombres du Placard ont été abandonnées le 02/10/2026) — **donjon du MVP**
 - **Bureau Corporatiste** : Employé en burnout (Anxiété) → Ennemis : Dossiers oppressants, Horloges tyranniques
 - **Maison Familiale** : Adulte traumatisé (Colère) → Ennemis : Mots blessants, Poings spectraux
 

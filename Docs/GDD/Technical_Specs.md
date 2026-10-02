@@ -188,7 +188,7 @@ Cette section remplace l'ancienne « Mise à jour implémentation » de `claude_
 
 | Sujet | Code actuel | Design (Excel) |
 |-------|-------------|----------------|
-| Ressources | `maxActionPoints` / `movementRange` par champion (Raze, Crux, Evan : 5 / 4) | Profil PA/PM avec budget total de 9 — déjà respecté, la règle n'est pas vérifiée par le code |
+| Ressources | `maxActionPoints` / `movementRange` par champion (Raze 6 / 3, Crux 4 / 5, Evan 5 / 4) | Profil PA/PM avec budget total de 9 — déjà respecté, la règle n'est pas vérifiée par le code |
 | Émotion | Identité de carte (`EmotionType`), pas de jauge | Jauges d'Éveil par émotion, paliers |
 | Cartes | `CardData` avec émotion et catégorie | + génération d'Éveil (plus de consommation ni de cartes d'Éveil depuis le 30/09) |
 | Deck | 20 cartes (4 Signature + 16 Standard), 1 base + 3 perso | Idem : plus de slots d'Éveil (30/09), format cible à confirmer |

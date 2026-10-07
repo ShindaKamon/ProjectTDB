@@ -5,7 +5,7 @@
 ## Par où commencer
 
 1. **[GDD_Main.md](GDD_Main.md)** — vision, roster MVP, décisions actées, questions ouvertes, tableau « source unique de vérité »
-2. **[MVP_Excel_Snapshot.md](MVP_Excel_Snapshot.md)** — copie texte de l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`, référence chiffrée du MVP
+2. **[MVP_Chiffres.md](MVP_Chiffres.md)** — **référence chiffrée du MVP** (née copie texte de l'Excel, qui n'est plus tenu à jour)
 3. **[Technical_Specs.md](Technical_Specs.md)** — architecture, et section **« État du code »** (ce qui est réellement implémenté)
 
 ## Tous les documents
@@ -13,7 +13,7 @@
 | Document | Contenu |
 |----------|---------|
 | [GDD_Main.md](GDD_Main.md) | Vision, lore, roster, décisions, questions ouvertes |
-| [MVP_Excel_Snapshot.md](MVP_Excel_Snapshot.md) | Budget des cartes, bibliothèque, progression, barème monstres, roadmap |
+| [MVP_Chiffres.md](MVP_Chiffres.md) | Budget des cartes, bibliothèque, progression, barème monstres, roadmap |
 | [claude_md_coarchitect.md](claude_md_coarchitect.md) | Contrat de collaboration avec Claude : rôle et façon de travailler (importé par `CLAUDE.md`) |
 | [Lecons_Rosewater.md](Lecons_Rosewater.md) | Les 20 leçons de design de Mark Rosewater (Magic), appliquées au jeu : grille de relecture d'une mécanique ou d'une carte |
 | [SYSTEME_EMOTIONS.md](SYSTEME_EMOTIONS.md) | 8 émotions, 3 de lancement (Colère, Peur, Joie), Éveil (fusion champion × émotion, 9 formes) |

@@ -19,7 +19,7 @@
 | **Adjacence** (ex. Réflexe du grimpeur de Crux) | Les 4 cases qui touchent |
 | **Terrain** | Plat, sans obstacles |
 
-> ⚠️ Côté Excel : le budget des cartes suppose des zones de 9 / 25 cases (8 directions) ; en 4 directions elles font 5 / 13 cases, le coût des cartes à zone est à revoir. La Roadmap parle encore d'une grille hexagonale : à corriger.
+> Budget des zones : recalculé le 07/10/2026 pour les formes en 4 directions (cercle de rayon 1 = 5 cases, rayon 2 = 13) — voir `MVP_Chiffres.md` § C.
 
 Le reste de ce document décrit la **conception hexagonale d'origine** (coordonnées cubiques, 6 directions), **non implémentée**. Elle est conservée pour référence : terrains, ligne de vue, déplacement forcé et optimisations restent valables sur une grille carrée en adaptant les formules.
 

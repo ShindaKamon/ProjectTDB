@@ -123,7 +123,7 @@ Stats à tirer du barème de l'Excel selon le niveau visé pour l'Orphelinat.
 
 **Mis de côté (à réfléchir) :** les yeux dans le noir (attaque), le vol de carte, le lit qui avale, la lumière qui s'éteint, les Cauchemars face cachée.
 
-**Chiffres :** les ratios du cycle Zone / Basique / Heal ci-dessous restent la référence des dégâts et soins ; PV des trois barres (200 / 250 / 300) et des Moutons (100) à valider en playtest, puis à reporter dans l'Excel.
+**Chiffres :** les ratios du cycle Zone / Basique / Heal ci-dessous restent la référence des dégâts et soins ; PV des trois barres (200 / 250 / 300) et des Moutons (100) à valider en playtest, puis à reporter dans `MVP_Chiffres.md`.
 
 
 ## Structure d'un Ennemi (EnemyData)

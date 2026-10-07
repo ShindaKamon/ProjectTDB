@@ -1,6 +1,8 @@
-# Copie texte de l'Excel MVP — `TCG_Tactique_Systeme_de_calcul.xlsx`
+# Chiffres du MVP
 
-> **Copie du 23/09/2026, mise à jour le 30/09/2026 (Éveil, deck à 20, grille), pour que Claude Code puisse lire le MVP sans le fichier Excel.** L'Excel (dans le projet claude.ai) reste la référence : si tu le modifies, mets à jour cette copie (ou remplace-la en ajoutant le `.xlsx` dans `Docs/`). Les cellules calculées par formule (valeurs finales des cartes, PV par niveau, barème) ne sont pas reprises ici : seules les entrées et les règles le sont.
+> **Référence chiffrée du MVP depuis le 07/10/2026.** Ce document est né le 23/09/2026 comme copie texte de l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx` (projet claude.ai). L'Excel n'est plus tenu à jour : **c'est ce fichier qui fait foi**, et c'est ici qu'on reporte les chiffres (playtest, refontes de cartes). Les valeurs finales des cartes ne sont pas recopiées : elles se calculent avec la formule ci-dessous et vivent dans les assets des cartes.
+>
+> ⚠️ **Pas encore reporté ici** (décidé dans `GDD_Main.md` § « Décisions actées », les assets font foi en attendant) : refontes et renommages de cartes du 29/09 (pool de 51 Standard, `Card_System.md`) ; ajustements d'identité des émotions (29/09) ; refontes de la passe de diversité (Rage dévastatrice, Effroi partagé…) ; chiffres du boss et des monstres de l'Orphelinat (`Enemies.md`). La bibliothèque ci-dessous reste donc celle de l'Excel au 30/09.
 
 ---
 
@@ -24,7 +26,23 @@
 
 **B. Portée** : 1 (Mêlée) 0 · 1 à 3 cases -0.15 · 1 à 5 cases -0.25 · 1 à 6 cases -0.35
 
-**C. Zone** : Cible unique 0 · Ligne (2-3 cases) -0.2 · Cône (3 cases) -0.25 · Cercle rayon 1 (9 cases) -0.35 · Cercle rayon 2 (25 cases) -0.5 · Équipe entière (sans portée ni ligne de vue) -0.65 · 3 cibles séparées -0.4 · Contagion (se propage aux cibles à 2 cases ou moins) -0.5 · 2 cibles séparées -0.25
+**C. Zone** (recalculée le 07/10/2026 pour la grille en 4 directions) :
+
+| Zone | Cases | Modificateur |
+|------|-------|--------------|
+| Cible unique | 1 | 0 |
+| Ligne (2-3 cases) | 2-3 | -0.2 |
+| Cône rayon 2 | 4 | -0.25 |
+| Cercle rayon 1 | 5 | **-0.25** *(était -0.35 pour 9 cases)* |
+| Cône rayon 3 | 9 | **-0.35** *(était compté comme un cône de 3 cases, -0.25)* |
+| Croix rayon 2 | 9 | -0.35 |
+| Cercle rayon 2 | 13 | **-0.4** *(était -0.5 pour 25 cases)* |
+| 2 cibles séparées | — | -0.25 |
+| 3 cibles séparées | — | -0.4 |
+| Contagion (se propage aux cibles à 2 cases ou moins) | — | -0.5 |
+| Équipe entière (sans portée ni ligne de vue) | — | -0.65 |
+
+**Comment les zones sont calculées.** L'Excel supposait une grille en 8 directions, où un cercle de rayon 1 fait 9 cases et un cercle de rayon 2 en fait 25. En 4 directions, ces cercles sont des losanges de **5 et 13 cases** (`CardData.IsInAOEShape`). Les trois zones de l'Excel suivent une courbe régulière selon le nombre de cases *n* : **modificateur ≈ −(0,05 + 0,15 × log₃ n)**. Elle redonne ses valeurs à 0,01 près : ligne de 3 → −0,20, 9 cases → −0,35, 25 cases → −0,50. On applique la même courbe aux formes réelles du code, arrondie à 0,05 : 4 cases → −0,25 ; 5 → −0,25 ; 9 → −0,35 ; 13 → −0,40. Les cibles séparées, la contagion et l'équipe entière ne dépendent pas de la grille : inchangées.
 
 **D. Ligne de vue** : Requise 0 · Non requise -0.15
 
@@ -89,7 +107,7 @@ Colonnes : coût PA · portée · zone · statut · déplacement forcé · Évei
 | Bouclier de la terreur | 2 | Mêlée | Unique | — | Gén. | Buff/Debuff | Perd 1 PM | Réaction/Soin | Gros bouclier |
 | Vision cauchemardesque | 3 | 1-5 | Unique | Poussée 2 | — | Dégâts | — | Dégâts | |
 | Vertige | 3 | Mêlée | Ligne | -1 PM | Gén. | Dégâts | — | Dégâts | |
-| Piège et recul | 3 | Mêlée | Unique | -1 PM | Gén. | Dégâts | Élan +2 PM | Dégâts | |
+| Frappe et repli | 3 | Mêlée | Unique | -1 PM | Gén. | Dégâts | Élan +2 PM | Dégâts | |
 | Silence glaçant | 4 | Mêlée | Unique | -2 PM | Gén. | Dégâts | — | Dégâts | |
 | Fuite panique | 4 | Mêlée | Unique | -2 PM, poussée 1 | Gén. | Dégâts | Repli auto | Dégâts | |
 | Onde de terreur | 4 | 1-3 | Cône | Poussée 1 | Gén. | Dégâts | — | Dégâts | |

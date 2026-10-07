@@ -2,7 +2,7 @@
 
 **Version:** 3.4
 **Date:** 2 Octobre 2026
-**Statut:** **Référence pour les règles de combat** (tour, main, ressources, statuts, contrôle, difficulté). Les **chiffres** (budget des cartes, profils PA/PM, barème monstres) font foi dans l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx`.
+**Statut:** **Référence pour les règles de combat** (tour, main, ressources, statuts, contrôle, difficulté). Les **chiffres** (budget des cartes, profils PA/PM, barème monstres) font foi dans `MVP_Chiffres.md`.
 **v3.1 (23/09/2026) :** réalignement sur l'Excel — budget PA+PM de 9 par profil, échelle de dégâts = baseline de l'Excel, statuts de contrôle de la Peur, règle anti-lock, règle de main redevenue question ouverte (hypothèse de playtest : main de 3).
 **v3.0 (23/09/2026) :** encodage réparé ; ancienne jauge -100/+100 retirée. **v3.2 :** ordre des tours et règles de main alignés sur le code réel (voir « État du code » dans `Technical_Specs.md`).
 **v3.3 (30/09/2026) :** relecture d'audit — règle de main actée (5 cartes) rappelée dans le tableau de tour.

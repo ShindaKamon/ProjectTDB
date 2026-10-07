@@ -2,7 +2,7 @@
 
 > **Ce document définit uniquement le rôle et la façon de travailler ensemble.** L'état du jeu est dans les documents de référence, qui font foi :
 > - **Design visé, décisions actées, questions ouvertes** → `GDD_Main.md` (et l'index `README.md`)
-> - **Chiffres du MVP** (cartes, champions, progression, monstres) → `TCG_Tactique_Systeme_de_calcul.xlsx`, copie texte : `MVP_Excel_Snapshot.md`
+> - **Chiffres du MVP** (cartes, champions, progression, monstres) → `MVP_Chiffres.md` (l'Excel `TCG_Tactique_Systeme_de_calcul.xlsx` n'est plus tenu à jour)
 > - **Règles de combat** → `Combat_System.md`
 > - **Ce qui est réellement codé** → `Technical_Specs.md`, section « État du code »
 

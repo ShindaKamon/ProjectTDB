@@ -1,7 +1,7 @@
 # ILYA - « Le Dévoué Enchaîné »
 
 **Statut :** Fiche de référence d'Ilya (source unique de vérité pour ses stats, son système Rage et son deck — voir `GDD_Main.md`). Mise à jour le 23/09/2026 : la liste détaillée des 12 cartes et les spécifications Rage, auparavant dans `claude_md_coarchitect.md`, ont été déplacées ici.
-**Place dans le MVP :** **hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`). **Depuis le 05/10/2026, jouable comme 4e champion de test** : voir « Version de test codée » ci-dessous ; le reste du document est la conception d'origine.
+**Place dans le MVP :** **hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`). Jouable comme 4e champion de test du 05/10 au 07/10/2026, puis **retiré du jeu le 07/10/2026** (code récupérable via le commit `0af64af`) : voir « Version de test codée » ci-dessous ; le reste du document est la conception d'origine.
 
 > ⚠️ **Conçu avant l'Excel MVP** (`TCG_Tactique_Systeme_de_calcul.xlsx`). Plusieurs éléments ne respectent plus les règles actuelles et devront être adaptés s'il revient :
 > - stats ATK/DEF (le système ne définit que PV, PA, PM) et PA/PM qui changent avec la forme (le budget PA+PM est fixé à 9 par profil) ;
@@ -13,7 +13,7 @@
 
 ---
 
-## VERSION DE TEST CODÉE (05/10/2026) — fait foi pour le code
+## VERSION DE TEST CODÉE (05/10/2026) — retirée du code le 07/10/2026 (commit `0af64af`)
 
 **But :** comparer deux façons de jouer — le roster (Signatures + cartes d'émotion, Éveil) et Ilya, la base de départ du projet, joué **indépendamment** : son deck de base ne contient que ses propres cartes (Signatures neutres, sans émotion ni Éveil). Il fusionne les deux versions ci-dessous : la Rage en main de la version codée et la transformation Enchaînée → Déchaînée du document. Chiffres remis à l'échelle du jeu actuel (~11 dégâts par PA, 100 PV, budget PA + PM = 9).
 

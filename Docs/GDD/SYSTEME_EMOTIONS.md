@@ -123,7 +123,7 @@ Les champions du MVP n'appartiennent pas à une émotion : leurs cartes Signatur
 | **Evan** | MVP — complet (Excel) |
 | **Crux** | MVP — complet (Excel) |
 | **Raze** | MVP — complet (Excel) |
-| **Ilya** (Colère) | Hors MVP — concept complet, Rage à réadapter à la fusion Colère |
+| **Ilya** (Colère) | Hors MVP — concept complet, Rage à réadapter à la fusion Colère ; version de test retirée du jeu le 07/10/2026 |
 | **Astra & Noctis** | Hors MVP — deux concepts concurrents |
 
 ---

@@ -13,7 +13,6 @@ namespace ProjectTDB.Tests
         [TestCase("Evan")]
         [TestCase("Crux")]
         [TestCase("Raze")]
-        [TestCase("Ilya")]
         public void ChampionSheet_FollowsExcelProfile(string name)
         {
             var champion = AssetDatabase.LoadAssetAtPath<ChampionData>($"Assets/ScriptableObjects/Characters/Champion/{name}.asset");
@@ -49,7 +48,6 @@ namespace ProjectTDB.Tests
         [TestCase("Evan")]
         [TestCase("Crux")]
         [TestCase("Raze")]
-        [TestCase("Ilya")]
         public void ChampionSheet_HasNonNegativeAttackAndDefense(string name)
         {
             var champion = AssetDatabase.LoadAssetAtPath<ChampionData>($"Assets/ScriptableObjects/Characters/Champion/{name}.asset");

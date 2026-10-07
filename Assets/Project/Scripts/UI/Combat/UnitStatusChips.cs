@@ -36,11 +36,6 @@ public static class UnitStatusChips
 
         if (ResourceDebuffManager.IsPmImmune(unit)) chips.Add(new CardChip("lock", "Ténacité", ChipKind.Mute));
 
-        if (unit is IRageUser rage)
-        {
-            if (rage.IsUnchained) chips.Add(new CardChip("buff", $"Déchaîné · {rage.UnchainedTurnsLeft} t", ChipKind.Damage));
-            else chips.Add(new CardChip("buff", $"Rage {rage.RageStock}/{RageGauge.MaxStock}", ChipKind.Damage));
-        }
         return chips;
     }
 

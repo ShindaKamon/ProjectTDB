@@ -184,25 +184,5 @@ namespace ProjectTDB.Tests
 
             Assert.AreEqual(2, GridGeometry.Distance(new Vector2Int(0, 0), cell.Value), "au-delà des voisins occupés");
         }
-
-        [Test]
-        public void ApplyTaunt_TaunterOnBoard_OnlyTarget()
-        {
-            Unit ilya = NewUnit(new Vector2Int(5, 0), 100);
-            Unit evan = NewUnit(new Vector2Int(1, 0), 100);
-
-            CollectionAssert.AreEqual(new[] { ilya }, EnemyAI.ApplyTaunt(ilya, new List<Unit> { evan, ilya }));
-        }
-
-        [Test]
-        public void ApplyTaunt_NoTaunterOrGone_AllPlayers()
-        {
-            Unit evan = NewUnit(new Vector2Int(1, 0), 100);
-            Unit gone = NewUnit(new Vector2Int(5, 0), 100);
-            var players = new List<Unit> { evan };
-
-            Assert.AreSame(players, EnemyAI.ApplyTaunt(null, players));
-            Assert.AreSame(players, EnemyAI.ApplyTaunt(gone, players), "provocateur absent du terrain");
-        }
     }
 }

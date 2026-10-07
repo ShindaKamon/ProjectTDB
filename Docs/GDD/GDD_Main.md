@@ -24,7 +24,7 @@
 **Émotions et personnages**
 - `SYSTEME_EMOTIONS.md` — les 8 émotions/familles (Plutchik), les 3 émotions de lancement, le système d'Éveil.
 - `CHAMPIONS_CONCEPTS.md` — roster MVP (Evan, Crux, Raze) et concepts hors MVP.
-- `archive/ilya_deck_simple.md` — fiche d'Ilya (**hors MVP**, jouable comme champion de test depuis le 05/10).
+- `archive/ilya_deck_simple.md` — fiche d'Ilya (**hors MVP**, retiré du jeu le 07/10).
 - `archive/astra_noctis_simple.md` — fiche des Jumeaux Astra & Noctis (**hors MVP**).
 - `Characters.md` — structure technique d'un champion (ChampionData).
 - `archive/personnages_a_developper.md` — réservoir de 100 concepts de personnages.
@@ -106,7 +106,7 @@ Un champion peut jouer **toutes les émotions**, mais **chaque deck a 1 ou 2 cou
 
 Détail : `CHAMPIONS_CONCEPTS.md` et onglet « Champions » de l'Excel.
 
-**Hors MVP :** Ilya (concept complet, jouable comme champion de test depuis le 05/10, indépendamment du système d'émotions) et les Jumeaux Astra & Noctis.
+**Hors MVP :** Ilya (concept complet, retiré du jeu le 07/10 après deux jours en champion de test) et les Jumeaux Astra & Noctis.
 
 ## Piliers de Design
 
@@ -185,7 +185,7 @@ Détail complet dans `Technical_Specs.md`. Patterns : Service Locator, Event Bus
 Détail et écarts avec le design : `Technical_Specs.md`, section « État du code ».
 
 **Core :** Unity 6 (6000.4), Service Locator + façade `Services`, EventBus typé, TurnStateMachine, GridManager/GridRepository (**grille carrée 10×10**), tests EditMode.
-**Champions jouables :** Raze, Crux, Evan (+ invocation Lyse), et Ilya en champion de test depuis le 05/10 (Rage, forme Déchaînée, provocation) ; Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`).
+**Champions jouables :** Raze, Crux, Evan (+ invocation Lyse) ; Vylos et Calyx ont été retirés du code le 24/09/2026 (récupérables via le commit `00afe5d`), Ilya le 07/10/2026 (commit `0af64af`).
 **Cartes :** `CardData` data-driven avec catégorie Standard / Éveil / Signature et émotion ; 51 cartes Standard (17 par émotion) + Signatures des 3 champions.
 **Decks :** 20 cartes (4 Signature, soit 2 exemplaires de chacune des 2 Signatures du champion, + 16 Standard — plus d'emplacements d'Éveil dans le deck depuis le 30/09), 1 ou 2 couleurs par deck (le deck de base en a 3), 4 exemplaires max, Signatures obligatoires, 1 deck de base + 3 decks perso par champion, sauvegarde JSON.
 **Ennemis :** deck pattern + IA ; 2 ennemis (UnderBed, Mouton de poussière).
@@ -332,6 +332,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 | Lisibilité et confort | Au **survol d'un monstre** : toute sa **zone de dégâts** en rouge (ce que sa prochaine carte peut toucher ce tour, déplacement compris) et un petit carré bleu sur ses cases de déplacement. **Aperçus des cartes des mobs** : plus grands (62 % au lieu de 46 %), rangés dans l'ordre où les mobs vont jouer ; survoler un aperçu met son mob en avant sur le plateau (sa case en jaune, sa zone de dégâts), survoler un mob grossit son aperçu. **Exploration** : on peut changer de destination en pleine marche ; les **groupes de monstres se promènent** autour de leur case (pause de 2,5 à 4 s, puis un pas, 2 cases max de leur départ) et attendent le pion qui vient les chercher. **Menu Échap** dans toutes les scènes : Reprendre, Menu principal, Quitter (pause en solo) | 02/10 |
 | Lisibilité du boss | **Bandeau d'objectif** au début du combat et à chaque phase (titre + une phrase : « Il se cache sous un des lits. Frappe les lits pour le trouver… », « frappe le Lit ! », « achève-le ! »). **« Vide ! »** au-dessus d'un lit vide qu'on frappe. **Bulle au survol d'un lit** (peut-être dessous / il est dessous / fusionné), sans jamais trahir un monstre caché. **Ombre noire qui se déplace** : lit cassé → on la voit filer sous le nouveau lit, qui est alors révélé ; Marée d'ombre → elle sort par le pied du lit et se dissout dans le noir (on sait qu'il a bougé, pas où) | 02/10 |
 | Ilya, champion de test | **Ilya revient comme 4e champion jouable, hors roster MVP**, pour comparer deux façons de jouer : le roster (Signatures + cartes d'émotion) et Ilya, joué **indépendamment** (deck de ses seules cartes, sans émotion ni Éveil). Fusion des deux versions : **Rage en main** (1 carte RAGE tous les 10 PV perdus, stock 5) et **transformation Déchaînée** (Chaînes brisées, 3 tours : +1 PA/PM, vol de vie 25 %, −5 PV/tour) ; **provocation** (Défi du colosse) ; chiffres remis à l'échelle actuelle. Modèle : chevalier Quaternius (CC0). Détail : `archive/ilya_deck_simple.md` | 05/10 |
+| Ilya retiré du jeu | **Ilya n'est plus jouable** : unité, Rage, forme Déchaînée, cartes, modèle chevalier, ainsi que la **provocation** et les **cartes qui disparaissent après usage** (codées pour lui seul) sont retirés du code. Sa fiche reste dans `archive/ilya_deck_simple.md` ; le code est récupérable via le commit `0af64af` | 07/10 |
 
 ## Questions ouvertes
 
@@ -343,12 +344,11 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - **Oppositions d'émotions** (paires Plutchik) — repoussé volontairement
 
 **Relevées lors de la passe de cohérence :**
-- **Ilya** : le garder pour la suite ? Jouable en test depuis le 05/10 : comparer son gameplay à celui du roster avant de trancher (le garder tel quel, l'intégrer aux émotions, ou en reprendre des idées pour le roster).
 - **Plateforme** : PC seul ou PC + Mobile ?
 - **Boss de l'Orphelinat** : chiffres des cartes (`Enemies.md`)
 
 ---
 
-**Dernière mise à jour :** 2 Octobre 2026
+**Dernière mise à jour :** 7 Octobre 2026
 **Version GDD :** 3.7
 **Responsable :** Shinda + Claude

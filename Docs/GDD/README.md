@@ -26,7 +26,7 @@
 | [UX_Flow.md](UX_Flow.md) | Parcours joueur, raccourcis clavier |
 | [UI_Design.md](UI_Design.md) | Interface, palette, désaturation des donjons |
 | [Characters.md](Characters.md) | Structure d'un champion (ChampionData) |
-| [ilya_deck_simple.md](archive/ilya_deck_simple.md) | Ilya (hors MVP) |
+| [ilya_deck_simple.md](archive/ilya_deck_simple.md) | Ilya (hors MVP, retiré du jeu le 07/10/2026) |
 | [astra_noctis_simple.md](archive/astra_noctis_simple.md) | Astra & Noctis (hors MVP) |
 | [personnages_a_developper.md](archive/personnages_a_developper.md) | Réservoir de 100 concepts |
 | [archive/Concepts_Abandonnes.md](archive/Concepts_Abandonnes.md) | Tout ce qui a été abandonné, mis en pause ou remplacé |

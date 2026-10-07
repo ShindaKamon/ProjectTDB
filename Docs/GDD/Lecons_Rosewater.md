@@ -7,7 +7,7 @@
 ## Comprendre le joueur
 
 **1. Ne luttez pas contre la nature humaine.** Les joueurs adoptent naturellement certains comportements ; on adapte le jeu à leur façon de penser plutôt que l'inverse.
-→ Les joueurs garderont leurs meilleures cartes « pour plus tard » et fuiront les risques. Un mécanisme qui les y pousse doit être voulu (la Rage d'Ilya récompense le fait de prendre des coups : vérifier en playtest que les joueurs ne l'évitent pas par réflexe).
+→ Les joueurs garderont leurs meilleures cartes « pour plus tard » et fuiront les risques. Une mécanique qui demande de prendre des risques (aller au contact avec Crux, garder une carte pour former une Suite avec Raze) doit les récompenser assez pour vaincre ce réflexe : à vérifier en playtest.
 
 **3. Utilisez ce que les gens connaissent déjà.** Les références culturelles et émotionnelles créent une connexion immédiate.
 → C'est la force du thème : tout le monde connaît la peur du monstre sous le lit, la colère, la joie. L'Orphelinat marche parce que ses monstres (moutons de poussière, soldats de bois, monstre sous le lit) sont des peurs d'enfance.
@@ -16,7 +16,7 @@
 → Raze s'appuie sur le poker (Paire, Suite, Bluff, Tapis) ; PA/PM sur Dofus ; les couleurs de deck sur Magic. Un nouveau champion devrait avoir le même ancrage : un vocabulaire que le joueur comprend avant d'avoir lu la carte.
 
 **15. Concevez chaque élément pour son public cible.** Certains cherchent l'excitation, d'autres la créativité, d'autres la compétition.
-→ Les trois profils de Magic (Timmy le spectaculaire, Johnny le combinard, Spike le compétiteur) se retrouvent dans le roster : Ilya et les gros coups de Colère pour Timmy, Raze et ses motifs pour Johnny, le contrôle de Peur pour Spike. Chaque nouvelle carte : pour lequel des trois ?
+→ Les trois profils de Magic (Timmy le spectaculaire, Johnny le combinard, Spike le compétiteur) se retrouvent dans le roster : les gros coups de Colère et le Tapis pour Timmy, Raze et ses motifs pour Johnny, le contrôle de Peur pour Spike. Chaque nouvelle carte : pour lequel des trois ?
 
 **19. Votre public sait identifier les problèmes, pas forcément les résoudre.** Les retours disent ce qui ne va pas ; la cause profonde est à chercher soi-même.
 → À appliquer pendant la passe de playtest : noter le ressenti (« le boss est frustrant ») plutôt que la solution proposée (« baisse ses PV »), puis chercher la cause (lisibilité ? durée ? hasard ?).

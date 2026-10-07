@@ -988,28 +988,5 @@ namespace ProjectTDB.Tests
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 5), true).IsValid);
             Assert.IsFalse(GameActionValidator.CanMoveSummonTo(NewRepositionCard(), summon, new Vector2Int(5, 6), false).IsValid);
         }
-
-        [Test]
-        public void CanPlayCard_BreaksChains_NeedsFullRage()
-        {
-            var ilya = NewUnit<IlyaUnit>();
-            CardData breakChains = NewCard("Chaînes brisées");
-            breakChains.breaksChains = true;
-
-            ilya.GainRage(RageGauge.MaxStock - 1);
-            Assert.IsFalse(GameActionValidator.CanPlayCard(ilya, breakChains).IsValid);
-
-            ilya.GainRage(1);
-            Assert.IsTrue(GameActionValidator.CanPlayCard(ilya, breakChains).IsValid);
-        }
-
-        [Test]
-        public void CanPlayCard_BreaksChains_NoRage_Fails()
-        {
-            CardData breakChains = NewCard("Chaînes brisées");
-            breakChains.breaksChains = true;
-
-            Assert.IsFalse(GameActionValidator.CanPlayCard(NewUnit<CruxUnit>(), breakChains).IsValid);
-        }
     }
 }

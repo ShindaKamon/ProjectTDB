@@ -123,7 +123,7 @@ public class DeckManager : MonoBehaviour
         if (_hand.Contains(cardToPlay))
         {
             _hand.Remove(cardToPlay);
-            if (!cardToPlay.vanishesWhenUsed) _discardPile.Add(cardToPlay);
+            _discardPile.Add(cardToPlay);
             // Un override de coût (ex: Triche) ne vaut que tant que la carte reste en main ;
             // on le retire à la défausse (voir doc de ClearCostOverride) pour éviter qu'il ne
             // persiste indéfiniment si la carte est rebattue et repiochée plus tard.
@@ -203,7 +203,7 @@ public class DeckManager : MonoBehaviour
         {
             ClearCostOverride(card);
         }
-        _discardPile.AddRange(_hand.Where(card => !card.vanishesWhenUsed));
+        _discardPile.AddRange(_hand);
         _hand.Clear();
         OnHandChanged?.Invoke();
         OnDiscardChanged?.Invoke(_discardPile.Count);
@@ -219,31 +219,10 @@ public class DeckManager : MonoBehaviour
     {
         if (!_hand.Remove(card)) return;
         ClearCostOverride(card);
-        if (!card.vanishesWhenUsed) _discardPile.Add(card);
+        _discardPile.Add(card);
         OnHandChanged?.Invoke();
         OnDiscardChanged?.Invoke(_discardPile.Count);
         GameLog.Log("Carte défaussée : " + card.cardName);
-    }
-
-    /// <summary>Ajoute une carte créée en combat directement dans la main (ex: RAGE d'Ilya).</summary>
-    public void AddCardToHand(CardData card)
-    {
-        if (card == null) return;
-        _hand.Add(card);
-        OnHandChanged?.Invoke();
-        GameLog.Log("Carte ajoutée à la main : " + card.cardName);
-    }
-
-    /// <summary>Retire de la main tous les exemplaires d'une carte, sans les défausser ; retourne leur nombre.</summary>
-    public int RemoveAllFromHand(CardData card)
-    {
-        int removed = _hand.RemoveAll(c => c == card);
-        if (removed > 0)
-        {
-            ClearCostOverride(card);
-            OnHandChanged?.Invoke();
-        }
-        return removed;
     }
 
     /// <summary>

@@ -59,7 +59,7 @@ public class EnemyAI : MonoBehaviour
         bool controlled = _enemy != null && _enemyUnit.GetCurrentMovementPoints() < _enemyUnit.GetMaxMovementPoints();
 
         // 1. Trouver le joueur le plus proche
-        List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
+        List<Unit> playerUnits = TargetablePlayers();
 
         if (playerUnits == null || playerUnits.Count == 0)
         {
@@ -532,6 +532,21 @@ public class EnemyAI : MonoBehaviour
         return nextCard.targetRange;
     }
 
+    // Champions que le monstre peut viser ce tour (provocation comprise)
+    private List<Unit> TargetablePlayers() =>
+        ApplyTaunt(_enemy != null ? _enemy.TauntedBy : null, Services.Grid.GetAllPlayerUnits());
+
+    /// <summary>
+    /// Provocation (ex: Défi du colosse) : un monstre provoqué ne peut viser que son provocateur, tant
+    /// que celui-ci est sur le terrain ; sinon, tous les champions.
+    /// </summary>
+    public static List<Unit> ApplyTaunt(Unit taunter, List<Unit> players)
+    {
+        if (taunter == null || players == null || !players.Contains(taunter)) return players;
+        UnitState state = taunter.GetUnitState();
+        return state != null && state.IsDead() ? players : new List<Unit> { taunter };
+    }
+
     // Cible du monstre pour une attaque de portée attackRange (voir ChooseTarget)
     private Unit FindClosestPlayer(List<Unit> playerUnits, int attackRange) =>
         ChooseTarget(AttackOrigins(), playerUnits, attackRange);
@@ -605,7 +620,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         // Trouve le joueur le plus proche pour vérifier la portée
-        List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
+        List<Unit> playerUnits = TargetablePlayers();
         if (playerUnits == null || playerUnits.Count == 0)
         {
             GameLog.LogWarning($"{_enemy.name}: Aucun joueur pour cibler {card.cardName}");
@@ -642,7 +657,7 @@ public class EnemyAI : MonoBehaviour
         Vector2Int targetTile = Vector2Int.zero;
 
         // Trouve le joueur le plus proche pour les cartes offensives
-        List<Unit> playerUnits = Services.Grid.GetAllPlayerUnits();
+        List<Unit> playerUnits = TargetablePlayers();
         if (playerUnits != null && playerUnits.Count > 0)
         {
             Unit closestPlayer = FindClosestPlayer(playerUnits, card.targetRange);

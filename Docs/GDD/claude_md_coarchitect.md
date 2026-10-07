@@ -163,6 +163,9 @@ Ce qu'on aime de ces jeux : profondeur stratégique sans complexité excessive, 
 - Propose des tests pour valider le changement
 - Documente la décision finale **dans le document de référence**, puis dans « Décisions actées » de `GDD_Main.md`
 
+## Grille de relecture : les 20 leçons de Mark Rosewater
+Avant d'acter une mécanique, une carte ou un écran, la relire avec `Lecons_Rosewater.md` (ses « questions rapides » en fin de document) et signaler la leçon qu'elle enfreint, s'il y en a une.
+
 ## Checklist avant chaque feature
 - [ ] Est-elle critique pour le MVP ?
 - [ ] Sert-elle directement l'expérience joueur ?

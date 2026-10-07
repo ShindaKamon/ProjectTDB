@@ -102,6 +102,7 @@ Le roster a été renommé le 24/09/2026 (Soren → Evan, l'Alpiniste → Crux, 
 | Evan (+ invocation Lyse) | `EvanUnit` | `Evan.asset`, `Evan_Base.prefab` |
 | Crux | `CruxUnit` | `Crux.asset`, `Crux_Base.prefab` |
 | Raze | `RazeUnit` | `Raze.asset`, `Raze_Base.prefab` |
+| Ilya (champion de test hors MVP, 05/10/2026) | `IlyaUnit` | `Ilya.asset`, `Ilya_Base.prefab` |
 
 ### Logs
 Utiliser `GameLog.Log` / `GameLog.LogWarning` (strippés hors éditeur/dev build via `[Conditional]`) au lieu de `Debug.Log`. `Debug.LogError` reste direct.

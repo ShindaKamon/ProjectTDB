@@ -4145,6 +4145,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c11befcf30483e042a9507a3c3c90e26, type: 2}
   - {fileID: 11400000, guid: d174dce2ba30a3c4994a68bb64a79176, type: 2}
   - {fileID: 11400000, guid: da96a074e88a56a4a9cef20aa023f665, type: 2}
+  - {fileID: 11400000, guid: e3c900522beb18b4782a085e8ebd3e85, type: 2}
   _selectedButtonColor: {r: 0.95, g: 0.85, b: 0.55, a: 1}
   _normalButtonColor: {r: 1, g: 1, b: 1, a: 1}
   _lobby: {fileID: 233087680}

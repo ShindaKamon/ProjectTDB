@@ -76,6 +76,13 @@ public static class CardRulesText
         if (card.casterActionGain > 0) Effect("pa", ChipKind.ActionPoints, $"+{card.casterActionGain} PA ce tour");
         if (card.casterArmorAmount > 0) Effect("armor", ChipKind.Defense, $"Ton armure +{card.casterArmorAmount}" + CasterTurns(card));
         if (card.casterRetreat > 0) Effect("push", ChipKind.Push, "Tu recules de " + Cases(card.casterRetreat));
+        if (card.taunts) Effect("lock", ChipKind.Mute, "Provoque : à leur prochain tour, les monstres touchés ne peuvent viser que toi");
+        if (card.rageGain > 0) Effect("buff", ChipKind.Damage, $"+{card.rageGain} Rage");
+        if (card.consumesAllRage) Effect("buff", ChipKind.Damage, "Consomme toute ta Rage");
+        if (card.damagePerRage > 0) Effect("dmg", ChipKind.Damage, $"+{card.damagePerRage} dégâts par Rage consommée");
+        if (card.healPerRage > 0) Effect("heal", ChipKind.Heal, $"Soigne {card.healPerRage} par Rage consommée");
+        if (card.breaksChains) Effect("buff", ChipKind.Damage, "Stock de Rage plein : forme Déchaînée");
+        if (card.vanishesWhenUsed) Effect("hand", ChipKind.Mute, "Disparaît une fois jouée ou défaussée");
 
         // Carte sur soi avec une zone : « Zone : autour de toi, … » suffit
         bool selfZone = card.targetType == CardTargetType.Self && ZoneText(card) != "";

@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 /// cases atteignables, à portée et en ligne de vue). Les lancers annoncés et les embuscades ont leur propre affichage.
 /// Survoler l'aperçu de carte d'un monstre (EnemyPreviewHoveredEvent) fait de même, avec sa case en jaune ; le monstre mis
 /// en avant est publié (EnemyFocusChangedEvent) pour que son aperçu grossisse. Marques posées au-dessus des cases, sans
-/// toucher à leurs surbrillances.
+/// toucher à leurs surbrillances. Pas de zone au survol d'un monstre pendant le ciblage d'une carte (InputManager.IsTargetingCard).
 /// </summary>
 public class EnemyThreatView : MonoBehaviour
 {
@@ -51,6 +51,7 @@ public class EnemyThreatView : MonoBehaviour
     private static Enemy FindHoveredEnemy()
     {
         if (Mouse.current == null || !Services.IsGridServiceAvailable()) return null;
+        if (InputManager.IsTargetingCard) return null; // ciblage d'une carte : la zone du monstre masquerait la portée de la carte
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return null;
         if (!InputManager.TryGetPointedObject(out GameObject pointed)) return null;
         return pointed.TryGetComponent(out Enemy enemy) && enemy.GetHealth() > 0 && !enemy.IsHidden ? enemy : null;

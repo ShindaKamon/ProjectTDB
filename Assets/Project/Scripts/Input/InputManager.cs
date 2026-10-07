@@ -11,8 +11,15 @@ public class InputManager : MonoBehaviour
 
     private static void ClearDamagePreview() => EventBus.Publish(new DamagePreviewEvent(new List<DamagePreview.Entry>()));
 
+    /// <summary>Une carte qui vise une unité ou une case est sélectionnée : le joueur choisit sa cible.</summary>
+    public static bool IsTargetingCard { get; private set; }
+
     // Tour terminé (le script est désactivé) : plus de prévision à l'écran
-    void OnDisable() => ClearDamagePreview();
+    void OnDisable()
+    {
+        IsTargetingCard = false;
+        ClearDamagePreview();
+    }
 
     /// <summary>
     /// Tente d'extraire la position de grille d'un GameObject (tuile ou unité)
@@ -113,6 +120,7 @@ public class InputManager : MonoBehaviour
 
         // Vérifie si la carte sélectionnée a changé pour afficher les cibles
         CardData currentSelectedCard = _handUIController?.SelectedCard;
+        IsTargetingCard = currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile);
         if (currentSelectedCard != _previousSelectedCard)
         {
             if (currentSelectedCard != null && (currentSelectedCard.targetsUnit || currentSelectedCard.targetsTile))

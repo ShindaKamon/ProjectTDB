@@ -88,7 +88,7 @@ Les cartes Signature ont l'identité **Neutre** : un champion peut jouer n'impor
 ## 🗄️ CHAMPIONS HORS MVP
 
 ### ILYA — « Le Dévoué Enchaîné »
-Concept complet (Colère, système Rage, transformation Enchaîné ↔ Déchaîné, 12 cartes) : `archive/ilya_deck_simple.md`. **Conçu avant l'Excel** : sa Rage devra devenir sa forme Colère (fusion Rage, voir `SYSTEME_EMOTIONS.md`), et son deck de 12 cartes passer au format du deck (Signatures + 16 Standard, sans cartes d'Éveil).
+Concept complet (Colère, système Rage, transformation Enchaîné ↔ Déchaîné, 12 cartes) : `archive/ilya_deck_simple.md`. **Jouable comme champion de test depuis le 05/10/2026** (Rage en main + forme Déchaînée, deck de ses seules cartes), pour comparer son gameplay à celui du roster. **Conçu avant l'Excel** : sa Rage devra devenir sa forme Colère (fusion Rage, voir `SYSTEME_EMOTIONS.md`), et son deck de 12 cartes passer au format du deck (Signatures + 16 Standard, sans cartes d'Éveil).
 
 ### LES JUMEAUX — ASTRA & NOCTIS
 Deux concepts concurrents :

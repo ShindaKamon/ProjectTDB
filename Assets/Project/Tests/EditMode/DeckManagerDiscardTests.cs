@@ -85,5 +85,43 @@ namespace ProjectTDB.Tests
             CollectionAssert.AreEqual(new[] { played }, deck.GetHand());
             Assert.AreEqual(2, deck.GetDiscardCount());
         }
+
+        [Test]
+        public void VanishingCard_PlayedOrDiscarded_NeverReachesTheDiscardPile()
+        {
+            CardData rage = NewCard("RAGE");
+            rage.vanishesWhenUsed = true;
+            var go = new GameObject("TestDeckManager");
+            _created.Add(go);
+            var deck = go.AddComponent<DeckManager>();
+            deck.InitializeDeck(new List<CardData>());
+
+            deck.AddCardToHand(rage);
+            deck.AddCardToHand(rage);
+            deck.AddCardToHand(rage);
+            deck.PlayCard(rage);
+            deck.DiscardFromHand(rage);
+            deck.DiscardHand();
+
+            Assert.AreEqual(0, deck.GetHand().Count);
+            Assert.AreEqual(0, deck.GetDiscardCount());
+        }
+
+        [Test]
+        public void RemoveAllFromHand_RemovesEveryCopyWithoutDiscarding()
+        {
+            CardData rage = NewCard("RAGE");
+            CardData other = NewCard("Autre");
+            var go = new GameObject("TestDeckManager");
+            _created.Add(go);
+            var deck = go.AddComponent<DeckManager>();
+            deck.InitializeDeck(new List<CardData> { other });
+            deck.AddCardToHand(rage);
+            deck.AddCardToHand(rage);
+
+            Assert.AreEqual(2, deck.RemoveAllFromHand(rage));
+            CollectionAssert.AreEqual(new[] { other }, deck.GetHand());
+            Assert.AreEqual(0, deck.GetDiscardCount());
+        }
     }
 }

@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc3b4ce2e1eb26c499dedba3f23528e3, type: 3}
+  m_Name: ExutoireBrutal
+  m_EditorClassIdentifier: ProjectTDB::CardData
+  cardName: Exutoire brutal
+  description: 
+  specialText: 
+  artwork: {fileID: 0}
+  emotionType: 0
+  category: 2
+  signatureOwner: {fileID: 11400000, guid: e3c900522beb18b4782a085e8ebd3e85, type: 2}
+  costPA: 2
+  costHP: 0
+  targetType: 2
+  targetRange: 1
+  targetInStraightLine: 0
+  ignoresLineOfSight: 0
+  areaEffect: 0
+  aoeRadius: 0
+  affectedTarget: 0
+  targetsHandCard: 0
+  targetCount: 1
+  damageAmount: 16
+  damageType: 0
+  damageSelf: 0
+  healAmount: 0
+  lifestealFixedAmount: 0
+  damageAroundTarget: 0
+  nextAttackBonus: 0
+  shieldAmount: 0
+  reactiveShield: 0
+  armorAmount: 0
+  magicResistanceAmount: 0
+  effectDuration: 0
+  paReduction: 0
+  pmReduction: 0
+  removeAllMovement: 0
+  nextTurnActionGain: 0
+  cancelsEnemyNextCard: 0
+  hindersEnemyNextCard: 0
+  changesHidingSpot: 0
+  spawnedEnemy: {fileID: 0}
+  paBecomesPmInShadow: 0
+  darkensTerrain: 0
+  throwsDebris: 0
+  pileOnEmptyCell: {fileID: 0}
+  pulledPileDamage: 0
+  isAmbush: 0
+  animatedToy: {fileID: 0}
+  animatedToyEveryNthThrow: 2
+  isChargeCard: 0
+  leapToTarget: 0
+  knockbackDistance: 0
+  pullsTowardCaster: 0
+  casterRetreat: 0
+  casterMovementGain: 0
+  casterActionGain: 0
+  casterArmorAmount: 0
+  casterMovementLoss: 0
+  drawAmount: 0
+  discardHandAttackBonusPerCard: 0
+  isSummonCard: 0
+  summonPrefab: {fileID: 0}
+  isRepositionSummonCard: 0
+  scalesWithPASpentThisTurn: 0
+  comboDamagePerPASpent: 0
+  rageGain: 0
+  consumesAllRage: 1
+  damagePerRage: 8
+  healPerRage: 0
+  breaksChains: 0
+  taunts: 0
+  vanishesWhenUsed: 0
+  telegraphedZoneCount: 0

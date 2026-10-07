@@ -259,6 +259,33 @@ public class Enemy : Unit, IOutgoingDamageModifier
         else SetCurrentHealth(GetHealth() - amount);
     }
 
+    // ========== PROVOCATION (CardData.taunts) ==========
+
+    private Unit _pendingTaunt;
+
+    /// <summary>Champion qui provoque le monstre pendant ce tour-ci (null sinon) : il ne peut viser que lui.</summary>
+    public Unit TauntedBy { get; private set; }
+
+    /// <summary>Provoqué : à son prochain tour, le monstre ne pourra viser que ce champion.</summary>
+    public void TauntBy(Unit taunter)
+    {
+        _pendingTaunt = taunter;
+        GameLog.Log($"{name} est provoqué par {taunter.name}");
+    }
+
+    /// <summary>Champion qui provoque le monstre, pour son prochain tour ou celui en cours (infobulle).</summary>
+    public Unit Taunter => _pendingTaunt != null ? _pendingTaunt
+        : Services.IsGridServiceAvailable() && Services.Grid.GetActiveUnit() == this ? TauntedBy : null;
+
+    public override string HoverHint => Taunter != null ? $"Provoqué : ne peut viser que {Taunter.DisplayName}" : null;
+
+    public override void OnOwnTurnStart()
+    {
+        base.OnOwnTurnStart();
+        TauntedBy = _pendingTaunt; // la provocation vaut pour ce tour, puis s'efface
+        _pendingTaunt = null;
+    }
+
     // ========== PASSIF « TAPI DANS LE NOIR » (EnemyData.darknessHealPercent) ==========
 
     private int _healthAtLastTurn = -1; // PV et phase au début de son tour précédent : « touché » = moins de PV ou autre phase

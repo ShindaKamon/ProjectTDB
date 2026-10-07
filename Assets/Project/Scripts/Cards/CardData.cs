@@ -335,6 +335,29 @@ public class CardData : ScriptableObject
     [Tooltip("Bonus de dégâts par PA déjà dépensé ce tour avant cette carte")]
     public int comboDamagePerPASpent = 0;
 
+    [Header("═══ RAGE (Ilya) ═══")]
+    [Tooltip("Rage ajoutée au stock du lanceur (voir IRageUser ; ex: RAGE)")]
+    public int rageGain = 0;
+
+    [Tooltip("Vide le stock de Rage du lanceur avant l'effet ; les bonus par Rage ci-dessous s'appliquent par Rage consommée (ex: Exutoire brutal)")]
+    public bool consumesAllRage = false;
+
+    [Tooltip("Dégâts ajoutés par Rage consommée")]
+    public int damagePerRage = 0;
+
+    [Tooltip("Soin ajouté par Rage consommée")]
+    public int healPerRage = 0;
+
+    [Tooltip("Jouable stock de Rage plein : brise les chaînes du lanceur, qui passe en forme Déchaînée (ex: Chaînes brisées)")]
+    public bool breaksChains = false;
+
+    [Header("═══ PROVOCATION ═══")]
+    [Tooltip("Les monstres touchés (zone ou cible) ne peuvent viser que le lanceur à leur prochain tour (ex: Défi du colosse)")]
+    public bool taunts = false;
+
+    [Tooltip("Carte créée en combat (ex: RAGE) : jouée ou défaussée, elle disparaît au lieu d'aller dans la défausse")]
+    public bool vanishesWhenUsed = false;
+
     [Header("═══ LANCER ANNONCÉ (boss) ═══")]
     [Tooltip("Si > 0 (carte de monstre ciblant une case) : la carte ne frappe pas tout de suite. Elle annonce ce nombre de zones (forme areaEffect / aoeRadius ; sans zone = 1 case), une sur chaque champion puis au hasard, qui tombent au début du prochain tour du lanceur. Sidération les annule.")]
     public int telegraphedZoneCount = 0;
@@ -695,6 +718,15 @@ public class CardData : ScriptableObject
             }
         }
 
+        // --- RAGE CONSOMMÉE (ex: Exutoire brutal, Second souffle) : une fois par carte ---
+        if (consumesAllRage && !isAdditionalMultiTargetHit && source is IRageUser consumer)
+        {
+            int rage = consumer.ConsumeAllRage();
+            finalDamage += damagePerRage * rage;
+            finalHeal += healPerRage * rage;
+            GameLog.Log($"[CardData] {cardName}: {rage} Rage consommée (+{damagePerRage * rage} dégâts, +{healPerRage * rage} soin)");
+        }
+
         // --- BONUS DE PROCHAINE ATTAQUE (ex: Montée d'adrénaline) ---
         // Consommé par la première carte qui inflige des dégâts (une fois par carte : sur une
         // carte à zone il touche toute la zone, sur une carte à cibles multiples la 1re cible)
@@ -1017,6 +1049,23 @@ public class CardData : ScriptableObject
                 // Retrait appliqué au début du prochain tour de la cible (voir ResourceDebuffManager)
                 ResourceDebuffManager.ApplyDebuff(debuffTarget, paLoss, removeAllMovement ? int.MaxValue : pmLoss, source);
             }
+        }
+
+        // Provocation (ex: Défi du colosse) : les monstres touchés ne visent que le lanceur à leur prochain tour
+        if (taunts)
+        {
+            List<Unit> taunted = isAOE
+                ? GetAOEAffectedUnits(source, effectEpicenter)
+                : (targetUnit != null ? new List<Unit> { targetUnit } : new List<Unit>());
+            foreach (Unit unit in taunted)
+                if (unit is Enemy tauntedEnemy && unit.GetFaction() != source.GetFaction()) tauntedEnemy.TauntBy(source);
+        }
+
+        // Rage du lanceur (ex: RAGE, Chaînes brisées), une fois par carte
+        if (!isAdditionalMultiTargetHit && source is IRageUser rageUser)
+        {
+            if (rageGain > 0) rageUser.GainRage(rageGain);
+            if (breaksChains) rageUser.BreakChains();
         }
 
         // 8. Effets sur le lanceur, une fois par carte : gains de PM/PA, armure (vulnérabilité si

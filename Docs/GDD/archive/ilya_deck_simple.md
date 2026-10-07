@@ -1,7 +1,7 @@
 # ILYA - « Le Dévoué Enchaîné »
 
 **Statut :** Fiche de référence d'Ilya (source unique de vérité pour ses stats, son système Rage et son deck — voir `GDD_Main.md`). Mise à jour le 23/09/2026 : la liste détaillée des 12 cartes et les spécifications Rage, auparavant dans `claude_md_coarchitect.md`, ont été déplacées ici.
-**Place dans le MVP :** **hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`).
+**Place dans le MVP :** **hors MVP** (roster MVP = Evan, Crux, Raze — voir `GDD_Main.md`). **Depuis le 05/10/2026, jouable comme 4e champion de test** : voir « Version de test codée » ci-dessous ; le reste du document est la conception d'origine.
 
 > ⚠️ **Conçu avant l'Excel MVP** (`TCG_Tactique_Systeme_de_calcul.xlsx`). Plusieurs éléments ne respectent plus les règles actuelles et devront être adaptés s'il revient :
 > - stats ATK/DEF (le système ne définit que PV, PA, PM) et PA/PM qui changent avec la forme (le budget PA+PM est fixé à 9 par profil) ;
@@ -9,7 +9,44 @@
 > - deck de 12 cartes Personnage/Famille/Neutre → format du deck (Signatures + 16 Standard, sans cartes d'Éveil) ;
 > - dégâts des cartes à recalculer avec le budget (ex : 1 PA = 12 dégâts de base, pas 20).
 >
-> ⚠️ **Une autre version d'Ilya a existé dans le code** (`IlyaUnit`, retiré le 24/09/2026, récupérable via le commit `00afe5d`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). À réconcilier avec ce document s'il revient.
+> ⚠️ **Une autre version d'Ilya a existé dans le code** (`IlyaUnit`, retiré le 24/09/2026, récupérable via le commit `00afe5d`) : 1 carte Rage ajoutée à la **main** tous les **10** dégâts subis ou PV payés, stock max 5, et des cartes différentes (Coup Déchaîné, Défi du Colosse, Exutoire Brutal, Frappe Téméraire, Hurlement de Guerre, Mouvement Forcé, Saignée Volontaire, Second Souffle, Soif de Sang, Tourbillon Sanglant). Réconciliée avec ce document le 05/10/2026 dans la version de test.
+
+---
+
+## VERSION DE TEST CODÉE (05/10/2026) — fait foi pour le code
+
+**But :** comparer deux façons de jouer — le roster (Signatures + cartes d'émotion, Éveil) et Ilya, la base de départ du projet, joué **indépendamment** : son deck de base ne contient que ses propres cartes (Signatures neutres, sans émotion ni Éveil). Il fusionne les deux versions ci-dessous : la Rage en main de la version codée et la transformation Enchaînée → Déchaînée du document. Chiffres remis à l'échelle du jeu actuel (~11 dégâts par PA, 100 PV, budget PA + PM = 9).
+
+**Fiche :** 100 PV, 5 PA, 4 PM, ATQ 2, armure 3, RM 0 (+0,5 ATQ, +0,5 armure, +0,25 RM par niveau). Modèle : chevalier Quaternius (Knight Pack, CC0) avec épée et casque.
+
+**Passif — Colère enchaînée :**
+- Tous les **10 PV perdus** (coups reçus, PV payés, contrecoups), une carte **RAGE** arrive en main. Jamais plus de 5 Rages entre le stock et la main (l'excédent est perdu).
+- **RAGE** (0 PA) : +1 Rage dans le stock (max **5**). Jouée ou défaussée, elle disparaît (ne va pas dans la défausse).
+- Stock plein → la carte **Chaînes brisées** arrive en main (elle en repart si le stock redescend).
+- **Chaînes brisées** (0 PA, disparaît) : vide le stock, 20 dégâts aux ennemis à 2 cases ou moins, Ilya récupère 15 PV et passe **Déchaîné pendant 3 tours** (celui-ci compris) : +1 PA et +1 PM max, **vol de vie 25 %** des dégâts infligés, **−5 PV au début de chaque tour** (jamais mortel), plus de Rage générée (les RAGE en main disparaissent). Ensuite, retour en forme Enchaînée.
+- **Décision clé :** briser ses chaînes (burst + survie) ou dépenser la Rage au fil de l'eau (Exutoire brutal, Second souffle).
+
+**Deck de base (20 cartes) :**
+
+| Carte | Ex. | Coût | Effet |
+|---|---|---|---|
+| Frappe téméraire | 3 | 1 PA + 6 PV | 18 dégâts, au contact |
+| Coups déchaînés | 2 | 2 PA + 12 PV | 36 dégâts, au contact |
+| Soif de sang | 2 | 1 PA | 10 dégâts, vol de vie 6, au contact |
+| Tourbillon sanglant | 2 | 2 PA | 16 dégâts autour de soi (1 case), vol de vie 5 par ennemi touché |
+| Exutoire brutal | 2 | 2 PA | 16 dégâts + 8 par Rage consommée (toute la Rage), au contact |
+| Second souffle | 2 | 1 PA | Consomme toute la Rage, soigne 8 par Rage |
+| Saignée volontaire | 2 | 1 PA + 8 PV | Pioche 2 |
+| Défi du colosse | 2 | 2 PA | **Provoque** les ennemis à 2 cases ou moins (à leur prochain tour, ils ne peuvent viser qu'Ilya) ; armure +3 pendant 1 tour |
+| Mouvement forcé | 1 | 1 PA | Charge en ligne droite (3 cases max), repousse de 2 le premier ennemi touché |
+| Garde inébranlable | 1 | 1 PA | +2 PM ce tour, armure +3 pendant 1 tour |
+| Passion sacrificielle | 1 | 2 PA + 10 PV | Soigne un allié de 25 (portée 3) — inutile en solo |
+
+Cartes du document non reprises (mécanique absente du code) : Frappe enchaînée (« si touché avant »), Lame ardente (brûlure), Brasier intérieur (+% ATQ sur 2 tours), Riposte (réactions), Canaliser colère (les Rages ne sont plus dans le deck), Hurlement de guerre (la Rage doit venir de la douleur), Dévotion et Mur vivant (doublons de Défi du colosse).
+
+**À observer en test :** la provocation ne change rien en solo (un seul champion à viser) : elle se juge en coop. Les boss qui protègent un allié ou les embuscades ne la respectent pas encore.
+
+---
 
 **Famille** : 🔴 Déchaînés — Colère *(appelée « Rouge (Incarnat) » dans les tout premiers brouillons — même personnage)*
 **Concept** : « Le Dévoué qui se sacrifie par amour, mais enchaîne sa colère »

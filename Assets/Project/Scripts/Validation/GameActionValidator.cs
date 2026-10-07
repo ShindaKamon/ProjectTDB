@@ -25,6 +25,10 @@ public static class GameActionValidator
         if (card.isRepositionSummonCard && !HasSummonToMove(player))
             return ValidationResult.Fail("Aucune invocation à déplacer");
 
+        // Chaînes brisées : stock de Rage plein, pas déjà Déchaîné
+        if (card.breaksChains && !(player is IRageUser rageUser && rageUser.CanBreakChains))
+            return ValidationResult.Fail("Il faut un stock de Rage plein");
+
         // Coût effectif (tient compte d'un éventuel override, ex: Triche)
         int effectiveCostPA = card.costPA;
         if (player.TryGetComponentSafe(out DeckManager deckManager))

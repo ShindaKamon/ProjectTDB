@@ -32,7 +32,7 @@ MonoBehaviour:
   damageAmount: 0
   damageType: 0
   damageSelf: 0
-  healAmount: 24
+  healAmount: 32
   lifestealFixedAmount: 0
   damageAroundTarget: 0
   nextAttackBonus: 0

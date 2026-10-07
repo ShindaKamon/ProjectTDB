@@ -29,7 +29,7 @@ MonoBehaviour:
   affectedTarget: 5
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 22
+  damageAmount: 25
   damageType: 0
   damageSelf: 0
   healAmount: 0

@@ -30,7 +30,7 @@ MonoBehaviour:
   affectedTarget: 2
   targetsHandCard: 0
   targetCount: 1
-  damageAmount: 26
+  damageAmount: 36
   damageType: 0
   damageSelf: 0
   healAmount: 0

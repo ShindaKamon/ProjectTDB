@@ -54,7 +54,7 @@ namespace ProjectTDB.Tests
             var enemy = NewUnit<Enemy>(new Vector2Int(3, 0));
             var card = ScriptableObject.CreateInstance<CardData>();
             _created.Add(card);
-            card.targetType = CardTargetType.AllyorEnemy;
+            card.targetType = CardTargetType.OtherUnit;
             card.targetRange = 5;
             card.damageAmount = 15;
 

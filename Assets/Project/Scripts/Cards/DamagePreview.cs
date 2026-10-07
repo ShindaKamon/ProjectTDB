@@ -69,7 +69,7 @@ public static class DamagePreview
         Unit target = Services.Grid.GetUnitAtGridPos(epicenter);
         // Carte « allié ou ennemi » : jamais de dégâts sur un allié (voir CardData.ExecuteEffect)
         bool ally = target != null && target.GetFaction() == source.GetFaction();
-        if (target == null || (ally && card.targetType == CardTargetType.AllyorEnemy)) return new Unit[0];
+        if (target == null || (ally && card.targetType == CardTargetType.OtherUnit)) return new Unit[0];
         return new[] { target };
     }
 }

@@ -157,10 +157,10 @@ Pas de nouvelles cartes : les cartes peu utiles ou en doublon sont **refondues**
 | **Enemy** | Un ou plusieurs ennemis | Attaque |
 | **Ally** | Alliés (sauf soi) | Soigner un allié |
 | **AllyOrSelf** | Alliés ET soi-même | Soins de groupe |
-| **AllyorEnemy** | Alliés ET ennemis | Grappin (Crux) |
+| **OtherUnit** (« 1 unité sauf soi », ex-AllyorEnemy) | Un allié ou un ennemi, jamais soi | Grappin, Corde de rappel (Crux) |
 | **AnyUnit** | N'importe quelle unité | Aucune carte pour l'instant |
 | **EmptyTile** | Tuiles vides uniquement | Invocation de Lyse (si Lyse est déjà là : cible Lyse pour la soigner), Écho évanescent (Evan), Bond percutant (bond) |
-| **AnyTile** | N'importe quelle tuile | Aucune carte pour l'instant (Grappin, ex-Piolet d'ascension, cible désormais une unité : AllyorEnemy, charge en ligne droite jusqu'à elle) |
+| **AnyTile** | N'importe quelle tuile | Aucune carte pour l'instant (Grappin, ex-Piolet d'ascension, cible désormais une unité : OtherUnit, charge en ligne droite jusqu'à elle) |
 | **EnemyOrTile** | Un ennemi ou une tuile | Éclat de rage, Balayage furieux |
 
 Option **ciblage en ligne droite** (`targetInStraightLine`) : la cible doit être sur la même ligne ou la même colonne que le lanceur, sans diagonale (Éclat de rage). On vise toujours une **case** : une unité ne masque jamais la case derrière elle.
@@ -181,10 +181,13 @@ Dans le code (`CardAreaEffect`) : None, OneTile, Line, Cross, Circle, Cone (ouve
 |------|------------------|
 | **Enemies** | Que les ennemis |
 | **Ally** / **AllyOrSelf** | Alliés (avec ou sans soi) |
-| **AllyorEnemy** / **AnyUnit** | Tout le monde (ex : contrepartie « touche aussi les alliés proches ») |
+| **AllExceptSelf** (« tout le monde sauf soi », ex-AllyorEnemy) | Alliés et ennemis, pas le lanceur (ex : Poing ardent, contrepartie « touche aussi les alliés proches ») |
+| **AnyUnit** | Tout le monde, lanceur compris |
+
+Dans l'Inspector, les valeurs de `CardTargetType` et `CardAffectedTarget` s'affichent en français (`[InspectorName]`, 07/10/2026).
 
 ---
 
-**Dernière mise à jour:** 23 Septembre 2026
-**Version:** 4.1
+**Dernière mise à jour:** 7 Octobre 2026
+**Version:** 4.2
 **Responsable:** Shinda + Claude

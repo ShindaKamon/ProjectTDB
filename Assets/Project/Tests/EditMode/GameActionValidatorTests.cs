@@ -471,7 +471,7 @@ namespace ProjectTDB.Tests
             // Grappin : charge qui cible une unité, pas une case
             var card = NewCard();
             card.isChargeCard = true;
-            card.targetType = CardTargetType.AllyorEnemy;
+            card.targetType = CardTargetType.OtherUnit;
             card.targetRange = 5;
             var source = NewUnit<Unit>(gridPos: Vector2Int.zero);
 

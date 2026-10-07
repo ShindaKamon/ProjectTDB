@@ -156,7 +156,7 @@ public static class GameActionValidator
                 break;
 
             case CardTargetType.AnyUnit:
-            case CardTargetType.AllyorEnemy:
+            case CardTargetType.OtherUnit:
                 // N'importe quelle cible est valide
                 break;
 

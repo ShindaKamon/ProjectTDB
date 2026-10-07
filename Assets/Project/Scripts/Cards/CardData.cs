@@ -4,16 +4,16 @@ using System.Collections.Generic;
 // Enum pour spécifier le type de cible valide
 public enum CardTargetType
 {
-    None,           // Aucune
-    Self,           // Soi-même
-    Enemy,          // Un ou plusieurs ennemis
-    Ally,           // Un ou plusieurs alliés (sauf soi-même)
-    AllyOrSelf,     // Cible les alliés ET soi-même
-    AllyorEnemy,    // Cible les alliés ET les ennemis
-    AnyUnit,        // Cible n'importe quelle unité
-    EmptyTile,      // Cible uniquement les tuiles vides
-    AnyTile,        // Cible n'importe quelle tuile (vide ou occupée)
-    EnemyOrTile     // Cible un ennemi OU une tuile
+    [InspectorName("Aucune")] None,
+    [InspectorName("Soi")] Self,
+    [InspectorName("Ennemi")] Enemy,                        // Un ou plusieurs ennemis
+    [InspectorName("Allié (sauf soi)")] Ally,               // Un ou plusieurs alliés
+    [InspectorName("Allié ou soi")] AllyOrSelf,
+    [InspectorName("1 unité sauf soi")] OtherUnit,          // Allié ou ennemi (ex-AllyorEnemy)
+    [InspectorName("N'importe quelle unité")] AnyUnit,
+    [InspectorName("Case vide")] EmptyTile,
+    [InspectorName("N'importe quelle case")] AnyTile,       // Vide ou occupée
+    [InspectorName("Ennemi ou case")] EnemyOrTile
 }
 
 public enum CardAreaEffect
@@ -29,13 +29,13 @@ public enum CardAreaEffect
 
 public enum CardAffectedTarget
 {
-    None,           // Aucune cible affectée
-    Self,           // Soi-même
-    Enemies,        // Que un ou plusieurs ennemies
-    Ally,           // Que un ou plusieurs alliées
-    AllyOrSelf,     // Que les alliés ET soi-même
-    AllyorEnemy,    // Que les alliés ET les ennemis
-    AnyUnit         // N'importe quelle unité
+    [InspectorName("Aucune")] None,
+    [InspectorName("Soi")] Self,
+    [InspectorName("Ennemis")] Enemies,
+    [InspectorName("Alliés (sauf soi)")] Ally,
+    [InspectorName("Alliés et soi")] AllyOrSelf,
+    [InspectorName("Tout le monde sauf soi")] AllExceptSelf, // Alliés et ennemis (ex-AllyorEnemy)
+    [InspectorName("Tout le monde")] AnyUnit
 }
 
 /// <summary>
@@ -152,7 +152,7 @@ public class CardData : ScriptableObject
     public int targetCount = 1;
 
     // Propriétés dérivées pour compatibilité
-    public bool targetsUnit => targetType == CardTargetType.Self || targetType == CardTargetType.Enemy || targetType == CardTargetType.Ally || targetType == CardTargetType.AllyOrSelf || targetType == CardTargetType.AllyorEnemy || targetType == CardTargetType.AnyUnit;
+    public bool targetsUnit => targetType == CardTargetType.Self || targetType == CardTargetType.Enemy || targetType == CardTargetType.Ally || targetType == CardTargetType.AllyOrSelf || targetType == CardTargetType.OtherUnit || targetType == CardTargetType.AnyUnit;
     public bool targetsTile => targetType == CardTargetType.EmptyTile || targetType == CardTargetType.AnyTile || targetType == CardTargetType.EnemyOrTile;
 
     /// <summary>
@@ -163,8 +163,8 @@ public class CardData : ScriptableObject
     // Zone : une forme avec un rayon, ou toute l'équipe (qui n'en a pas besoin)
     public bool isAOE => areaEffect == CardAreaEffect.WholeTeam || (areaEffect != CardAreaEffect.None && aoeRadius > 0);
     public bool affectsSelf => affectedTarget == CardAffectedTarget.Self || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AnyUnit;
-    public bool affectsAllies => affectedTarget == CardAffectedTarget.Ally || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;
-    public bool affectsEnemies => affectedTarget == CardAffectedTarget.Enemies || affectedTarget == CardAffectedTarget.AllyorEnemy || affectedTarget == CardAffectedTarget.AnyUnit;
+    public bool affectsAllies => affectedTarget == CardAffectedTarget.Ally || affectedTarget == CardAffectedTarget.AllyOrSelf || affectedTarget == CardAffectedTarget.AllExceptSelf || affectedTarget == CardAffectedTarget.AnyUnit;
+    public bool affectsEnemies => affectedTarget == CardAffectedTarget.Enemies || affectedTarget == CardAffectedTarget.AllExceptSelf || affectedTarget == CardAffectedTarget.AnyUnit;
 
     // ╔════════════════════════════════════════════════════════════════════════════╗
     // ║                         4. DÉGÂTS & SOIN                                   ║
@@ -361,7 +361,7 @@ public class CardData : ScriptableObject
             case CardTargetType.AllyOrSelf:
                 return target != null && target.GetFaction() == source.GetFaction();
 
-            case CardTargetType.AllyorEnemy:
+            case CardTargetType.OtherUnit:
                 return target != null && target != source;
 
             case CardTargetType.AnyUnit:
@@ -676,7 +676,7 @@ public class CardData : ScriptableObject
         int finalDamage = damageAmount;
         // Carte « allié ou ennemi » (ex: Corde de rappel) : jamais de dégâts sur un allié (le bonus
         // de prochaine attaque n'est donc pas consommé non plus)
-        if (targetType == CardTargetType.AllyorEnemy && targetUnit != null && targetUnit.GetFaction() == source.GetFaction())
+        if (targetType == CardTargetType.OtherUnit && targetUnit != null && targetUnit.GetFaction() == source.GetFaction())
             finalDamage = 0;
         int finalHeal = healAmount;
         int finalShield = shieldAmount;

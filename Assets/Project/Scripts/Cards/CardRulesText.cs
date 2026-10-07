@@ -25,7 +25,7 @@ public static class CardRulesText
         if (card.damageAmount > 0)
             Effect(card.damageType == DamageType.Magical ? "magic" : "dmg", ChipKind.Damage,
                 "Inflige " + card.damageAmount + (card.damageType == DamageType.Magical ? " (magique)" : "")
-                + (card.targetType == CardTargetType.AllyorEnemy ? " à un ennemi" : "")
+                + (card.targetType == CardTargetType.OtherUnit ? " à un ennemi" : "")
                 + (card.scalesWithPASpentThisTurn && paSpentThisTurn > 0 ? $" ({card.damageAmount + card.comboDamagePerPASpent * paSpentThisTurn})" : ""));
         if (card.scalesWithPASpentThisTurn && card.comboDamagePerPASpent > 0)
             Effect("dmg", ChipKind.Damage, $"+{card.comboDamagePerPASpent} dégâts par PA déjà dépensé ce tour");
@@ -148,7 +148,7 @@ public static class CardRulesText
             CardTargetType.Enemy => n > 1 ? $"{n} ennemis distincts" : "1 ennemi",
             CardTargetType.Ally => n > 1 ? $"{n} alliés distincts" : "1 allié",
             CardTargetType.AllyOrSelf => n > 1 ? $"{n} alliés distincts (toi compris)" : "toi ou 1 allié",
-            CardTargetType.AllyorEnemy => "1 autre unité",
+            CardTargetType.OtherUnit => "1 autre unité",
             CardTargetType.AnyUnit => "1 unité",
             CardTargetType.EmptyTile => "1 case vide",
             CardTargetType.AnyTile => "1 case",
@@ -180,7 +180,7 @@ public static class CardRulesText
             CardAffectedTarget.Enemies => "ennemis",
             CardAffectedTarget.Ally => "alliés",
             CardAffectedTarget.AllyOrSelf => "toi et tes alliés",
-            CardAffectedTarget.AllyorEnemy => "alliés et ennemis",
+            CardAffectedTarget.AllExceptSelf => "tout le monde sauf toi",
             CardAffectedTarget.AnyUnit => "tout le monde",
             CardAffectedTarget.Self => "toi",
             _ => "",

@@ -168,7 +168,7 @@ namespace ProjectTDB.Tests
         [Test]
         public void RulesText_ShieldPushSelfDamageAndSpecial()
         {
-            var card = NewCard(CardTargetType.AllyorEnemy, 3);
+            var card = NewCard(CardTargetType.OtherUnit, 3);
             card.shieldAmount = 10;
             card.knockbackDistance = 2;
             card.pullsTowardCaster = true;

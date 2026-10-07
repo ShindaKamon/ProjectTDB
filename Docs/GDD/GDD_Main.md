@@ -1,7 +1,7 @@
 # Game Design Document - Émotions Tactics (nom de code : Project TDB)
 
-**Version :** 3.5
-**Date :** 30 Septembre 2026
+**Version :** 3.8
+**Date :** 7 Octobre 2026
 **Statut :** Document canon central. Réaligné le 23/09/2026 sur le classeur **`TCG_Tactique_Systeme_de_calcul.xlsx`**, qui fait office de **référence du MVP** (roster, émotions, deck, budget des cartes, progression, monstres).
 
 > Ce document est le point d'entrée du projet. Pour le détail, voir les documents listés ci-dessous. Les concepts abandonnés, mis en pause ou sortis du MVP sont conservés dans `archive/Concepts_Abandonnes.md` — rien n'est perdu, juste rangé.
@@ -350,5 +350,5 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 ---
 
 **Dernière mise à jour :** 7 Octobre 2026
-**Version GDD :** 3.7
+**Version GDD :** 3.8
 **Responsable :** Shinda + Claude

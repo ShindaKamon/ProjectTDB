@@ -1,6 +1,6 @@
 # 📚 GDD — Émotions Tactics (Project TDB)
 
-**Mis à jour le 23/09/2026** — passe de cohérence : docs réalignés sur l'Excel MVP et sur l'état réel du code.
+**Mis à jour le 07/10/2026** — ajout des leçons de Rosewater, retrait d'Ilya du jeu (sa fiche reste en archive). Dernière passe de cohérence complète : 23/09/2026.
 
 ## Par où commencer
 

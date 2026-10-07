@@ -211,7 +211,7 @@ Détail et écarts avec le design : `Technical_Specs.md`, section « État du co
 - [x] **Boss en 3 phases** (terminé le 02/10, valeurs provisoires) : le Monstre sous le lit (sous les lits → fusion avec le dernier lit → il sort), lancers d'objets annoncés, draps qui attirent, débris, soldats de bois (la fusion des moutons est retirée le 02/10), carte propre au boss (voir `Enemies.md`) — faits le 01/10 : lancers annoncés (Pluie de jouets) et phase 1 (6 lits portant les PV du boss, caché sous l'un d'eux avec son ombre, change de lit chaque tour, sort quand il ne reste que son lit)
 - [ ] **Monstres de l'Orphelinat** : stats selon le barème de l'Excel (Mouton de poussière et Soldat de bois en valeurs provisoires ; les Ombres du Placard sont abandonnées le 02/10, remplacées par le Soldat de bois), patterns ; Ombres du Placard ?
 - [x] **Écran de fin de donjon** (02/10) : « DONJON TERMINÉ ! », bilan de l'expédition (dégâts et soins cumulés), Recommencer ou Menu principal ; affiché après le dernier combat
-- [ ] **Passe de playtest** (passifs, ATQ / défenses, fusions, monstres), puis report des chiffres en attente dans `MVP_Chiffres.md`
+- [ ] **Passe de playtest** (passifs, ATQ / défenses, fusions, monstres ; grille : `Playtest_Grille.md`), puis report des chiffres en attente dans `MVP_Chiffres.md`
 - [ ] Optionnel : ambiance (lumière), mobilier d'orphelinat (à trancher : obstacles en combat ou non)
 
 **Reporté en V2 (01/10/2026) :** XP et niveaux (les champions restent au niveau 1), désaturation → couleur des donjons (rien n'est encore pensé), exploration en réseau.
